@@ -1,0 +1,7 @@
+node_modules/
+.env
+npm-debug.log*
+uploads/
+__pycache__/
+*.pyc
+worker-smoke.pdf

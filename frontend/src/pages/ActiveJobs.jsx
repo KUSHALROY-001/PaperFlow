@@ -1,47 +1,32 @@
 import { Link } from "react-router-dom";
-import { Zap, ArrowRight, Clock, CheckCircle } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowRight, CheckCircle, Clock, Zap } from "lucide-react";
+import { api } from "@/lib/api";
 
-const jobs = [
-  {
-    id: "c1",
-    cluster: "JECA",
-    name: "JECA Mock Test 1",
-    phase: "Phase 1",
-    substep: "OCR extraction",
-    percent: 55,
-    eta: "~3 min remaining",
-  },
-  {
-    id: "c4",
-    cluster: "Aptitude",
-    name: "Aptitude Mock Batch 1",
-    phase: "Phase 1",
-    substep: "Text correction",
-    percent: 82,
-    eta: "~1 min remaining",
-  },
-];
+function formatTime(value) {
+  if (!value) return "-";
+  return new Intl.DateTimeFormat("en-IN", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
 
-const completed = [
-  {
-    id: "c1",
-    cluster: "JECA",
-    name: "JECA PYQ 2024",
-    phase: "Phase 2 Complete",
-    duration: "10m 40s",
-    at: "10:55 AM",
-  },
-  {
-    id: "c5",
-    cluster: "Network Security",
-    name: "Network Security PYQ",
-    phase: "Phase 2 Complete",
-    duration: "8m 12s",
-    at: "Yesterday",
-  },
-];
+function jobPercent(job) {
+  if (job.status === "completed") return 100;
+  return Number(job.progress_percent || 0);
+}
 
 export default function ActiveJobs() {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["processing-jobs"],
+    queryFn: () => api.listProcessingJobs(),
+    refetchInterval: 10000,
+  });
+
+  const jobs = data?.jobs || [];
+  const running = jobs.filter((job) => ["queued", "running"].includes(job.status));
+  const completed = jobs.filter((job) => job.status === "completed").slice(0, 8);
+
   return (
     <div className="space-y-8">
       <div>
@@ -51,14 +36,24 @@ export default function ActiveJobs() {
         </p>
       </div>
 
+      {error && (
+        <div className="rounded-2xl border border-red-100 bg-red-50 p-5 text-sm font-medium text-red-700">
+          {error.message}
+        </div>
+      )}
+
       <div>
         <div className="flex items-center gap-2 mb-4">
           <div className="w-2 h-2 rounded-full bg-violet-500 pulse-violet" />
           <h2 className="text-lg font-bold text-foreground">
-            Running Now ({jobs.length})
+            Running Now ({running.length})
           </h2>
         </div>
-        {jobs.length === 0 ? (
+        {isLoading ? (
+          <div className="card-lavender rounded-2xl p-8 text-sm text-muted-foreground">
+            Loading jobs...
+          </div>
+        ) : running.length === 0 ? (
           <div className="card-lavender rounded-2xl p-12 text-center">
             <Zap className="w-10 h-10 text-violet-300 mx-auto mb-3" />
             <p className="text-foreground font-semibold mb-1">No active jobs</p>
@@ -68,37 +63,39 @@ export default function ActiveJobs() {
           </div>
         ) : (
           <div className="space-y-4">
-            {jobs.map((job) => (
-              <div key={`${job.id}-${job.name}`} className="card-lavender rounded-2xl p-6">
+            {running.map((job) => (
+              <div key={job.id} className="card-lavender rounded-2xl p-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-4">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center">
                       <Zap className="w-5 h-5 text-violet-600" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-foreground">{job.name}</h3>
+                      <h3 className="font-bold text-foreground">
+                        {job.mock_test_name}
+                      </h3>
                       <p className="text-sm text-muted-foreground">
-                        {job.cluster} · {job.phase} · {job.substep}
+                        {job.cluster_name} / {job.status} / {job.current_stage || "Queued"}
                       </p>
                     </div>
                   </div>
                   <Link
-                    to={`/cluster/${job.id}`}
+                    to={`/cluster/${job.cluster_id}/mocktest/${job.mock_test_id}`}
                     className="flex w-full sm:w-auto items-center justify-center gap-1.5 text-sm px-4 py-2 gradient-violet text-white font-semibold rounded-xl shadow-md shadow-violet-200 hover:opacity-90 transition-all"
                   >
-                    View Cluster <ArrowRight className="w-3.5 h-3.5" />
+                    View Job <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
                 <div className="flex justify-between text-sm text-muted-foreground mb-2">
-                  <span>{job.percent}% complete</span>
+                  <span>{jobPercent(job)}% complete</span>
                   <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" /> {job.eta}
+                    <Clock className="w-3.5 h-3.5" /> Started {formatTime(job.started_at || job.created_at)}
                   </span>
                 </div>
                 <div className="h-2.5 bg-violet-100 rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full shimmer"
-                    style={{ width: `${job.percent}%` }}
+                    style={{ width: `${Math.max(jobPercent(job), 8)}%` }}
                   />
                 </div>
               </div>
@@ -111,30 +108,38 @@ export default function ActiveJobs() {
         <h2 className="text-lg font-bold text-foreground mb-4">
           Recently Completed
         </h2>
-        <div className="space-y-3">
-          {completed.map((job) => (
-            <div
-              key={`${job.id}-${job.name}`}
-              className="card-lavender rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-4"
-            >
-              <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
-                <CheckCircle className="w-5 h-5 text-emerald-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-foreground">{job.name}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {job.cluster} · {job.phase} · {job.duration} · {job.at}
-                </p>
-              </div>
-              <Link
-                to={`/cluster/${job.id}`}
-                className="flex w-full sm:w-auto items-center justify-center gap-1.5 text-sm px-3 py-2 bg-violet-100 text-violet-700 font-semibold rounded-xl hover:bg-violet-200 transition-colors"
+        {completed.length === 0 ? (
+          <div className="card-lavender rounded-2xl p-8 text-sm text-muted-foreground">
+            No completed processing jobs yet.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {completed.map((job) => (
+              <div
+                key={job.id}
+                className="card-lavender rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-4"
               >
-                Open Cluster <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          ))}
-        </div>
+                <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
+                  <CheckCircle className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-foreground">
+                    {job.mock_test_name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {job.cluster_name} / completed / {formatTime(job.completed_at)}
+                  </p>
+                </div>
+                <Link
+                  to={`/cluster/${job.cluster_id}/mocktest/${job.mock_test_id}`}
+                  className="flex w-full sm:w-auto items-center justify-center gap-1.5 text-sm px-3 py-2 bg-violet-100 text-violet-700 font-semibold rounded-xl hover:bg-violet-200 transition-colors"
+                >
+                  Open Mock <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

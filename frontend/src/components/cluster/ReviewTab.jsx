@@ -12,7 +12,7 @@ const filters = [
   { id: "all", label: "All" },
   { id: "approved", label: "Approved" },
   { id: "review", label: "Needs Review" },
-  { id: "flagged", label: "Flagged" },
+  { id: "rejected", label: "Flagged" },
 ];
 
 function getConfidenceTone(confidence) {
@@ -41,7 +41,7 @@ export default function ReviewTab({ questions, onStatusChange, onDelete }) {
     () => ({
       approved: questions.filter((question) => question.status === "approved").length,
       review: questions.filter((question) => question.status === "review").length,
-      flagged: questions.filter((question) => question.status === "flagged").length,
+      flagged: questions.filter((question) => question.status === "rejected").length,
     }),
     [questions],
   );
@@ -146,7 +146,7 @@ export default function ReviewTab({ questions, onStatusChange, onDelete }) {
                   </button>
                   <button
                     type="button"
-                    onClick={() => onStatusChange(question.id, "flagged")}
+                    onClick={() => onStatusChange(question.id, "rejected")}
                     className="rounded-xl border border-amber-200 p-2 text-amber-600 transition-colors hover:bg-amber-50 dark:border-amber-500/20 dark:hover:bg-amber-500/10"
                     aria-label="Flag question"
                   >
@@ -196,10 +196,20 @@ export default function ReviewTab({ questions, onStatusChange, onDelete }) {
                       </div>
                     );
                   })}
-                  {question.status === "flagged" && (
+                  {question.status === "rejected" && (
                     <div className="inline-flex items-center gap-2 rounded-full bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 dark:bg-red-500/15 dark:text-red-200">
                       <ShieldAlert className="h-3.5 w-3.5" />
                       Needs manual review before export
+                    </div>
+                  )}
+                  {question.aiIssues?.length > 0 && (
+                    <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-100">
+                      <div className="mb-1 font-semibold">AI review notes</div>
+                      <ul className="list-disc space-y-1 pl-5">
+                        {question.aiIssues.map((issue, index) => (
+                          <li key={`${question.id}-issue-${index}`}>{issue}</li>
+                        ))}
+                      </ul>
                     </div>
                   )}
                 </div>

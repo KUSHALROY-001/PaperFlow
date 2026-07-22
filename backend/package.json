@@ -1,0 +1,24 @@
+{
+  "name": "paperflow-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "db:migrate": "node src/db/migrate.js",
+    "db:check": "node src/db/check.js",
+    "worker:once": "python -m worker.worker --once",
+    "worker": "python -m worker.worker"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^16.4.7",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.11.0",
+    "multer": "^2.2.0",
+    "pg": "^8.13.1"
+  }
+}

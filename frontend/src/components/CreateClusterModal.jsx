@@ -1,18 +1,35 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { FolderOpen, Sparkles, X } from "lucide-react";
+import { api } from "@/lib/api";
 
-export default function CreateClusterModal({ onClose }) {
+export default function CreateClusterModal({ onClose, onCreated }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [form, setForm] = useState({
     name: "",
     description: "",
   });
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    onClose();
-    navigate("/cluster/new");
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const result = await api.createCluster(form);
+      await queryClient.invalidateQueries({ queryKey: ["clusters"] });
+      onCreated?.(result.cluster);
+      onClose();
+      navigate(`/cluster/${result.cluster.id}`);
+    } catch (err) {
+      setError(err.message || "Could not create cluster");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -41,10 +58,7 @@ export default function CreateClusterModal({ onClose }) {
           </button>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-5 p-6"
-        >
+        <form onSubmit={handleSubmit} className="space-y-5 p-6">
           <div>
             <label className="mb-2 block text-sm font-semibold text-foreground">
               Cluster Name *
@@ -101,6 +115,12 @@ export default function CreateClusterModal({ onClose }) {
             </div>
           </div>
 
+          {error && (
+            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+              {error}
+            </div>
+          )}
+
           <div className="flex gap-3 pt-2">
             <button
               type="button"
@@ -111,9 +131,10 @@ export default function CreateClusterModal({ onClose }) {
             </button>
             <button
               type="submit"
-              className="flex-1 rounded-xl py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 gradient-violet"
+              disabled={isSubmitting}
+              className="flex-1 rounded-xl py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60 gradient-violet"
             >
-              Create Cluster
+              {isSubmitting ? "Creating..." : "Create Cluster"}
             </button>
           </div>
         </form>

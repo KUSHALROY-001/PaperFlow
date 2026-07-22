@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import CreateClusterModal from "./CreateClusterModal";
 import ThemeToggle from "./ThemeToggle";
+import { useAuth } from "@/lib/AuthContext";
 
 const navSections = [
   {
@@ -119,6 +120,7 @@ function SidebarContent({ location, onNavigate, onCreateCluster }) {
 
 export default function AppShell() {
   const location = useLocation();
+  const { logout, user } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -213,7 +215,7 @@ export default function AppShell() {
                   <User className="w-3 h-3 text-white" />
                 </div>
                 <span className="hidden sm:inline text-sm font-medium text-foreground">
-                  Account
+                  {user?.name || "Account"}
                 </span>
               </button>
               {showUserMenu && (
@@ -225,12 +227,13 @@ export default function AppShell() {
                   >
                     <Settings className="w-4 h-4" /> Settings
                   </Link>
-                  <Link
-                    to="/"
+                  <button
+                    type="button"
+                    onClick={logout}
                     className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-all"
                   >
                     <LogOut className="w-4 h-4" /> Sign Out
-                  </Link>
+                  </button>
                 </div>
               )}
             </div>

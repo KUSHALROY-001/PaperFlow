@@ -1,12 +1,50 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
 import ThemeToggle from "../components/ThemeToggle";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function AuthPage({ mode, title, description }) {
+  const navigate = useNavigate();
+  const { login, signup } = useAuth();
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const ctaLabel = mode === "login" ? "Sign In" : "Create Account";
   const altLabel =
     mode === "login" ? "Need an account? Sign Up" : "Already have an account? Login";
   const altHref = mode === "login" ? "/signup" : "/login";
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      if (mode === "login") {
+        await login({
+          email: form.email,
+          password: form.password,
+        });
+      } else {
+        await signup({
+          name: form.name,
+          email: form.email,
+          password: form.password,
+        });
+      }
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      setError(err.message || "Authentication failed");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen gradient-hero px-4 sm:px-6 py-6 sm:py-8">
@@ -38,17 +76,40 @@ export default function AuthPage({ mode, title, description }) {
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-foreground">{ctaLabel}</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              This placeholder keeps navigation working while backend auth is still being built.
+              Use your PaperFlow backend account to access clusters and mock tests.
             </p>
           </div>
 
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            {mode === "signup" && (
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-foreground">
+                  Name
+                </label>
+                <input
+                  required
+                  type="text"
+                  value={form.name}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, name: event.target.value }))
+                  }
+                  placeholder="Kushal"
+                  className="w-full rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-violet-300 focus:ring-2 focus:ring-violet-200 dark:bg-white/5"
+                />
+              </div>
+            )}
+
             <div>
               <label className="mb-2 block text-sm font-semibold text-foreground">
                 Email
               </label>
               <input
+                required
                 type="email"
+                value={form.email}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, email: event.target.value }))
+                }
                 placeholder="you@example.com"
                 className="w-full rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-violet-300 focus:ring-2 focus:ring-violet-200 dark:bg-white/5"
               />
@@ -58,39 +119,35 @@ export default function AuthPage({ mode, title, description }) {
                 Password
               </label>
               <input
+                required
                 type="password"
-                placeholder="Enter your password"
+                value={form.password}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, password: event.target.value }))
+                }
+                placeholder="At least 8 characters"
                 className="w-full rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-violet-300 focus:ring-2 focus:ring-violet-200 dark:bg-white/5"
               />
             </div>
 
-            {mode === "signup" && (
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-foreground">
-                  Workspace Name
-                </label>
-                <input
-                  type="text"
-                  placeholder="JECA prep batch"
-                  className="w-full rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-violet-300 focus:ring-2 focus:ring-violet-200 dark:bg-white/5"
-                />
+            {error && (
+              <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                {error}
               </div>
             )}
 
             <button
-              type="button"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-3.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 gradient-violet"
+              type="submit"
+              disabled={isSubmitting}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-3.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60 gradient-violet"
             >
-              {ctaLabel} <ArrowRight className="h-4 w-4" />
+              {isSubmitting ? "Please wait..." : ctaLabel} <ArrowRight className="h-4 w-4" />
             </button>
           </form>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 text-sm">
             <Link to={altHref} className="font-medium text-violet-700 hover:text-violet-600">
               {altLabel}
-            </Link>
-            <Link to="/dashboard" className="font-medium text-slate-500 hover:text-violet-600">
-              Skip to demo app
             </Link>
           </div>
         </div>

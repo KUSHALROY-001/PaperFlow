@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClientInstance } from "@/lib/query-client";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import ThemeProvider from "./components/ThemeProvider";
 import PageNotFound from "./lib/PageNotFound";
 import { AuthProvider, useAuth } from "@/lib/AuthContext";
@@ -16,6 +16,7 @@ import Settings from "./pages/Settings";
 import ActiveJobs from "./pages/ActiveJobs";
 import AppShell from "./components/AppShell";
 import MockSession from "./pages/MockSession";
+import MockTestWorkspace from "./pages/MockTestWorkspace";
 import QuestionEditor from "./pages/QuestionEditor";
 import Templates from "./pages/Templates";
 import Team from "./pages/Team";
@@ -28,10 +29,17 @@ import MyResults from "./pages/MyResults";
 import AuthPage from "./pages/AuthPage";
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } =
+  const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated } =
     useAuth();
+  const location = useLocation();
 
-  if (isLoadingPublicSettings || isLoadingAuth) {
+  const publicPaths = ["/", "/login", "/signup"];
+  const isPublicRoute =
+    publicPaths.includes(location.pathname) ||
+    location.pathname.startsWith("/shared/") ||
+    location.pathname.startsWith("/session/");
+
+  if (!isPublicRoute && (isLoadingPublicSettings || isLoadingAuth)) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin"></div>
@@ -39,12 +47,13 @@ const AuthenticatedApp = () => {
     );
   }
 
-  if (authError) {
+  if (!isPublicRoute && !isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  if (!isPublicRoute && authError) {
     if (authError.type === "user_not_registered") {
       return <UserNotRegisteredError />;
-    } else if (authError.type === "auth_required") {
-      navigateToLogin();
-      return null;
     }
   }
 
@@ -82,7 +91,9 @@ const AuthenticatedApp = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/clusters" element={<ClustersLibrary />} />
         <Route path="/cluster/:id" element={<ClusterWorkspace />} />
+        <Route path="/cluster/:clusterId/mocktest/:mockTestId" element={<MockTestWorkspace />} />
         <Route path="/cluster/:clusterId/editor" element={<QuestionEditor />} />
+        <Route path="/cluster/:clusterId/mock/:mockTestId/editor" element={<QuestionEditor />} />
         <Route path="/jobs" element={<ActiveJobs />} />
         <Route path="/templates" element={<Templates />} />
         <Route path="/team" element={<Team />} />

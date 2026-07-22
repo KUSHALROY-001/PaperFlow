@@ -45,13 +45,45 @@ function PhaseCard({ phase }) {
   );
 }
 
-export default function ProcessingTab({ phases, documentPreview }) {
-  return (
-    <div className="grid gap-6 xl:grid-cols-[0.9fr_0.9fr_1.2fr]">
-      <PhaseCard phase={phases[0]} />
-      <PhaseCard phase={phases[1]} />
+export default function ProcessingTab({ phases, documentPreview, job }) {
+  const progress = Number(job?.progress_percent || 0);
+  const statusLabel = job?.status ? job.status.replace("_", " ") : "idle";
 
-      <div className="rounded-3xl p-6 card-lavender">
+  return (
+    <div className="space-y-6">
+      <div className="rounded-3xl p-5 card-lavender">
+        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="font-bold text-foreground">Live Processing Status</h3>
+            <p className="text-sm text-muted-foreground">
+              {job?.current_stage || "No active processing job"}
+            </p>
+          </div>
+          <span className="inline-flex w-fit rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold capitalize text-violet-700 dark:bg-white/5 dark:text-violet-200">
+            {statusLabel}
+          </span>
+        </div>
+        <div className="h-2 overflow-hidden rounded-full bg-violet-100 dark:bg-white/10">
+          <div
+            className="h-full rounded-full bg-violet-600 transition-all"
+            style={{ width: `${Math.min(progress, 100)}%` }}
+          />
+        </div>
+        <div className="mt-2 text-right text-xs font-semibold text-muted-foreground">
+          {progress}%
+        </div>
+        {job?.error_message && (
+          <div className="mt-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+            {job.error_message}
+          </div>
+        )}
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[0.9fr_0.9fr_1.2fr]">
+        <PhaseCard phase={phases[0]} />
+        <PhaseCard phase={phases[1]} />
+
+        <div className="rounded-3xl p-6 card-lavender">
         <div className="mb-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200">
@@ -82,6 +114,7 @@ export default function ProcessingTab({ phases, documentPreview }) {
             ))}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

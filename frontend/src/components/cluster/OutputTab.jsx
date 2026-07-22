@@ -12,9 +12,11 @@ export default function OutputTab({ questions, metadata }) {
       metadata,
       questions: questions.map((question) => ({
         id: question.id,
-        question: question.text,
+        questionNo: question.questionNo,
         topic: question.topic,
+        question: question.text,
         options: question.options,
+        correctOptionIndexes: question.correctOptionIndexes,
         answer: question.answer,
         confidence: question.confidence,
         status: question.status,
