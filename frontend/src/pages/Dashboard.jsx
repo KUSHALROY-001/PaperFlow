@@ -44,10 +44,13 @@ export default function Dashboard() {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground mt-1">
-            Organize clusters first, then build multiple mock tests inside each one.
+            Organize clusters first, then build multiple mock tests inside each
+            one.
           </p>
           {isLoading && (
-            <p className="mt-1 text-xs text-muted-foreground">Loading workspace summary...</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Loading workspace summary...
+            </p>
           )}
         </div>
         <button
@@ -97,7 +100,9 @@ export default function Dashboard() {
         ].map((card) => (
           <div key={card.label} className="card-lavender rounded-2xl p-5">
             <div className="flex items-start justify-between mb-3">
-              <div className={`w-10 h-10 ${card.bg} rounded-xl flex items-center justify-center`}>
+              <div
+                className={`w-10 h-10 ${card.bg} rounded-xl flex items-center justify-center`}
+              >
                 <card.icon className={`w-5 h-5 ${card.color}`} />
               </div>
             </div>
@@ -115,8 +120,8 @@ export default function Dashboard() {
             Cluster = workspace, mock test = exam paper
           </h3>
           <p className="text-sm text-muted-foreground">
-            Example: create a JECA cluster, then add JECA PYQ 2024, JECA PYQ 2023,
-            and JECA Mock Test 1 inside it.
+            Example: create a JECA cluster, then add JECA PYQ 2024, JECA PYQ
+            2023, and JECA Mock Test 1 inside it.
           </p>
         </div>
         <button
@@ -130,8 +135,13 @@ export default function Dashboard() {
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-foreground">Recent Clusters</h2>
-            <Link to="/clusters" className="text-sm text-violet-600 hover:text-violet-700 font-medium flex items-center gap-1">
+            <h2 className="text-xl font-bold text-foreground">
+              Recent Clusters
+            </h2>
+            <Link
+              to="/clusters"
+              className="text-sm text-violet-600 hover:text-violet-700 font-medium flex items-center gap-1"
+            >
               View all <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
@@ -143,11 +153,16 @@ export default function Dashboard() {
               </div>
             )}
             {recentClusters.map((cluster) => (
-              <div key={cluster.id} className="card-lavender rounded-2xl p-5 hover:shadow-lg transition-all group">
+              <div
+                key={cluster.id}
+                className="card-lavender rounded-2xl p-5 hover:shadow-lg transition-all group"
+              >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center mb-1">
-                      <h3 className="font-semibold text-foreground truncate">{cluster.name}</h3>
+                      <h3 className="font-semibold text-foreground truncate">
+                        {cluster.name}
+                      </h3>
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-2.5 py-1 text-xs font-semibold text-violet-700 shrink-0">
                         <ClipboardList className="h-3 w-3" />
                         {cluster.mock_test_count} mocks
@@ -177,11 +192,18 @@ export default function Dashboard() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {formatTimeAgo(cluster.updated_at)}
+                      <Clock className="w-3 h-3" />{" "}
+                      {formatTimeAgo(cluster.updated_at)}
                     </span>
-                    <span>Latest: {cluster.latest_mock_test_name || "No mock tests yet"}</span>
+                    <span>
+                      Latest:{" "}
+                      {cluster.latest_mock_test_name || "No mock tests yet"}
+                    </span>
                   </div>
-                  <Link to={`/cluster/${cluster.id}`} className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-100 text-violet-700 font-semibold rounded-lg text-xs hover:bg-violet-200 transition-colors">
+                  <Link
+                    to={`/cluster/${cluster.id}`}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-100 text-violet-700 font-semibold rounded-lg text-xs hover:bg-violet-200 transition-colors"
+                  >
                     Open <ArrowRight className="w-3 h-3" />
                   </Link>
                 </div>
@@ -191,11 +213,15 @@ export default function Dashboard() {
         </div>
 
         <div>
-          <h2 className="text-xl font-bold text-foreground mb-4">Active Mock Jobs</h2>
+          <h2 className="text-xl font-bold text-foreground mb-4">
+            Active Mock Jobs
+          </h2>
           {activeJobs.length === 0 ? (
             <div className="card-lavender rounded-2xl p-8 text-center">
               <Zap className="w-8 h-8 text-violet-300 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">No mock tests processing</p>
+              <p className="text-sm text-muted-foreground">
+                No mock tests processing
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -208,13 +234,23 @@ export default function Dashboard() {
                     </span>
                   </div>
                   <div className="flex justify-between text-xs text-muted-foreground mb-2">
-                    <span>{job.cluster_name} / {job.current_stage || job.status}</span>
+                    <span>
+                      {job.cluster_name} / {job.current_stage || job.status}
+                    </span>
                     <span>{job.progress_percent || 0}%</span>
                   </div>
                   <div className="h-1.5 bg-violet-100 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full shimmer" style={{ width: `${Math.max(job.progress_percent || 0, 8)}%` }} />
+                    <div
+                      className="h-full rounded-full shimmer"
+                      style={{
+                        width: `${Math.max(job.progress_percent || 0, 8)}%`,
+                      }}
+                    />
                   </div>
-                  <Link to={`/cluster/${job.cluster_id}/mocktest/${job.mock_test_id}`} className="mt-2 text-xs text-violet-600 hover:text-violet-700 font-medium flex items-center gap-1">
+                  <Link
+                    to={`/cluster/${job.cluster_id}/mocktest/${job.mock_test_id}`}
+                    className="mt-2 text-xs text-violet-600 hover:text-violet-700 font-medium flex items-center gap-1"
+                  >
                     View mock <ArrowRight className="w-3 h-3" />
                   </Link>
                 </div>

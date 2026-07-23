@@ -77,14 +77,17 @@ export default function CreateClusterModal({ onClose, onCreated }) {
               className="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-violet-300 dark:bg-white/5"
             />
             <p className="mt-2 text-xs text-muted-foreground">
-              A cluster is just a container, like JECA, GATE, or Class 10 Science.
+              A cluster is just a container, like JECA, GATE, or Class 10
+              Science.
             </p>
           </div>
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-foreground">
               Description{" "}
-              <span className="font-normal text-muted-foreground">(optional)</span>
+              <span className="font-normal text-muted-foreground">
+                (optional)
+              </span>
             </label>
             <textarea
               value={form.description}
