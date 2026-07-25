@@ -33,12 +33,12 @@ export default function CreateClusterModal({ onClose, onCreated }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg overflow-hidden rounded-3xl card-lavender">
-        <div className="flex items-center justify-between border-b border-violet-100 p-6 dark:border-white/10">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
+      <div className="w-full max-w-lg overflow-hidden rounded-3xl surface-card border border-border shadow-2xl">
+        <div className="flex items-center justify-between border-b border-border p-5 sm:p-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-violet">
-              <FolderOpen className="h-4 w-4 text-white" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500/15 text-orange-500">
+              <FolderOpen className="h-4 w-4" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-foreground">
@@ -52,13 +52,13 @@ export default function CreateClusterModal({ onClose, onCreated }) {
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-xl transition-colors hover:bg-violet-100 dark:hover:bg-white/5"
+            className="flex h-8 w-8 items-center justify-center rounded-xl transition-colors hover:bg-muted text-muted-foreground hover:text-foreground"
           >
-            <X className="h-4 w-4 text-muted-foreground" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5 p-6">
+        <form onSubmit={handleSubmit} className="space-y-5 p-5 sm:p-6">
           <div>
             <label className="mb-2 block text-sm font-semibold text-foreground">
               Cluster Name *
@@ -74,7 +74,7 @@ export default function CreateClusterModal({ onClose, onCreated }) {
                 }))
               }
               placeholder="e.g. JECA"
-              className="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-violet-300 dark:bg-white/5"
+              className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
             />
             <p className="mt-2 text-xs text-muted-foreground">
               A cluster is just a container, like JECA, GATE, or Class 10
@@ -99,13 +99,13 @@ export default function CreateClusterModal({ onClose, onCreated }) {
               }
               placeholder="e.g. MCA entrance preparation workspace for PYQs and practice mocks"
               rows={3}
-              className="w-full resize-none rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-violet-300 dark:bg-white/5"
+              className="w-full resize-none rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
             />
           </div>
 
-          <div className="rounded-2xl border border-violet-100 bg-violet-50/60 p-4">
+          <div className="rounded-2xl border border-orange-500/20 bg-orange-500/10 p-4">
             <div className="flex gap-3">
-              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-violet-600" />
+              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
               <div>
                 <p className="text-sm font-semibold text-foreground">
                   Mock tests are created inside the cluster.
@@ -119,7 +119,7 @@ export default function CreateClusterModal({ onClose, onCreated }) {
           </div>
 
           {error && (
-            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+            <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-500">
               {error}
             </div>
           )}
@@ -128,14 +128,14 @@ export default function CreateClusterModal({ onClose, onCreated }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-xl border border-violet-200 py-3 text-sm font-semibold text-muted-foreground transition-all hover:bg-violet-50 dark:hover:bg-white/5"
+              className="flex-1 rounded-xl border border-border py-2.5 text-sm font-semibold text-muted-foreground transition-all hover:bg-muted"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 rounded-xl py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60 gradient-violet"
+              className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white transition-all bg-[#ea580c] hover:bg-[#c2410c] disabled:opacity-60 shadow-sm"
             >
               {isSubmitting ? "Creating..." : "Create Cluster"}
             </button>

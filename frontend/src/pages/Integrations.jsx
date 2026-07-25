@@ -94,11 +94,11 @@ const integrations = [
 ];
 
 const categoryColors = {
-  LMS: "bg-blue-100 text-blue-700",
-  Flashcards: "bg-violet-100 text-secondary-foreground",
-  Productivity: "bg-emerald-100 text-emerald-700",
-  Notifications: "bg-amber-100 text-amber-700",
-  Developer: "bg-gray-100 text-gray-700",
+  LMS: "bg-blue-500/10 text-blue-500 border border-blue-500/20",
+  Flashcards: "bg-orange-500/10 text-orange-500 border border-orange-500/20",
+  Productivity: "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20",
+  Notifications: "bg-amber-500/10 text-amber-500 border border-amber-500/20",
+  Developer: "bg-muted text-muted-foreground border border-border",
 };
 
 const categories = [
@@ -140,30 +140,37 @@ export default function Integrations() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Integrations</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Integrations</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Connect MockCraft to your favorite tools and platforms.
           </p>
         </div>
-        <div className="text-right">
-          <div className="text-2xl font-bold text-foreground">
+        <div className="text-left sm:text-right">
+          <div className="text-2xl font-extrabold text-foreground tracking-tight">
             {Object.keys(connected).length}
           </div>
-          <div className="text-xs text-muted-foreground">Connected</div>
+          <div className="text-xs text-muted-foreground font-medium">Connected</div>
         </div>
       </div>
 
       {/* Category filters */}
-      <div className="flex gap-2 flex-wrap">
-        {categories.map((c) => (
-          <button
-            key={c}
-            onClick={() => setActiveCategory(c)}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${activeCategory === c ? "gradient-violet text-white shadow-md shadow-violet-200" : "bg-card border border-border text-muted-foreground hover:border-violet-400 hover:text-primary"}`}
-          >
-            {c}
-          </button>
-        ))}
+      <div className="flex gap-1.5 flex-wrap">
+        {categories.map((c) => {
+          const active = activeCategory === c;
+          return (
+            <button
+              key={c}
+              onClick={() => setActiveCategory(c)}
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+                active
+                  ? "bg-orange-500/10 text-orange-500 dark:bg-orange-500/15 font-bold border border-orange-500/20"
+                  : "bg-card border border-border text-muted-foreground hover:border-orange-500/40 hover:text-foreground"
+              }`}
+            >
+              {c}
+            </button>
+          );
+        })}
       </div>
 
       {/* Integrations grid */}
@@ -174,10 +181,10 @@ export default function Integrations() {
           return (
             <div
               key={integration.id}
-              className="card-lavender rounded-2xl p-5 hover:shadow-md transition-all"
+              className="surface-card rounded-2xl p-5 border border-border hover:border-orange-500/30 transition-all"
             >
               <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                <div className="w-12 h-12 bg-card rounded-2xl border border-violet-100 flex items-center justify-center text-2xl shrink-0 shadow-sm">
+                <div className="w-12 h-12 bg-orange-500/15 rounded-2xl flex items-center justify-center text-2xl shrink-0">
                   {integration.icon}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -187,19 +194,19 @@ export default function Integrations() {
                         {integration.name}
                       </h3>
                       <span
-                        className={`text-xs px-2 py-0.5 rounded-lg font-medium ${categoryColors[integration.category]}`}
+                        className={`inline-block text-[11px] px-2 py-0.5 mt-1 rounded-lg font-semibold ${categoryColors[integration.category]}`}
                       >
                         {integration.category}
                       </span>
                     </div>
                     {status === "connected" && (
-                      <span className="flex items-center gap-1 text-xs bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg font-semibold shrink-0">
-                        <CheckCircle className="w-3 h-3" /> Connected
+                      <span className="flex items-center gap-1 text-xs bg-emerald-500/15 text-emerald-500 border border-emerald-500/20 px-2.5 py-1 rounded-lg font-bold shrink-0">
+                        <CheckCircle className="w-3.5 h-3.5" /> Connected
                       </span>
                     )}
                     {status === "configured" && (
-                      <span className="flex items-center gap-1 text-xs bg-blue-100 text-blue-700 px-2.5 py-1 rounded-lg font-semibold shrink-0">
-                        <Zap className="w-3 h-3" /> Configured
+                      <span className="flex items-center gap-1 text-xs bg-blue-500/15 text-blue-500 border border-blue-500/20 px-2.5 py-1 rounded-lg font-bold shrink-0">
+                        <Zap className="w-3.5 h-3.5" /> Configured
                       </span>
                     )}
                   </div>
@@ -208,7 +215,7 @@ export default function Integrations() {
                   </p>
 
                   {integration.connected_as && status === "connected" && (
-                    <p className="text-xs text-emerald-600 mt-1 font-medium">
+                    <p className="text-xs text-emerald-500 mt-1 font-semibold">
                       Signed in as {integration.connected_as}
                     </p>
                   )}
@@ -222,16 +229,16 @@ export default function Integrations() {
                     {status === "available" ? (
                       <button
                         onClick={() => handleConnect(integration.id)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl transition-all ${isConnecting ? "bg-violet-100 text-secondary-foreground" : "gradient-violet text-white shadow-sm shadow-violet-200 hover:opacity-90"}`}
+                        className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all ${isConnecting ? "bg-orange-500/20 text-orange-500 border border-orange-500/30" : "bg-orange-500/10 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30 hover:bg-orange-500/20"}`}
                       >
                         {isConnecting ? (
                           <>
-                            <RefreshCw className="w-3 h-3 animate-spin" />{" "}
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />{" "}
                             Connecting...
                           </>
                         ) : (
                           <>
-                            <Zap className="w-3 h-3" /> Connect
+                            <Zap className="w-3.5 h-3.5" /> Connect
                           </>
                         )}
                       </button>
@@ -239,15 +246,15 @@ export default function Integrations() {
                       integration.actions?.slice(0, 2).map((action, i) => (
                         <button
                           key={i}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-violet-50 border border-border text-secondary-foreground rounded-xl hover:bg-violet-100 transition-all"
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-card border border-border text-foreground rounded-xl hover:bg-muted hover:border-orange-500/40 transition-all"
                         >
                           {action.includes("Export") ? (
-                            <Download className="w-3 h-3" />
+                            <Download className="w-3.5 h-3.5 text-orange-500" />
                           ) : action.includes("Sync") ||
                             action.includes("View") ? (
-                            <ExternalLink className="w-3 h-3" />
+                            <ExternalLink className="w-3.5 h-3.5 text-orange-500" />
                           ) : (
-                            <Zap className="w-3 h-3" />
+                            <Zap className="w-3.5 h-3.5 text-orange-500" />
                           )}
                           {action}
                         </button>
@@ -262,10 +269,10 @@ export default function Integrations() {
       </div>
 
       {/* API key section */}
-      <div className="card-lavender rounded-2xl p-6">
+      <div className="surface-card rounded-2xl p-6 border border-border">
         <div className="flex items-start gap-4">
-          <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center shrink-0">
-            <Lock className="w-5 h-5 text-gray-500" />
+          <div className="w-10 h-10 bg-orange-500/15 text-orange-500 rounded-xl flex items-center justify-center shrink-0">
+            <Lock className="w-5 h-5" />
           </div>
           <div className="flex-1">
             <h3 className="font-bold text-foreground mb-1">API Key</h3>
@@ -274,13 +281,13 @@ export default function Integrations() {
               MockCraft REST API.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <code className="flex-1 overflow-hidden text-ellipsis text-xs font-mono bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-gray-600">
+              <code className="flex-1 overflow-hidden text-ellipsis text-xs font-mono bg-muted border border-border rounded-xl px-4 py-2.5 text-foreground font-semibold">
                 mc_live_••••••••••••••••••••••••••••••••
               </code>
-              <button className="px-4 py-2.5 text-xs font-semibold bg-card border border-border text-secondary-foreground rounded-xl hover:bg-violet-50 transition-all whitespace-nowrap">
+              <button className="px-4 py-2.5 text-xs font-semibold bg-card border border-border text-foreground rounded-xl hover:bg-muted hover:border-orange-500/40 transition-all whitespace-nowrap">
                 Reveal Key
               </button>
-              <button className="px-4 py-2.5 text-xs font-semibold gradient-violet text-white rounded-xl shadow-md shadow-violet-200 hover:opacity-90 transition-all whitespace-nowrap">
+              <button className="px-4 py-2.5 text-xs font-semibold bg-[#ea580c] hover:bg-[#c2410c] text-white rounded-xl shadow-xs transition-all whitespace-nowrap">
                 Regenerate
               </button>
             </div>

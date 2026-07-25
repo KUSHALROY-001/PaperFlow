@@ -158,35 +158,30 @@ export default function MockSession() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <div className="min-h-screen bg-background flex items-center justify-center p-6 font-sans">
         <div className="w-full max-w-2xl space-y-6">
-          <div className="card-lavender rounded-3xl p-8 text-center">
+          <div className="surface-card rounded-3xl p-8 border border-border text-center">
             <div
-              className={`w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-5 ${percentage >= 70 ? "bg-emerald-100" : "bg-amber-100"}`}
+              className={`w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-5 ${percentage >= 70 ? "bg-emerald-500/15 border border-emerald-500/20" : "bg-amber-500/15 border border-amber-500/20"}`}
             >
               {percentage >= 70 ? (
-                <CheckCircle className="w-10 h-10 text-emerald-600" />
+                <CheckCircle className="w-10 h-10 text-emerald-500" />
               ) : (
-                <BarChart2 className="w-10 h-10 text-amber-600" />
+                <BarChart2 className="w-10 h-10 text-amber-500" />
               )}
             </div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
+            <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">
               Session Complete!
             </h1>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-muted-foreground text-sm mb-6">
               JECA 2024 Full Paper — Mock Test
             </p>
             <div
-              className="text-6xl font-black mb-2"
-              style={{
-                background: "linear-gradient(135deg, #7C3AED, #4F46E5)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
+              className="text-6xl font-black mb-2 bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent"
             >
               {percentage}%
             </div>
-            <p className="text-muted-foreground mb-8">
+            <p className="text-muted-foreground text-sm font-semibold mb-8">
               {score} / {mockQuestions.length} correct
             </p>
             <div className="grid grid-cols-3 gap-4 mb-8">
@@ -194,7 +189,7 @@ export default function MockSession() {
                 {
                   label: "Correct",
                   value: score,
-                  color: "bg-emerald-100 text-emerald-700",
+                  color: "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20",
                 },
                 {
                   label: "Wrong",
@@ -202,17 +197,17 @@ export default function MockSession() {
                     mockQuestions.length -
                     score -
                     (mockQuestions.length - answered),
-                  color: "bg-red-100 text-red-700",
+                  color: "bg-red-500/10 text-red-500 border border-red-500/20",
                 },
                 {
                   label: "Skipped",
                   value: mockQuestions.length - answered,
-                  color: "bg-gray-100 text-gray-600",
+                  color: "bg-muted text-muted-foreground border border-border",
                 },
               ].map((s, i) => (
                 <div key={i} className={`rounded-2xl p-4 ${s.color}`}>
                   <div className="text-2xl font-bold">{s.value}</div>
-                  <div className="text-xs font-medium">{s.label}</div>
+                  <div className="text-xs font-semibold">{s.label}</div>
                 </div>
               ))}
             </div>
@@ -224,25 +219,25 @@ export default function MockSession() {
                 return (
                   <div
                     key={q.id}
-                    className={`p-4 rounded-2xl border text-sm ${correct ? "bg-emerald-50 border-emerald-200" : skipped ? "bg-gray-50 border-gray-200" : "bg-red-50 border-red-200"}`}
+                    className={`p-4 rounded-2xl border text-sm ${correct ? "bg-emerald-500/10 border-emerald-500/30" : skipped ? "bg-card border-border" : "bg-red-500/10 border-red-500/30"}`}
                   >
                     <div className="flex items-start gap-2">
                       {correct ? (
-                        <CheckCircle className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                        <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
                       ) : skipped ? (
-                        <span className="w-4 h-4 rounded-full border-2 border-gray-400 mt-0.5 shrink-0 block" />
+                        <span className="w-4 h-4 rounded-full border-2 border-muted-foreground mt-0.5 shrink-0 block" />
                       ) : (
                         <XCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
                       )}
                       <div>
-                        <p className="font-medium text-foreground">{q.text}</p>
+                        <p className="font-bold text-foreground">{q.text}</p>
                         {!correct && !skipped && (
-                          <p className="text-xs text-red-500 mt-1">
+                          <p className="text-xs text-red-500 font-semibold mt-1">
                             Your answer: {q.options[userAns]}
                           </p>
                         )}
                         {!correct && (
-                          <p className="text-xs text-emerald-600 mt-0.5">
+                          <p className="text-xs text-emerald-500 font-semibold mt-0.5">
                             Correct: {q.options[q.answer]}
                           </p>
                         )}
@@ -255,13 +250,13 @@ export default function MockSession() {
             <div className="flex gap-3 justify-center">
               <Link
                 to="/dashboard"
-                className="flex items-center gap-2 px-6 py-3 bg-card border border-border text-foreground font-semibold rounded-xl hover:bg-secondary transition-all text-sm"
+                className="flex items-center gap-2 px-6 py-3 border border-border bg-card text-foreground font-semibold rounded-xl hover:bg-muted transition-all text-sm"
               >
-                <Home className="w-4 h-4" /> Dashboard
+                <Home className="w-4 h-4 text-orange-500" /> Dashboard
               </Link>
               <Link
                 to="/clusters"
-                className="flex items-center gap-2 px-6 py-3 gradient-violet text-white font-semibold rounded-xl shadow-lg shadow-violet-200 hover:opacity-90 transition-all text-sm"
+                className="flex items-center gap-2 px-6 py-3 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-xl shadow-xs transition-all text-sm"
               >
                 View Clusters
               </Link>
@@ -273,18 +268,18 @@ export default function MockSession() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col lg:flex-row font-inter">
+    <div className="min-h-screen bg-background flex flex-col lg:flex-row font-sans">
       {/* Sidebar navigator */}
       <aside className="w-full lg:w-56 bg-card border-b lg:border-b-0 lg:border-r border-border flex flex-col p-4 lg:fixed lg:h-full z-10">
         <div className="mb-4">
           <Link
             to="/dashboard"
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+            className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-orange-500 transition-colors"
           >
             <ChevronLeft className="w-3.5 h-3.5" /> Exit Session
           </Link>
         </div>
-        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+        <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
           Questions
         </div>
         <div className="grid grid-cols-10 lg:grid-cols-5 gap-1.5 lg:flex-1">
@@ -294,29 +289,29 @@ export default function MockSession() {
               onClick={() => setCurrent(i)}
               className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${
                 i === current
-                  ? "gradient-violet text-white shadow-md shadow-violet-200"
+                  ? "bg-orange-500/10 text-orange-500 dark:bg-orange-500/15 font-bold border border-orange-500/30"
                   : answers[q.id] !== undefined
-                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400"
+                    ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20"
                     : flagged.has(q.id)
-                      ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400"
-                      : "bg-secondary text-muted-foreground hover:bg-accent"
+                      ? "bg-amber-500/15 text-amber-500 border border-amber-500/20"
+                      : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted"
               }`}
             >
               {i + 1}
             </button>
           ))}
         </div>
-        <div className="mt-4 space-y-1.5 text-xs">
+        <div className="mt-4 space-y-1.5 text-xs font-semibold">
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded bg-emerald-100 inline-block" />
+            <span className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500/30 inline-block" />
             <span className="text-muted-foreground">Answered</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded bg-amber-100 inline-block" />
+            <span className="w-3 h-3 rounded bg-amber-500/20 border border-amber-500/30 inline-block" />
             <span className="text-muted-foreground">Flagged</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded bg-secondary inline-block" />
+            <span className="w-3 h-3 rounded bg-muted border border-border inline-block" />
             <span className="text-muted-foreground">Not visited</span>
           </div>
         </div>
@@ -325,23 +320,23 @@ export default function MockSession() {
       {/* Main */}
       <div className="flex-1 lg:ml-56 flex flex-col min-w-0">
         {/* Top bar */}
-        <header className="min-h-14 bg-card border-b border-border flex flex-col gap-3 sm:flex-row sm:items-center px-4 sm:px-6 py-3 sticky top-0 z-20">
+        <header className="min-h-14 bg-card/80 backdrop-blur-md border-b border-border flex flex-col gap-3 sm:flex-row sm:items-center px-4 sm:px-6 py-3 sticky top-0 z-20">
           <div className="flex-1">
             <div className="text-sm font-bold text-foreground">
               JECA 2024 Full Paper
             </div>
-            <div className="text-xs text-muted-foreground">
+            <div className="text-xs text-muted-foreground font-semibold">
               {answered}/{mockQuestions.length} answered
             </div>
           </div>
           <div
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono font-bold text-sm ${timeLeft < 120 ? "bg-red-100 text-red-600" : "bg-violet-100 text-violet-700"}`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono font-bold text-sm ${timeLeft < 120 ? "bg-red-500/10 text-red-500 border border-red-500/20" : "bg-orange-500/10 text-orange-500 border border-orange-500/20"}`}
           >
             <Clock className="w-4 h-4" /> {formatTime(timeLeft)}
           </div>
           <button
             onClick={handleSubmit}
-            className="px-5 py-2 gradient-violet text-white font-semibold rounded-xl shadow-md shadow-violet-200 hover:opacity-90 transition-all text-sm"
+            className="px-5 py-2 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-xl shadow-xs transition-all text-xs sm:text-sm"
           >
             Submit
           </button>
@@ -349,26 +344,26 @@ export default function MockSession() {
 
         {/* Question */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto w-full">
-          <div className="card-lavender rounded-3xl p-5 sm:p-8">
+          <div className="surface-card rounded-3xl p-5 sm:p-8 border border-border">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-primary bg-secondary px-3 py-1 rounded-full">
+                <span className="text-xs font-bold text-orange-500 bg-orange-500/10 border border-orange-500/20 px-3 py-1 rounded-full">
                   Q{current + 1} of {mockQuestions.length}
                 </span>
-                <span className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">
+                <span className="text-xs text-muted-foreground bg-muted border border-border px-3 py-1 rounded-full font-semibold">
                   {q.topic}
                 </span>
               </div>
               <button
                 onClick={toggleFlag}
-                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition-all ${flagged.has(q.id) ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400" : "bg-muted text-muted-foreground hover:text-amber-600 hover:bg-amber-50"}`}
+                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition-all ${flagged.has(q.id) ? "bg-amber-500/15 text-amber-500 border border-amber-500/30" : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted border border-border"}`}
               >
-                <Flag className="w-3 h-3" />{" "}
+                <Flag className="w-3.5 h-3.5" />{" "}
                 {flagged.has(q.id) ? "Flagged" : "Flag"}
               </button>
             </div>
 
-            <p className="text-lg font-semibold text-foreground mb-8 leading-relaxed">
+            <p className="text-lg font-bold text-foreground mb-8 leading-relaxed">
               {q.text}
             </p>
 
@@ -377,13 +372,13 @@ export default function MockSession() {
                 <button
                   key={i}
                   onClick={() => handleAnswer(i)}
-                  className={`w-full text-left px-5 py-4 rounded-2xl border-2 font-medium text-sm transition-all ${
+                  className={`w-full text-left px-5 py-4 rounded-2xl border font-medium text-sm transition-all ${
                     answers[q.id] === i
-                      ? "border-primary bg-secondary text-secondary-foreground"
-                      : "border-border bg-card hover:border-input hover:bg-secondary text-foreground"
+                      ? "border-orange-500/40 bg-orange-500/10 text-orange-500 font-bold"
+                      : "border-border bg-card hover:bg-muted text-foreground"
                   }`}
                 >
-                  <span className="font-bold text-violet-400 mr-3">
+                  <span className="font-bold text-orange-500 mr-3">
                     {String.fromCharCode(65 + i)}.
                   </span>
                   {opt}
@@ -395,11 +390,11 @@ export default function MockSession() {
               <button
                 onClick={() => setCurrent((c) => Math.max(0, c - 1))}
                 disabled={current === 0}
-                className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border text-foreground font-semibold rounded-xl hover:bg-secondary transition-all text-sm disabled:opacity-40"
+                className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border text-foreground font-semibold rounded-xl hover:bg-muted transition-all text-xs sm:text-sm disabled:opacity-40"
               >
                 <ChevronLeft className="w-4 h-4" /> Previous
               </button>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-xs font-semibold text-muted-foreground">
                 {progress}% complete
               </div>
               <button
@@ -407,7 +402,7 @@ export default function MockSession() {
                   setCurrent((c) => Math.min(mockQuestions.length - 1, c + 1))
                 }
                 disabled={current === mockQuestions.length - 1}
-                className="flex items-center gap-2 px-5 py-2.5 gradient-violet text-white font-semibold rounded-xl shadow-md shadow-violet-200 hover:opacity-90 transition-all text-sm disabled:opacity-40"
+                className="flex items-center gap-2 px-5 py-2.5 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-xl shadow-xs transition-all text-xs sm:text-sm disabled:opacity-40"
               >
                 Next <ChevronRight className="w-4 h-4" />
               </button>

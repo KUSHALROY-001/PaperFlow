@@ -42,7 +42,7 @@ const plans = [
       "Priority support",
     ],
     limits: { clusters: 50, pages: 500 },
-    color: "border-violet-500",
+    color: "border-orange-500",
     current: true,
     badge: "Current Plan",
   },
@@ -120,14 +120,14 @@ export default function Billing() {
     <div className="p-0 sm:p-2 lg:p-6 max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Billing & Plans</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Billing & Plans</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
           Manage your subscription and usage.
         </p>
       </div>
 
       {/* Current usage */}
-      <div className="card-lavender rounded-2xl p-6">
+      <div className="surface-card rounded-2xl p-6 border border-border">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-5">
           <div>
             <h2 className="font-bold text-foreground">Current Usage</h2>
@@ -135,7 +135,7 @@ export default function Billing() {
               Pro Plan · Resets Jun 1, 2026
             </p>
           </div>
-          <span className="text-xs bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5">
+          <span className="text-xs bg-emerald-500/15 text-emerald-500 border border-emerald-500/20 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5">
             <CheckCircle className="w-3.5 h-3.5" /> Pro Plan Active
           </span>
         </div>
@@ -147,7 +147,7 @@ export default function Billing() {
               limit: 50,
               unit: "clusters",
               icon: FileText,
-              color: "#7C3AED",
+              color: "#ea580c",
             },
             {
               label: "Pages Processed",
@@ -155,7 +155,7 @@ export default function Billing() {
               limit: 25000,
               unit: "pages",
               icon: Zap,
-              color: "#4F46E5",
+              color: "#f59e0b",
             },
             {
               label: "Questions Extracted",
@@ -167,15 +167,15 @@ export default function Billing() {
             },
           ].map((u, i) => (
             <div key={i}>
-              <div className="flex items-center justify-between text-sm mb-2">
-                <span className="font-semibold text-foreground">{u.label}</span>
-                <span className="text-muted-foreground">
+              <div className="flex items-center justify-between text-xs sm:text-sm mb-2">
+                <span className="font-bold text-foreground">{u.label}</span>
+                <span className="text-muted-foreground font-semibold">
                   {u.used.toLocaleString()}
                   {u.limit ? ` / ${u.limit.toLocaleString()}` : ""}
                 </span>
               </div>
               {u.limit ? (
-                <div className="h-2.5 bg-violet-100 rounded-full overflow-hidden">
+                <div className="h-2.5 bg-muted rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all"
                     style={{
@@ -185,14 +185,14 @@ export default function Billing() {
                   />
                 </div>
               ) : (
-                <div className="h-2.5 bg-emerald-100 rounded-full overflow-hidden">
+                <div className="h-2.5 bg-emerald-500/20 rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full bg-emerald-500"
                     style={{ width: "100%" }}
                   />
                 </div>
               )}
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-1 font-medium">
                 {u.limit
                   ? `${Math.round((u.used / u.limit) * 100)}% used`
                   : "Unlimited"}
@@ -205,17 +205,21 @@ export default function Billing() {
       {/* Plans */}
       <div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
-          <h2 className="font-bold text-foreground">Plans</h2>
-          <div className="flex items-center gap-1 bg-violet-100 p-1 rounded-xl">
+          <h2 className="font-extrabold text-foreground tracking-tight">Plans</h2>
+          <div className="flex items-center gap-1 bg-muted p-1 rounded-xl border border-border">
             {["monthly", "yearly"].map((b) => (
               <button
                 key={b}
                 onClick={() => setBilling(b)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all capitalize ${billing === b ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all capitalize ${
+                  billing === b
+                    ? "bg-orange-500/10 text-orange-500 dark:bg-orange-500/15 font-bold border border-orange-500/20"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
               >
                 {b}{" "}
                 {b === "yearly" && (
-                  <span className="text-emerald-600 ml-0.5">-20%</span>
+                  <span className="text-emerald-500 ml-0.5">-20%</span>
                 )}
               </button>
             ))}
@@ -225,11 +229,11 @@ export default function Billing() {
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className={`card-lavender rounded-2xl p-5 border-2 transition-all ${plan.current ? "border-violet-500 shadow-lg shadow-violet-100" : "border-border hover:border-violet-300"}`}
+              className={`surface-card rounded-2xl p-5 border-2 transition-all ${plan.current ? "border-orange-500/50 shadow-lg shadow-orange-500/10" : "border-border hover:border-orange-500/30"}`}
             >
               {plan.badge && (
                 <div
-                  className={`text-xs font-bold px-2.5 py-1 rounded-lg inline-flex items-center gap-1 mb-3 ${plan.current ? "bg-violet-100 text-violet-700" : "bg-amber-100 text-amber-700"}`}
+                  className={`text-xs font-bold px-2.5 py-1 rounded-lg inline-flex items-center gap-1 mb-3 ${plan.current ? "bg-orange-500/15 text-orange-500 border border-orange-500/20" : "bg-amber-500/15 text-amber-500 border border-amber-500/20"}`}
                 >
                   <Star className="w-3 h-3" /> {plan.badge}
                 </div>
@@ -239,14 +243,14 @@ export default function Billing() {
                 {plan.description}
               </p>
               <div className="mb-4">
-                <span className="text-3xl font-black text-foreground">
+                <span className="text-3xl font-extrabold text-foreground tracking-tight">
                   $
                   {billing === "yearly"
                     ? Math.round(plan.price * 0.8)
                     : plan.price}
                 </span>
                 {plan.price > 0 && (
-                  <span className="text-muted-foreground text-sm">
+                  <span className="text-muted-foreground text-sm font-medium">
                     /{plan.period}
                   </span>
                 )}
@@ -255,21 +259,21 @@ export default function Billing() {
                 {plan.features.map((f, i) => (
                   <div key={i} className="flex items-center gap-2 text-xs">
                     <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    <span className="text-foreground">{f}</span>
+                    <span className="text-foreground font-medium">{f}</span>
                   </div>
                 ))}
               </div>
               {plan.current ? (
                 <button
                   disabled
-                  className="w-full py-2.5 bg-violet-100 text-violet-700 font-semibold rounded-xl text-sm opacity-75"
+                  className="w-full py-2.5 bg-orange-500/15 text-orange-500 border border-orange-500/20 font-bold rounded-xl text-xs sm:text-sm opacity-90"
                 >
                   Current Plan
                 </button>
               ) : (
                 <button
                   onClick={() => handleUpgrade(plan.id)}
-                  className={`w-full py-2.5 font-semibold rounded-xl text-sm transition-all ${upgrading === plan.id ? "bg-emerald-100 text-emerald-700" : plan.id === "team" ? "gradient-violet text-white shadow-md shadow-violet-200 hover:opacity-90" : "bg-card border border-border text-violet-700 hover:bg-violet-50"}`}
+                  className={`w-full py-2.5 font-bold rounded-xl text-xs sm:text-sm transition-all ${upgrading === plan.id ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30" : plan.id === "team" ? "bg-[#ea580c] hover:bg-[#c2410c] text-white shadow-xs" : "bg-card border border-border text-foreground hover:bg-muted"}`}
                 >
                   {upgrading === plan.id ? (
                     <span className="flex items-center justify-center gap-2">
@@ -288,39 +292,39 @@ export default function Billing() {
       </div>
 
       {/* Payment method */}
-      <div className="card-lavender rounded-2xl p-5">
+      <div className="surface-card rounded-2xl p-5 border border-border">
         <h3 className="font-bold text-foreground mb-4">Payment Method</h3>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
-              <CreditCard className="w-5 h-5 text-gray-500" />
+            <div className="w-10 h-10 bg-orange-500/15 text-orange-500 rounded-xl flex items-center justify-center">
+              <CreditCard className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-foreground">
+              <p className="text-sm font-bold text-foreground">
                 Visa ending in 4242
               </p>
-              <p className="text-xs text-muted-foreground">Expires 12/27</p>
+              <p className="text-xs text-muted-foreground font-medium">Expires 12/27</p>
             </div>
           </div>
-          <button className="text-xs font-semibold text-violet-600 hover:underline">
+          <button className="text-xs font-bold text-orange-500 hover:underline">
             Update
           </button>
         </div>
       </div>
 
       {/* Invoices */}
-      <div className="card-lavender rounded-2xl overflow-hidden">
+      <div className="surface-card rounded-2xl border border-border overflow-hidden">
         <div className="px-6 py-4 border-b border-border">
           <h3 className="font-bold text-foreground">Invoice History</h3>
         </div>
-        <div className="divide-y divide-violet-50">
+        <div className="divide-y divide-border">
           {invoices.map((inv) => (
-            <div key={inv.id} className="px-4 sm:px-6 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-              <div className="w-8 h-8 bg-violet-100 rounded-xl flex items-center justify-center shrink-0">
-                <FileText className="w-4 h-4 text-violet-600" />
+            <div key={inv.id} className="px-4 sm:px-6 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 hover:bg-muted/40 transition-colors">
+              <div className="w-8 h-8 bg-orange-500/15 text-orange-500 rounded-xl flex items-center justify-center shrink-0">
+                <FileText className="w-4 h-4" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-foreground">
+                <p className="text-sm font-bold text-foreground">
                   {inv.plan}
                 </p>
                 <p className="text-xs text-muted-foreground">
@@ -330,10 +334,10 @@ export default function Billing() {
               <span className="text-sm font-bold text-foreground">
                 ${inv.amount}
               </span>
-              <span className="text-xs bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg font-semibold">
+              <span className="text-xs bg-emerald-500/15 text-emerald-500 border border-emerald-500/20 px-2.5 py-1 rounded-lg font-semibold">
                 {inv.status}
               </span>
-              <button className="w-7 h-7 rounded-lg hover:bg-violet-100 flex items-center justify-center text-muted-foreground hover:text-violet-600 transition-colors">
+              <button className="w-7 h-7 rounded-lg hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-orange-500 transition-colors">
                 <Download className="w-3.5 h-3.5" />
               </button>
             </div>

@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+ARCHITUCTURE_AUDIT.md
+Refactor_Blueprint.md

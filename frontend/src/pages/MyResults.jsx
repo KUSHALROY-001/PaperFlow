@@ -345,14 +345,14 @@ function AttemptCard({ attempt }) {
   const pct = Math.round((attempt.score / attempt.total) * 100);
 
   return (
-    <div className="card-lavender rounded-2xl overflow-hidden">
+    <div className="surface-card rounded-2xl border border-border overflow-hidden">
       {/* Header row */}
       <div className="p-5 flex items-center gap-4">
         <div
-          className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${pct >= 80 ? "bg-emerald-100" : pct >= 60 ? "bg-amber-100" : "bg-red-100"}`}
+          className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${pct >= 80 ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20" : pct >= 60 ? "bg-amber-500/15 text-amber-500 border border-amber-500/20" : "bg-red-500/15 text-red-500 border border-red-500/20"}`}
         >
           <span
-            className={`text-lg font-black ${pct >= 80 ? "text-emerald-700" : pct >= 60 ? "text-amber-700" : "text-red-600"}`}
+            className="text-lg font-black"
           >
             {pct}%
           </span>
@@ -363,7 +363,7 @@ function AttemptCard({ attempt }) {
             {attempt.date} · {attempt.time} · {attempt.timeTaken}
           </div>
           {/* Progress bar */}
-          <div className="mt-2 h-1.5 bg-violet-100 rounded-full overflow-hidden w-48">
+          <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden w-48">
             <div
               className="h-full rounded-full"
               style={{
@@ -379,11 +379,11 @@ function AttemptCard({ attempt }) {
             <div className="text-lg font-bold text-foreground">
               {attempt.score}/{attempt.total}
             </div>
-            <div className="text-xs text-muted-foreground">correct</div>
+            <div className="text-xs text-muted-foreground font-medium">correct</div>
           </div>
           <button
             onClick={() => setExpanded((e) => !e)}
-            className="w-9 h-9 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:text-violet-600 hover:border-violet-400 transition-all"
+            className="w-9 h-9 rounded-xl border border-border bg-card flex items-center justify-center text-muted-foreground hover:text-orange-500 hover:border-orange-500/40 transition-all"
           >
             {expanded ? (
               <ChevronUp className="w-4 h-4" />
@@ -396,7 +396,7 @@ function AttemptCard({ attempt }) {
 
       {/* Expanded detail */}
       {expanded && (
-        <div className="border-t border-border p-5 space-y-5 bg-violet-50/30">
+        <div className="border-t border-border p-5 space-y-5 bg-muted/40">
           {/* Topic breakdown */}
           <div>
             <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
@@ -409,22 +409,22 @@ function AttemptCard({ attempt }) {
                     key={topic}
                     className="bg-card rounded-xl p-3 border border-border"
                   >
-                    <div className="text-xs font-semibold text-foreground mb-1">
+                    <div className="text-xs font-bold text-foreground mb-1">
                       {topic}
                     </div>
                     <div className="flex items-center justify-between">
-                      <div className="h-1.5 flex-1 mr-2 bg-violet-100 rounded-full overflow-hidden">
+                      <div className="h-1.5 flex-1 mr-2 bg-muted rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full"
                           style={{
                             width: `${Math.round((correct / total) * 100)}%`,
                             background:
-                              correct === total ? "#10B981" : "#7C3AED",
+                              correct === total ? "#10B981" : "#ea580c",
                           }}
                         />
                       </div>
                       <span
-                        className={`text-xs font-bold ${correct === total ? "text-emerald-600" : correct === 0 ? "text-red-500" : "text-amber-600"}`}
+                        className={`text-xs font-bold ${correct === total ? "text-emerald-500" : correct === 0 ? "text-red-500" : "text-amber-500"}`}
                       >
                         {correct}/{total}
                       </span>
@@ -447,37 +447,37 @@ function AttemptCard({ attempt }) {
                 return (
                   <div
                     key={i}
-                    className={`p-3.5 rounded-xl border text-sm ${correct ? "bg-emerald-50 border-emerald-200" : skipped ? "bg-gray-50 border-gray-200" : "bg-red-50 border-red-200"}`}
+                    className={`p-3.5 rounded-xl border text-sm ${correct ? "bg-emerald-500/10 border-emerald-500/30" : skipped ? "bg-card border-border" : "bg-red-500/10 border-red-500/30"}`}
                   >
                     <div className="flex items-start gap-2">
                       {correct ? (
-                        <CheckCircle className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                        <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
                       ) : skipped ? (
-                        <span className="w-4 h-4 rounded-full border-2 border-gray-400 mt-0.5 shrink-0 block" />
+                        <span className="w-4 h-4 rounded-full border-2 border-muted-foreground mt-0.5 shrink-0 block" />
                       ) : (
                         <XCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="font-medium text-foreground text-xs leading-relaxed">
+                          <p className="font-bold text-foreground text-xs leading-relaxed">
                             {q.text}
                           </p>
-                          <span className="text-xs bg-violet-100 text-violet-600 px-2 py-0.5 rounded-lg font-medium shrink-0">
+                          <span className="text-xs bg-orange-500/15 text-orange-500 border border-orange-500/20 px-2 py-0.5 rounded-lg font-bold shrink-0">
                             {q.topic}
                           </span>
                         </div>
                         {!correct && !skipped && (
-                          <p className="text-xs text-red-500 mt-1">
+                          <p className="text-xs text-red-500 mt-1 font-semibold">
                             Your answer:{" "}
-                            <span className="font-semibold">
+                            <span className="font-bold">
                               {q.options[q.userAnswer]}
                             </span>
                           </p>
                         )}
                         {!correct && (
-                          <p className="text-xs text-emerald-600 mt-0.5">
+                          <p className="text-xs text-emerald-500 mt-0.5 font-semibold">
                             Correct:{" "}
-                            <span className="font-semibold">
+                            <span className="font-bold">
                               {q.options[q.correctAnswer]}
                             </span>
                           </p>
@@ -523,8 +523,8 @@ export default function MyResults() {
     <div className="p-0 sm:p-2 lg:p-6 max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground">My Results</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h1 className="text-2xl font-extrabold text-foreground tracking-tight">My Results</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
           Review all your past mock test attempts and track your progress.
         </p>
       </div>
@@ -536,19 +536,19 @@ export default function MyResults() {
             label: "Total Attempts",
             value: totalAttempts,
             icon: Target,
-            color: "bg-violet-100 text-violet-700",
+            color: "bg-orange-500/15 text-orange-500 border border-orange-500/20",
           },
           {
             label: "Average Score",
             value: `${avgScore}%`,
             icon: BarChart2,
-            color: "bg-blue-100 text-blue-700",
+            color: "bg-blue-500/15 text-blue-500 border border-blue-500/20",
           },
           {
             label: "Best Score",
             value: `${best}%`,
             icon: Award,
-            color: "bg-emerald-100 text-emerald-700",
+            color: "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20",
           },
           {
             label: "Trend",
@@ -556,24 +556,24 @@ export default function MyResults() {
             icon: TrendingUp,
             color:
               avgScore >= 70
-                ? "bg-emerald-100 text-emerald-700"
-                : "bg-amber-100 text-amber-700",
+                ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20"
+                : "bg-amber-500/15 text-amber-500 border border-amber-500/20",
           },
         ].map((s, i) => (
-          <div key={i} className="card-lavender rounded-2xl p-4">
+          <div key={i} className="surface-card rounded-2xl p-4 border border-border hover:border-orange-500/30 transition-all">
             <div
               className={`w-8 h-8 rounded-xl ${s.color} flex items-center justify-center mb-2`}
             >
               <s.icon className="w-4 h-4" />
             </div>
-            <div className="text-xl font-bold text-foreground">{s.value}</div>
-            <div className="text-xs text-muted-foreground">{s.label}</div>
+            <div className="text-xl font-extrabold text-foreground tracking-tight">{s.value}</div>
+            <div className="text-xs text-muted-foreground font-medium">{s.label}</div>
           </div>
         ))}
       </div>
 
       {/* Score trend strip */}
-      <div className="card-lavender rounded-2xl p-5">
+      <div className="surface-card rounded-2xl p-5 border border-border">
         <h3 className="text-sm font-bold text-foreground mb-4">Score Trend</h3>
         <div className="flex items-end gap-3 h-20">
           {[...mockHistory].reverse().map((a, i) => {
@@ -592,7 +592,7 @@ export default function MyResults() {
                     opacity: 0.85,
                   }}
                 />
-                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                <span className="text-xs text-muted-foreground whitespace-nowrap font-medium">
                   Attempt {i + 1}
                 </span>
               </div>
@@ -602,26 +602,33 @@ export default function MyResults() {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-2">
+      <div className="flex gap-1.5 flex-wrap">
         {[
           ["all", "All Attempts"],
           ["passed", "Passed (≥60%)"],
           ["failed", "Failed (<60%)"],
-        ].map(([val, label]) => (
-          <button
-            key={val}
-            onClick={() => setFilter(val)}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${filter === val ? "gradient-violet text-white shadow-md shadow-violet-200" : "bg-card border border-border text-muted-foreground hover:border-violet-400 hover:text-violet-600"}`}
-          >
-            {label}
-          </button>
-        ))}
+        ].map(([val, label]) => {
+          const active = filter === val;
+          return (
+            <button
+              key={val}
+              onClick={() => setFilter(val)}
+              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+                active
+                  ? "bg-orange-500/10 text-orange-500 dark:bg-orange-500/15 font-bold border border-orange-500/20"
+                  : "bg-card border border-border text-muted-foreground hover:border-orange-500/40 hover:text-foreground"
+              }`}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Attempts list */}
       <div className="space-y-3">
         {filtered.length === 0 ? (
-          <div className="card-lavender rounded-2xl p-10 text-center text-muted-foreground text-sm">
+          <div className="surface-card rounded-2xl p-10 border border-border text-center text-muted-foreground text-sm">
             No attempts match this filter.
           </div>
         ) : (

@@ -25,7 +25,7 @@ const templates = [
     uses: 1240,
     rating: 4.9,
     tags: ["CS", "Engineering", "GATE"],
-    color: "violet",
+    color: "orange",
     popular: true,
     sections: [
       "Engineering Mathematics",
@@ -171,25 +171,27 @@ const categories = [
   "Custom",
   "Study Notes",
 ];
+
 const colorMap = {
-  violet: "bg-violet-100 text-violet-700",
-  blue: "bg-blue-100 text-blue-700",
-  emerald: "bg-emerald-100 text-emerald-700",
-  amber: "bg-amber-100 text-amber-700",
-  rose: "bg-rose-100 text-rose-700",
-  teal: "bg-teal-100 text-teal-700",
-  purple: "bg-purple-100 text-purple-700",
-  indigo: "bg-indigo-100 text-indigo-700",
+  orange: "bg-orange-500/10 text-orange-500 border border-orange-500/20",
+  blue: "bg-blue-500/10 text-blue-500 border border-blue-500/20",
+  emerald: "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20",
+  amber: "bg-amber-500/10 text-amber-500 border border-amber-500/20",
+  rose: "bg-rose-500/10 text-rose-500 border border-rose-500/20",
+  teal: "bg-teal-500/10 text-teal-500 border border-teal-500/20",
+  purple: "bg-purple-500/10 text-purple-500 border border-purple-500/20",
+  indigo: "bg-indigo-500/10 text-indigo-500 border border-indigo-500/20",
 };
-const iconColorMap = {
-  violet: "from-violet-500 to-indigo-500",
-  blue: "from-blue-500 to-cyan-500",
-  emerald: "from-emerald-500 to-green-500",
-  amber: "from-amber-500 to-orange-500",
-  rose: "from-rose-500 to-pink-500",
-  teal: "from-teal-500 to-cyan-500",
-  purple: "from-purple-500 to-violet-500",
-  indigo: "from-indigo-500 to-blue-500",
+
+const iconBgMap = {
+  orange: "bg-orange-500/15 text-orange-500",
+  blue: "bg-blue-500/15 text-blue-500",
+  emerald: "bg-emerald-500/15 text-emerald-500",
+  amber: "bg-amber-500/15 text-amber-500",
+  rose: "bg-rose-500/15 text-rose-500",
+  teal: "bg-teal-500/15 text-teal-500",
+  purple: "bg-purple-500/15 text-purple-500",
+  indigo: "bg-indigo-500/15 text-indigo-500",
 };
 
 export default function Templates() {
@@ -215,19 +217,19 @@ export default function Templates() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
             Extraction Templates
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">
+          <p className="text-muted-foreground text-xs sm:text-sm mt-1">
             Pre-built formats for popular exams — apply to any cluster
             instantly.
           </p>
         </div>
-        <div className="text-right">
-          <div className="text-2xl font-bold text-foreground">
+        <div className="text-left sm:text-right">
+          <div className="text-2xl font-extrabold text-foreground tracking-tight">
             {templates.length}
           </div>
-          <div className="text-xs text-muted-foreground">
+          <div className="text-xs text-muted-foreground font-medium">
             Templates available
           </div>
         </div>
@@ -241,19 +243,26 @@ export default function Templates() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search templates..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-violet-300 transition-all"
+            className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all placeholder:text-muted-foreground"
           />
         </div>
-        <div className="flex gap-2 flex-wrap">
-          {categories.map((c) => (
-            <button
-              key={c}
-              onClick={() => setCategory(c)}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${category === c ? "gradient-violet text-white shadow-md shadow-violet-200" : "bg-card border border-border text-muted-foreground hover:border-violet-400 hover:text-violet-600"}`}
-            >
-              {c}
-            </button>
-          ))}
+        <div className="flex gap-1.5 flex-wrap">
+          {categories.map((c) => {
+            const active = category === c;
+            return (
+              <button
+                key={c}
+                onClick={() => setCategory(c)}
+                className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+                  active
+                    ? "bg-orange-500/10 text-orange-500 dark:bg-orange-500/15 dark:text-orange-500 font-bold border border-orange-500/20"
+                    : "bg-card border border-border text-muted-foreground hover:border-orange-500/40 hover:text-foreground"
+                }`}
+              >
+                {c}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -272,15 +281,15 @@ export default function Templates() {
               .map((t) => (
                 <div
                   key={t.id}
-                  className="card-lavender rounded-2xl p-4 hover:shadow-md transition-all cursor-pointer"
+                  className="surface-card rounded-2xl p-4 border border-border hover:border-orange-500/30 transition-all cursor-pointer"
                   onClick={() => setPreview(t)}
                 >
                   <div
-                    className={`w-10 h-10 rounded-xl bg-gradient-to-br ${iconColorMap[t.color]} flex items-center justify-center mb-3 shadow-md`}
+                    className={`w-10 h-10 rounded-xl ${iconBgMap[t.color] || "bg-orange-500/15 text-orange-500"} flex items-center justify-center mb-3 shrink-0`}
                   >
-                    <FileText className="w-5 h-5 text-white" />
+                    <FileText className="w-5 h-5" />
                   </div>
-                  <div className="font-bold text-sm text-foreground">
+                  <div className="font-bold text-sm text-foreground truncate">
                     {t.name}
                   </div>
                   <div className="text-xs text-muted-foreground mt-0.5">
@@ -288,7 +297,7 @@ export default function Templates() {
                   </div>
                   <div className="flex items-center gap-1 mt-2">
                     <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                    <span className="text-xs font-semibold text-foreground">
+                    <span className="text-xs font-bold text-foreground">
                       {t.rating}
                     </span>
                     <span className="text-xs text-muted-foreground">
@@ -306,26 +315,28 @@ export default function Templates() {
         {filtered.map((t) => (
           <div
             key={t.id}
-            className="card-lavender rounded-2xl p-5 hover:shadow-md transition-all"
+            className="surface-card rounded-2xl p-5 border border-border hover:border-orange-500/30 transition-all"
           >
             <div className="flex flex-col sm:flex-row sm:items-start gap-4">
               <div
-                className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${iconColorMap[t.color]} flex items-center justify-center shadow-md shrink-0`}
+                className={`w-12 h-12 rounded-2xl ${iconBgMap[t.color] || "bg-orange-500/15 text-orange-500"} flex items-center justify-center shrink-0`}
               >
-                <BookOpen className="w-6 h-6 text-white" />
+                <BookOpen className="w-6 h-6" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <h3 className="font-bold text-foreground">{t.name}</h3>
+                    <h3 className="font-bold text-foreground text-sm sm:text-base">
+                      {t.name}
+                    </h3>
                     <span
-                      className={`text-xs px-2 py-0.5 rounded-lg font-medium ${colorMap[t.color]}`}
+                      className={`inline-block text-[11px] px-2.5 py-0.5 mt-1 rounded-lg font-semibold ${colorMap[t.color] || colorMap.orange}`}
                     >
                       {t.category}
                     </span>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                    <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                     <span className="text-xs font-bold text-foreground">
                       {t.rating}
                     </span>
@@ -334,15 +345,16 @@ export default function Templates() {
                 <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
                   {t.description}
                 </p>
-                <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
+                <div className="flex items-center gap-3 mt-3 text-xs font-medium text-muted-foreground">
                   <span className="flex items-center gap-1">
-                    <Target className="w-3 h-3" /> {t.questions} Qs
+                    <Target className="w-3.5 h-3.5 text-orange-500" />{" "}
+                    {t.questions} Qs
                   </span>
                   <span className="flex items-center gap-1">
-                    <Zap className="w-3 h-3" /> {t.duration}
+                    <Zap className="w-3.5 h-3.5 text-orange-500" /> {t.duration}
                   </span>
                   <span
-                    className={`font-semibold ${t.difficulty === "Easy" ? "text-emerald-600" : t.difficulty === "Medium" ? "text-amber-600" : "text-red-600"}`}
+                    className={`font-semibold ${t.difficulty === "Easy" ? "text-emerald-500" : t.difficulty === "Medium" ? "text-amber-500" : "text-red-500"}`}
                   >
                     {t.difficulty}
                   </span>
@@ -350,21 +362,27 @@ export default function Templates() {
                 <div className="flex flex-col min-[420px]:flex-row gap-2 mt-4">
                   <button
                     onClick={() => setPreview(t)}
-                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-violet-50 border border-border text-violet-700 rounded-xl hover:bg-violet-100 transition-all"
+                    className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold border border-border bg-card text-foreground rounded-xl hover:bg-muted hover:border-orange-500/40 transition-all"
                   >
-                    <Eye className="w-3 h-3" /> Preview
+                    <Eye className="w-3.5 h-3.5 text-orange-500" /> Preview
                   </button>
                   <button
                     onClick={() => handleApply(t)}
-                    className={`flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl transition-all ${applied === t.id ? "bg-emerald-100 text-emerald-700" : "gradient-violet text-white shadow-sm shadow-violet-200 hover:opacity-90"}`}
+                    className={`flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${
+                      applied === t.id
+                        ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30"
+                        : "bg-orange-500/10 dark:bg-orange-500/15  border border-orange-500/30 hover:bg-orange-500/20"
+                    }`}
                   >
                     {applied === t.id ? (
                       <>
-                        <CheckCircle className="w-3 h-3" /> Applied!
+                        <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />{" "}
+                        Applied!
                       </>
                     ) : (
                       <>
-                        <Download className="w-3 h-3" /> Apply Template
+                        <Download className="w-3.5 h-3.5 text-orange-500" />{" "}
+                        Apply Template
                       </>
                     )}
                   </button>
@@ -378,22 +396,22 @@ export default function Templates() {
       {/* Preview modal */}
       {preview && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
           onClick={() => setPreview(null)}
         >
           <div
-            className="w-full max-w-md card-lavender rounded-3xl shadow-2xl shadow-violet-200 p-6"
+            className="w-full max-w-md surface-card border border-border rounded-3xl shadow-2xl p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div
-              className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${iconColorMap[preview.color]} flex items-center justify-center mb-4 shadow-md`}
+              className={`w-14 h-14 rounded-2xl ${iconBgMap[preview.color] || "bg-orange-500/15 text-orange-500"} flex items-center justify-center mb-4 shrink-0`}
             >
-              <BookOpen className="w-7 h-7 text-white" />
+              <BookOpen className="w-7 h-7" />
             </div>
             <h2 className="text-xl font-bold text-foreground">
               {preview.name}
             </h2>
-            <p className="text-sm text-muted-foreground mt-1 mb-4">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1 mb-4 leading-relaxed">
               {preview.description}
             </p>
             <div className="grid grid-cols-3 gap-3 mb-5">
@@ -404,7 +422,7 @@ export default function Templates() {
               ].map((s, i) => (
                 <div
                   key={i}
-                  className="bg-violet-50 rounded-xl p-3 text-center"
+                  className="bg-muted/60 border border-border rounded-xl p-3 text-center"
                 >
                   <div className="text-sm font-bold text-foreground">
                     {s.value}
@@ -414,14 +432,17 @@ export default function Templates() {
               ))}
             </div>
             <div className="mb-5">
-              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+              <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
                 Sections
               </div>
               <div className="space-y-1.5">
                 {preview.sections.map((s, i) => (
-                  <div key={i} className="flex items-center gap-2 text-sm">
-                    <ChevronRight className="w-3.5 h-3.5 text-violet-400" />
-                    <span className="text-foreground">{s}</span>
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 text-xs sm:text-sm"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                    <span className="text-foreground font-medium">{s}</span>
                   </div>
                 ))}
               </div>
@@ -429,7 +450,7 @@ export default function Templates() {
             <div className="flex gap-3">
               <button
                 onClick={() => setPreview(null)}
-                className="flex-1 py-2.5 border border-border text-muted-foreground font-semibold rounded-xl hover:bg-violet-50 text-sm transition-all"
+                className="flex-1 py-2.5 border border-border bg-card text-foreground font-semibold rounded-xl hover:bg-muted text-xs sm:text-sm transition-all"
               >
                 Close
               </button>
@@ -438,9 +459,9 @@ export default function Templates() {
                   handleApply(preview);
                   setPreview(null);
                 }}
-                className="flex-1 py-2.5 gradient-violet text-white font-semibold rounded-xl shadow-md shadow-violet-200 hover:opacity-90 text-sm transition-all"
+                className="flex-1 py-2.5 bg-orange-500/10 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 font-bold border border-orange-500/30 hover:bg-orange-500/20 text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5"
               >
-                Apply Template
+                <Download className="w-4 h-4 text-orange-500" /> Apply Template
               </button>
             </div>
           </div>

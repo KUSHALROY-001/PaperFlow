@@ -88,7 +88,7 @@ const COLORS = ["#10B981", "#F59E0B", "#EF4444"];
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-card border border-violet-100 rounded-2xl p-3 shadow-lg text-xs">
+      <div className="bg-card border border-border rounded-2xl p-3 shadow-lg text-xs">
         <p className="font-bold text-foreground mb-1">{label}</p>
         {payload.map((p, i) => (
           <p key={i} style={{ color: p.color }} className="font-semibold">
@@ -106,8 +106,8 @@ export default function Analytics() {
     <div className="p-0 sm:p-2 lg:p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Analytics</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Analytics</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
           Cross-cluster insights into your extraction pipeline performance.
         </p>
       </div>
@@ -120,31 +120,31 @@ export default function Analytics() {
             value: "34",
             delta: "+6 this month",
             icon: FileText,
-            color: "bg-violet-100 text-violet-700",
+            color: "bg-orange-500/15 text-orange-500 border border-orange-500/20",
           },
           {
             label: "Questions Extracted",
             value: "2,230",
             delta: "+410 this month",
             icon: CheckCircle,
-            color: "bg-emerald-100 text-emerald-700",
+            color: "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20",
           },
           {
             label: "Avg. Confidence",
             value: "91%",
             delta: "+2% vs last month",
             icon: Star,
-            color: "bg-amber-100 text-amber-700",
+            color: "bg-amber-500/15 text-amber-500 border border-amber-500/20",
           },
           {
             label: "Avg. Processing Time",
             value: "45m",
             delta: "-8m improvement",
             icon: Zap,
-            color: "bg-blue-100 text-blue-700",
+            color: "bg-blue-500/15 text-blue-500 border border-blue-500/20",
           },
         ].map((s, i) => (
-          <div key={i} className="card-lavender rounded-2xl p-4">
+          <div key={i} className="surface-card rounded-2xl p-4 border border-border hover:border-orange-500/30 transition-all">
             <div className="flex items-center justify-between mb-3">
               <div
                 className={`w-9 h-9 rounded-xl ${s.color} flex items-center justify-center`}
@@ -153,11 +153,11 @@ export default function Analytics() {
               </div>
               <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
             </div>
-            <div className="text-2xl font-bold text-foreground">{s.value}</div>
-            <div className="text-xs text-muted-foreground mt-0.5">
+            <div className="text-2xl font-extrabold text-foreground tracking-tight">{s.value}</div>
+            <div className="text-xs text-muted-foreground mt-0.5 font-medium">
               {s.label}
             </div>
-            <div className="text-xs text-emerald-600 font-semibold mt-1">
+            <div className="text-xs text-emerald-500 font-semibold mt-1">
               {s.delta}
             </div>
           </div>
@@ -167,7 +167,7 @@ export default function Analytics() {
       {/* Charts row 1 */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Questions extracted over time */}
-        <div className="card-lavender rounded-2xl p-5">
+        <div className="surface-card rounded-2xl p-5 border border-border">
           <h3 className="font-bold text-foreground mb-1">
             Questions Extracted
           </h3>
@@ -176,7 +176,7 @@ export default function Analytics() {
           </p>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={monthlyData} barSize={20}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0e7ff" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#24242a" opacity={0.3} />
               <XAxis
                 dataKey="month"
                 tick={{ fontSize: 11, fill: "#9ca3af" }}
@@ -192,13 +192,13 @@ export default function Analytics() {
               <Bar
                 dataKey="questions"
                 name="Questions"
-                fill="url(#violetGrad)"
+                fill="url(#orangeGrad)"
                 radius={[6, 6, 0, 0]}
               />
               <defs>
-                <linearGradient id="violetGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#7C3AED" />
-                  <stop offset="100%" stopColor="#4F46E5" />
+                <linearGradient id="orangeGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#ea580c" />
+                  <stop offset="100%" stopColor="#f59e0b" />
                 </linearGradient>
               </defs>
             </BarChart>
@@ -206,7 +206,7 @@ export default function Analytics() {
         </div>
 
         {/* Confidence over time */}
-        <div className="card-lavender rounded-2xl p-5">
+        <div className="surface-card rounded-2xl p-5 border border-border">
           <h3 className="font-bold text-foreground mb-1">
             Avg. Confidence Score
           </h3>
@@ -215,7 +215,7 @@ export default function Analytics() {
           </p>
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0e7ff" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#24242a" opacity={0.3} />
               <XAxis
                 dataKey="month"
                 tick={{ fontSize: 11, fill: "#9ca3af" }}
@@ -233,9 +233,9 @@ export default function Analytics() {
                 type="monotone"
                 dataKey="confidence"
                 name="Confidence %"
-                stroke="#7C3AED"
+                stroke="#ea580c"
                 strokeWidth={3}
-                dot={{ fill: "#7C3AED", r: 5 }}
+                dot={{ fill: "#ea580c", r: 5 }}
                 activeDot={{ r: 7 }}
               />
             </LineChart>
@@ -246,7 +246,7 @@ export default function Analytics() {
       {/* Charts row 2 */}
       <div className="grid md:grid-cols-3 gap-6">
         {/* Topic breakdown */}
-        <div className="card-lavender rounded-2xl p-5 md:col-span-2">
+        <div className="surface-card rounded-2xl p-5 border border-border md:col-span-2">
           <h3 className="font-bold text-foreground mb-1">Questions by Topic</h3>
           <p className="text-xs text-muted-foreground mb-4">
             Most extracted topics across all clusters
@@ -255,7 +255,8 @@ export default function Analytics() {
             <BarChart data={topicData} layout="vertical" barSize={16}>
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke="#f0e7ff"
+                stroke="#24242a"
+                opacity={0.3}
                 horizontal={false}
               />
               <XAxis
@@ -267,7 +268,7 @@ export default function Analytics() {
               <YAxis
                 dataKey="topic"
                 type="category"
-                tick={{ fontSize: 11, fill: "#6b7280" }}
+                tick={{ fontSize: 11, fill: "#9ca3af" }}
                 axisLine={false}
                 tickLine={false}
                 width={110}
@@ -276,16 +277,16 @@ export default function Analytics() {
               <Bar
                 dataKey="count"
                 name="Questions"
-                fill="#7C3AED"
+                fill="#ea580c"
                 radius={[0, 6, 6, 0]}
-                opacity={0.8}
+                opacity={0.9}
               />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Question status pie */}
-        <div className="card-lavender rounded-2xl p-5">
+        <div className="surface-card rounded-2xl p-5 border border-border">
           <h3 className="font-bold text-foreground mb-1">Question Status</h3>
           <p className="text-xs text-muted-foreground mb-4">
             Overall review breakdown
@@ -329,20 +330,20 @@ export default function Analytics() {
       </div>
 
       {/* Recent cluster performance */}
-      <div className="card-lavender rounded-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-violet-100">
+      <div className="surface-card rounded-2xl border border-border overflow-hidden">
+        <div className="px-6 py-4 border-b border-border">
           <h3 className="font-bold text-foreground">
             Recent Cluster Performance
           </h3>
         </div>
-        <div className="divide-y divide-violet-50">
+        <div className="divide-y divide-border">
           {recentClusters.map((c, i) => (
-            <div key={i} className="px-4 sm:px-6 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-              <div className="w-8 h-8 bg-violet-100 rounded-xl flex items-center justify-center shrink-0">
-                <BarChart2 className="w-4 h-4 text-violet-600" />
+            <div key={i} className="px-4 sm:px-6 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 hover:bg-muted/40 transition-colors">
+              <div className="w-8 h-8 bg-orange-500/15 text-orange-500 rounded-xl flex items-center justify-center shrink-0">
+                <BarChart2 className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">
+                <p className="text-sm font-bold text-foreground truncate">
                   {c.name}
                 </p>
                 <p className="text-xs text-muted-foreground">
@@ -351,13 +352,13 @@ export default function Analytics() {
               </div>
               <div className="text-right">
                 <div
-                  className={`text-sm font-bold ${c.confidence >= 90 ? "text-emerald-600" : c.confidence >= 80 ? "text-amber-600" : "text-red-500"}`}
+                  className={`text-sm font-bold ${c.confidence >= 90 ? "text-emerald-500" : c.confidence >= 80 ? "text-amber-500" : "text-red-500"}`}
                 >
                   {c.confidence}%
                 </div>
-                <div className="text-xs text-muted-foreground">confidence</div>
+                <div className="text-xs text-muted-foreground font-medium">confidence</div>
               </div>
-              <div className="w-full sm:w-24 bg-violet-100 rounded-full h-2">
+              <div className="w-full sm:w-24 bg-muted rounded-full h-2 overflow-hidden">
                 <div
                   className="h-2 rounded-full"
                   style={{

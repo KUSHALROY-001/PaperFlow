@@ -54,56 +54,56 @@ export default function ClustersLibrary() {
   const filtered = useMemo(
     () =>
       clusters.filter((cluster) => {
-        const target = `${cluster.name} ${cluster.description || ""}`.toLowerCase();
-        return (
-          !search ||
-          target.includes(search.toLowerCase())
-        );
+        const target =
+          `${cluster.name} ${cluster.description || ""}`.toLowerCase();
+        return !search || target.includes(search.toLowerCase());
       }),
     [clusters, search],
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-6 max-w-7xl mx-auto">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
             Clusters Library
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             {clusters.length} cluster{clusters.length !== 1 ? "s" : ""} /{" "}
             {totalMockTests} mock test{totalMockTests !== 1 ? "s" : ""}
           </p>
           {isLoading && (
-            <p className="text-xs text-muted-foreground mt-1">Loading...</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Loading clusters...
+            </p>
           )}
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex w-full items-center justify-center gap-2 px-5 py-3 gradient-violet text-white font-semibold rounded-xl shadow-lg shadow-violet-200 hover:opacity-90 transition-all sm:w-auto"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-xl text-sm shadow-sm transition-all sm:w-auto shrink-0"
         >
           <Plus className="w-4 h-4" /> New Cluster
         </button>
       </div>
 
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+        <div className="relative w-full min-w-0 sm:flex-1 sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search clusters..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-violet-300 text-sm"
+            className="w-full pl-9 pr-4 py-2 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-orange-500/30 text-sm text-foreground placeholder:text-muted-foreground"
           />
         </div>
-        <div className="flex items-center gap-1 ml-auto bg-card border border-border rounded-xl p-1">
+        <div className="flex items-center gap-1 self-end surface-card border border-border rounded-xl p-1 sm:ml-auto sm:self-auto">
           <button
             onClick={() => setView("grid")}
             className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
               view === "grid"
-                ? "gradient-violet text-white"
-                : "text-muted-foreground hover:text-violet-600"
+                ? "bg-[#ea580c] text-white font-semibold"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Grid3X3 className="w-4 h-4" />
@@ -112,8 +112,8 @@ export default function ClustersLibrary() {
             onClick={() => setView("list")}
             className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
               view === "list"
-                ? "gradient-violet text-white"
-                : "text-muted-foreground hover:text-violet-600"
+                ? "bg-[#ea580c] text-white font-semibold"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <List className="w-4 h-4" />
@@ -122,15 +122,15 @@ export default function ClustersLibrary() {
       </div>
 
       {error && (
-        <div className="rounded-2xl border border-red-100 bg-red-50 p-5 text-sm font-medium text-red-700">
+        <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-xs font-medium text-red-500">
           {error.message}
         </div>
       )}
 
       {!isLoading && !error && filtered.length === 0 && (
-        <div className="card-lavender rounded-2xl p-12 text-center">
-          <FolderOpen className="w-10 h-10 text-violet-300 mx-auto mb-3" />
-          <p className="text-muted-foreground">
+        <div className="surface-card rounded-2xl p-12 text-center border border-border">
+          <FolderOpen className="w-10 h-10 text-orange-500/60 mx-auto mb-3" />
+          <p className="text-sm font-semibold text-foreground">
             No clusters match your search
           </p>
         </div>
@@ -144,33 +144,35 @@ export default function ClustersLibrary() {
             return (
               <div
                 key={cluster.id}
-                className="card-lavender rounded-2xl p-5 hover:shadow-lg transition-all"
+                className="surface-card rounded-2xl p-5 border border-border hover:border-orange-500/30 transition-all flex flex-col justify-between"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center">
-                    <FolderOpen className="w-5 h-5 text-violet-600" />
+                <div>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="w-10 h-10 bg-orange-500/15 rounded-xl flex items-center justify-center text-orange-500">
+                      <FolderOpen className="w-5 h-5" />
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 text-xs bg-purple-500/15 text-purple-400 dark:text-purple-300 px-2.5 py-1 rounded-full font-semibold">
+                      <FileText className="w-3 h-3" />
+                      {mockTestCount} mock test{mockTestCount !== 1 ? "s" : ""}
+                    </span>
                   </div>
-                  <span className="inline-flex items-center gap-1.5 text-xs bg-violet-100 text-violet-700 px-2.5 py-1 rounded-full font-semibold">
-                    <FileText className="w-3 h-3" />
-                    {mockTestCount} mock test{mockTestCount !== 1 ? "s" : ""}
-                  </span>
+                  <h3 className="font-bold text-foreground mb-1 truncate text-base">
+                    {cluster.name}
+                  </h3>
+                  {cluster.description && (
+                    <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+                      {cluster.description}
+                    </p>
+                  )}
                 </div>
-                <h3 className="font-bold text-foreground mb-1 truncate">
-                  {cluster.name}
-                </h3>
-                {cluster.description && (
-                  <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                    {cluster.description}
-                  </p>
-                )}
-                <div className="flex items-center justify-between mt-3">
+                <div className="flex items-center justify-between pt-3 border-t border-border/60 mt-2">
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
                     <Clock className="w-3 h-3" />{" "}
                     {formatTimeAgo(cluster.created_at)}
                   </span>
                   <Link
                     to={`/cluster/${cluster.id}`}
-                    className="flex items-center gap-1 px-3 py-1.5 gradient-violet text-white font-semibold rounded-lg text-xs hover:opacity-90 transition-all shadow-sm shadow-violet-200"
+                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-orange-500 border border-orange-500/30 hover:bg-orange-500/10 rounded-lg transition-colors"
                   >
                     Open <ArrowRight className="w-3 h-3" />
                   </Link>
@@ -182,8 +184,8 @@ export default function ClustersLibrary() {
       )}
 
       {view === "list" && filtered.length > 0 && (
-        <div className="card-lavender rounded-2xl overflow-x-auto">
-          <div className="grid min-w-[40rem] grid-cols-[2fr_1fr_1fr_auto] gap-4 px-5 py-3 bg-violet-50 border-b border-violet-100 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+        <div className="surface-card rounded-2xl overflow-x-auto border border-border">
+          <div className="grid min-w-[40rem] grid-cols-[2fr_1fr_1fr_auto] gap-4 px-5 py-3 bg-muted/40 border-b border-border text-xs font-bold text-muted-foreground uppercase tracking-wide">
             <span>Cluster</span>
             <span>Mock Tests</span>
             <span>Created</span>
@@ -195,11 +197,11 @@ export default function ClustersLibrary() {
             return (
               <div
                 key={cluster.id}
-                className="grid min-w-[40rem] grid-cols-[2fr_1fr_1fr_auto] gap-4 items-center px-5 py-4 border-b border-violet-50 hover:bg-violet-50/50 transition-colors last:border-0"
+                className="grid min-w-[40rem] grid-cols-[2fr_1fr_1fr_auto] gap-4 items-center px-5 py-4 border-b border-border/50 hover:bg-muted/30 transition-colors last:border-0"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 bg-violet-100 rounded-lg flex items-center justify-center shrink-0">
-                    <FolderOpen className="w-4 h-4 text-violet-600" />
+                  <div className="w-8 h-8 bg-orange-500/15 text-orange-500 rounded-lg flex items-center justify-center shrink-0">
+                    <FolderOpen className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
                     <p className="font-semibold text-foreground text-sm truncate">
@@ -212,15 +214,15 @@ export default function ClustersLibrary() {
                     )}
                   </div>
                 </div>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-muted-foreground font-medium">
                   {mockTestCount}
                 </span>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-muted-foreground font-medium">
                   {formatTimeAgo(cluster.created_at)}
                 </span>
                 <Link
                   to={`/cluster/${cluster.id}`}
-                  className="flex items-center gap-1 px-3 py-1.5 gradient-violet text-white font-semibold rounded-lg text-xs hover:opacity-90 transition-all shadow-sm shadow-violet-200"
+                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-orange-500 border border-orange-500/30 hover:bg-orange-500/10 rounded-lg transition-colors"
                 >
                   Open <ArrowRight className="w-3 h-3" />
                 </Link>

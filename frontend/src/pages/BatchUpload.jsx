@@ -18,19 +18,19 @@ const templates = [
 ];
 
 function getStatusColor(status) {
-  if (status === "queued") return "bg-gray-100 text-gray-600";
-  if (status === "processing") return "bg-violet-100 text-violet-700";
-  if (status === "done") return "bg-emerald-100 text-emerald-700";
-  if (status === "error") return "bg-red-100 text-red-600";
-  return "bg-gray-100 text-gray-600";
+  if (status === "queued") return "bg-muted text-muted-foreground border border-border";
+  if (status === "processing") return "bg-orange-500/10 text-orange-500 border border-orange-500/20 font-bold";
+  if (status === "done") return "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-bold";
+  if (status === "error") return "bg-red-500/10 text-red-500 border border-red-500/20 font-bold";
+  return "bg-muted text-muted-foreground border border-border";
 }
 
 function getStatusIcon(status) {
   if (status === "queued") return <Clock className="w-3.5 h-3.5" />;
   if (status === "processing")
-    return <Zap className="w-3.5 h-3.5 animate-pulse" />;
-  if (status === "done") return <CheckCircle className="w-3.5 h-3.5" />;
-  if (status === "error") return <AlertCircle className="w-3.5 h-3.5" />;
+    return <Zap className="w-3.5 h-3.5 animate-pulse text-orange-500" />;
+  if (status === "done") return <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />;
+  if (status === "error") return <AlertCircle className="w-3.5 h-3.5 text-red-500" />;
 }
 
 export default function BatchUpload() {
@@ -106,8 +106,8 @@ export default function BatchUpload() {
     <div className="p-0 sm:p-2 lg:p-6 max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Batch Upload</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Batch Upload</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
           Upload multiple PDFs at once and queue them as mock tests inside a
           selected cluster.
         </p>
@@ -125,20 +125,20 @@ export default function BatchUpload() {
           onClick={() => document.getElementById("batch-upload").click()}
           className={`border-2 border-dashed rounded-3xl p-6 sm:p-12 text-center cursor-pointer transition-all ${
             dragging
-              ? "border-violet-500 bg-violet-50"
-              : "border-border hover:border-violet-400 hover:bg-violet-50/50"
+              ? "border-orange-500 bg-orange-500/10"
+              : "border-border hover:border-orange-500/40 hover:bg-muted/40"
           }`}
         >
-          <div className="w-16 h-16 bg-violet-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Upload className="w-8 h-8 text-violet-600" />
+          <div className="w-16 h-16 bg-orange-500/15 rounded-2xl flex items-center justify-center text-orange-500 mx-auto mb-4">
+            <Upload className="w-8 h-8" />
           </div>
           <p className="text-lg font-bold text-foreground mb-1">
             Drop your PDFs here
           </p>
-          <p className="text-sm text-muted-foreground mb-2">
+          <p className="text-xs sm:text-sm text-muted-foreground mb-2">
             or click to browse · PDF only · max 50MB each · no limit on count
           </p>
-          <p className="text-xs text-violet-600">
+          <p className="text-xs font-semibold text-orange-500">
             Each PDF will become its own mock test
           </p>
           <input
@@ -164,7 +164,7 @@ export default function BatchUpload() {
                 <select
                   value={template}
                   onChange={(e) => setTemplate(e.target.value)}
-                  className="px-3 py-2 text-sm rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-violet-300"
+                  className="px-3 py-2 text-xs sm:text-sm rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30"
                 >
                   {templates.map((t) => (
                     <option key={t}>{t}</option>
@@ -173,7 +173,7 @@ export default function BatchUpload() {
                 <button
                   onClick={handleStart}
                   disabled={files.length === 0}
-                  className="flex items-center justify-center gap-2 px-5 py-2.5 gradient-violet text-white font-semibold rounded-xl shadow-lg shadow-violet-200 hover:opacity-90 transition-all text-sm"
+                  className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-xl shadow-xs transition-all text-xs sm:text-sm"
                 >
                   <Play className="w-4 h-4" /> Start Processing
                 </button>
@@ -183,27 +183,25 @@ export default function BatchUpload() {
 
           {/* Summary bar when processing */}
           {started && (
-            <div className="card-lavender rounded-2xl p-4 flex items-center gap-4">
+            <div className="surface-card rounded-2xl p-4 border border-border flex items-center gap-4">
               <div className="flex-1">
-                <div className="flex items-center justify-between text-sm mb-2">
-                  <span className="font-semibold text-foreground">
+                <div className="flex items-center justify-between text-xs sm:text-sm mb-2">
+                  <span className="font-bold text-foreground">
                     {allDone
                       ? "All mock tests created!"
                       : `Processing ${files.filter((f) => f.status === "processing").length} mock tests...`}
                   </span>
-                  <span className="text-muted-foreground">
+                  <span className="text-muted-foreground font-semibold">
                     {files.filter((f) => f.status === "done").length}/
                     {files.length} done
                   </span>
                 </div>
-                <div className="h-2 bg-violet-100 rounded-full overflow-hidden">
+                <div className="h-2.5 bg-muted rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{
                       width: `${Math.round((files.filter((f) => f.status === "done").length / files.length) * 100)}%`,
-                      background: allDone
-                        ? "#10B981"
-                        : "linear-gradient(90deg, #7C3AED, #4F46E5)",
+                      background: allDone ? "#10B981" : "#ea580c",
                     }}
                   />
                 </div>
@@ -218,25 +216,23 @@ export default function BatchUpload() {
             {files.map((f) => (
               <div
                 key={f.id}
-                className={`card-lavender rounded-2xl p-4 transition-all ${f.status === "done" ? "border-emerald-200" : f.status === "error" ? "border-red-200" : ""}`}
+                className={`surface-card rounded-2xl p-4 border transition-all ${f.status === "done" ? "border-emerald-500/30" : f.status === "error" ? "border-red-500/30" : "border-border"}`}
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                   <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${f.status === "done" ? "bg-emerald-100" : f.status === "processing" ? "bg-violet-100" : "bg-gray-100"}`}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${f.status === "done" ? "bg-emerald-500/15 text-emerald-500" : f.status === "processing" ? "bg-orange-500/15 text-orange-500" : "bg-muted text-muted-foreground"}`}
                   >
-                    <FileText
-                      className={`w-5 h-5 ${f.status === "done" ? "text-emerald-600" : f.status === "processing" ? "text-violet-600" : "text-gray-400"}`}
-                    />
+                    <FileText className="w-5 h-5" />
                   </div>
                   <div className="flex-1 min-w-0">
                     {!started ? (
                       <input
                         value={f.mockTestName}
                         onChange={(e) => updateName(f.id, e.target.value)}
-                        className="w-full text-sm font-semibold text-foreground bg-transparent border-b border-dashed border-border focus:outline-none focus:border-violet-500 pb-0.5 transition-colors"
+                        className="w-full text-xs sm:text-sm font-bold text-foreground bg-transparent border-b border-dashed border-border focus:outline-none focus:border-orange-500 pb-0.5 transition-colors"
                       />
                     ) : (
-                      <p className="text-sm font-semibold text-foreground">
+                      <p className="text-xs sm:text-sm font-bold text-foreground">
                         {f.mockTestName}
                       </p>
                     )}
@@ -244,13 +240,11 @@ export default function BatchUpload() {
                       {f.name} · {(f.size / 1024 / 1024).toFixed(1)} MB
                     </p>
                     {f.status === "processing" && (
-                      <div className="mt-2 h-1.5 bg-violet-100 rounded-full overflow-hidden">
+                      <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
                         <div
-                          className="h-full rounded-full transition-all duration-300"
+                          className="h-full rounded-full bg-[#ea580c] transition-all duration-300"
                           style={{
                             width: `${f.progress}%`,
-                            background:
-                              "linear-gradient(90deg, #7C3AED, #4F46E5)",
                           }}
                         />
                       </div>
@@ -272,7 +266,7 @@ export default function BatchUpload() {
                     {!started && (
                       <button
                         onClick={() => removeFile(f.id)}
-                        className="w-7 h-7 rounded-lg hover:bg-red-100 flex items-center justify-center text-muted-foreground hover:text-red-500 transition-colors"
+                        className="w-7 h-7 rounded-lg hover:bg-red-500/10 flex items-center justify-center text-muted-foreground hover:text-red-500 transition-colors"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -286,7 +280,7 @@ export default function BatchUpload() {
           {!started && (
             <button
               onClick={() => document.getElementById("batch-upload").click()}
-              className="w-full py-3 border-2 border-dashed border-border text-violet-600 text-sm font-semibold rounded-2xl hover:bg-violet-50 transition-all"
+              className="w-full py-3 border-2 border-dashed border-border text-orange-500 text-xs sm:text-sm font-semibold rounded-2xl hover:bg-muted hover:border-orange-500/40 transition-all"
             >
               + Add More Files
             </button>
@@ -314,11 +308,11 @@ export default function BatchUpload() {
               desc: "All PDFs are processed sequentially. Monitor live progress per file.",
             },
           ].map((s, i) => (
-            <div key={i} className="card-lavender rounded-2xl p-5">
-              <div className="text-3xl font-black text-violet-200 mb-3">
+            <div key={i} className="surface-card rounded-2xl p-5 border border-border">
+              <div className="text-3xl font-black text-orange-500/30 mb-3">
                 {s.step}
               </div>
-              <h3 className="font-bold text-foreground mb-1">{s.title}</h3>
+              <h3 className="font-bold text-foreground mb-1 text-sm sm:text-base">{s.title}</h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 {s.desc}
               </p>

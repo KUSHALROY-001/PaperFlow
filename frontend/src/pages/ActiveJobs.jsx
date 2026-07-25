@@ -28,73 +28,75 @@ export default function ActiveJobs() {
   const completed = jobs.filter((job) => job.status === "completed").slice(0, 8);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-7xl mx-auto">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Active Jobs</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Active Jobs</h1>
+        <p className="text-muted-foreground text-sm sm:text-base mt-1">
           Monitor mock-test processing jobs across all clusters
         </p>
       </div>
 
       {error && (
-        <div className="rounded-2xl border border-red-100 bg-red-50 p-5 text-sm font-medium text-red-700">
+        <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-5 text-sm font-medium text-red-500">
           {error.message}
         </div>
       )}
 
       <div>
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-2 h-2 rounded-full bg-violet-500 pulse-violet" />
-          <h2 className="text-lg font-bold text-foreground">
+          <div className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse" />
+          <h2 className="text-lg font-extrabold text-foreground tracking-tight">
             Running Now ({running.length})
           </h2>
         </div>
         {isLoading ? (
-          <div className="card-lavender rounded-2xl p-8 text-sm text-muted-foreground">
+          <div className="surface-card rounded-2xl p-8 border border-border text-sm text-muted-foreground">
             Loading jobs...
           </div>
         ) : running.length === 0 ? (
-          <div className="card-lavender rounded-2xl p-12 text-center">
-            <Zap className="w-10 h-10 text-violet-300 mx-auto mb-3" />
-            <p className="text-foreground font-semibold mb-1">No active jobs</p>
-            <p className="text-sm text-muted-foreground">
-              All mock-test pipelines are idle
+          <div className="surface-card rounded-2xl p-12 border border-border text-center">
+            <div className="w-12 h-12 rounded-2xl bg-orange-500/10 text-orange-500/60 flex items-center justify-center mx-auto mb-3">
+              <Zap className="w-6 h-6" />
+            </div>
+            <p className="text-foreground font-bold text-base mb-1">No active jobs</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              All mock-test processing pipelines are currently idle
             </p>
           </div>
         ) : (
           <div className="space-y-4">
             {running.map((job) => (
-              <div key={job.id} className="card-lavender rounded-2xl p-6">
+              <div key={job.id} className="surface-card rounded-2xl p-6 border border-border hover:border-orange-500/30 transition-all">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-4">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center">
-                      <Zap className="w-5 h-5 text-violet-600" />
+                    <div className="w-10 h-10 bg-orange-500/15 text-orange-500 rounded-xl flex items-center justify-center shrink-0">
+                      <Zap className="w-5 h-5 fill-orange-500/20" />
                     </div>
-                    <div>
-                      <h3 className="font-bold text-foreground">
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-foreground truncate">
                         {job.mock_test_name}
                       </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {job.cluster_name} / {job.status} / {job.current_stage || "Queued"}
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                        {job.cluster_name} / <span className="capitalize">{job.status}</span> / {job.current_stage || "Queued"}
                       </p>
                     </div>
                   </div>
                   <Link
                     to={`/cluster/${job.cluster_id}/mocktest/${job.mock_test_id}`}
-                    className="flex w-full sm:w-auto items-center justify-center gap-1.5 text-sm px-4 py-2 gradient-violet text-white font-semibold rounded-xl shadow-md shadow-violet-200 hover:opacity-90 transition-all"
+                    className="flex w-full sm:w-auto items-center justify-center gap-1.5 text-xs sm:text-sm px-4 py-2 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-xl shadow-xs transition-all shrink-0"
                   >
                     View Job <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
-                <div className="flex justify-between text-sm text-muted-foreground mb-2">
+                <div className="flex justify-between text-xs sm:text-sm font-semibold text-muted-foreground mb-2">
                   <span>{jobPercent(job)}% complete</span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5" /> Started {formatTime(job.started_at || job.created_at)}
                   </span>
                 </div>
-                <div className="h-2.5 bg-violet-100 rounded-full overflow-hidden">
+                <div className="h-2.5 bg-muted rounded-full overflow-hidden">
                   <div
-                    className="h-full rounded-full shimmer"
+                    className="h-full rounded-full bg-[#ea580c] transition-all duration-500"
                     style={{ width: `${Math.max(jobPercent(job), 8)}%` }}
                   />
                 </div>
@@ -105,11 +107,11 @@ export default function ActiveJobs() {
       </div>
 
       <div>
-        <h2 className="text-lg font-bold text-foreground mb-4">
+        <h2 className="text-lg font-extrabold text-foreground tracking-tight mb-4">
           Recently Completed
         </h2>
         {completed.length === 0 ? (
-          <div className="card-lavender rounded-2xl p-8 text-sm text-muted-foreground">
+          <div className="surface-card rounded-2xl p-8 border border-border text-sm text-muted-foreground">
             No completed processing jobs yet.
           </div>
         ) : (
@@ -117,24 +119,24 @@ export default function ActiveJobs() {
             {completed.map((job) => (
               <div
                 key={job.id}
-                className="card-lavender rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-4"
+                className="surface-card rounded-2xl p-5 border border-border flex flex-col sm:flex-row sm:items-center gap-4 hover:border-orange-500/30 transition-all"
               >
-                <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
-                  <CheckCircle className="w-5 h-5 text-emerald-600" />
+                <div className="w-10 h-10 bg-emerald-500/15 text-emerald-500 border border-emerald-500/20 rounded-xl flex items-center justify-center shrink-0">
+                  <CheckCircle className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-foreground">
+                  <h3 className="font-bold text-foreground text-sm sm:text-base truncate">
                     {job.mock_test_name}
                   </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {job.cluster_name} / completed / {formatTime(job.completed_at)}
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                    {job.cluster_name} / Completed / {formatTime(job.completed_at)}
                   </p>
                 </div>
                 <Link
                   to={`/cluster/${job.cluster_id}/mocktest/${job.mock_test_id}`}
-                  className="flex w-full sm:w-auto items-center justify-center gap-1.5 text-sm px-3 py-2 bg-violet-100 text-violet-700 font-semibold rounded-xl hover:bg-violet-200 transition-colors"
+                  className="flex w-full sm:w-auto items-center justify-center gap-1.5 text-xs sm:text-sm px-4 py-2 border border-border bg-card text-foreground font-semibold rounded-xl hover:bg-muted hover:border-orange-500/40 transition-colors shrink-0"
                 >
-                  Open Mock <ArrowRight className="w-3.5 h-3.5" />
+                  Open Mock <ArrowRight className="w-3.5 h-3.5 text-orange-500" />
                 </Link>
               </div>
             ))}

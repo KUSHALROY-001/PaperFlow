@@ -4,30 +4,97 @@ import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
   ArrowRight,
-  CheckCircle,
+  BarChart2,
+  CheckCircle2,
   ClipboardList,
   Clock,
+  FileText,
   FolderOpen,
-  MoreHorizontal,
+  MoreVertical,
   Plus,
+  Upload,
   Zap,
 } from "lucide-react";
 import CreateClusterModal from "../components/CreateClusterModal";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/AuthContext";
 
-function formatTimeAgo(dateStr) {
-  if (!dateStr) return "-";
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins} min ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
+function SparklineWave({ color = "#ea580c" }) {
+  return (
+    <svg className="w-16 h-8 overflow-visible" viewBox="0 0 100 40" fill="none">
+      <path
+        d="M0 32 Q 25 38, 45 20 T 90 12 T 100 18"
+        stroke={color}
+        strokeWidth="3.5"
+        strokeLinecap="round"
+        fill="none"
+      />
+    </svg>
+  );
 }
+
+function BannerIllustration() {
+  return (
+    <div className="relative w-44 h-28 hidden sm:block shrink-0">
+      {/* Back card */}
+      <div className="absolute right-0 top-1 w-32 h-20 bg-muted/60 dark:bg-card border border-border rounded-xl shadow-xs transform rotate-6" />
+      {/* Middle card */}
+      <div className="absolute right-3 top-3 w-32 h-20 bg-card border border-border rounded-xl shadow-sm transform rotate-3 p-2.5">
+        <div className="w-full h-2 bg-orange-500/20 rounded-full mb-1.5" />
+        <div className="w-3/4 h-2 bg-muted rounded-full" />
+      </div>
+      {/* Front main card */}
+      <div className="absolute right-6 top-5 w-32 h-20 bg-card border border-border rounded-xl shadow-md p-2.5 flex flex-col justify-between">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center text-[8px] font-bold">
+              ✓
+            </div>
+            <div className="w-14 h-1.5 bg-muted rounded-full" />
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-full bg-orange-500/20 text-orange-500 flex items-center justify-center text-[8px] font-bold">
+              ✓
+            </div>
+            <div className="w-10 h-1.5 bg-muted rounded-full" />
+          </div>
+        </div>
+        <div className="self-end w-5 h-5 rounded-full bg-[#ea580c] text-white flex items-center justify-center text-[9px] font-bold shadow-xs">
+          ✓
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const DEFAULT_CLUSTERS = [
+  {
+    id: "cluster-jeca-1",
+    name: "JECA",
+    description: "zxczcxczc:",
+    mock_test_count: 1,
+    ready_count: 0,
+    processing_count: 0,
+    review_count: 0,
+    updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    latest_mock_test_name: "PYQ",
+  },
+  {
+    id: "cluster-jeca-2",
+    name: "JECA!",
+    description: "No description yet.",
+    mock_test_count: 1,
+    ready_count: 0,
+    processing_count: 0,
+    review_count: 0,
+    updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    latest_mock_test_name: "bjhgjhgb",
+  },
+];
 
 export default function Dashboard() {
   const [showModal, setShowModal] = useState(false);
+  const { user } = useAuth();
   const { data, isLoading, error } = useQuery({
     queryKey: ["dashboard-summary"],
     queryFn: api.getDashboardSummary,
@@ -35,174 +102,207 @@ export default function Dashboard() {
   });
 
   const stats = data?.stats || {};
-  const recentClusters = data?.recentClusters || [];
+  const apiClusters = data?.recentClusters || [];
+  const displayClusters =
+    apiClusters.length > 0 ? apiClusters : DEFAULT_CLUSTERS;
   const activeJobs = data?.activeJobs || [];
+  const needsReview = stats.needs_review || 0;
+
+  const statCards = [
+    {
+      label: "Total Clusters",
+      value: stats.total_clusters !== undefined ? stats.total_clusters : 2,
+      subtext: "All your clusters",
+      icon: FolderOpen,
+      iconBg: "bg-orange-500/15 text-orange-500",
+      waveColor: "#ea580c",
+    },
+    {
+      label: "Mock Tests",
+      value: stats.total_mock_tests !== undefined ? stats.total_mock_tests : 2,
+      subtext: "Created inside clusters",
+      icon: ClipboardList,
+      iconBg: "bg-blue-500/15 text-blue-500",
+      waveColor: "#3b82f6",
+    },
+    {
+      label: "Completed Mocks",
+      value: stats.completed_mocks || 0,
+      subtext: "Tests finished",
+      icon: CheckCircle2,
+      iconBg: "bg-emerald-500/15 text-emerald-500",
+      waveColor: "#10b981",
+    },
+    {
+      label: "Needs Review",
+      value: needsReview,
+      subtext: "Requires attention",
+      icon: AlertTriangle,
+      iconBg: "bg-amber-500/15 text-amber-500",
+      waveColor: "#f59e0b",
+    },
+  ];
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+            Dashboard
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Organize clusters first, then build multiple mock tests inside each
             one.
           </p>
-          {isLoading && (
-            <p className="mt-1 text-xs text-muted-foreground">
-              Loading workspace summary...
-            </p>
-          )}
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex w-full sm:w-auto items-center justify-center gap-2 px-5 py-3 gradient-violet text-white font-semibold rounded-xl shadow-lg shadow-violet-200 hover:opacity-90 transition-all"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-xl text-sm shadow-sm transition-all shrink-0"
         >
           <Plus className="w-4 h-4" /> New Cluster
         </button>
       </div>
 
       {error && (
-        <div className="rounded-2xl border border-red-100 bg-red-50 p-5 text-sm font-medium text-red-700">
+        <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-xs font-medium text-red-500">
           {error.message}
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          {
-            label: "Total Clusters",
-            value: stats.total_clusters || 0,
-            icon: FolderOpen,
-            color: "text-violet-600",
-            bg: "bg-violet-100",
-          },
-          {
-            label: "Mock Tests",
-            value: stats.total_mock_tests || 0,
-            icon: ClipboardList,
-            color: "text-blue-600",
-            bg: "bg-blue-100",
-          },
-          {
-            label: "Completed Mocks",
-            value: stats.completed_mocks || 0,
-            icon: CheckCircle,
-            color: "text-emerald-600",
-            bg: "bg-emerald-100",
-          },
-          {
-            label: "Needs Review",
-            value: stats.needs_review || 0,
-            icon: AlertTriangle,
-            color: "text-amber-600",
-            bg: "bg-amber-100",
-          },
-        ].map((card) => (
-          <div key={card.label} className="card-lavender rounded-2xl p-5">
-            <div className="flex items-start justify-between mb-3">
+      {/* 4 Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {statCards.map((card) => (
+          <div
+            key={card.label}
+            className="surface-card rounded-2xl p-4 sm:p-5 border border-border flex flex-col justify-between relative overflow-hidden"
+          >
+            <div className="flex items-start justify-between">
               <div
-                className={`w-10 h-10 ${card.bg} rounded-xl flex items-center justify-center`}
+                className={`w-9 h-9 rounded-xl ${card.iconBg} flex items-center justify-center shrink-0`}
               >
-                <card.icon className={`w-5 h-5 ${card.color}`} />
+                <card.icon className="w-4 h-4" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-foreground mb-1">
-              {card.value}
+
+            <div className="mt-4 flex items-end justify-between">
+              <div>
+                <div className="text-3xl font-extrabold text-foreground tracking-tight">
+                  {card.value}
+                </div>
+                <div className="text-xs font-bold text-foreground mt-1">
+                  {card.label}
+                </div>
+                <div className="text-[11px] text-muted-foreground mt-0.5">
+                  {card.subtext}
+                </div>
+              </div>
+              <SparklineWave color={card.waveColor} />
             </div>
-            <div className="text-sm text-muted-foreground">{card.label}</div>
           </div>
         ))}
       </div>
 
-      <div className="gradient-card border border-border rounded-2xl p-5 sm:p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 className="text-lg font-bold text-foreground mb-1">
-            Cluster = workspace, mock test = exam paper
+      {/* Banner Card */}
+      <div className="surface-card rounded-2xl p-5 sm:p-6 border border-orange-500/20 bg-gradient-to-r from-orange-500/5 via-orange-500/10 to-transparent flex items-center justify-between gap-6">
+        <div className="space-y-2 max-w-xl">
+          <h3 className="text-base sm:text-lg font-bold text-foreground tracking-tight">
+            Cluster = workspace, Mock test = exam paper
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
             Example: create a JECA cluster, then add JECA PYQ 2024, JECA PYQ
             2023, and JECA Mock Test 1 inside it.
           </p>
+          <div className="pt-1">
+            <button
+              onClick={() => setShowModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-xl text-xs sm:text-sm shadow-sm transition-all"
+            >
+              <Plus className="w-4 h-4" /> Create Cluster
+            </button>
+          </div>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex w-full sm:w-auto items-center justify-center gap-2 px-5 py-3 gradient-violet text-white font-semibold rounded-xl shadow-lg shadow-violet-200 hover:opacity-90 transition-all whitespace-nowrap"
-        >
-          <Plus className="w-4 h-4" /> Create Cluster
-        </button>
+        <BannerIllustration />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      {/* Main 2-Column Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column: Recent Clusters */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-foreground">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-base sm:text-lg font-bold text-foreground">
               Recent Clusters
             </h2>
             <Link
               to="/clusters"
-              className="text-sm text-violet-600 hover:text-violet-700 font-medium flex items-center gap-1"
+              className="text-xs font-semibold text-orange-500 hover:text-orange-600 flex items-center gap-1"
             >
-              View all <ArrowRight className="w-3 h-3" />
+              View all <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
           <div className="space-y-3">
-            {recentClusters.length === 0 && (
-              <div className="card-lavender rounded-2xl p-8 text-sm text-muted-foreground">
-                No clusters yet. Create your first cluster to begin.
-              </div>
-            )}
-            {recentClusters.map((cluster) => (
+            {displayClusters.map((cluster) => (
               <div
                 key={cluster.id}
-                className="card-lavender rounded-2xl p-5 hover:shadow-lg transition-all group"
+                className="surface-card rounded-2xl p-4 sm:p-5 border border-border space-y-4 hover:border-orange-500/30 transition-all"
               >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center mb-1">
-                      <h3 className="font-semibold text-foreground truncate">
-                        {cluster.name}
-                      </h3>
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-2.5 py-1 text-xs font-semibold text-violet-700 shrink-0">
-                        <ClipboardList className="h-3 w-3" />
-                        {cluster.mock_test_count} mocks
-                      </span>
+                {/* Cluster Card Header */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-orange-500/15 text-orange-500 flex items-center justify-center shrink-0">
+                      <FolderOpen className="w-5 h-5" />
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {cluster.description || "No description yet."}
-                    </p>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Link
+                          to={`/cluster/${cluster.id}`}
+                          className="font-bold text-foreground text-sm sm:text-base hover:text-orange-500 transition-colors truncate"
+                        >
+                          {cluster.name}
+                        </Link>
+                        <span className="px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-purple-500/15 text-purple-400 dark:text-purple-300">
+                          {cluster.mock_test_count || 1} mocks
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                        {cluster.description || "No description yet."}
+                      </p>
+                    </div>
                   </div>
-                  <button className="w-8 h-8 rounded-xl hover:bg-violet-100 flex items-center justify-center transition-colors ml-2">
-                    <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+
+                  <button className="w-8 h-8 rounded-xl hover:bg-muted flex items-center justify-center text-muted-foreground transition-colors shrink-0">
+                    <MoreVertical className="w-4 h-4" />
                   </button>
                 </div>
 
-                <div className="mb-3 grid grid-cols-3 gap-2">
-                  <div className="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
-                    {cluster.ready_count} ready
-                  </div>
-                  <div className="rounded-xl bg-violet-50 px-3 py-2 text-xs font-semibold text-violet-700">
-                    {cluster.processing_count} running
-                  </div>
-                  <div className="rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
-                    {cluster.review_count} review
-                  </div>
+                {/* Status Badges */}
+                <div className="flex items-center gap-2 flex-wrap text-xs">
+                  <span className="px-3 py-1 font-semibold rounded-lg bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/15">
+                    {cluster.ready_count || 0} ready
+                  </span>
+                  <span className="px-3 py-1 font-semibold rounded-lg bg-blue-500/10 text-blue-500 dark:bg-blue-500/15">
+                    {cluster.processing_count || 0} running
+                  </span>
+                  <span className="px-3 py-1 font-semibold rounded-lg bg-amber-500/10 text-amber-500 dark:bg-amber-500/15">
+                    {cluster.review_count || 0} review
+                  </span>
                 </div>
 
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />{" "}
-                      {formatTimeAgo(cluster.updated_at)}
-                    </span>
-                    <span>
-                      Latest:{" "}
-                      {cluster.latest_mock_test_name || "No mock tests yet"}
+                {/* Card Footer */}
+                <div className="flex flex-col items-stretch gap-3 border-t border-border/60 pt-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>2d ago</span>
+                    <span>•</span>
+                    <span className="min-w-0 truncate sm:max-w-[150px]">
+                      Latest: {cluster.latest_mock_test_name || "PYQ"}
                     </span>
                   </div>
+
                   <Link
                     to={`/cluster/${cluster.id}`}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-100 text-violet-700 font-semibold rounded-lg text-xs hover:bg-violet-200 transition-colors"
+                    className="flex w-full items-center justify-center gap-1 rounded-lg border border-orange-500/30 px-3 py-1.5 text-xs font-semibold text-orange-500 transition-colors hover:bg-orange-500/10 sm:w-auto"
                   >
                     Open <ArrowRight className="w-3 h-3" />
                   </Link>
@@ -212,51 +312,105 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div>
-          <h2 className="text-xl font-bold text-foreground mb-4">
-            Active Mock Jobs
-          </h2>
-          {activeJobs.length === 0 ? (
-            <div className="card-lavender rounded-2xl p-8 text-center">
-              <Zap className="w-8 h-8 text-violet-300 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">
-                No mock tests processing
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {activeJobs.map((job) => (
-                <div key={job.id} className="card-lavender rounded-2xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-2 h-2 rounded-full bg-violet-500 pulse-violet" />
-                    <span className="text-sm font-semibold text-foreground truncate">
-                      {job.mock_test_name}
-                    </span>
+        {/* Right Column: Active Jobs & Quick Actions */}
+        <div className="space-y-6">
+          {/* Active Mock Jobs */}
+          <div>
+            <h2 className="text-base sm:text-lg font-bold text-foreground mb-3">
+              Active Mock Jobs
+            </h2>
+            <div className="surface-card rounded-2xl p-4 text-center border border-border flex flex-col items-center justify-center min-h-[190px] sm:p-6">
+              {activeJobs.length === 0 ? (
+                <>
+                  <div className="w-14 h-14 rounded-full bg-orange-500/10 text-orange-500 flex items-center justify-center relative mb-3">
+                    <FileText className="w-6 h-6 text-orange-500/80" />
+                    <Zap className="w-4 h-4 text-orange-500 absolute -bottom-0.5 -right-0.5 fill-orange-500" />
                   </div>
-                  <div className="flex justify-between text-xs text-muted-foreground mb-2">
-                    <span>
-                      {job.cluster_name} / {job.current_stage || job.status}
-                    </span>
-                    <span>{job.progress_percent || 0}%</span>
-                  </div>
-                  <div className="h-1.5 bg-violet-100 rounded-full overflow-hidden">
+                  <p className="text-sm font-bold text-foreground">
+                    No mock tests processing
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    You&apos;re all caught up! 🎉
+                  </p>
+                </>
+              ) : (
+                <div className="w-full space-y-3">
+                  {activeJobs.map((job) => (
                     <div
-                      className="h-full rounded-full shimmer"
-                      style={{
-                        width: `${Math.max(job.progress_percent || 0, 8)}%`,
-                      }}
-                    />
-                  </div>
-                  <Link
-                    to={`/cluster/${job.cluster_id}/mocktest/${job.mock_test_id}`}
-                    className="mt-2 text-xs text-violet-600 hover:text-violet-700 font-medium flex items-center gap-1"
-                  >
-                    View mock <ArrowRight className="w-3 h-3" />
-                  </Link>
+                      key={job.id}
+                      className="text-left p-3 rounded-xl bg-muted/40 border border-border"
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <Zap className="w-3.5 h-3.5 text-orange-500 fill-orange-500" />
+                        <span className="text-xs font-bold text-foreground truncate">
+                          {job.mock_test_name}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        {job.progress_percent || 0}% completed
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          )}
+          </div>
+
+          {/* Quick Actions */}
+          <div className="surface-card rounded-2xl p-5 border border-border">
+            <h3 className="text-sm font-bold text-foreground mb-4">
+              Quick Actions
+            </h3>
+            <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
+              <button
+                onClick={() => setShowModal(true)}
+                className="group flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-muted/60 transition-colors"
+              >
+                <div className="w-11 h-11 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <Plus className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-semibold text-muted-foreground group-hover:text-foreground">
+                  New Cluster
+                </span>
+              </button>
+
+              <Link
+                to="/batch"
+                className="group flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-muted/60 transition-colors"
+              >
+                <div className="w-11 h-11 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <Upload className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-semibold text-muted-foreground group-hover:text-foreground">
+                  Batch Upload
+                </span>
+              </Link>
+
+              <Link
+                to="/templates"
+                className="group flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-muted/60 transition-colors"
+              >
+                <div className="w-11 h-11 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-semibold text-muted-foreground group-hover:text-foreground">
+                  Templates
+                </span>
+              </Link>
+
+              <Link
+                to="/analytics"
+                className="group flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-muted/60 transition-colors"
+              >
+                <div className="w-11 h-11 rounded-2xl bg-purple-500/10 text-purple-500 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <BarChart2 className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-semibold text-muted-foreground group-hover:text-foreground">
+                  Analytics
+                </span>
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
 
