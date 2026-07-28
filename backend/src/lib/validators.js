@@ -1,7 +1,7 @@
-import { httpError } from './http-error.js';
+import { httpError } from "./http-error.js";
 
 export function requiredString(value, fieldName) {
-  if (typeof value !== 'string' || value.trim().length === 0) {
+  if (typeof value !== "string" || value.trim().length === 0) {
     throw httpError(400, `${fieldName} is required`);
   }
 
@@ -13,7 +13,7 @@ export function optionalString(value) {
     return null;
   }
 
-  if (typeof value !== 'string') {
+  if (typeof value !== "string") {
     return null;
   }
 
@@ -22,7 +22,7 @@ export function optionalString(value) {
 }
 
 export function optionalNumber(value, fallback) {
-  if (value === undefined || value === null || value === '') {
+  if (value === undefined || value === null || value === "") {
     return fallback;
   }
 

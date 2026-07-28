@@ -120,6 +120,14 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions):
     inserted_count = 0
 
     for question in questions:
+        # question_type used to be hardcoded to 'single' here regardless of
+        # how many correct answers the parser/AI actually found, which
+        # mislabeled every multi-answer question. Derive it from the data.
+        correct_option_indexes = question["correct_option_indexes"]
+        question_type = question.get("question_type") or (
+            "multi" if len(correct_option_indexes) > 1 else "single"
+        )
+
         question_row = connection.execute(
             """
             INSERT INTO questions (
@@ -138,7 +146,7 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions):
               status,
               metadata
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'single', %s, %s, %s, 'needs_review', %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'needs_review', %s)
             RETURNING id
             """,
             [
@@ -150,7 +158,8 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions):
                 question.get("subtopic"),
                 question.get("passage"),
                 question.get("explanation"),
-                question["correct_option_indexes"],
+                question_type,
+                correct_option_indexes,
                 question.get("source_page"),
                 question.get("confidence", 60),
                 json.dumps(question.get("metadata", {})),

@@ -13,22 +13,7 @@ import {
 } from "lucide-react";
 import CreateClusterModal from "../components/CreateClusterModal";
 import { api } from "@/lib/api";
-
-function formatTimeAgo(dateStr) {
-  if (!dateStr) return "-";
-
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins} min ago`;
-
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
+import { formatTimeAgo } from "@/lib/date";
 
 export default function ClustersLibrary() {
   const [view, setView] = useState("grid");
@@ -128,11 +113,23 @@ export default function ClustersLibrary() {
       )}
 
       {!isLoading && !error && filtered.length === 0 && (
-        <div className="surface-card rounded-2xl p-12 text-center border border-border">
-          <FolderOpen className="w-10 h-10 text-orange-500/60 mx-auto mb-3" />
-          <p className="text-sm font-semibold text-foreground">
-            No clusters match your search
+        <div className="surface-card rounded-2xl p-10 sm:p-12 text-center border border-border">
+          <div className="w-14 h-14 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center mx-auto mb-4">
+            <FolderOpen className="w-7 h-7" />
+          </div>
+          <h3 className="text-lg font-bold text-foreground">
+            It seems you don't have any cluster yet
+          </h3>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Create your first cluster to start organizing mock tests and
+            questions.
           </p>
+          <button
+            onClick={() => setShowModal(true)}
+            className="mt-6 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-xl text-sm shadow-sm transition-all"
+          >
+            <Plus className="w-4 h-4" /> Create Cluster
+          </button>
         </div>
       )}
 

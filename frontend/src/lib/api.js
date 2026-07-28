@@ -158,4 +158,37 @@ export const api = {
   getDashboardSummary() {
     return apiRequest("/api/dashboard/summary");
   },
+  listExtractionTemplates(params = {}) {
+    const searchParams = new URLSearchParams(
+      Object.fromEntries(Object.entries(params).filter(([, value]) => value)),
+    );
+    const suffix = searchParams.toString() ? `?${searchParams.toString()}` : "";
+    return apiRequest(`/api/extraction-templates${suffix}`);
+  },
+  getExtractionTemplate(templateId) {
+    return apiRequest(`/api/extraction-templates/${templateId}`);
+  },
+  createExtractionTemplate(payload) {
+    return apiRequest("/api/extraction-templates", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  updateExtractionTemplate(templateId, payload) {
+    return apiRequest(`/api/extraction-templates/${templateId}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+  },
+  deleteExtractionTemplate(templateId) {
+    return apiRequest(`/api/extraction-templates/${templateId}`, {
+      method: "DELETE",
+    });
+  },
+  applyExtractionTemplate(templateId, payload) {
+    return apiRequest(`/api/extraction-templates/${templateId}/apply`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
 };

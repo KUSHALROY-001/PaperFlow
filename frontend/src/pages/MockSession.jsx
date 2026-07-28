@@ -10,6 +10,7 @@ import {
   BarChart2,
   Home,
 } from "lucide-react";
+import { formatDuration } from "@/lib/date";
 
 const mockQuestions = [
   {
@@ -96,14 +97,6 @@ const mockQuestions = [
 
 const TOTAL_TIME = 20 * 60; // 20 minutes in seconds
 
-function formatTime(secs) {
-  const m = Math.floor(secs / 60)
-    .toString()
-    .padStart(2, "0");
-  const s = (secs % 60).toString().padStart(2, "0");
-  return `${m}:${s}`;
-}
-
 export default function MockSession() {
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -176,9 +169,7 @@ export default function MockSession() {
             <p className="text-muted-foreground text-sm mb-6">
               JECA 2024 Full Paper — Mock Test
             </p>
-            <div
-              className="text-6xl font-black mb-2 bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent"
-            >
+            <div className="text-6xl font-black mb-2 bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
               {percentage}%
             </div>
             <p className="text-muted-foreground text-sm font-semibold mb-8">
@@ -189,7 +180,8 @@ export default function MockSession() {
                 {
                   label: "Correct",
                   value: score,
-                  color: "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20",
+                  color:
+                    "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20",
                 },
                 {
                   label: "Wrong",
@@ -332,7 +324,7 @@ export default function MockSession() {
           <div
             className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono font-bold text-sm ${timeLeft < 120 ? "bg-red-500/10 text-red-500 border border-red-500/20" : "bg-orange-500/10 text-orange-500 border border-orange-500/20"}`}
           >
-            <Clock className="w-4 h-4" /> {formatTime(timeLeft)}
+            <Clock className="w-4 h-4" /> {formatDuration(timeLeft)}
           </div>
           <button
             onClick={handleSubmit}

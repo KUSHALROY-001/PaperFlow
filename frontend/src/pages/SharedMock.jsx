@@ -8,6 +8,7 @@ import {
   XCircle,
   Sparkles,
 } from "lucide-react";
+import { formatDuration } from "@/lib/date";
 
 const mockData = {
   title: "JECA 2024 Full Paper",
@@ -102,14 +103,6 @@ const mockQuestions = [
 
 const TOTAL_TIME = 20 * 60;
 
-function formatTime(secs) {
-  const m = Math.floor(secs / 60)
-    .toString()
-    .padStart(2, "0");
-  const s = (secs % 60).toString().padStart(2, "0");
-  return `${m}:${s}`;
-}
-
 export default function SharedMock() {
   const [phase, setPhase] = useState("intro"); // intro | session | result
   const [name, setName] = useState("");
@@ -178,7 +171,9 @@ export default function SharedMock() {
                   <div className="text-sm font-bold text-foreground">
                     {s.value}
                   </div>
-                  <div className="text-xs text-muted-foreground font-medium">{s.label}</div>
+                  <div className="text-xs text-muted-foreground font-medium">
+                    {s.label}
+                  </div>
                 </div>
               ))}
             </div>
@@ -235,9 +230,7 @@ export default function SharedMock() {
             <p className="text-muted-foreground text-xs sm:text-sm mb-5">
               {mockData.title}
             </p>
-            <div
-              className="text-6xl font-black mb-1 text-orange-500"
-            >
+            <div className="text-6xl font-black mb-1 text-orange-500">
               {percentage}%
             </div>
             <p className="text-muted-foreground text-xs sm:text-sm font-medium">
@@ -288,10 +281,7 @@ export default function SharedMock() {
           <div className="text-center">
             <p className="text-xs text-muted-foreground">
               Want to create your own mock tests?{" "}
-              <a
-                href="/"
-                className="text-orange-500 font-bold hover:underline"
-              >
+              <a href="/" className="text-orange-500 font-bold hover:underline">
                 Try MockCraft free →
               </a>
             </p>
@@ -317,7 +307,7 @@ export default function SharedMock() {
         <div
           className={`flex items-center gap-2 px-3 py-1.5 rounded-xl font-mono font-bold text-xs ${timeLeft < 120 ? "bg-red-500/15 text-red-500 border border-red-500/20" : "bg-orange-500/15 text-orange-500 border border-orange-500/20"}`}
         >
-          <Clock className="w-4 h-4" /> {formatTime(timeLeft)}
+          <Clock className="w-4 h-4" /> {formatDuration(timeLeft)}
         </div>
         <button
           onClick={handleSubmit}

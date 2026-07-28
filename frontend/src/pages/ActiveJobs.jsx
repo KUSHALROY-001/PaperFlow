@@ -2,14 +2,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CheckCircle, Clock, Zap } from "lucide-react";
 import { api } from "@/lib/api";
-
-function formatTime(value) {
-  if (!value) return "-";
-  return new Intl.DateTimeFormat("en-IN", {
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(new Date(value));
-}
+import { formatClockTime } from "@/lib/date";
 
 function jobPercent(job) {
   if (job.status === "completed") return 100;
@@ -24,13 +17,19 @@ export default function ActiveJobs() {
   });
 
   const jobs = data?.jobs || [];
-  const running = jobs.filter((job) => ["queued", "running"].includes(job.status));
-  const completed = jobs.filter((job) => job.status === "completed").slice(0, 8);
+  const running = jobs.filter((job) =>
+    ["queued", "running"].includes(job.status),
+  );
+  const completed = jobs
+    .filter((job) => job.status === "completed")
+    .slice(0, 8);
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       <div>
-        <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Active Jobs</h1>
+        <h1 className="text-3xl font-extrabold text-foreground tracking-tight">
+          Active Jobs
+        </h1>
         <p className="text-muted-foreground text-sm sm:text-base mt-1">
           Monitor mock-test processing jobs across all clusters
         </p>
@@ -58,7 +57,9 @@ export default function ActiveJobs() {
             <div className="w-12 h-12 rounded-2xl bg-orange-500/10 text-orange-500/60 flex items-center justify-center mx-auto mb-3">
               <Zap className="w-6 h-6" />
             </div>
-            <p className="text-foreground font-bold text-base mb-1">No active jobs</p>
+            <p className="text-foreground font-bold text-base mb-1">
+              No active jobs
+            </p>
             <p className="text-xs sm:text-sm text-muted-foreground">
               All mock-test processing pipelines are currently idle
             </p>
@@ -66,7 +67,10 @@ export default function ActiveJobs() {
         ) : (
           <div className="space-y-4">
             {running.map((job) => (
-              <div key={job.id} className="surface-card rounded-2xl p-6 border border-border hover:border-orange-500/30 transition-all">
+              <div
+                key={job.id}
+                className="surface-card rounded-2xl p-6 border border-border hover:border-orange-500/30 transition-all"
+              >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-4">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-10 h-10 bg-orange-500/15 text-orange-500 rounded-xl flex items-center justify-center shrink-0">
@@ -77,7 +81,9 @@ export default function ActiveJobs() {
                         {job.mock_test_name}
                       </h3>
                       <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                        {job.cluster_name} / <span className="capitalize">{job.status}</span> / {job.current_stage || "Queued"}
+                        {job.cluster_name} /{" "}
+                        <span className="capitalize">{job.status}</span> /{" "}
+                        {job.current_stage || "Queued"}
                       </p>
                     </div>
                   </div>
@@ -91,7 +97,8 @@ export default function ActiveJobs() {
                 <div className="flex justify-between text-xs sm:text-sm font-semibold text-muted-foreground mb-2">
                   <span>{jobPercent(job)}% complete</span>
                   <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" /> Started {formatTime(job.started_at || job.created_at)}
+                    <Clock className="w-3.5 h-3.5" /> Started{" "}
+                    {formatClockTime(job.started_at || job.created_at)}
                   </span>
                 </div>
                 <div className="h-2.5 bg-muted rounded-full overflow-hidden">
@@ -129,14 +136,16 @@ export default function ActiveJobs() {
                     {job.mock_test_name}
                   </h3>
                   <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                    {job.cluster_name} / Completed / {formatTime(job.completed_at)}
+                    {job.cluster_name} / Completed /{" "}
+                    {formatClockTime(job.completed_at)}
                   </p>
                 </div>
                 <Link
                   to={`/cluster/${job.cluster_id}/mocktest/${job.mock_test_id}`}
                   className="flex w-full sm:w-auto items-center justify-center gap-1.5 text-xs sm:text-sm px-4 py-2 border border-border bg-card text-foreground font-semibold rounded-xl hover:bg-muted hover:border-orange-500/40 transition-colors shrink-0"
                 >
-                  Open Mock <ArrowRight className="w-3.5 h-3.5 text-orange-500" />
+                  Open Mock{" "}
+                  <ArrowRight className="w-3.5 h-3.5 text-orange-500" />
                 </Link>
               </div>
             ))}

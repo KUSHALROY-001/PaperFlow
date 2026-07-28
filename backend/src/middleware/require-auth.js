@@ -1,18 +1,19 @@
-import { pool } from '../db/pool.js';
-import { httpError } from '../lib/http-error.js';
-import { verifyAccessToken } from '../lib/jwt.js';
+import { pool } from "../db/pool.js";
+import { httpError } from "../lib/http-error.js";
+import { verifyAccessToken } from "../lib/jwt.js";
 
 export async function requireAuth(req, _res, next) {
   try {
-    const header = req.get('authorization');
-    const token = header?.startsWith('Bearer ') ? header.slice(7) : null;
+    const header = req.get("authorization");
+    const token = header?.startsWith("Bearer ") ? header.slice(7) : null;
 
     if (!token) {
-      throw httpError(401, 'Authentication token is required');
+      throw httpError(401, "Authentication token is required");
     }
 
     const payload = verifyAccessToken(token);
-    const requestedWorkspaceId = req.get('x-workspace-id') || payload.workspaceId;
+    const requestedWorkspaceId =
+      req.get("x-workspace-id") || payload.workspaceId;
 
     const result = await pool.query(
       `
@@ -34,7 +35,7 @@ export async function requireAuth(req, _res, next) {
     );
 
     if (result.rowCount === 0) {
-      throw httpError(401, 'Invalid or expired session');
+      throw httpError(401, "Invalid or expired session");
     }
 
     const user = result.rows[0];
@@ -48,6 +49,8 @@ export async function requireAuth(req, _res, next) {
 
     next();
   } catch (error) {
-    next(error.statusCode ? error : httpError(401, 'Invalid or expired session'));
+    next(
+      error.statusCode ? error : httpError(401, "Invalid or expired session"),
+    );
   }
 }
