@@ -19,5 +19,34 @@ export async function login(req, res) {
 }
 
 export async function me(req, res) {
-  res.json({ user: req.user, workspaceId: req.workspaceId });
+  const workspaces = await authService.listWorkspacesForUser(req.user.id);
+  res.json({ user: req.user, workspaceId: req.workspaceId, workspaces });
+}
+
+export async function getProfile(req, res) {
+  const profile = await authService.getProfile(req.user.id);
+  res.json({ profile });
+}
+
+export async function updateProfile(req, res) {
+  const profile = await authService.updateProfile(req.user.id, req.body);
+  res.json({ profile });
+}
+
+export async function updatePreferences(req, res) {
+  const preferences = await authService.updatePreferences(
+    req.user.id,
+    req.body,
+  );
+  res.json({ preferences });
+}
+
+export async function changePassword(req, res) {
+  await authService.changePassword(req.user.id, req.body);
+  res.status(204).send();
+}
+
+export async function deleteAccount(req, res) {
+  await authService.deleteAccount(req.user.id, req.body);
+  res.status(204).send();
 }

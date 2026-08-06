@@ -23,8 +23,46 @@ def add_job_event(connection, job_id, stage, message, payload=None):
     )
 
 
+# A 'running' job whose updated_at hasn't moved in this long is treated as
+# orphaned (worker crashed or was interrupted mid-job) and becomes eligible
+# for another worker to reclaim it. See migration 005 for why this needs a
+# bounded retry_count rather than reclaiming indefinitely.
+STALE_JOB_THRESHOLD = "15 minutes"
+MAX_JOB_RETRIES = 2
+
+
 def claim_next_job(connection):
     with connection.transaction():
+        # A job that's already been reclaimed MAX_JOB_RETRIES times and is
+        # stale again has proven it can't complete - stop retrying it and
+        # mark it failed outright, so a job that reliably crashes the
+        # worker can't loop through reclaim attempts forever.
+        failed_stale_rows = connection.execute(
+            """
+            UPDATE processing_jobs
+            SET status = 'failed',
+                current_stage = 'Failed (exceeded retry limit after being reclaimed)',
+                error_message = COALESCE(
+                    error_message,
+                    'Job was orphaned (worker crashed/interrupted) and exceeded the retry limit'
+                ),
+                completed_at = COALESCE(completed_at, now())
+            WHERE status = 'running'
+              AND updated_at < now() - (%s)::interval
+              AND retry_count >= %s
+            RETURNING id
+            """,
+            [STALE_JOB_THRESHOLD, MAX_JOB_RETRIES],
+        ).fetchall()
+
+        for failed_row in failed_stale_rows:
+            add_job_event(
+                connection,
+                failed_row["id"],
+                "failed",
+                "Job exceeded retry limit after being reclaimed too many times - marked failed",
+            )
+
         row = connection.execute(
             """
             SELECT
@@ -35,14 +73,18 @@ def claim_next_job(connection):
             FROM processing_jobs pj
             JOIN uploaded_files uf ON uf.id = pj.uploaded_file_id
             WHERE pj.status = 'queued'
+               OR (pj.status = 'running' AND pj.updated_at < now() - (%s)::interval)
             ORDER BY pj.created_at ASC
             FOR UPDATE SKIP LOCKED
             LIMIT 1
-            """
+            """,
+            [STALE_JOB_THRESHOLD],
         ).fetchone()
 
         if not row:
             return None
+
+        is_reclaim = row["status"] == "running"
 
         updated = connection.execute(
             """
@@ -50,19 +92,20 @@ def claim_next_job(connection):
             SET status = 'running',
                 current_stage = 'Claimed by OCR worker',
                 progress_percent = 5,
-                started_at = COALESCE(started_at, now())
+                started_at = COALESCE(started_at, now()),
+                retry_count = retry_count + %s
             WHERE id = %s
             RETURNING *
             """,
-            [row["id"]],
+            [1 if is_reclaim else 0, row["id"]],
         ).fetchone()
 
         add_job_event(
             connection,
             row["id"],
             "running",
-            "OCR worker claimed job",
-            {"originalFilename": row["original_filename"]},
+            "OCR worker reclaimed a stale/orphaned job" if is_reclaim else "OCR worker claimed job",
+            {"originalFilename": row["original_filename"], "reclaimed": is_reclaim},
         )
 
         return {**row, **updated}

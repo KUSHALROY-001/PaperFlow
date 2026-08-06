@@ -1,3 +1,4 @@
+import { Fragment, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertCircle,
@@ -12,16 +13,22 @@ import {
 } from "lucide-react";
 import { formatDate } from "@/lib/date";
 import { useMockTestWorkspace } from "@/hooks/useMockTestWorkspace";
+import { useAuth } from "@/lib/AuthContext";
 import { tabs, buildProcessingPhases } from "@/utils/mockTestHelpers";
 import OverviewTab from "../components/cluster/OverviewTab";
 import ProcessingTab from "../components/cluster/ProcessingTab";
 import ReviewTab from "../components/cluster/ReviewTab";
 import OutputTab from "../components/cluster/OutputTab";
+import { ConfirmDialog } from "../components/design-system/ConfirmDialog";
 
 export default function MockTestWorkspace() {
+  const { isViewer } = useAuth();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   const {
     clusterId,
     cluster,
+    clusterMockTests,
     mocktest,
     isLoading,
     latestJob,
@@ -63,13 +70,42 @@ export default function MockTestWorkspace() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      <Link
-        to={`/cluster/${clusterId}`}
-        className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-muted-foreground hover:text-orange-500 transition-colors"
-      >
-        <ChevronLeft className="w-4 h-4" />
-        {cluster?.name || "Cluster"}
-      </Link>
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-sm">
+        <Link
+          to={`/cluster/${clusterId}`}
+          className="flex items-center gap-1.5 font-semibold text-muted-foreground hover:text-orange-500 transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          {cluster?.name || "Cluster"}
+        </Link>
+
+        {clusterMockTests.length > 0 && (
+          <>
+            <div className="h-5 w-px bg-border" />
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              {clusterMockTests.map((item, index) => {
+                const isActive = item.id === mocktest.id;
+
+                return (
+                  <Fragment key={item.id}>
+                    {index > 0 && <div className="h-5 w-px bg-border" />}
+                    <Link
+                      to={`/cluster/${clusterId}/mocktest/${item.id}`}
+                      className={
+                        isActive
+                          ? "text-sm font-semibold text-orange-500"
+                          : "text-sm font-medium text-muted-foreground hover:text-orange-500 transition-colors"
+                      }
+                    >
+                      {item.name}
+                    </Link>
+                  </Fragment>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
 
       <div className="surface-card rounded-2xl p-4 sm:p-6 border border-border">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between mb-4">
@@ -108,16 +144,32 @@ export default function MockTestWorkspace() {
               <Play className="w-4 h-4 text-emerald-500" /> Start Test
             </Link>
             <button
-              onClick={handleReprocess}
-              className="w-9 h-9 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-orange-500/40 transition-all"
-              title="Reprocess"
+              disabled={isViewer}
+              onClick={() => !isViewer && handleReprocess()}
+              className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
+                isViewer
+                  ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-50"
+                  : "border-border text-muted-foreground hover:text-foreground hover:border-orange-500/40"
+              }`}
+              title={
+                isViewer ? "Editor role is required to reprocess" : "Reprocess"
+              }
             >
               <RotateCcw className="w-4 h-4" />
             </button>
             <button
-              onClick={handleDelete}
-              className="w-9 h-9 rounded-xl border border-red-500/20 flex items-center justify-center text-muted-foreground hover:text-red-500 hover:border-red-500/40 transition-all"
-              title="Delete"
+              disabled={isViewer}
+              onClick={() => !isViewer && setShowDeleteConfirm(true)}
+              className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
+                isViewer
+                  ? "border-red-500/10 text-red-500/30 cursor-not-allowed opacity-50"
+                  : "border-red-500/20 text-muted-foreground hover:text-red-500 hover:border-red-500/40"
+              }`}
+              title={
+                isViewer
+                  ? "Editor role is required to delete mock test"
+                  : "Delete"
+              }
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -130,7 +182,6 @@ export default function MockTestWorkspace() {
           </div>
         )}
 
-        {/* Dim Card Backgrounds matching icon tones for BOTH Light and Dark themes */}
         <div className="grid grid-cols-1 min-[380px]:grid-cols-2 md:grid-cols-4 gap-3">
           {[
             {
@@ -195,7 +246,6 @@ export default function MockTestWorkspace() {
         </div>
       </div>
 
-      {/* Tabs with exact active orange slider background like sidebar */}
       <div className="grid grid-cols-2 gap-1 surface-card border border-border rounded-2xl p-1.5 sm:flex">
         {tabs.map((tab) => {
           const active = activeTab === tab.id;
@@ -248,10 +298,27 @@ export default function MockTestWorkspace() {
           questions={questions}
           onStatusChange={handleQuestionStatusChange}
           onDelete={handleQuestionDelete}
+          clusterId={clusterId}
+          mockTestId={mocktest.id}
         />
       )}
       {activeTab === "output" && (
         <OutputTab questions={questions} metadata={metadata} />
+      )}
+
+      {showDeleteConfirm && (
+        <ConfirmDialog
+          open={showDeleteConfirm}
+          onOpenChange={setShowDeleteConfirm}
+          title={`Delete "${mocktest?.name}"?`}
+          description="Are you sure you want to delete this mock test and all its questions? This action cannot be undone."
+          confirmLabel="Delete Mock Test"
+          destructive={true}
+          onConfirm={async () => {
+            setShowDeleteConfirm(false);
+            await handleDelete();
+          }}
+        />
       )}
     </div>
   );

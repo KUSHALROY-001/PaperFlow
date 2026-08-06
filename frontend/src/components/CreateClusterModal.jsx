@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { FolderOpen, Sparkles, X } from "lucide-react";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function CreateClusterModal({ onClose, onCreated }) {
+  const { isViewer } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [form, setForm] = useState({
@@ -33,9 +35,9 @@ export default function CreateClusterModal({ onClose, onCreated }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-      <div className="w-full max-w-lg overflow-hidden rounded-3xl surface-card border border-border shadow-2xl">
-        <div className="flex items-center justify-between border-b border-border p-5 sm:p-6">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 py-8 backdrop-blur-xs sm:items-center">
+      <div className="flex max-h-[85dvh] w-full max-w-lg flex-col overflow-hidden rounded-3xl surface-card border border-border shadow-2xl">
+        <div className="flex shrink-0 items-center justify-between border-b border-border p-5 sm:p-6">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500/15 text-orange-500">
               <FolderOpen className="h-4 w-4" />
@@ -58,7 +60,10 @@ export default function CreateClusterModal({ onClose, onCreated }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5 p-5 sm:p-6">
+        <form
+          onSubmit={handleSubmit}
+          className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5 sm:p-6 overscroll-contain"
+        >
           <div>
             <label className="mb-2 block text-sm font-semibold text-foreground">
               Cluster Name *
@@ -134,8 +139,15 @@ export default function CreateClusterModal({ onClose, onCreated }) {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white transition-all bg-[#ea580c] hover:bg-[#c2410c] disabled:opacity-60 shadow-sm"
+              disabled={isSubmitting || isViewer}
+              title={
+                isViewer ? "Editor role is required to create clusters" : undefined
+              }
+              className={`flex-1 rounded-xl py-2.5 text-sm font-semibold text-white transition-all shadow-sm ${
+                isViewer
+                  ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50"
+                  : "bg-[#ea580c] hover:bg-[#c2410c]"
+              }`}
             >
               {isSubmitting ? "Creating..." : "Create Cluster"}
             </button>

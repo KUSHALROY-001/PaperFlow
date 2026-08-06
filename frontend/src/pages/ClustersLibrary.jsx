@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/lib/AuthContext";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRight,
   Clock,
@@ -12,13 +13,23 @@ import {
   Search,
 } from "lucide-react";
 import CreateClusterModal from "../components/CreateClusterModal";
+import CardActionMenu from "../components/design-system/CardActionMenu";
+import RenameModal from "../components/design-system/RenameModal";
+import { ConfirmDialog } from "../components/design-system/ConfirmDialog";
 import { api } from "@/lib/api";
 import { formatTimeAgo } from "@/lib/date";
 
 export default function ClustersLibrary() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
   const [view, setView] = useState("grid");
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
+
+  // Target cluster for Rename / Delete modals
+  const [renameTarget, setRenameTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["clusters"],
@@ -46,6 +57,24 @@ export default function ClustersLibrary() {
     [clusters, search],
   );
 
+  const handleRenameSave = async (newName, newDescription) => {
+    if (!renameTarget) return;
+    await api.updateCluster(renameTarget.id, {
+      name: newName,
+      description: newDescription,
+    });
+    queryClient.invalidateQueries({ queryKey: ["clusters"] });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    await api.deleteCluster(deleteTarget.id);
+    queryClient.invalidateQueries({ queryKey: ["clusters"] });
+    setDeleteTarget(null);
+  };
+
+  const { isViewer } = useAuth();
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -64,8 +93,16 @@ export default function ClustersLibrary() {
           )}
         </div>
         <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-xl text-sm shadow-sm transition-all sm:w-auto shrink-0"
+          onClick={() => !isViewer && setShowModal(true)}
+          disabled={isViewer}
+          title={
+            isViewer ? "Editor role is required to create clusters" : undefined
+          }
+          className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm shadow-sm transition-all sm:w-auto shrink-0 ${
+            isViewer
+              ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50 font-semibold"
+              : "bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold"
+          }`}
         >
           <Plus className="w-4 h-4" /> New Cluster
         </button>
@@ -141,19 +178,27 @@ export default function ClustersLibrary() {
             return (
               <div
                 key={cluster.id}
-                className="surface-card rounded-2xl p-5 border border-border hover:border-orange-500/30 transition-all flex flex-col justify-between"
+                onClick={() => navigate(`/cluster/${cluster.id}`)}
+                className="surface-card rounded-2xl p-5 border border-border hover:border-orange-500/40 cursor-pointer transition-all flex flex-col justify-between group"
               >
                 <div>
                   <div className="flex items-start justify-between mb-3">
                     <div className="w-10 h-10 bg-orange-500/15 rounded-xl flex items-center justify-center text-orange-500">
                       <FolderOpen className="w-5 h-5" />
                     </div>
-                    <span className="inline-flex items-center gap-1.5 text-xs bg-purple-500/15 text-purple-400 dark:text-purple-300 px-2.5 py-1 rounded-full font-semibold">
-                      <FileText className="w-3 h-3" />
-                      {mockTestCount} mock test{mockTestCount !== 1 ? "s" : ""}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 text-xs bg-purple-500/15 text-purple-400 dark:text-purple-300 px-2.5 py-1 rounded-full font-semibold">
+                        <FileText className="w-3 h-3" />
+                        {mockTestCount} mock test
+                        {mockTestCount !== 1 ? "s" : ""}
+                      </span>
+                      <CardActionMenu
+                        onRename={() => setRenameTarget(cluster)}
+                        onDelete={() => setDeleteTarget(cluster)}
+                      />
+                    </div>
                   </div>
-                  <h3 className="font-bold text-foreground mb-1 truncate text-base">
+                  <h3 className="font-bold text-foreground mb-1 truncate text-base group-hover:text-orange-500 transition-colors">
                     {cluster.name}
                   </h3>
                   {cluster.description && (
@@ -167,12 +212,9 @@ export default function ClustersLibrary() {
                     <Clock className="w-3 h-3" />{" "}
                     {formatTimeAgo(cluster.created_at)}
                   </span>
-                  <Link
-                    to={`/cluster/${cluster.id}`}
-                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-orange-500 border border-orange-500/30 hover:bg-orange-500/10 rounded-lg transition-colors"
-                  >
+                  <span className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-orange-500 border border-orange-500/30 group-hover:bg-orange-500/10 rounded-lg transition-colors">
                     Open <ArrowRight className="w-3 h-3" />
-                  </Link>
+                  </span>
                 </div>
               </div>
             );
@@ -194,14 +236,15 @@ export default function ClustersLibrary() {
             return (
               <div
                 key={cluster.id}
-                className="grid min-w-[40rem] grid-cols-[2fr_1fr_1fr_auto] gap-4 items-center px-5 py-4 border-b border-border/50 hover:bg-muted/30 transition-colors last:border-0"
+                onClick={() => navigate(`/cluster/${cluster.id}`)}
+                className="grid min-w-[40rem] grid-cols-[2fr_1fr_1fr_auto] gap-4 items-center px-5 py-4 border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors last:border-0 group"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 bg-orange-500/15 text-orange-500 rounded-lg flex items-center justify-center shrink-0">
                     <FolderOpen className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-semibold text-foreground text-sm truncate">
+                    <p className="font-semibold text-foreground text-sm truncate group-hover:text-orange-500 transition-colors">
                       {cluster.name}
                     </p>
                     {cluster.description && (
@@ -217,12 +260,15 @@ export default function ClustersLibrary() {
                 <span className="text-sm text-muted-foreground font-medium">
                   {formatTimeAgo(cluster.created_at)}
                 </span>
-                <Link
-                  to={`/cluster/${cluster.id}`}
-                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-orange-500 border border-orange-500/30 hover:bg-orange-500/10 rounded-lg transition-colors"
-                >
-                  Open <ArrowRight className="w-3 h-3" />
-                </Link>
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-orange-500 border border-orange-500/30 group-hover:bg-orange-500/10 rounded-lg transition-colors">
+                    Open <ArrowRight className="w-3 h-3" />
+                  </span>
+                  <CardActionMenu
+                    onRename={() => setRenameTarget(cluster)}
+                    onDelete={() => setDeleteTarget(cluster)}
+                  />
+                </div>
               </div>
             );
           })}
@@ -230,6 +276,30 @@ export default function ClustersLibrary() {
       )}
 
       {showModal && <CreateClusterModal onClose={() => setShowModal(false)} />}
+
+      {renameTarget && (
+        <RenameModal
+          isOpen={Boolean(renameTarget)}
+          title="Rename Cluster"
+          initialName={renameTarget.name}
+          initialDescription={renameTarget.description || ""}
+          showDescription={true}
+          onClose={() => setRenameTarget(null)}
+          onSave={handleRenameSave}
+        />
+      )}
+
+      {deleteTarget && (
+        <ConfirmDialog
+          open={Boolean(deleteTarget)}
+          onOpenChange={(open) => !open && setDeleteTarget(null)}
+          title={`Delete "${deleteTarget.name}"?`}
+          description="Are you sure you want to delete this cluster? All mock tests inside it will also be deleted."
+          confirmLabel="Delete Cluster"
+          destructive={true}
+          onConfirm={handleDeleteConfirm}
+        />
+      )}
     </div>
   );
 }

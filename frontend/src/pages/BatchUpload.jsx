@@ -9,6 +9,7 @@ import {
   AlertCircle,
   Play,
 } from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
 
 const templates = [
   "GATE CS",
@@ -34,12 +35,14 @@ function getStatusIcon(status) {
 }
 
 export default function BatchUpload() {
+  const { isViewer } = useAuth();
   const [files, setFiles] = useState([]);
   const [dragging, setDragging] = useState(false);
   const [template, setTemplate] = useState("Custom (Auto-detect)");
   const [started, setStarted] = useState(false);
 
   const addFiles = useCallback((newFiles) => {
+    if (isViewer) return;
     const pdfs = Array.from(newFiles).filter(
       (f) => f.type === "application/pdf",
     );
@@ -53,25 +56,27 @@ export default function BatchUpload() {
       mockTestName: f.name.replace(".pdf", ""),
     }));
     setFiles((prev) => [...prev, ...entries]);
-  }, []);
+  }, [isViewer]);
 
   const handleDrop = (e) => {
     e.preventDefault();
+    if (isViewer) return;
     setDragging(false);
     addFiles(e.dataTransfer.files);
   };
 
   const removeFile = (id) =>
-    setFiles((prev) => prev.filter((f) => f.id !== id));
+    !isViewer && setFiles((prev) => prev.filter((f) => f.id !== id));
 
   const updateName = (id, name) =>
+    !isViewer &&
     setFiles((prev) =>
       prev.map((f) => (f.id === id ? { ...f, mockTestName: name } : f)),
     );
 
   const handleStart = () => {
+    if (isViewer) return;
     setStarted(true);
-    // Simulate processing
     files.forEach((file, i) => {
       setTimeout(() => {
         setFiles((prev) =>
@@ -119,33 +124,39 @@ export default function BatchUpload() {
           onDrop={handleDrop}
           onDragOver={(e) => {
             e.preventDefault();
-            setDragging(true);
+            if (!isViewer) setDragging(true);
           }}
           onDragLeave={() => setDragging(false)}
-          onClick={() => document.getElementById("batch-upload").click()}
-          className={`border-2 border-dashed rounded-3xl p-6 sm:p-12 text-center cursor-pointer transition-all ${
-            dragging
-              ? "border-orange-500 bg-orange-500/10"
-              : "border-border hover:border-orange-500/40 hover:bg-muted/40"
+          onClick={() => !isViewer && document.getElementById("batch-upload").click()}
+          title={isViewer ? "Editor role is required to upload files" : undefined}
+          className={`border-2 border-dashed rounded-3xl p-6 sm:p-12 text-center transition-all ${
+            isViewer
+              ? "border-border bg-muted/40 cursor-not-allowed opacity-50"
+              : dragging
+                ? "border-orange-500 bg-orange-500/10 cursor-pointer"
+                : "border-border hover:border-orange-500/40 hover:bg-muted/40 cursor-pointer"
           }`}
         >
           <div className="w-16 h-16 bg-orange-500/15 rounded-2xl flex items-center justify-center text-orange-500 mx-auto mb-4">
             <Upload className="w-8 h-8" />
           </div>
           <p className="text-lg font-bold text-foreground mb-1">
-            Drop your PDFs here
+            {isViewer ? "Batch Upload Disabled for Viewers" : "Drop your PDFs here"}
           </p>
           <p className="text-xs sm:text-sm text-muted-foreground mb-2">
-            or click to browse · PDF only · max 50MB each · no limit on count
+            {isViewer ? "Editor role is required to upload documents" : "or click to browse · PDF only · max 50MB each · no limit on count"}
           </p>
-          <p className="text-xs font-semibold text-orange-500">
-            Each PDF will become its own mock test
-          </p>
+          {!isViewer && (
+            <p className="text-xs font-semibold text-orange-500">
+              Each PDF will become its own mock test
+            </p>
+          )}
           <input
             id="batch-upload"
             type="file"
             accept=".pdf"
             multiple
+            disabled={isViewer}
             className="hidden"
             onChange={(e) => addFiles(e.target.files)}
           />
@@ -162,55 +173,32 @@ export default function BatchUpload() {
             {!started && (
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <select
+                  disabled={isViewer}
                   value={template}
                   onChange={(e) => setTemplate(e.target.value)}
-                  className="px-3 py-2 text-xs sm:text-sm rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30"
+                  className={`px-3 py-2 text-xs sm:text-sm rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 ${
+                    isViewer ? "cursor-not-allowed opacity-50" : ""
+                  }`}
                 >
                   {templates.map((t) => (
                     <option key={t}>{t}</option>
                   ))}
                 </select>
                 <button
+                  disabled={isViewer || files.length === 0}
                   onClick={handleStart}
-                  disabled={files.length === 0}
-                  className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-xl shadow-xs transition-all text-xs sm:text-sm"
+                  title={isViewer ? "Editor role is required to process files" : undefined}
+                  className={`flex items-center justify-center gap-2 px-5 py-2.5 font-semibold rounded-xl shadow-xs transition-all text-xs sm:text-sm ${
+                    isViewer
+                      ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50"
+                      : "bg-[#ea580c] hover:bg-[#c2410c] text-white"
+                  }`}
                 >
                   <Play className="w-4 h-4" /> Start Processing
                 </button>
               </div>
             )}
           </div>
-
-          {/* Summary bar when processing */}
-          {started && (
-            <div className="surface-card rounded-2xl p-4 border border-border flex items-center gap-4">
-              <div className="flex-1">
-                <div className="flex items-center justify-between text-xs sm:text-sm mb-2">
-                  <span className="font-bold text-foreground">
-                    {allDone
-                      ? "All mock tests created!"
-                      : `Processing ${files.filter((f) => f.status === "processing").length} mock tests...`}
-                  </span>
-                  <span className="text-muted-foreground font-semibold">
-                    {files.filter((f) => f.status === "done").length}/
-                    {files.length} done
-                  </span>
-                </div>
-                <div className="h-2.5 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${Math.round((files.filter((f) => f.status === "done").length / files.length) * 100)}%`,
-                      background: allDone ? "#10B981" : "#ea580c",
-                    }}
-                  />
-                </div>
-              </div>
-              {allDone && (
-                <CheckCircle className="w-6 h-6 text-emerald-500 shrink-0" />
-              )}
-            </div>
-          )}
 
           <div className="space-y-3">
             {files.map((f) => (
@@ -227,9 +215,12 @@ export default function BatchUpload() {
                   <div className="flex-1 min-w-0">
                     {!started ? (
                       <input
+                        disabled={isViewer}
                         value={f.mockTestName}
                         onChange={(e) => updateName(f.id, e.target.value)}
-                        className="w-full text-xs sm:text-sm font-bold text-foreground bg-transparent border-b border-dashed border-border focus:outline-none focus:border-orange-500 pb-0.5 transition-colors"
+                        className={`w-full text-xs sm:text-sm font-bold text-foreground bg-transparent border-b border-dashed border-border focus:outline-none focus:border-orange-500 pb-0.5 transition-colors ${
+                          isViewer ? "cursor-not-allowed opacity-60" : ""
+                        }`}
                       />
                     ) : (
                       <p className="text-xs sm:text-sm font-bold text-foreground">
@@ -239,16 +230,6 @@ export default function BatchUpload() {
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {f.name} · {(f.size / 1024 / 1024).toFixed(1)} MB
                     </p>
-                    {f.status === "processing" && (
-                      <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-[#ea580c] transition-all duration-300"
-                          style={{
-                            width: `${f.progress}%`,
-                          }}
-                        />
-                      </div>
-                    )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <span
@@ -265,8 +246,13 @@ export default function BatchUpload() {
                     </span>
                     {!started && (
                       <button
+                        disabled={isViewer}
                         onClick={() => removeFile(f.id)}
-                        className="w-7 h-7 rounded-lg hover:bg-red-500/10 flex items-center justify-center text-muted-foreground hover:text-red-500 transition-colors"
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
+                          isViewer
+                            ? "cursor-not-allowed opacity-30 text-muted-foreground"
+                            : "hover:bg-red-500/10 text-muted-foreground hover:text-red-500"
+                        }`}
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -276,48 +262,6 @@ export default function BatchUpload() {
               </div>
             ))}
           </div>
-
-          {!started && (
-            <button
-              onClick={() => document.getElementById("batch-upload").click()}
-              className="w-full py-3 border-2 border-dashed border-border text-orange-500 text-xs sm:text-sm font-semibold rounded-2xl hover:bg-muted hover:border-orange-500/40 transition-all"
-            >
-              + Add More Files
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Empty instructions */}
-      {files.length === 0 && (
-        <div className="grid md:grid-cols-3 gap-4">
-          {[
-            {
-              step: "01",
-              title: "Upload PDFs",
-              desc: "Drag & drop multiple PDF files. Each becomes an independent cluster.",
-            },
-            {
-              step: "02",
-              title: "Name Mock Tests",
-              desc: "Auto-named from filenames. Edit any mock test name before processing.",
-            },
-            {
-              step: "03",
-              title: "Start Queue",
-              desc: "All PDFs are processed sequentially. Monitor live progress per file.",
-            },
-          ].map((s, i) => (
-            <div key={i} className="surface-card rounded-2xl p-5 border border-border">
-              <div className="text-3xl font-black text-orange-500/30 mb-3">
-                {s.step}
-              </div>
-              <h3 className="font-bold text-foreground mb-1 text-sm sm:text-base">{s.title}</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                {s.desc}
-              </p>
-            </div>
-          ))}
         </div>
       )}
     </div>

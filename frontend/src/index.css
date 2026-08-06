@@ -291,3 +291,78 @@
 .animate-liquid-wave {
   animation: liquid-wave 5s linear infinite;
 }
+
+@keyframes progress-shine {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+@keyframes progress-indeterminate {
+  0% {
+    transform: translateX(-100%) scaleX(0.25);
+  }
+  50% {
+    transform: translateX(70%) scaleX(0.6);
+  }
+  100% {
+    transform: translateX(200%) scaleX(0.25);
+  }
+}
+
+.animate-progress-shine {
+  animation: progress-shine 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-progress-indeterminate {
+  animation: progress-indeterminate 1.8s ease-in-out infinite;
+}
+
+@keyframes rgb-border-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-rgb-border {
+  animation: rgb-border-spin 3.5s linear infinite;
+}
+
+@keyframes slide-in-from-right {
+  0% {
+    opacity: 0.3;
+    transform: translateX(40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-from-left {
+  0% {
+    opacity: 0.3;
+    transform: translateX(-40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-left {
+  animation: slide-in-from-right 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-slide-right {
+  animation: slide-in-from-left 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+
+

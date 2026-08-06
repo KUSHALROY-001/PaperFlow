@@ -1,6 +1,9 @@
 import { CheckCircle2, Circle, FileText, Sparkles, Zap } from "lucide-react";
 
 function PhaseCard({ phase }) {
+  const isRunning = phase?.steps?.some((step) => step.status === "active");
+  const isComplete = phase?.steps?.every((step) => step.status === "complete");
+
   return (
     <div className="rounded-3xl p-4 sm:p-5 surface-card border border-border">
       <div className="mb-5 flex items-center gap-3">
@@ -40,8 +43,20 @@ function PhaseCard({ phase }) {
         })}
       </div>
 
-      <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-muted">
-        <div className="h-full w-3/4 rounded-full bg-orange-500 animate-pulse" />
+      <div className="mt-5 h-2 overflow-hidden rounded-full bg-muted/80 border border-border/40 relative">
+        <div
+          className={`h-full rounded-full transition-all duration-500 relative overflow-hidden ${
+            isComplete
+              ? "w-full bg-emerald-500"
+              : isRunning
+                ? "w-3/4 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500"
+                : "w-0 bg-muted-foreground/20"
+          }`}
+        >
+          {isRunning && (
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent animate-progress-shine" />
+          )}
+        </div>
       </div>
     </div>
   );
@@ -50,32 +65,73 @@ function PhaseCard({ phase }) {
 export default function ProcessingTab({ phases, documentPreview, job }) {
   const progress = Number(job?.progress_percent || 0);
   const statusLabel = job?.status ? job.status.replace("_", " ") : "idle";
+  const isProcessing =
+    !job?.status ||
+    ["queued", "running", "processing"].includes(job?.status);
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-3xl p-5 surface-card border border-border">
-        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-6 font-inter">
+      <div className="rounded-3xl p-5 sm:p-6 surface-card border border-border">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="font-bold text-foreground">
+            <h3 className="font-bold text-foreground text-base sm:text-lg flex items-center gap-2">
               Live Processing Status
+              {isProcessing && (
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-500"></span>
+                </span>
+              )}
             </h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               {job?.current_stage || "No active processing job"}
             </p>
           </div>
-          <span className="inline-flex w-fit rounded-full bg-orange-500/15 border border-orange-500/20 px-3 py-1 text-xs font-semibold capitalize text-orange-500">
+          <span
+            className={`inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold capitalize border ${
+              job?.status === "completed"
+                ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-500"
+                : job?.status === "failed"
+                  ? "bg-red-500/15 border-red-500/30 text-red-500"
+                  : "bg-orange-500/15 border-orange-500/30 text-orange-500"
+            }`}
+          >
+            {isProcessing && (
+              <Zap className="h-3 w-3 animate-pulse text-orange-500 fill-orange-500" />
+            )}
             {statusLabel}
           </span>
         </div>
-        <div className="h-2 overflow-hidden rounded-full bg-muted">
+
+        {/* Live Sliding Animated Progress Bar */}
+        <div className="relative h-3 w-full overflow-hidden rounded-full bg-muted/80 border border-border/50 shadow-inner">
           <div
-            className="h-full rounded-full bg-[#ea580c] transition-all"
-            style={{ width: `${Math.min(progress, 100)}%` }}
-          />
+            className={`h-full rounded-full transition-all duration-500 relative overflow-hidden shadow-xs ${
+              job?.status === "completed"
+                ? "bg-emerald-500"
+                : "bg-gradient-to-r from-[#ea580c] via-orange-500 to-amber-500"
+            }`}
+            style={{
+              width: `${Math.min(Math.max(progress, isProcessing ? 6 : 0), 100)}%`,
+            }}
+          >
+            {/* Sliding Sheen Light Beam across filled progress */}
+            {isProcessing && (
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent animate-progress-shine" />
+            )}
+          </div>
+
+          {/* Indeterminate Sliding Pulse when starting at 0% */}
+          {isProcessing && progress === 0 && (
+            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-orange-500/60 to-transparent animate-progress-indeterminate" />
+          )}
         </div>
-        <div className="mt-2 text-right text-xs font-semibold text-muted-foreground">
-          {progress}%
+
+        <div className="mt-2.5 flex items-center justify-between text-xs font-semibold text-muted-foreground">
+          <span>{isProcessing ? "Extracting & processing PDF..." : "Status"}</span>
+          <span className="font-bold text-foreground font-mono">{progress}%</span>
         </div>
+
         {job?.error_message && (
           <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs font-medium text-red-500">
             {job.error_message}

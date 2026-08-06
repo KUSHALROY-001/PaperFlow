@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, ShieldCheck } from "lucide-react";
+import { ArrowRight, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import ThemeToggle from "../components/ThemeToggle";
 import { useAuth } from "@/lib/AuthContext";
+import { PENDING_INVITE_TOKEN_KEY } from "./AcceptInvite";
 
 function MockCraftLogo() {
   return (
@@ -10,10 +11,17 @@ function MockCraftLogo() {
       <div className="w-8 h-8 rounded-xl bg-orange-500/15 flex items-center justify-center text-[#ea580c] shrink-0">
         <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
           <circle cx="12" cy="12" r="3" />
-          <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+          <path
+            d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+          />
         </svg>
       </div>
-      <span className="text-xl font-extrabold text-foreground tracking-tight">MockCraft</span>
+      <span className="text-xl font-extrabold text-foreground tracking-tight">
+        MockCraft
+      </span>
     </div>
   );
 }
@@ -26,12 +34,15 @@ export default function AuthPage({ mode, title, description }) {
     email: "",
     password: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const ctaLabel = mode === "login" ? "Sign In" : "Create Account";
   const altLabel =
-    mode === "login" ? "Need an account? Sign Up" : "Already have an account? Login";
+    mode === "login"
+      ? "Need an account? Sign Up"
+      : "Already have an account? Login";
   const altHref = mode === "login" ? "/signup" : "/login";
 
   const handleSubmit = async (event) => {
@@ -52,7 +63,19 @@ export default function AuthPage({ mode, title, description }) {
           password: form.password,
         });
       }
-      navigate("/dashboard", { replace: true });
+      // If AcceptInvite.jsx sent them here to log in/sign up first (see its
+      // stash-and-redirect logic), send them back to finish accepting
+      // instead of dropping them on the dashboard and losing the invite.
+      const pendingInviteToken = sessionStorage.getItem(
+        PENDING_INVITE_TOKEN_KEY,
+      );
+      if (pendingInviteToken) {
+        navigate(`/accept-invite?token=${pendingInviteToken}`, {
+          replace: true,
+        });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
     } catch (err) {
       setError(err.message || "Authentication failed");
     } finally {
@@ -83,7 +106,7 @@ export default function AuthPage({ mode, title, description }) {
           </p>
         </div>
 
-        <div className="surface-card rounded-[28px] p-6 sm:p-8 md:p-10 border border-border shadow-md">
+        <div className="surface-card rounded-[28px] px-3 py-4 sm:p-8 md:p-10 border border-border shadow-md">
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-foreground">{ctaLabel}</h2>
             <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
@@ -102,7 +125,10 @@ export default function AuthPage({ mode, title, description }) {
                   type="text"
                   value={form.name}
                   onChange={(event) =>
-                    setForm((current) => ({ ...current, name: event.target.value }))
+                    setForm((current) => ({
+                      ...current,
+                      name: event.target.value,
+                    }))
                   }
                   placeholder="Kushal"
                   className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/30"
@@ -119,7 +145,10 @@ export default function AuthPage({ mode, title, description }) {
                 type="email"
                 value={form.email}
                 onChange={(event) =>
-                  setForm((current) => ({ ...current, email: event.target.value }))
+                  setForm((current) => ({
+                    ...current,
+                    email: event.target.value,
+                  }))
                 }
                 placeholder="you@example.com"
                 className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/30"
@@ -129,16 +158,34 @@ export default function AuthPage({ mode, title, description }) {
               <label className="mb-2 block text-sm font-semibold text-foreground">
                 Password
               </label>
-              <input
-                required
-                type="password"
-                value={form.password}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, password: event.target.value }))
-                }
-                placeholder="At least 8 characters"
-                className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/30"
-              />
+              <div className="relative">
+                <input
+                  required
+                  type={showPassword ? "text" : "password"}
+                  value={form.password}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      password: event.target.value,
+                    }))
+                  }
+                  placeholder="At least 8 characters"
+                  className="w-full rounded-2xl border border-border bg-card pl-4 pr-12 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/30"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1.5 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500/30 flex items-center justify-center"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  title={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <Eye className="h-5 w-5" />
+                  ) : (
+                    <EyeOff className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
             </div>
 
             {error && (
@@ -152,12 +199,16 @@ export default function AuthPage({ mode, title, description }) {
               disabled={isSubmitting}
               className="inline-flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-3.5 text-sm font-semibold text-white transition-all bg-[#ea580c] hover:bg-[#c2410c] disabled:opacity-60 shadow-sm"
             >
-              {isSubmitting ? "Please wait..." : ctaLabel} <ArrowRight className="h-4 w-4" />
+              {isSubmitting ? "Please wait..." : ctaLabel}{" "}
+              <ArrowRight className="h-4 w-4" />
             </button>
           </form>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 text-sm">
-            <Link to={altHref} className="font-semibold text-orange-500 hover:text-orange-600">
+            <Link
+              to={altHref}
+              className="font-semibold text-orange-500 hover:text-orange-600"
+            >
               {altLabel}
             </Link>
           </div>

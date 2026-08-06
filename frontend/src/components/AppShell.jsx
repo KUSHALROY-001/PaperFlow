@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import {
-  Sparkles,
   LayoutDashboard,
   FolderOpen,
   Zap,
@@ -14,6 +15,7 @@ import {
   LogOut,
   BarChart2,
   Users,
+  UserPlus,
   Upload,
   Puzzle,
   CreditCard,
@@ -24,6 +26,7 @@ import {
 } from "lucide-react";
 import CreateClusterModal from "./CreateClusterModal";
 import ThemeToggle from "./ThemeToggle";
+import WorkspaceSwitcher from "./WorkspaceSwitcher";
 import { useAuth } from "@/lib/AuthContext";
 
 const navSections = [
@@ -47,12 +50,24 @@ const navSections = [
     label: "Workspace",
     items: [
       { icon: Users, label: "Team", to: "/team" },
+      { icon: UserPlus, label: "Invitations", to: "/invitations" },
       { icon: Puzzle, label: "Integrations", to: "/integrations" },
       { icon: CreditCard, label: "Billing", to: "/billing" },
       { icon: Settings, label: "Settings", to: "/settings" },
     ],
   },
 ];
+
+const roleLabels = {
+  owner: "Owner",
+  admin: "an Admin",
+  editor: "an Editor",
+  viewer: "a Viewer",
+};
+
+function roleLabelFor(role) {
+  return roleLabels[role] || role;
+}
 
 function MockCraftLogo() {
   return (
@@ -162,10 +177,17 @@ function SidebarContent({ location, onNavigate, onCreateCluster }) {
 
 export default function AppShell() {
   const location = useLocation();
-  const { logout, user } = useAuth();
+  const { logout, user, workspaceId, workspaces } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  const { data: myInvitationsData } = useQuery({
+    queryKey: ["my-invitations"],
+    queryFn: api.listMyInvitations,
+    refetchInterval: 60_000,
+  });
+  const pendingInviteCount = myInvitationsData?.invitations?.length || 0;
 
   useEffect(() => {
     setMobileNavOpen(false);
@@ -179,6 +201,10 @@ export default function AppShell() {
 
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : "K";
   const userName = user?.name ? user.name.split(" ")[0] : "Kushal";
+  const currentWorkspace = workspaces.find((w) => w.id === workspaceId);
+  const isGuestWorkspace = Boolean(
+    currentWorkspace && !currentWorkspace.isOwner,
+  );
 
   return (
     <div className="min-h-screen bg-background font-sans">
@@ -260,9 +286,18 @@ export default function AppShell() {
               <span className="hidden sm:inline">My Results</span>
             </Link>
             <ThemeToggle />
-            <button className="w-9 h-9 rounded-xl border border-border bg-card flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
+            <WorkspaceSwitcher />
+            <Link
+              to="/invitations"
+              className="relative w-9 h-9 rounded-xl border border-border bg-card flex items-center justify-center text-muted-foreground hover:text-foreground transition-all"
+            >
               <Bell className="w-4 h-4" />
-            </button>
+              {pendingInviteCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-orange-500 text-white text-[9px] font-bold flex items-center justify-center">
+                  {pendingInviteCount > 9 ? "9+" : pendingInviteCount}
+                </span>
+              )}
+            </Link>
 
             <div className="relative">
               <button
@@ -299,7 +334,17 @@ export default function AppShell() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 min-w-0">
+        {isGuestWorkspace && (
+          <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 sm:px-6 py-2 text-xs font-medium text-amber-700 dark:text-amber-400 flex items-center gap-2">
+            <Users className="w-3.5 h-3.5 shrink-0" />
+            <span>
+              You're viewing <strong>{currentWorkspace.name}</strong> as{" "}
+              {roleLabelFor(currentWorkspace.role)} — not your own workspace.
+            </span>
+          </div>
+        )}
+
+        <main className="flex-1 p-2 sm:p-6 min-w-0">
           <Outlet />
         </main>
       </div>

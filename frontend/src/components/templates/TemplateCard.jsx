@@ -1,8 +1,10 @@
 import { BookOpen, Download, Eye, Star, Target, Zap } from "lucide-react";
 import { colorMap, iconBgMap } from "@/utils/templateHelpers";
+import { useAuth } from "@/lib/AuthContext";
 
-// Promoted from an inline .map() inside pages/Templates.jsx — no behavior changes.
 export default function TemplateCard({ template, onPreview, onApply }) {
+  const { isViewer } = useAuth();
+
   return (
     <div className="surface-card rounded-2xl p-5 border border-border hover:border-orange-500/30 transition-all">
       <div className="flex flex-col sm:flex-row sm:items-start gap-4">
@@ -56,8 +58,16 @@ export default function TemplateCard({ template, onPreview, onApply }) {
               <Eye className="w-3.5 h-3.5 text-orange-500" /> Preview
             </button>
             <button
-              onClick={() => onApply(template)}
-              className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl transition-all bg-orange-500/10 dark:bg-orange-500/15 border border-orange-500/30 hover:bg-orange-500/20"
+              disabled={isViewer}
+              onClick={() => !isViewer && onApply(template)}
+              title={
+                isViewer ? "Editor role is required to apply templates" : undefined
+              }
+              className={`flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${
+                isViewer
+                  ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50 border border-border"
+                  : "bg-orange-500/10 dark:bg-orange-500/15 border border-orange-500/30 hover:bg-orange-500/20"
+              }`}
             >
               <Download className="w-3.5 h-3.5 text-orange-500" /> Apply
               Template

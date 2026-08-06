@@ -266,6 +266,7 @@ export async function listPlayableQuestions(mockTestId) {
   const result = await pool.query(
     `
     SELECT
+      "questionId",
       mock_test_id,
       "questionNo",
       topic,

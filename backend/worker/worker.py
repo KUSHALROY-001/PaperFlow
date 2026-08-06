@@ -103,6 +103,11 @@ def process_job(job):
 
     questions = parse_questions(pages)
 
+    # Set at upload time (mock-tests.service.js#uploadDocument) based on what
+    # the user told us the PDF is. Defaults to "questions" so jobs queued
+    # before this field existed behave exactly as they did before.
+    document_type = (job.get("input_config") or {}).get("documentType", "questions")
+
     with get_connection() as connection:
         update_job(
             connection,
@@ -114,11 +119,30 @@ def process_job(job):
                 "pagesWithText": len(pages),
                 "ocr": ocr_summary,
                 "regexQuestionsParsed": len(questions),
+                "documentType": document_type,
             },
         )
         connection.commit()
 
-    questions, ai_summary = enhance_questions_with_ai(pages, questions, pdf_path=pdf_path)
+    def report_ai_progress(stage_message):
+        # Real-time checkpoint so a job that's genuinely still working
+        # through several AI chunks is distinguishable in the DB from one
+        # that's silently orphaned - previously this whole phase wrote
+        # "AI cleanup" once and then nothing else until it finished,
+        # indistinguishable from a dead job without checking the worker's
+        # own terminal.
+        with get_connection() as connection:
+            update_job(connection, job["id"], status="running", stage=stage_message, progress=68)
+            connection.commit()
+
+    questions, ai_summary = enhance_questions_with_ai(
+        pages,
+        questions,
+        pdf_path=pdf_path,
+        document_type=document_type,
+        was_scanned=bool(ocr_summary.get("converted")),
+        on_progress=report_ai_progress,
+    )
 
     with get_connection() as connection:
         with connection.transaction():
@@ -174,7 +198,15 @@ def process_next_job():
     try:
         count = process_job(job)
         print(f"Completed job {job['id']} with {count} parsed question(s)")
-    except Exception as error:
+    except (Exception, KeyboardInterrupt, SystemExit) as error:
+        # KeyboardInterrupt/SystemExit are BaseException, not Exception -
+        # without listing them explicitly, a Ctrl+C (or SIGTERM converted
+        # to SystemExit) during a job left it permanently orphaned at
+        # status='running' with no failed/completed event ever written
+        # (this is exactly what happened to a real job - see
+        # processing_job_events for that incident's timeline). Mark it
+        # failed first, then still actually stop the worker for a genuine
+        # interrupt/exit instead of silently swallowing it.
         with get_connection() as connection:
             update_job(
                 connection,
@@ -182,11 +214,14 @@ def process_next_job():
                 status="failed",
                 stage="Failed",
                 progress=100,
-                error=str(error),
+                error=str(error) or error.__class__.__name__,
             )
             mark_mock_test_after_processing(connection, job["mock_test_id"], 0)
             connection.commit()
         print(f"Failed job {job['id']}: {error}")
+
+        if isinstance(error, (KeyboardInterrupt, SystemExit)):
+            raise
 
     return True
 

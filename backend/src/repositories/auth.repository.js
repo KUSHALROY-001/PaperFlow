@@ -29,10 +29,124 @@ export async function findFirstWorkspaceIdForUser(userId) {
   return result.rows[0]?.workspace_id || null;
 }
 
+// Powers the workspace switcher and GET /api/auth/me - a user can belong to
+// more than one workspace (their own, plus any they've accepted an
+// invitation into), and the frontend needs to know all of them plus the
+// role held in each, not just the currently-active one.
+export async function listWorkspacesForUser(userId) {
+  const result = await pool.query(
+    `
+    SELECT
+      w.id,
+      w.name,
+      wm.role,
+      w.owner_id = $1 AS "isOwner"
+    FROM workspace_members wm
+    JOIN workspaces w ON w.id = wm.workspace_id
+    WHERE wm.user_id = $1
+    ORDER BY wm.created_at ASC
+    `,
+    [userId],
+  );
+
+  return result.rows;
+}
+
 export async function touchLastLogin(userId) {
   await pool.query("UPDATE users SET last_login_at = now() WHERE id = $1", [
     userId,
   ]);
+}
+
+// --- Settings page --------------------------------------------------------
+
+const PROFILE_COLUMNS = `
+  id,
+  name,
+  email,
+  account_type AS "accountType",
+  preferences,
+  created_at AS "createdAt"
+`;
+
+export async function findProfileById(userId) {
+  const result = await pool.query(
+    `SELECT ${PROFILE_COLUMNS} FROM users WHERE id = $1`,
+    [userId],
+  );
+  return result.rows[0] || null;
+}
+
+export async function updateProfile(userId, { name, email, accountType }) {
+  const result = await pool.query(
+    `
+    UPDATE users
+    SET
+      name = COALESCE($2, name),
+      email = COALESCE($3, email),
+      account_type = COALESCE($4, account_type)
+    WHERE id = $1
+    RETURNING ${PROFILE_COLUMNS}
+    `,
+    [userId, name ?? null, email ?? null, accountType ?? null],
+  );
+
+  return result.rows[0] || null;
+}
+
+// Merges rather than replaces (jsonb || jsonb) so saving one preferences
+// section (e.g. just emailNotifications) never wipes out fields the
+// frontend didn't send in that request.
+export async function mergePreferences(userId, patch) {
+  const result = await pool.query(
+    `
+    UPDATE users
+    SET preferences = preferences || $2::jsonb
+    WHERE id = $1
+    RETURNING preferences
+    `,
+    [userId, JSON.stringify(patch)],
+  );
+
+  return result.rows[0]?.preferences || null;
+}
+
+export async function findPasswordHashById(userId) {
+  const result = await pool.query(
+    "SELECT password_hash FROM users WHERE id = $1",
+    [userId],
+  );
+  return result.rows[0]?.password_hash || null;
+}
+
+export async function updatePassword(userId, passwordHash) {
+  await pool.query("UPDATE users SET password_hash = $2 WHERE id = $1", [
+    userId,
+    passwordHash,
+  ]);
+}
+
+// Deleting a user cascades to any workspace they own (workspaces.owner_id
+// ON DELETE CASCADE) - if that workspace has other members, deleting your
+// own account would silently destroy a shared workspace out from under
+// your team. This surfaces that risk so the service layer can block it
+// rather than let it happen implicitly.
+export async function findOwnedWorkspacesWithOtherMembers(userId) {
+  const result = await pool.query(
+    `
+    SELECT w.id, w.name
+    FROM workspaces w
+    WHERE w.owner_id = $1
+      AND (SELECT COUNT(*) FROM workspace_members wm WHERE wm.workspace_id = w.id) > 1
+    `,
+    [userId],
+  );
+
+  return result.rows;
+}
+
+export async function deleteUser(userId) {
+  await pool.query("DELETE FROM users WHERE id = $1", [userId]);
 }
 
 // Creates the user, a personal workspace, and the owner membership row in a

@@ -99,9 +99,15 @@ export const api = {
       body: JSON.stringify(payload),
     });
   },
-  uploadMockTestDocument(mockTestId, file) {
+  // documentType: "questions" (default, PDF already has ready-made MCQs) or
+  // "notes" (PDF is study notes - ask the AI to write new questions from it
+  // instead of trying to extract questions that don't exist). Passed as a
+  // plain form field alongside the file so multer's upload.single('document')
+  // still parses the file normally; multer puts non-file fields into req.body.
+  uploadMockTestDocument(mockTestId, file, documentType = "questions") {
     const formData = new FormData();
     formData.append("document", file);
+    formData.append("documentType", documentType);
 
     return apiRequest(`/api/mock-tests/${mockTestId}/upload`, {
       method: "POST",
@@ -129,6 +135,12 @@ export const api = {
   },
   listQuestions(mockTestId) {
     return apiRequest(`/api/mock-tests/${mockTestId}/questions`);
+  },
+  reorderQuestions(mockTestId, items) {
+    return apiRequest(`/api/mock-tests/${mockTestId}/questions/reorder`, {
+      method: "PUT",
+      body: JSON.stringify({ items }),
+    });
   },
   createQuestion(payload) {
     return apiRequest("/api/questions", {
@@ -189,6 +201,153 @@ export const api = {
     return apiRequest(`/api/extraction-templates/${templateId}/apply`, {
       method: "POST",
       body: JSON.stringify(payload),
+    });
+  },
+
+  // --- Attempts (workspace-authenticated) ---
+  startAttempt(mockTestId) {
+    return apiRequest(`/api/mock-tests/${mockTestId}/attempts`, {
+      method: "POST",
+    });
+  },
+  listAttemptsForMockTest(mockTestId) {
+    return apiRequest(`/api/mock-tests/${mockTestId}/attempts`);
+  },
+  listMyAttempts() {
+    return apiRequest("/api/attempts");
+  },
+  getAttempt(attemptId) {
+    return apiRequest(`/api/attempts/${attemptId}`);
+  },
+  saveAttemptAnswer(attemptId, questionId, selectedOptionIndexes) {
+    return apiRequest(`/api/attempts/${attemptId}/answers/${questionId}`, {
+      method: "PUT",
+      body: JSON.stringify({ selectedOptionIndexes }),
+    });
+  },
+  submitAttempt(attemptId) {
+    return apiRequest(`/api/attempts/${attemptId}/submit`, {
+      method: "POST",
+    });
+  },
+  abandonAttempt(attemptId) {
+    return apiRequest(`/api/attempts/${attemptId}/abandon`, {
+      method: "POST",
+    });
+  },
+  deleteAttempt(attemptId) {
+    return apiRequest(`/api/attempts/${attemptId}`, {
+      method: "DELETE",
+    });
+  },
+
+  // --- Share links (workspace-authenticated management) ---
+  createShareLink(mockTestId) {
+    return apiRequest(`/api/mock-tests/${mockTestId}/share`, {
+      method: "POST",
+    });
+  },
+  listShareLinks(mockTestId) {
+    return apiRequest(`/api/mock-tests/${mockTestId}/share`);
+  },
+  revokeShareLink(mockTestId, shareId) {
+    return apiRequest(`/api/mock-tests/${mockTestId}/share/${shareId}`, {
+      method: "DELETE",
+    });
+  },
+
+  // --- Public shared-test-taking (no auth - token is the credential) ---
+  getSharedMockTest(token) {
+    return apiRequest(`/api/shared/${token}`);
+  },
+  startSharedAttempt(token, guestName) {
+    return apiRequest(`/api/shared/${token}/attempts`, {
+      method: "POST",
+      body: JSON.stringify({ guestName }),
+    });
+  },
+  getSharedAttempt(token, attemptId) {
+    return apiRequest(`/api/shared/${token}/attempts/${attemptId}`);
+  },
+  saveSharedAnswer(token, attemptId, questionId, selectedOptionIndexes) {
+    return apiRequest(
+      `/api/shared/${token}/attempts/${attemptId}/answers/${questionId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ selectedOptionIndexes }),
+      },
+    );
+  },
+  submitSharedAttempt(token, attemptId) {
+    return apiRequest(`/api/shared/${token}/attempts/${attemptId}/submit`, {
+      method: "POST",
+    });
+  },
+
+  // --- Settings (profile, preferences, password, account) ---
+  getProfile() {
+    return apiRequest("/api/auth/profile");
+  },
+  updateProfile(payload) {
+    return apiRequest("/api/auth/profile", {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+  },
+  updatePreferences(payload) {
+    return apiRequest("/api/auth/preferences", {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+  },
+  changePassword(payload) {
+    return apiRequest("/api/auth/password", {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+  },
+  deleteAccount(password) {
+    return apiRequest("/api/auth/account", {
+      method: "DELETE",
+      body: JSON.stringify({ password }),
+    });
+  },
+
+  // --- Team (members + invitations) ---
+  listTeamMembers() {
+    return apiRequest("/api/team/members");
+  },
+  updateTeamMemberRole(memberId, role) {
+    return apiRequest(`/api/team/members/${memberId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    });
+  },
+  removeTeamMember(memberId) {
+    return apiRequest(`/api/team/members/${memberId}`, {
+      method: "DELETE",
+    });
+  },
+  listSentInvitations() {
+    return apiRequest("/api/team/invitations");
+  },
+  listMyInvitations() {
+    return apiRequest("/api/team/invitations/mine");
+  },
+  createInvitation(payload) {
+    return apiRequest("/api/team/invitations", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  revokeInvitation(invitationId) {
+    return apiRequest(`/api/team/invitations/${invitationId}`, {
+      method: "DELETE",
+    });
+  },
+  acceptInvitation(token) {
+    return apiRequest(`/api/team/invitations/${token}/accept`, {
+      method: "POST",
     });
   },
 };

@@ -1,18 +1,23 @@
 import { useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import {
   Check,
   CheckCircle2,
   ChevronDown,
+  Edit2,
   Flag,
   ShieldAlert,
   Trash2,
 } from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
+import { ConfirmDialog } from "../design-system/ConfirmDialog";
 
 const filters = [
   { id: "all", label: "All" },
   { id: "approved", label: "Approved" },
   { id: "review", label: "Needs Review" },
   { id: "rejected", label: "Flagged" },
+  { id: "low_confidence", label: "Low Confidence" },
 ];
 
 function getConfidenceTone(confidence) {
@@ -25,15 +30,31 @@ function getConfidenceTone(confidence) {
   return "bg-red-500/10 text-red-500 border border-red-500/20";
 }
 
-export default function ReviewTab({ questions, onStatusChange, onDelete }) {
+export default function ReviewTab({
+  questions,
+  onStatusChange,
+  onDelete,
+  clusterId: propClusterId,
+  mockTestId: propMockTestId,
+}) {
+  const { isViewer } = useAuth();
+  const params = useParams();
+  const clusterId = propClusterId || params.clusterId;
+  const mockTestId = propMockTestId || params.mockTestId;
   const [activeFilter, setActiveFilter] = useState("all");
   const [expandedIds, setExpandedIds] = useState(
     [questions[0]?.id].filter(Boolean),
   );
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const filteredQuestions = useMemo(() => {
     if (activeFilter === "all") {
       return questions;
+    }
+    if (activeFilter === "low_confidence") {
+      return questions.filter(
+        (question) => Number(question.confidence || 0) < 70,
+      );
     }
 
     return questions.filter((question) => question.status === activeFilter);
@@ -47,6 +68,9 @@ export default function ReviewTab({ questions, onStatusChange, onDelete }) {
         .length,
       flagged: questions.filter((question) => question.status === "rejected")
         .length,
+      lowConfidence: questions.filter(
+        (question) => Number(question.confidence || 0) < 70,
+      ).length,
     }),
     [questions],
   );
@@ -60,7 +84,7 @@ export default function ReviewTab({ questions, onStatusChange, onDelete }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-inter">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap gap-2">
           {filters.map((filter) => {
@@ -82,7 +106,7 @@ export default function ReviewTab({ questions, onStatusChange, onDelete }) {
           })}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
           <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-3 text-sm sm:px-4">
             <div className="text-xs font-bold uppercase tracking-wide text-emerald-500">
               Approved
@@ -99,12 +123,20 @@ export default function ReviewTab({ questions, onStatusChange, onDelete }) {
               {summary.review}
             </div>
           </div>
-          <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-3 py-3 text-sm sm:px-4">
-            <div className="text-xs font-bold uppercase tracking-wide text-red-500">
+          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-3 py-3 text-sm sm:px-4">
+            <div className="text-xs font-bold uppercase tracking-wide text-amber-500">
               Flagged
             </div>
             <div className="mt-1 text-xl font-bold text-foreground">
               {summary.flagged}
+            </div>
+          </div>
+          <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-3 py-3 text-sm sm:px-4">
+            <div className="text-xs font-bold uppercase tracking-wide text-red-500">
+              Low Confidence
+            </div>
+            <div className="mt-1 text-xl font-bold text-foreground">
+              {summary.lowConfidence}
             </div>
           </div>
         </div>
@@ -113,58 +145,142 @@ export default function ReviewTab({ questions, onStatusChange, onDelete }) {
       <div className="space-y-4">
         {filteredQuestions.map((question) => {
           const expanded = expandedIds.includes(question.id);
+          const isApproved = question.status === "approved";
+          const isFlagged = question.status === "rejected";
 
           return (
             <div
               key={question.id}
-              className="rounded-3xl p-5 surface-card border border-border"
+              className={`rounded-3xl p-3 sm:p-5 surface-card border transition-all ${
+                isApproved
+                  ? "border-emerald-500/30"
+                  : isFlagged
+                    ? "border-amber-500/30"
+                    : "border-border"
+              }`}
             >
               <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                <button
-                  type="button"
-                  onClick={() => toggleExpanded(question.id)}
-                  className="flex-1 text-left"
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-orange-500/10 px-3 py-1 text-xs font-semibold text-orange-500">
-                      {question.topic}
-                    </span>
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${getConfidenceTone(question.confidence)}`}
-                    >
-                      {question.confidence}% confidence
-                    </span>
+                <div className="flex-1 min-w-0">
+                  <div className="mb-3 flex items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2 min-w-0">
+                      <span className="rounded-full bg-orange-500/15 border border-orange-500/20 px-3 py-1 text-xs font-bold text-orange-500 shrink-0">
+                        Q{question.questionNo}
+                      </span>
+                      <span className="rounded-full bg-muted border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
+                        {question.topic}
+                      </span>
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${getConfidenceTone(question.confidence)}`}
+                      >
+                        {question.confidence}% confidence
+                      </span>
+                      {isApproved && (
+                        <span className="rounded-full bg-emerald-500/15 border border-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-500 flex items-center gap-1">
+                          <Check className="w-3 h-3" /> Approved
+                        </span>
+                      )}
+                      {isFlagged && (
+                        <span className="rounded-full bg-amber-500/15 border border-amber-500/20 px-3 py-1 text-xs font-semibold text-amber-500 flex items-center gap-1">
+                          <Flag className="w-3 h-3" /> Flagged
+                        </span>
+                      )}
+                    </div>
+                    {clusterId && mockTestId && (
+                      <Link
+                        to={`/cluster/${clusterId}/mock/${mockTestId}/editor?qId=${question.id}`}
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all hover:border-orange-500/40 hover:text-orange-500 hover:bg-orange-500/10 shrink-0"
+                        title={`Edit Question ${question.questionNo} in Question Editor`}
+                      >
+                        <Edit2 className="h-4 w-4 text-orange-500" />
+                      </Link>
+                    )}
                   </div>
-                  <h3 className="mt-3 text-base sm:text-lg font-bold text-foreground">
-                    {question.text}
-                  </h3>
-                  <p className="mt-1.5 text-xs text-muted-foreground">
-                    Source: {question.sourceLine}
-                  </p>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => toggleExpanded(question.id)}
+                    className="w-full text-left"
+                  >
+                    <h3 className="text-base sm:text-lg font-bold text-foreground">
+                      {question.text}
+                    </h3>
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      Source: {question.sourceLine}
+                    </p>
+                  </button>
+                </div>
 
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     type="button"
-                    onClick={() => onStatusChange(question.id, "approved")}
-                    className="rounded-xl border border-emerald-500/20 p-2 text-emerald-500 transition-colors hover:bg-emerald-500/10"
+                    disabled={isViewer}
+                    onClick={() =>
+                      !isViewer &&
+                      onStatusChange(
+                        question.id,
+                        isApproved ? "review" : "approved",
+                      )
+                    }
+                    className={`rounded-xl p-2 transition-all ${
+                      isViewer
+                        ? "opacity-50 cursor-not-allowed border border-emerald-500/20 text-emerald-500"
+                        : isApproved
+                          ? "bg-emerald-500 text-white border border-emerald-500 shadow-xs hover:bg-emerald-600"
+                          : "border border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/10"
+                    }`}
                     aria-label="Approve question"
+                    title={
+                      isViewer
+                        ? "Editor role is required to approve questions"
+                        : isApproved
+                          ? "Approved (click to unapprove)"
+                          : "Approve question"
+                    }
                   >
                     <Check className="h-4 w-4" />
                   </button>
                   <button
                     type="button"
-                    onClick={() => onStatusChange(question.id, "rejected")}
-                    className="rounded-xl border border-amber-500/20 p-2 text-amber-500 transition-colors hover:bg-amber-500/10"
+                    disabled={isViewer}
+                    onClick={() =>
+                      !isViewer &&
+                      onStatusChange(
+                        question.id,
+                        isFlagged ? "review" : "rejected",
+                      )
+                    }
+                    className={`rounded-xl p-2 transition-all ${
+                      isViewer
+                        ? "opacity-50 cursor-not-allowed border border-amber-500/20 text-amber-500"
+                        : isFlagged
+                          ? "bg-amber-500 text-white border border-amber-500 shadow-xs hover:bg-amber-600"
+                          : "border border-amber-500/20 text-amber-500 hover:bg-amber-500/10"
+                    }`}
                     aria-label="Flag question"
+                    title={
+                      isViewer
+                        ? "Editor role is required to flag questions"
+                        : isFlagged
+                          ? "Flagged (click to unflag)"
+                          : "Flag question"
+                    }
                   >
                     <Flag className="h-4 w-4" />
                   </button>
                   <button
                     type="button"
-                    onClick={() => onDelete(question.id)}
-                    className="rounded-xl border border-red-500/20 p-2 text-red-500 transition-colors hover:bg-red-500/10"
+                    disabled={isViewer}
+                    onClick={() => !isViewer && setDeleteTarget(question)}
+                    className={`rounded-xl border border-red-500/20 p-2 text-red-500 transition-colors ${
+                      isViewer
+                        ? "opacity-50 cursor-not-allowed"
+                        : "hover:bg-red-500/10"
+                    }`}
                     aria-label="Delete question"
+                    title={
+                      isViewer
+                        ? "Editor role is required to delete questions"
+                        : "Delete question"
+                    }
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -182,7 +298,7 @@ export default function ReviewTab({ questions, onStatusChange, onDelete }) {
               </div>
 
               {expanded && (
-                <div className="mt-5 space-y-3 rounded-2xl border border-border bg-muted/40 p-4">
+                <div className="mt-5 space-y-3 rounded-2xl border border-border bg-muted/40 p-2 sm:p-4">
                   {question.options.map((option) => {
                     const correct = option === question.answer;
                     return (
@@ -226,6 +342,21 @@ export default function ReviewTab({ questions, onStatusChange, onDelete }) {
           );
         })}
       </div>
+
+      {deleteTarget && (
+        <ConfirmDialog
+          open={Boolean(deleteTarget)}
+          onOpenChange={(open) => !open && setDeleteTarget(null)}
+          title={`Delete Q${deleteTarget.questionNo}?`}
+          description="Are you sure you want to delete this question? This action cannot be undone."
+          confirmLabel="Delete Question"
+          destructive={true}
+          onConfirm={() => {
+            onDelete(deleteTarget.id);
+            setDeleteTarget(null);
+          }}
+        />
+      )}
     </div>
   );
 }

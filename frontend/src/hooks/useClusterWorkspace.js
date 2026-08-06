@@ -40,8 +40,6 @@ export function useClusterWorkspace() {
   ).length;
 
   const handleDeleteCluster = async () => {
-    if (!confirm("Delete this cluster and all its mock tests?")) return;
-
     try {
       await api.deleteCluster(cluster.id);
       await queryClient.invalidateQueries({ queryKey: ["clusters"] });

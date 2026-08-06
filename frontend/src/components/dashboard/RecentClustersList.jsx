@@ -1,22 +1,38 @@
-import { Link } from "react-router-dom";
-import {
-  ArrowRight,
-  Clock,
-  FolderOpen,
-  MoreVertical,
-  Plus,
-} from "lucide-react";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { ArrowRight, Clock, FolderOpen, Plus } from "lucide-react";
 import { formatTimeAgo } from "@/lib/date";
+import CardActionMenu from "../design-system/CardActionMenu";
+import RenameModal from "../design-system/RenameModal";
+import { ConfirmDialog } from "../design-system/ConfirmDialog";
+import { api } from "@/lib/api";
 
-// Extracted from pages/Dashboard.jsx, with two fixes:
-//
-// 1. The footer used to show a hardcoded literal "2d ago" for every single
-//    cluster, regardless of its actual updated_at. Now uses formatTimeAgo.
-// 2. The mock-test-count badge used `cluster.mock_test_count || 1`, which
-//    incorrectly showed "1 mocks" for a cluster with genuinely 0 mock
-//    tests (since `0 || 1` evaluates to 1). Now uses `?? 0` so only a
-//    missing value falls back, not a real zero.
 export default function RecentClustersList({ clusters }) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const [renameTarget, setRenameTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const handleRenameSave = async (newName, newDescription) => {
+    if (!renameTarget) return;
+    await api.updateCluster(renameTarget.id, {
+      name: newName,
+      description: newDescription,
+    });
+    queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+    queryClient.invalidateQueries({ queryKey: ["clusters"] });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    await api.deleteCluster(deleteTarget.id);
+    queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+    queryClient.invalidateQueries({ queryKey: ["clusters"] });
+    setDeleteTarget(null);
+  };
+
   return (
     <div className="lg:col-span-2 space-y-4">
       <div className="flex items-center justify-between gap-3">
@@ -55,7 +71,8 @@ export default function RecentClustersList({ clusters }) {
           clusters.map((cluster) => (
             <div
               key={cluster.id}
-              className="surface-card rounded-2xl p-4 sm:p-5 border border-border space-y-4 hover:border-orange-500/30 transition-all"
+              onClick={() => navigate(`/cluster/${cluster.id}`)}
+              className="surface-card rounded-2xl p-4 sm:p-5 border border-border space-y-4 hover:border-orange-500/40 cursor-pointer transition-all group"
             >
               {/* Cluster Card Header */}
               <div className="flex items-start justify-between gap-3">
@@ -65,12 +82,9 @@ export default function RecentClustersList({ clusters }) {
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Link
-                        to={`/cluster/${cluster.id}`}
-                        className="font-bold text-foreground text-sm sm:text-base hover:text-orange-500 transition-colors truncate"
-                      >
+                      <span className="font-bold text-foreground text-sm sm:text-base group-hover:text-orange-500 transition-colors truncate">
                         {cluster.name}
-                      </Link>
+                      </span>
                       <span className="px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-purple-500/15 text-purple-400 dark:text-purple-300">
                         {cluster.mock_test_count ?? 0} mocks
                       </span>
@@ -81,9 +95,10 @@ export default function RecentClustersList({ clusters }) {
                   </div>
                 </div>
 
-                <button className="w-8 h-8 rounded-xl hover:bg-muted flex items-center justify-center text-muted-foreground transition-colors shrink-0">
-                  <MoreVertical className="w-4 h-4" />
-                </button>
+                <CardActionMenu
+                  onRename={() => setRenameTarget(cluster)}
+                  onDelete={() => setDeleteTarget(cluster)}
+                />
               </div>
 
               {/* Status Badges */}
@@ -110,17 +125,38 @@ export default function RecentClustersList({ clusters }) {
                   </span>
                 </div>
 
-                <Link
-                  to={`/cluster/${cluster.id}`}
-                  className="flex w-full items-center justify-center gap-1 rounded-lg border border-orange-500/30 px-3 py-1.5 text-xs font-semibold text-orange-500 transition-colors hover:bg-orange-500/10 sm:w-auto"
-                >
+                <span className="flex w-full items-center justify-center gap-1 rounded-lg border border-orange-500/30 px-3 py-1.5 text-xs font-semibold text-orange-500 transition-colors group-hover:bg-orange-500/10 sm:w-auto">
                   Open <ArrowRight className="w-3 h-3" />
-                </Link>
+                </span>
               </div>
             </div>
           ))
         )}
       </div>
+
+      {renameTarget && (
+        <RenameModal
+          isOpen={Boolean(renameTarget)}
+          title="Rename Cluster"
+          initialName={renameTarget.name}
+          initialDescription={renameTarget.description || ""}
+          showDescription={true}
+          onClose={() => setRenameTarget(null)}
+          onSave={handleRenameSave}
+        />
+      )}
+
+      {deleteTarget && (
+        <ConfirmDialog
+          open={Boolean(deleteTarget)}
+          onOpenChange={(open) => !open && setDeleteTarget(null)}
+          title={`Delete "${deleteTarget.name}"?`}
+          description="Are you sure you want to delete this cluster? All mock tests inside it will also be deleted."
+          confirmLabel="Delete Cluster"
+          destructive={true}
+          onConfirm={handleDeleteConfirm}
+        />
+      )}
     </div>
   );
 }

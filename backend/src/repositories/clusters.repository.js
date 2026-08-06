@@ -5,11 +5,13 @@ export async function listClusters(workspaceId) {
     `
     SELECT
       c.*,
+      creator.name AS creator_name,
       count(mt.id)::INT AS mock_test_count
     FROM clusters c
     LEFT JOIN mock_tests mt ON mt.cluster_id = c.id
+    LEFT JOIN users creator ON creator.id = c.created_by
     WHERE c.workspace_id = $1
-    GROUP BY c.id
+    GROUP BY c.id, creator.name
     ORDER BY c.created_at DESC
     `,
     [workspaceId],

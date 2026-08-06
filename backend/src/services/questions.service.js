@@ -225,3 +225,51 @@ export async function deleteQuestion(questionId, workspaceId) {
     throw httpError(404, "Question not found");
   }
 }
+
+export async function reorderQuestions(mockTestId, workspaceId, items) {
+  if (!Array.isArray(items) || items.length === 0) {
+    throw httpError(400, "items array is required");
+  }
+
+  const mockTest = await questionsRepo.findMockTestForWorkspace(
+    mockTestId,
+    workspaceId,
+  );
+
+  if (!mockTest) {
+    throw httpError(404, "Mock test not found");
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    // Pass 1: Set question_no to 10000 + offset to satisfy check constraint (>0) while clearing slots
+    for (let index = 0; index < items.length; index += 1) {
+      const item = items[index];
+      await client.query(
+        "UPDATE questions SET question_no = $1 WHERE id = $2 AND mock_test_id = $3 AND workspace_id = $4",
+        [10000 + index + 1, item.id, mockTestId, workspaceId],
+      );
+    }
+
+    // Pass 2: Set question_no to final position numbers
+    for (let index = 0; index < items.length; index += 1) {
+      const item = items[index];
+      const finalNo = Number(item.questionNo || index + 1);
+      await client.query(
+        "UPDATE questions SET question_no = $1 WHERE id = $2 AND mock_test_id = $3 AND workspace_id = $4",
+        [finalNo, item.id, mockTestId, workspaceId],
+      );
+    }
+
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+

@@ -25,6 +25,12 @@ export function useMockTestWorkspace() {
     enabled: Boolean(clusterId),
   });
 
+  const { data: mockTestsData } = useQuery({
+    queryKey: ["mock-tests", clusterId],
+    queryFn: () => api.listMockTests(clusterId),
+    enabled: Boolean(clusterId),
+  });
+
   const { data: mocktestData, isLoading } = useQuery({
     queryKey: ["mock-test", mockTestId],
     queryFn: () => api.getMockTest(mockTestId),
@@ -55,6 +61,7 @@ export function useMockTestWorkspace() {
   });
 
   const cluster = clusterData?.cluster;
+  const clusterMockTests = mockTestsData?.mockTests || [];
   const mocktest = mocktestData?.mockTest;
   const latestJob = jobsData?.jobs?.[0];
   const latestJobId = latestJob?.id;
@@ -163,8 +170,6 @@ export function useMockTestWorkspace() {
   };
 
   const handleDelete = async () => {
-    if (!confirm("Delete this mock test and all its questions?")) return;
-
     try {
       await api.deleteMockTest(mocktest.id);
       await queryClient.invalidateQueries({
@@ -180,6 +185,7 @@ export function useMockTestWorkspace() {
   return {
     clusterId,
     cluster,
+    clusterMockTests,
     mocktest,
     isLoading,
     latestJob,

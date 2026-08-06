@@ -1,6 +1,4 @@
-// Extracted from pages/QuestionEditor.jsx — no behavior changes.
-
-export const topics = [
+export const topicCategories = [
   "Data Structures",
   "Algorithms",
   "Networking",
@@ -10,6 +8,12 @@ export const topics = [
   "Java",
   "OS",
   "C Programming",
+  "Discrete Mathematics",
+  "Operating Systems",
+  "Software Engineering",
+  "Digital Logic",
+  "Compiler Design",
+  "General",
 ];
 
 export function toEditorQuestion(question) {
@@ -22,12 +26,11 @@ export function toEditorQuestion(question) {
     text: question.question_text,
     options,
     correctOptionIndexes: question.correct_option_indexes || [0],
-    topic: question.topic || "Data Structures",
+    topic: question.topic || "General",
     questionType: question.question_type || "single",
   };
 }
 
-// Pure validation — takes no component state, safe to call anywhere.
 export function getIssues(q) {
   let issues = 0;
   if (!q.text.trim()) issues++;

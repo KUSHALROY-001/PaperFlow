@@ -43,6 +43,8 @@ export async function upload(req, res) {
     workspaceId: req.workspaceId,
     userId: req.user.id,
     file: req.file,
+    // multer parses non-file multipart fields into req.body alongside req.file
+    documentType: req.body.documentType,
   });
   res.status(201).json(result);
 }

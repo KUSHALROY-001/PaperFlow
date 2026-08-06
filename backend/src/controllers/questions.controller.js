@@ -29,3 +29,13 @@ export async function remove(req, res) {
   await questionsService.deleteQuestion(req.params.questionId, req.workspaceId);
   res.status(204).send();
 }
+
+export async function reorder(req, res) {
+  await questionsService.reorderQuestions(
+    req.params.mockTestId,
+    req.workspaceId,
+    req.body.items,
+  );
+  res.json({ success: true });
+}
+

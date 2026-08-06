@@ -8,3 +8,28 @@ export const authRouter = Router();
 authRouter.post("/signup", asyncHandler(authController.signup));
 authRouter.post("/login", asyncHandler(authController.login));
 authRouter.get("/me", requireAuth, asyncHandler(authController.me));
+authRouter.get(
+  "/profile",
+  requireAuth,
+  asyncHandler(authController.getProfile),
+);
+authRouter.patch(
+  "/profile",
+  requireAuth,
+  asyncHandler(authController.updateProfile),
+);
+authRouter.patch(
+  "/preferences",
+  requireAuth,
+  asyncHandler(authController.updatePreferences),
+);
+authRouter.patch(
+  "/password",
+  requireAuth,
+  asyncHandler(authController.changePassword),
+);
+authRouter.delete(
+  "/account",
+  requireAuth,
+  asyncHandler(authController.deleteAccount),
+);

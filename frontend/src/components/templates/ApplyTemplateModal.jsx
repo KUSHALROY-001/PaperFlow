@@ -2,9 +2,10 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle } from "lucide-react";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/AuthContext";
 
-// Promoted from pages/Templates.jsx — no behavior changes.
 export default function ApplyTemplateModal({ template, onClose, onApplied }) {
+  const { isViewer } = useAuth();
   const { data, isLoading: clustersLoading } = useQuery({
     queryKey: ["clusters"],
     queryFn: api.listClusters,
@@ -18,6 +19,7 @@ export default function ApplyTemplateModal({ template, onClose, onApplied }) {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (isViewer) return;
 
     if (!clusterId) {
       setError("Choose a cluster to apply this template to");
@@ -61,9 +63,12 @@ export default function ApplyTemplateModal({ template, onClose, onApplied }) {
           Mock test name
         </label>
         <input
+          disabled={isViewer}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full px-3 py-2 mb-4 text-sm rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30"
+          className={`w-full px-3 py-2 mb-4 text-sm rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 ${
+            isViewer ? "cursor-not-allowed opacity-60" : ""
+          }`}
         />
 
         <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
@@ -79,9 +84,12 @@ export default function ApplyTemplateModal({ template, onClose, onApplied }) {
           </p>
         ) : (
           <select
+            disabled={isViewer}
             value={clusterId}
             onChange={(e) => setClusterId(e.target.value)}
-            className="w-full px-3 py-2 mb-4 text-sm rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30"
+            className={`w-full px-3 py-2 mb-4 text-sm rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 ${
+              isViewer ? "cursor-not-allowed opacity-60" : ""
+            }`}
           >
             <option value="">Select a cluster...</option>
             {clusters.map((cluster) => (
@@ -104,8 +112,15 @@ export default function ApplyTemplateModal({ template, onClose, onApplied }) {
           </button>
           <button
             type="submit"
-            disabled={isSubmitting || clusters.length === 0}
-            className="flex-1 py-2.5 bg-orange-500/10 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 font-bold border border-orange-500/30 hover:bg-orange-500/20 text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+            disabled={isSubmitting || clusters.length === 0 || isViewer}
+            title={
+              isViewer ? "Editor role is required to apply templates" : undefined
+            }
+            className={`flex-1 py-2.5 font-bold rounded-xl text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 ${
+              isViewer
+                ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50 border border-border"
+                : "bg-orange-500/10 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30 hover:bg-orange-500/20"
+            }`}
           >
             {isSubmitting ? (
               "Applying..."

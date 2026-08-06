@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   AlertTriangle,
   CheckCircle,
@@ -9,10 +10,15 @@ import {
   Zap,
 } from "lucide-react";
 import { useClusterWorkspace } from "@/hooks/useClusterWorkspace";
+import { useAuth } from "@/lib/AuthContext";
 import MockTestCard from "../components/cluster/MockTestCard";
 import CreateMockTestModal from "../components/cluster/CreateMockTestModal";
+import { ConfirmDialog } from "../components/design-system/ConfirmDialog";
 
 export default function ClusterWorkspace() {
+  const { isViewer } = useAuth();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   const {
     id,
     cluster,
@@ -54,7 +60,7 @@ export default function ClusterWorkspace() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      <div className="surface-card rounded-2xl p-6 border border-border">
+      <div className="surface-card rounded-2xl p-3 sm:p-6 border border-border">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-4">
           <div className="flex items-center gap-4 flex-1 min-w-0">
             <div className="w-12 h-12 bg-orange-500/15 text-orange-500 rounded-2xl flex items-center justify-center shrink-0">
@@ -119,16 +125,32 @@ export default function ClusterWorkspace() {
           {!editing && (
             <div className="flex items-center gap-2">
               <button
-                onClick={startEdit}
-                className="w-9 h-9 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-orange-500/40 transition-all"
-                title="Edit"
+                disabled={isViewer}
+                onClick={() => !isViewer && startEdit()}
+                className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
+                  isViewer
+                    ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-50"
+                    : "border-border text-muted-foreground hover:text-foreground hover:border-orange-500/40"
+                }`}
+                title={
+                  isViewer ? "Editor role is required to edit cluster" : "Edit"
+                }
               >
                 <Edit2 className="w-4 h-4" />
               </button>
               <button
-                onClick={handleDeleteCluster}
-                className="w-9 h-9 rounded-xl border border-red-500/20 flex items-center justify-center text-muted-foreground hover:text-red-500 hover:border-red-500/40 transition-all"
-                title="Delete"
+                disabled={isViewer}
+                onClick={() => !isViewer && setShowDeleteConfirm(true)}
+                className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
+                  isViewer
+                    ? "border-red-500/10 text-red-500/30 cursor-not-allowed opacity-50"
+                    : "border-red-500/20 text-muted-foreground hover:text-red-500 hover:border-red-500/40"
+                }`}
+                title={
+                  isViewer
+                    ? "Editor role is required to delete cluster"
+                    : "Delete"
+                }
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -194,8 +216,16 @@ export default function ClusterWorkspace() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg font-bold text-foreground">Mock Tests</h2>
         <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-xl text-xs sm:text-sm shadow-sm transition-all w-full sm:w-auto justify-center"
+          disabled={isViewer}
+          onClick={() => !isViewer && setShowModal(true)}
+          title={
+            isViewer ? "Editor role is required to add mock tests" : undefined
+          }
+          className={`flex items-center gap-2 px-4 py-2.5 font-semibold rounded-xl text-xs sm:text-sm shadow-sm transition-all w-full sm:w-auto justify-center ${
+            isViewer
+              ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50"
+              : "bg-[#ea580c] hover:bg-[#c2410c] text-white"
+          }`}
         >
           <Plus className="w-4 h-4" /> Add Mock Test
         </button>
@@ -211,8 +241,16 @@ export default function ClusterWorkspace() {
             Upload a PDF or create a manual mock test in this cluster.
           </p>
           <button
-            onClick={() => setShowModal(true)}
-            className="px-4 py-2.5 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-xl text-xs shadow-sm transition-all"
+            disabled={isViewer}
+            onClick={() => !isViewer && setShowModal(true)}
+            title={
+              isViewer ? "Editor role is required to add mock tests" : undefined
+            }
+            className={`px-4 py-2.5 font-semibold rounded-xl text-xs shadow-sm transition-all ${
+              isViewer
+                ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50"
+                : "bg-[#ea580c] hover:bg-[#c2410c] text-white"
+            }`}
           >
             Add Mock Test
           </button>
@@ -233,6 +271,21 @@ export default function ClusterWorkspace() {
         <CreateMockTestModal
           clusterId={id}
           onClose={() => setShowModal(false)}
+        />
+      )}
+
+      {showDeleteConfirm && (
+        <ConfirmDialog
+          open={showDeleteConfirm}
+          onOpenChange={setShowDeleteConfirm}
+          title={`Delete "${cluster?.name}"?`}
+          description="Are you sure you want to delete this cluster and all its mock tests? This action cannot be undone."
+          confirmLabel="Delete Cluster"
+          destructive={true}
+          onConfirm={async () => {
+            setShowDeleteConfirm(false);
+            await handleDeleteCluster();
+          }}
         />
       )}
     </div>

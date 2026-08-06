@@ -3,6 +3,9 @@ import crypto from "node:crypto";
 import path from "node:path";
 import multer from "multer";
 import * as mockTestsController from "../controllers/mock-tests.controller.js";
+import * as questionsController from "../controllers/questions.controller.js";
+import * as attemptsController from "../controllers/attempts.controller.js";
+import * as sharedController from "../controllers/shared.controller.js";
 import { asyncHandler } from "../lib/async-handler.js";
 import { ensureUploadDir } from "../lib/file-storage.js";
 import { httpError } from "../lib/http-error.js";
@@ -95,7 +98,37 @@ mockTestsRouter.get(
   "/:mockTestId/questions",
   asyncHandler(mockTestsController.listQuestions),
 );
+mockTestsRouter.put(
+  "/:mockTestId/questions/reorder",
+  requireRole("editor"),
+  asyncHandler(questionsController.reorder),
+);
 mockTestsRouter.get(
   "/:mockTestId/play",
   asyncHandler(mockTestsController.play),
+);
+
+mockTestsRouter.post(
+  "/:mockTestId/attempts",
+  asyncHandler(attemptsController.start),
+);
+mockTestsRouter.get(
+  "/:mockTestId/attempts",
+  asyncHandler(attemptsController.listForMockTest),
+);
+
+mockTestsRouter.post(
+  "/:mockTestId/share",
+  requireRole("editor"),
+  asyncHandler(sharedController.createShareLink),
+);
+mockTestsRouter.get(
+  "/:mockTestId/share",
+  requireRole("editor"),
+  asyncHandler(sharedController.listShares),
+);
+mockTestsRouter.delete(
+  "/:mockTestId/share/:shareId",
+  requireRole("editor"),
+  asyncHandler(sharedController.revokeShareLink),
 );

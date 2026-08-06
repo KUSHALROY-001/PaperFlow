@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { CheckCircle2, Copy, Download } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Copy, Download, Edit2 } from "lucide-react";
 
 const viewTabs = ["Visual", "JSON", "Metadata"];
 
@@ -44,7 +45,7 @@ export default function OutputTab({ questions, metadata }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-inter">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="inline-flex max-w-full rounded-2xl bg-muted/60 p-1.5 border border-border">
           {viewTabs.map((view) => {
@@ -91,22 +92,29 @@ export default function OutputTab({ questions, metadata }) {
           {questions.map((question) => (
             <div
               key={question.id}
-              className="rounded-3xl p-5 surface-card border border-border"
+              className="rounded-3xl p-2.5 sm:p-5 surface-card border border-border"
             >
-              <div className="flex flex-col items-start gap-3 sm:flex-row sm:justify-between">
-                <div className="min-w-0">
-                  <div className="mb-3 inline-flex rounded-full bg-orange-500/10 px-3 py-1 text-xs font-semibold text-orange-500">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 flex-wrap min-w-0">
+                  <span className="rounded-full bg-orange-500/15 border border-orange-500/20 px-3 py-1 text-xs font-bold text-orange-500 shrink-0">
+                    Q{question.questionNo}
+                  </span>
+                  <span className="rounded-full bg-muted border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
                     {question.topic}
-                  </div>
-                  <h3 className="text-lg font-semibold text-foreground">
-                    {question.text}
-                  </h3>
+                  </span>
                 </div>
-                <div className="inline-flex w-fit items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-500">
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  Correct option highlighted
-                </div>
+                <Link
+                  to={`/cluster/${metadata.clusterId}/mock/${metadata.mockTestId}/editor?qId=${question.id}`}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all hover:border-orange-500/40 hover:text-orange-500 hover:bg-orange-500/10 shrink-0"
+                  title={`Edit Question ${question.questionNo} in Question Editor`}
+                >
+                  <Edit2 className="h-4 w-4 text-orange-500" />
+                </Link>
               </div>
+
+              <h3 className="text-lg font-semibold text-foreground">
+                {question.text}
+              </h3>
 
               <div className="mt-5 grid gap-3 md:grid-cols-2">
                 {question.options.map((option) => {

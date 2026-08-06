@@ -81,6 +81,25 @@ export async function deleteMockTest(mockTestId, workspaceId) {
   await deleteMockTestUploadDir(workspaceId, mockTestId);
 }
 
+// The only two values the worker understands (worker/ai/provider.py reads
+// this same string from processing_jobs.input_config.documentType). Kept as
+// a small local list rather than pulling in a shared enum helper - promote
+// this alongside requiredEnum if/when validators.js gains one.
+const DOCUMENT_TYPES = ["questions", "notes"];
+
+function normalizeDocumentType(value) {
+  if (value === undefined || value === null || value === "") {
+    return "questions";
+  }
+  if (!DOCUMENT_TYPES.includes(value)) {
+    throw httpError(
+      400,
+      `documentType must be one of: ${DOCUMENT_TYPES.join(", ")}`,
+    );
+  }
+  return value;
+}
+
 // Shared by both the fresh-upload flow and the reprocess flow: insert a
 // processing_jobs row + its first event + flip the mock test to "processing",
 // all in one transaction, then kick the worker.
@@ -91,6 +110,7 @@ async function queueProcessingJob({
   requestedBy,
   originalFilename,
   storageKey,
+  documentType,
   extraInputConfig = {},
 }) {
   const client = await pool.connect();
@@ -103,7 +123,12 @@ async function queueProcessingJob({
       mockTestId: mockTest.id,
       uploadedFileId,
       requestedBy,
-      inputConfig: { originalFilename, storageKey, ...extraInputConfig },
+      inputConfig: {
+        originalFilename,
+        storageKey,
+        documentType,
+        ...extraInputConfig,
+      },
     });
 
     await mockTestsRepo.insertProcessingJobEvent(client, {
@@ -135,11 +160,18 @@ async function queueProcessingJob({
   }
 }
 
-export async function uploadDocument({ mockTest, workspaceId, userId, file }) {
+export async function uploadDocument({
+  mockTest,
+  workspaceId,
+  userId,
+  file,
+  documentType,
+}) {
   if (!file) {
     throw httpError(400, "PDF document is required");
   }
 
+  const normalizedDocumentType = normalizeDocumentType(documentType);
   const storageKey = buildStorageKey(workspaceId, mockTest.id, file.filename);
   const client = await pool.connect();
 
@@ -155,7 +187,11 @@ export async function uploadDocument({ mockTest, workspaceId, userId, file }) {
       storageKey,
       mimeType: file.mimetype || "application/pdf",
       fileSizeBytes: file.size,
-      metadata: { localPath: file.path, uploadedVia: "mock-test-create-modal" },
+      metadata: {
+        localPath: file.path,
+        uploadedVia: "mock-test-create-modal",
+        documentType: normalizedDocumentType,
+      },
     });
 
     await client.query("COMMIT");
@@ -180,6 +216,7 @@ export async function uploadDocument({ mockTest, workspaceId, userId, file }) {
     requestedBy: userId,
     originalFilename: file.originalname,
     storageKey,
+    documentType: normalizedDocumentType,
   });
 
   return { uploadedFile, processingJob, mockTest: updatedMockTest, worker };
@@ -195,6 +232,13 @@ export async function reprocessMockTest({ mockTest, workspaceId, userId }) {
     throw httpError(400, "Upload a PDF before reprocessing this mock test");
   }
 
+  // Reuse whatever documentType was chosen on the original upload, so the
+  // user isn't asked "notes or questions?" again just to retry processing.
+  // Older uploads made before this field existed have no metadata.documentType
+  // at all - normalizeDocumentType's undefined-defaults-to-'questions'
+  // behavior keeps those working exactly as they did before this change.
+  const documentType = normalizeDocumentType(latestFile.metadata?.documentType);
+
   return queueProcessingJob({
     mockTest,
     workspaceId,
@@ -202,6 +246,7 @@ export async function reprocessMockTest({ mockTest, workspaceId, userId }) {
     requestedBy: userId,
     originalFilename: latestFile.original_filename,
     storageKey: latestFile.storage_key,
+    documentType,
     extraInputConfig: { reprocess: true },
   });
 }
@@ -226,14 +271,18 @@ export async function getPlayableMockTest(mockTestId, workspaceId) {
       totalQuestions: mockTest.total_questions,
       status: mockTest.status,
     },
+    // Deliberately NOT sending correctOptionIndex/explanation here - this
+    // was leaking the answer key to anyone who called this endpoint before
+    // submitting anything. Grading now happens server-side in
+    // attempts.service.js#submitAttempt instead, which is also where the
+    // answer key legitimately becomes visible (after submission).
     questions: questions.map((question) => ({
+      questionId: question.questionId,
       questionNo: question.questionNo,
       topic: question.topic,
       text: question.text,
       options: question.options,
-      correctOptionIndex: question.correctOptionIndex,
       questionType: question.questionType,
-      explanation: question.explanation,
     })),
   };
 }

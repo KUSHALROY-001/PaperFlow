@@ -1,7 +1,13 @@
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClientInstance } from "@/lib/query-client";
-import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 import ThemeProvider from "./components/ThemeProvider";
 import PageNotFound from "./lib/PageNotFound";
 import { AuthProvider, useAuth } from "@/lib/AuthContext";
@@ -27,13 +33,15 @@ import Integrations from "./pages/Integrations";
 import Billing from "./pages/Billing";
 import MyResults from "./pages/MyResults";
 import AuthPage from "./pages/AuthPage";
+import MyInvitations from "./pages/MyInvitations";
+import AcceptInvite from "./pages/AcceptInvite";
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated } =
     useAuth();
   const location = useLocation();
 
-  const publicPaths = ["/", "/login", "/signup"];
+  const publicPaths = ["/", "/login", "/signup", "/accept-invite"];
   const isPublicRoute =
     publicPaths.includes(location.pathname) ||
     location.pathname.startsWith("/shared/") ||
@@ -85,18 +93,26 @@ const AuthenticatedApp = () => {
       {/* Public shared mock — no shell */}
       <Route path="/shared/:token" element={<SharedMock />} />
       <Route path="/session/:id" element={<MockSession />} />
+      <Route path="/accept-invite" element={<AcceptInvite />} />
 
       {/* App shell with sidebar */}
       <Route element={<AppShell />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/clusters" element={<ClustersLibrary />} />
         <Route path="/cluster/:id" element={<ClusterWorkspace />} />
-        <Route path="/cluster/:clusterId/mocktest/:mockTestId" element={<MockTestWorkspace />} />
+        <Route
+          path="/cluster/:clusterId/mocktest/:mockTestId"
+          element={<MockTestWorkspace />}
+        />
         <Route path="/cluster/:clusterId/editor" element={<QuestionEditor />} />
-        <Route path="/cluster/:clusterId/mock/:mockTestId/editor" element={<QuestionEditor />} />
+        <Route
+          path="/cluster/:clusterId/mock/:mockTestId/editor"
+          element={<QuestionEditor />}
+        />
         <Route path="/jobs" element={<ActiveJobs />} />
         <Route path="/templates" element={<Templates />} />
         <Route path="/team" element={<Team />} />
+        <Route path="/invitations" element={<MyInvitations />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/batch" element={<BatchUpload />} />
         <Route path="/integrations" element={<Integrations />} />

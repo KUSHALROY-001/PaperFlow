@@ -2,9 +2,19 @@ import json
 from urllib import request
 
 from ..config import AI_MODEL, AI_TIMEOUT_SECONDS, OPENAI_API_KEY
+from .schemas import OPENAI_QUESTION_RESPONSE_SCHEMA
 
 
 OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
+
+QUESTION_TEXT_FORMAT = {
+    "format": {
+        "type": "json_schema",
+        "name": "question_extraction",
+        "schema": OPENAI_QUESTION_RESPONSE_SCHEMA,
+        "strict": True,
+    }
+}
 
 
 class OpenAIProvider:
@@ -23,6 +33,7 @@ class OpenAIProvider:
                 {"role": "user", "content": user_prompt},
             ],
             "max_output_tokens": 12000,
+            "text": QUESTION_TEXT_FORMAT,
         }
 
         req = request.Request(

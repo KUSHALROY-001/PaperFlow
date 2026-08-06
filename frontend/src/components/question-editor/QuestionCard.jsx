@@ -1,21 +1,55 @@
 import { memo } from "react";
 import { AlertCircle, GripVertical, Trash2 } from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
 
-// Promoted from an inline function inside pages/QuestionEditor.jsx.
-//
-// Wrapped in React.memo: this renders once per question in the sidebar
-// list. Paired with the stable onSelect/onDelete handlers from
-// useQuestionEditor (see that file's comments), editing the text of the
-// currently-selected question no longer re-renders every other card in
-// the list on each keystroke.
-function QuestionCard({ q, isSelected, onSelect, onDelete, issues }) {
+function QuestionCard({
+  q,
+  index,
+  isSelected,
+  onSelect,
+  onDelete,
+  issues,
+  onCardMouseDown,
+  onCardMouseEnter,
+  isDragging,
+  isDragOver,
+}) {
+  const { isViewer } = useAuth();
+
   return (
     <div
+      onMouseDown={(e) => {
+        if (isViewer) return;
+        if (e.target.closest("button")) return;
+        onCardMouseDown(e, index);
+      }}
+      onMouseEnter={() => !isViewer && onCardMouseEnter(index)}
       onClick={() => onSelect(q.id)}
-      className={`p-4 rounded-2xl border cursor-pointer transition-all ${isSelected ? "border-orange-500 bg-orange-500/10 dark:bg-orange-500/15" : "border-border bg-card hover:border-orange-500/40"}`}
+      className={`p-4 rounded-2xl border transition-all duration-150 select-none ${
+        isViewer
+          ? "cursor-default border-border bg-card"
+          : "cursor-grab active:cursor-grabbing"
+      } ${
+        isDragging
+          ? "opacity-30 border-2 border-dashed border-orange-500/60 bg-orange-500/10 scale-[0.98]"
+          : isDragOver
+            ? "border-2 border-orange-500 bg-orange-500/20 dark:bg-orange-500/25 ring-2 ring-orange-500/40 shadow-md transform translate-y-0.5 scale-[1.01]"
+            : isSelected
+              ? "border-orange-500 bg-orange-500/10 dark:bg-orange-500/15"
+              : "border-border bg-card hover:border-orange-500/40"
+      }`}
     >
       <div className="flex items-start gap-3">
-        <GripVertical className="w-4 h-4 text-muted-foreground mt-1 shrink-0" />
+        <div
+          className={`p-0.5 rounded transition-colors ${
+            isViewer
+              ? "text-muted-foreground/30 cursor-not-allowed"
+              : "text-muted-foreground hover:text-orange-500"
+          }`}
+          title={isViewer ? "Editor role is required to reorder questions" : undefined}
+        >
+          <GripVertical className="w-4 h-4 mt-0.5 shrink-0" />
+        </div>
         <div className="flex-1 min-w-0">
           <p className="text-xs sm:text-sm font-bold text-foreground truncate">
             {q.text}
@@ -24,7 +58,7 @@ function QuestionCard({ q, isSelected, onSelect, onDelete, issues }) {
             <span className="text-xs bg-orange-500/15 text-orange-500 border border-orange-500/20 px-2 py-0.5 rounded-lg font-bold">
               Q{q.questionNo}
             </span>
-            <span className="text-xs bg-orange-500/15 text-orange-500 border border-orange-500/20 px-2 py-0.5 rounded-lg font-bold">
+            <span className="text-xs bg-orange-500/15 text-orange-500 border border-orange-500/20 px-2 py-0.5 rounded-lg font-bold truncate max-w-[120px]">
               {q.topic}
             </span>
             {!q.persisted && (
@@ -41,11 +75,21 @@ function QuestionCard({ q, isSelected, onSelect, onDelete, issues }) {
           </div>
         </div>
         <button
+          disabled={isViewer}
           onClick={(e) => {
             e.stopPropagation();
-            onDelete(q.id);
+            if (!isViewer) onDelete(q.id);
           }}
-          className="w-7 h-7 rounded-lg hover:bg-red-500/10 flex items-center justify-center text-muted-foreground hover:text-red-500 transition-colors shrink-0"
+          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors shrink-0 ${
+            isViewer
+              ? "text-muted-foreground/30 cursor-not-allowed opacity-50"
+              : "text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
+          }`}
+          title={
+            isViewer
+              ? "Editor role is required to delete questions"
+              : "Delete question"
+          }
         >
           <Trash2 className="w-3.5 h-3.5" />
         </button>

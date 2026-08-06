@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertCircle,
   CheckCircle,
+  ChevronDown,
+  ChevronUp,
   Download,
   FileText,
   Filter,
@@ -21,6 +24,7 @@ export default function OverviewTab({
   setActiveTab,
   onReprocess,
 }) {
+  const [showAllTopics, setShowAllTopics] = useState(false);
   const isProcessing =
     mocktest.status === "processing" ||
     ["queued", "running"].includes(latestJob?.status);
@@ -125,22 +129,45 @@ export default function OverviewTab({
         </div>
 
         {topics.length > 0 && (
-          <div className="surface-card rounded-2xl p-6 border border-border">
+          <div className="surface-card rounded-2xl p-4 sm:p-6 border border-border">
             <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
               <Filter className="w-4 h-4 text-orange-500" /> Topic-wise Practice
             </h3>
             <div className="grid gap-2 sm:grid-cols-2">
-              {topics.map((topic) => (
-                <Link
-                  key={topic}
-                  to={`/session/${mocktest.id}?topic=${encodeURIComponent(topic)}`}
-                  className="flex items-center gap-2 px-3.5 py-2.5 border border-border bg-card text-foreground font-medium rounded-xl hover:border-orange-500/40 hover:bg-muted transition-colors text-xs sm:text-sm truncate"
-                >
-                  <Play className="w-3.5 h-3.5 text-orange-500 shrink-0" />{" "}
-                  {topic}
-                </Link>
-              ))}
+              {topics.map((topic, index) => {
+                const isHiddenOnMobile = !showAllTopics && index >= 2;
+                return (
+                  <Link
+                    key={topic}
+                    to={`/session/${mocktest.id}?topic=${encodeURIComponent(topic)}`}
+                    className={`items-center gap-2 px-3.5 py-2.5 border border-border bg-card text-foreground font-medium rounded-xl hover:border-orange-500/40 hover:bg-muted transition-colors text-xs sm:text-sm truncate ${
+                      isHiddenOnMobile ? "hidden sm:flex" : "flex"
+                    }`}
+                  >
+                    <Play className="w-3.5 h-3.5 text-orange-500 shrink-0" />{" "}
+                    {topic}
+                  </Link>
+                );
+              })}
             </div>
+            {topics.length > 2 && (
+              <button
+                type="button"
+                onClick={() => setShowAllTopics((prev) => !prev)}
+                className="mt-3 sm:hidden flex items-center justify-center gap-1.5 w-full py-2 rounded-xl border border-orange-500/20 bg-orange-500/10 text-xs font-semibold text-orange-500 hover:bg-orange-500/20 transition-all"
+              >
+                {showAllTopics ? (
+                  <>
+                    See Less <ChevronUp className="w-3.5 h-3.5" />
+                  </>
+                ) : (
+                  <>
+                    See More ({topics.length - 2} more){" "}
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </>
+                )}
+              </button>
+            )}
           </div>
         )}
       </div>

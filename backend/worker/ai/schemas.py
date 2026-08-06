@@ -2,7 +2,149 @@ import json
 import re
 
 
+def _question_item_schema(*, nullable_as_union):
+    # Gemini's responseSchema is a subset of OpenAPI 3.0: optional fields are
+    # marked with a separate "nullable": true flag, and it doesn't support
+    # multi-type "type" arrays. OpenAI's structured outputs use standard
+    # JSON Schema instead, where a nullable field is expressed as
+    # "type": [<type>, "null"]. Getting this dialect wrong for a given
+    # provider doesn't crash anything - the provider just won't be able to
+    # enforce the schema and normalize_ai_questions()/extract_json_payload()
+    # remain as the safety net - but it's worth re-checking against each
+    # provider's current docs if either changes their schema dialect.
+    def optional(json_type):
+        if nullable_as_union:
+            return {"type": [json_type, "null"]}
+        return {"type": json_type, "nullable": True}
+
+    properties = {
+        "question_no": {"type": "integer"},
+        "topic": optional("string"),
+        "subtopic": optional("string"),
+        "passage": optional("string"),
+        "text": {"type": "string"},
+        "explanation": optional("string"),
+        "options": {
+            "type": "array",
+            "items": {"type": "string"},
+            "minItems": 2,
+        },
+        "correct_option_indexes": {
+            "type": "array",
+            "items": {"type": "integer"},
+        },
+        "source_page": optional("integer"),
+        "confidence": {"type": "integer"},
+        "needs_review": {"type": "boolean"},
+        "issues": {"type": "array", "items": {"type": "string"}},
+    }
+
+    schema = {
+        "type": "object",
+        "properties": properties,
+        "required": ["question_no", "text", "options", "correct_option_indexes"],
+    }
+
+    if nullable_as_union:
+        # OpenAI's strict structured-output mode requires every declared
+        # property to also be listed in "required" (optionality is
+        # expressed purely through the "null" type union above, not through
+        # actually omitting the key) and disallows undeclared properties.
+        schema["required"] = list(properties.keys())
+        schema["additionalProperties"] = False
+
+    return schema
+
+
+def _question_response_schema(*, nullable_as_union):
+    schema = {
+        "type": "object",
+        "properties": {
+            "questions": {
+                "type": "array",
+                "items": _question_item_schema(nullable_as_union=nullable_as_union),
+            }
+        },
+        "required": ["questions"],
+    }
+    if nullable_as_union:
+        schema["additionalProperties"] = False
+    return schema
+
+
+# Gemini responseSchema dialect (OpenAPI 3.0 subset).
+GEMINI_QUESTION_RESPONSE_SCHEMA = _question_response_schema(nullable_as_union=False)
+
+# OpenAI structured-outputs dialect (standard JSON Schema, strict mode).
+OPENAI_QUESTION_RESPONSE_SCHEMA = _question_response_schema(nullable_as_union=True)
+
+
 JSON_BLOCK_RE = re.compile(r"```(?:json)?\s*(.*?)```", re.IGNORECASE | re.DOTALL)
+
+
+def _find_balanced_objects(text):
+    """
+    Scans text for every balanced {...} substring, at any nesting depth -
+    not just ones that return all the way to depth 0. This matters because
+    in a truncated response the OUTER wrapper (`{"questions": [...`) never
+    closes, so gating on "back to depth 0" would mean the individual
+    question objects nested inside it - which DO close correctly - never
+    get recorded either. Correctly skips over braces that appear inside
+    quoted strings.
+    """
+    objects = []
+    open_positions = []
+    in_string = False
+    escape = False
+
+    for index, char in enumerate(text):
+        if in_string:
+            if escape:
+                escape = False
+            elif char == "\\":
+                escape = True
+            elif char == '"':
+                in_string = False
+            continue
+
+        if char == '"':
+            in_string = True
+            continue
+
+        if char == "{":
+            open_positions.append(index)
+        elif char == "}":
+            if open_positions:
+                start = open_positions.pop()
+                objects.append(text[start : index + 1])
+
+    return objects
+
+
+def salvage_question_objects(text):
+    """
+    Last-resort recovery for a response that broke partway through (e.g. an
+    "Unterminated string" error from the model cutting off mid-generation).
+    Rather than discarding the WHOLE chunk's worth of questions because one
+    object near the end never finished, this pulls out every individually
+    well-formed {...} object in the text and keeps whichever ones parse and
+    look like a question (has "options" and either "text" or
+    "question_text") - so a response that correctly wrote out 8 questions
+    before breaking on the 9th still contributes those 8, instead of
+    contributing nothing (which is what silently erased 37 real questions
+    from a 100-question exam before this existed).
+    """
+    salvaged = []
+    for candidate in _find_balanced_objects(text):
+        try:
+            parsed = json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(parsed, dict) and "options" in parsed and (
+            "text" in parsed or "question_text" in parsed
+        ):
+            salvaged.append(parsed)
+    return salvaged
 
 
 def extract_json_payload(text):
@@ -17,12 +159,26 @@ def extract_json_payload(text):
 
     try:
         return json.loads(text)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as first_error:
         start = text.find("{")
         end = text.rfind("}")
-        if start == -1 or end == -1 or end <= start:
-            raise
-        return json.loads(text[start : end + 1])
+        if start != -1 and end != -1 and end > start:
+            try:
+                return json.loads(text[start : end + 1])
+            except json.JSONDecodeError:
+                pass
+
+        # Both the direct parse and the whole-response bracket-slice
+        # failed. Previously that meant the entire chunk's questions were
+        # silently discarded even if most of them were written out
+        # correctly before the break - recover whatever individual
+        # question objects are still well-formed instead of giving up
+        # entirely.
+        salvaged = salvage_question_objects(text)
+        if salvaged:
+            return {"questions": salvaged}
+
+        raise first_error
 
 
 def normalize_ai_questions(payload, *, source="ai"):

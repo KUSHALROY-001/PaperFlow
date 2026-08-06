@@ -3,6 +3,7 @@ import { httpError } from "../lib/http-error.js";
 import {
   optionalNumber,
   optionalString,
+  requiredEnum,
   requiredString,
 } from "../lib/validators.js";
 import * as clustersRepo from "../repositories/clusters.repository.js";
@@ -31,13 +32,6 @@ const COLORS = [
   "purple",
   "indigo",
 ];
-
-function requiredEnum(value, allowed, fieldName) {
-  if (!allowed.includes(value)) {
-    throw httpError(400, `${fieldName} must be one of: ${allowed.join(", ")}`);
-  }
-  return value;
-}
 
 function slugify(name) {
   return (

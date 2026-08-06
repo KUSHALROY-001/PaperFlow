@@ -1,13 +1,25 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { api, clearStoredAuth, getStoredAuth, storeAuth } from "./api";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [authChecked, setAuthChecked] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(getStoredAuth().token));
+  const [isAuthenticated, setIsAuthenticated] = useState(() =>
+    Boolean(getStoredAuth().token),
+  );
   const [user, setUser] = useState(null);
-  const [workspaceId, setWorkspaceId] = useState(() => getStoredAuth().workspaceId);
+  const [workspaceId, setWorkspaceId] = useState(
+    () => getStoredAuth().workspaceId,
+  );
+  const [workspaces, setWorkspaces] = useState([]);
 
   const checkUserAuth = useCallback(async () => {
     const { token } = getStoredAuth();
@@ -23,6 +35,7 @@ export function AuthProvider({ children }) {
       const session = await api.me();
       setUser(session.user);
       setWorkspaceId(session.workspaceId);
+      setWorkspaces(session.workspaces || []);
       setIsAuthenticated(true);
       setAuthChecked(true);
       return true;
@@ -30,6 +43,7 @@ export function AuthProvider({ children }) {
       clearStoredAuth();
       setUser(null);
       setWorkspaceId(null);
+      setWorkspaces([]);
       setIsAuthenticated(false);
       setAuthChecked(true);
       return false;
@@ -54,23 +68,52 @@ export function AuthProvider({ children }) {
     navigateToLogin();
   }, [navigateToLogin]);
 
-  const login = useCallback(async (payload) => {
-    const result = await api.login(payload);
-    storeAuth(result);
-    setUser(result.user);
-    setWorkspaceId(result.workspaceId);
-    setIsAuthenticated(true);
-    return result;
-  }, []);
+  const login = useCallback(
+    async (payload) => {
+      const result = await api.login(payload);
+      storeAuth(result);
+      setUser(result.user);
+      setWorkspaceId(result.workspaceId);
+      setIsAuthenticated(true);
+      await checkUserAuth();
+      return result;
+    },
+    [checkUserAuth],
+  );
 
-  const signup = useCallback(async (payload) => {
-    const result = await api.signup(payload);
-    storeAuth(result);
-    setUser(result.user);
-    setWorkspaceId(result.workspaceId);
-    setIsAuthenticated(true);
-    return result;
-  }, []);
+  const signup = useCallback(
+    async (payload) => {
+      const result = await api.signup(payload);
+      storeAuth(result);
+      setUser(result.user);
+      setWorkspaceId(result.workspaceId);
+      setIsAuthenticated(true);
+      await checkUserAuth();
+      return result;
+    },
+    [checkUserAuth],
+  );
+
+  // Switching workspace changes which data every page-scoped query returns
+  // (clusters, mock tests, dashboard summary, team - all of it). Rather than
+  // hand-picking every react-query key to invalidate, a full reload is the
+  // same "clean slate" approach logout() already uses below - simplest way
+  // to guarantee nothing from the old workspace lingers in memory.
+  const switchWorkspace = useCallback(
+    (newWorkspaceId) => {
+      if (!newWorkspaceId || newWorkspaceId === workspaceId) return;
+      storeAuth({ token: getStoredAuth().token, workspaceId: newWorkspaceId });
+      window.location.assign("/dashboard");
+    },
+    [workspaceId],
+  );
+
+  const currentWorkspace = useMemo(
+    () => workspaces.find((w) => w.id === workspaceId) || null,
+    [workspaces, workspaceId],
+  );
+  const role = currentWorkspace?.role || user?.role || "owner";
+  const isViewer = role === "viewer";
 
   const value = useMemo(
     () => ({
@@ -84,10 +127,30 @@ export function AuthProvider({ children }) {
       logout,
       navigateToLogin,
       signup,
+      switchWorkspace,
       user,
       workspaceId,
+      workspaces,
+      currentWorkspace,
+      role,
+      isViewer,
     }),
-    [authChecked, checkUserAuth, isAuthenticated, login, logout, navigateToLogin, signup, user, workspaceId],
+    [
+      authChecked,
+      checkUserAuth,
+      isAuthenticated,
+      login,
+      logout,
+      navigateToLogin,
+      signup,
+      switchWorkspace,
+      user,
+      workspaceId,
+      workspaces,
+      currentWorkspace,
+      role,
+      isViewer,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

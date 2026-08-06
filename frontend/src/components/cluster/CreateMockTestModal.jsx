@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Upload, X } from "lucide-react";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/AuthContext";
 
 // Promoted from an inline component inside pages/ClusterWorkspace.jsx — no behavior changes.
 export default function CreateMockTestModal({ clusterId, onClose }) {
+  const { isViewer } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [form, setForm] = useState({
@@ -14,6 +16,7 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
     durationMinutes: 120,
   });
   const [selectedFile, setSelectedFile] = useState(null);
+  const [documentType, setDocumentType] = useState("questions");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -30,7 +33,11 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
       });
 
       if (selectedFile) {
-        await api.uploadMockTestDocument(result.mockTest.id, selectedFile);
+        await api.uploadMockTestDocument(
+          result.mockTest.id,
+          selectedFile,
+          documentType,
+        );
       }
 
       await queryClient.invalidateQueries({
@@ -50,8 +57,8 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-      <div className="w-full max-w-lg overflow-hidden rounded-3xl surface-card border border-border shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-xs">
+      <div className="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl surface-card border border-border shadow-2xl">
         <div className="flex items-center justify-between border-b border-border p-5 sm:p-6">
           <div>
             <h2 className="text-lg font-bold text-foreground">Add Mock Test</h2>
@@ -68,7 +75,10 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5 p-5 sm:p-6">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-5 overflow-y-auto p-5 sm:p-6"
+        >
           <div>
             <label className="mb-2 block text-sm font-semibold text-foreground">
               Mock Test Name *
@@ -130,8 +140,7 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
                 {selectedFile ? selectedFile.name : "Choose PDF document"}
               </span>
               <span className="mt-1 text-xs text-muted-foreground">
-                PDF upload processing will be connected in the OCR pipeline
-                step.
+                We'll extract questions automatically after upload.
               </span>
               <input
                 type="file"
@@ -163,6 +172,48 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
             )}
           </div>
 
+          {selectedFile && (
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-foreground">
+                What's in this PDF?
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setDocumentType("questions")}
+                  className={`rounded-2xl border-2 px-4 py-3 text-left transition-all ${
+                    documentType === "questions"
+                      ? "border-orange-500/60 bg-orange-500/10"
+                      : "border-border bg-muted/40 hover:border-orange-500/30"
+                  }`}
+                >
+                  <span className="block text-sm font-semibold text-foreground">
+                    Question Paper
+                  </span>
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    Already has ready-made questions &amp; options
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDocumentType("notes")}
+                  className={`rounded-2xl border-2 px-4 py-3 text-left transition-all ${
+                    documentType === "notes"
+                      ? "border-orange-500/60 bg-orange-500/10"
+                      : "border-border bg-muted/40 hover:border-orange-500/30"
+                  }`}
+                >
+                  <span className="block text-sm font-semibold text-foreground">
+                    Study Notes
+                  </span>
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    No questions yet — generate a quiz from this
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {error && (
             <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs font-medium text-red-500">
               {error}
@@ -179,8 +230,15 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white transition-all bg-[#ea580c] hover:bg-[#c2410c] disabled:opacity-60 shadow-sm"
+              disabled={isSubmitting || isViewer}
+              title={
+                isViewer ? "Editor role is required to add mock tests" : undefined
+              }
+              className={`flex-1 rounded-xl py-2.5 text-sm font-semibold text-white transition-all shadow-sm ${
+                isViewer
+                  ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50"
+                  : "bg-[#ea580c] hover:bg-[#c2410c]"
+              }`}
             >
               {isSubmitting ? "Creating..." : "Add Mock Test"}
             </button>

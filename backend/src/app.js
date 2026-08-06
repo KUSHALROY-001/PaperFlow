@@ -2,12 +2,15 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import { authRouter } from "./routes/auth.routes.js";
+import { attemptsRouter } from "./routes/attempts.routes.js";
 import { clustersRouter } from "./routes/clusters.routes.js";
 import { dashboardRouter } from "./routes/dashboard.routes.js";
 import { extractionTemplatesRouter } from "./routes/extraction-templates.routes.js";
 import { mockTestsRouter } from "./routes/mock-tests.routes.js";
 import { processingJobsRouter } from "./routes/processing-jobs.routes.js";
 import { questionsRouter } from "./routes/questions.routes.js";
+import { sharedRouter } from "./routes/shared.routes.js";
+import { teamRouter } from "./routes/team.routes.js";
 import { requireAuth } from "./middleware/require-auth.js";
 import { errorHandler } from "./middleware/error-handler.js";
 
@@ -58,6 +61,13 @@ export function createApp() {
   app.use("/api/mock-tests", requireAuth, mockTestsRouter);
   app.use("/api/processing-jobs", requireAuth, processingJobsRouter);
   app.use("/api/questions", requireAuth, questionsRouter);
+  app.use("/api/attempts", requireAuth, attemptsRouter);
+  app.use("/api/team", requireAuth, teamRouter);
+  // Deliberately public - this is how an unauthenticated visitor takes a
+  // mock test via a share link. Every handler in shared.routes.js resolves
+  // its own workspace scoping from the token, not from req.workspaceId
+  // (which won't exist here, since requireAuth never ran).
+  app.use("/api/shared", sharedRouter);
 
   app.use((_req, _res, next) => {
     next(Object.assign(new Error("Route not found"), { statusCode: 404 }));

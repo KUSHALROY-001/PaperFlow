@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { getIssues, toEditorQuestion } from "@/utils/questionEditorHelpers";
 
-// Extracted from pages/QuestionEditor.jsx — same behavior, plus two
-// deliberate optimizations (see comments below on `issuesById` and
-// `deleteQuestion`). Everything else is a straight extraction.
 export function useQuestionEditor() {
   const { clusterId, mockTestId } = useParams();
+  const [searchParams] = useSearchParams();
+  const targetQId = searchParams.get("qId") || searchParams.get("questionId");
+
   const queryClient = useQueryClient();
   const [questions, setQuestions] = useState([]);
   const [selectedId, setSelectedId] = useState("");
@@ -30,18 +30,29 @@ export function useQuestionEditor() {
     setQuestions(loaded);
     initialQuestionsRef.current = loaded;
     setHasUnsavedChanges(false);
-    setSelectedId((current) =>
-      loaded.some((question) => question.id === current)
+    setSelectedId((current) => {
+      if (targetQId && loaded.some((q) => q.id === targetQId)) {
+        return targetQId;
+      }
+      return loaded.some((question) => question.id === current)
         ? current
-        : loaded[0]?.id || "",
-    );
-  }, [questionsQuery.data]);
+        : loaded[0]?.id || "";
+    });
+  }, [questionsQuery.data, targetQId]);
 
-  // Keeps a live pointer to the latest `questions` without needing to list
-  // it as a dependency below — this is what lets `deleteQuestion` stay
-  // referentially stable (see note on that function).
   const questionsRef = useRef(questions);
   questionsRef.current = questions;
+
+  // Dynamically collect unique topics extracted from questions in this mock test
+  const extractedTopics = useMemo(() => {
+    const set = new Set();
+    for (const q of questions) {
+      if (q.topic && q.topic.trim()) {
+        set.add(q.topic.trim());
+      }
+    }
+    return Array.from(set);
+  }, [questions]);
 
   const selected = useMemo(
     () => questions.find((q) => q.id === selectedId),
@@ -57,10 +68,6 @@ export function useQuestionEditor() {
     [questions],
   );
 
-  // Previously `getIssues(q)` was called fresh in two places every render
-  // (once per card for its badge, once again to compute the header count).
-  // Computing it once here means editing one question no longer re-derives
-  // issue counts for every other question on every keystroke.
   const issuesById = useMemo(() => {
     const map = new Map();
     for (const q of questions) map.set(q.id, getIssues(q));
@@ -142,6 +149,7 @@ export function useQuestionEditor() {
   );
 
   const addQuestion = useCallback(() => {
+    const defaultTopic = extractedTopics[0] || "General";
     const newQ = {
       id: `draft-${Date.now()}`,
       persisted: false,
@@ -149,20 +157,44 @@ export function useQuestionEditor() {
       text: "New Question",
       options: ["Option A", "Option B", "Option C", "Option D"],
       correctOptionIndexes: [0],
-      topic: "Data Structures",
+      topic: defaultTopic,
       questionType: "single",
     };
     setQuestions((prev) => [...prev, newQ]);
     setHasUnsavedChanges(true);
     setSelectedId(newQ.id);
-  }, [nextQuestionNo]);
+  }, [nextQuestionNo, extractedTopics]);
 
-  // Stable across renders (deps are clusterId/mockTestId/queryClient, which
-  // don't change while this page is mounted) — reads the live question list
-  // via questionsRef instead of closing over `questions` directly. That's
-  // what lets this function keep the same identity while the user edits
-  // question text, so a memoized QuestionCard list doesn't all re-render
-  // on every keystroke just because this handler "changed".
+  // DIRECT 2-ITEM SWAP: Swaps position of draggedIndex and targetIndex directly
+  // (e.g. item 1 and item 5 swap places directly; items 2, 3, 4 remain unchanged).
+  const reorderQuestions = useCallback((draggedIndex, targetIndex) => {
+    if (
+      draggedIndex === undefined ||
+      targetIndex === undefined ||
+      draggedIndex === null ||
+      targetIndex === null ||
+      draggedIndex === targetIndex
+    ) {
+      return;
+    }
+
+    setQuestions((prev) => {
+      const list = [...prev];
+      // Direct swap between dragged item and target item
+      const temp = list[draggedIndex];
+      list[draggedIndex] = list[targetIndex];
+      list[targetIndex] = temp;
+
+      // Update question numbers sequentially (1, 2, 3...)
+      return list.map((q, idx) => ({
+        ...q,
+        questionNo: idx + 1,
+      }));
+    });
+
+    setHasUnsavedChanges(true);
+  }, []);
+
   const deleteQuestion = useCallback(
     async (id) => {
       const target = questionsRef.current.find(
@@ -180,11 +212,6 @@ export function useQuestionEditor() {
           });
         }
 
-        // Renumber by position so deleting from the middle doesn't leave a
-        // gap (e.g. deleting #6 and #7 out of 10 used to leave 1-5, 8-10
-        // instead of a clean 1-8). Computed directly from questionsRef
-        // rather than inside a setState updater, so there's no dependence
-        // on React's update-processing order between the two setState calls.
         const remaining = questionsRef.current
           .filter((question) => question.id !== id)
           .map((question, index) => ({ ...question, questionNo: index + 1 }));
@@ -234,6 +261,16 @@ export function useQuestionEditor() {
         throw new Error("Fix question issues before saving");
       }
 
+      // First reorder all existing persisted questions in a single atomic transaction
+      const persistedItems = questionsRef.current
+        .filter((q) => q.persisted)
+        .map((q) => ({ id: q.id, questionNo: Number(q.questionNo) }));
+
+      if (persistedItems.length > 0) {
+        await api.reorderQuestions(mockTestId, persistedItems);
+      }
+
+      // Then save question content edits and create draft questions
       for (const question of questionsRef.current) {
         await saveQuestion(question);
       }
@@ -279,6 +316,7 @@ export function useQuestionEditor() {
     isLoading: questionsQuery.isLoading,
     issuesById,
     issueCount,
+    extractedTopics,
     hasUnsavedChanges,
     updateSelected,
     updateOption,
@@ -287,6 +325,7 @@ export function useQuestionEditor() {
     removeOption,
     addQuestion,
     deleteQuestion,
+    reorderQuestions,
     handleSave,
   };
 }
