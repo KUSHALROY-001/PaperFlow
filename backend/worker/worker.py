@@ -160,11 +160,12 @@ def process_job(job):
                     "questionsParsed": len(questions),
                 },
             )
-            inserted = replace_questions(
+            inserted, pending_diagram_writes = replace_questions(
                 connection,
                 workspace_id=job["workspace_id"],
                 mock_test_id=job["mock_test_id"],
                 questions=questions,
+                pdf_path=pdf_path,
             )
             mark_mock_test_after_processing(connection, job["mock_test_id"], inserted)
             update_job(
@@ -179,8 +180,25 @@ def process_job(job):
                     "ai": ai_summary,
                     "questionsParsed": len(questions),
                     "questionsInserted": inserted,
+                    "diagramsExtracted": len(pending_diagram_writes),
                 },
             )
+
+    # Deliberately OUTSIDE the transaction block above, and only reached if
+    # it committed successfully - see db.py#replace_questions. Writing the
+    # files first and the DB rows second would risk an orphaned file
+    # pointing at a question that got rolled back; this order can only ever
+    # leave a question_assets row with no file on disk yet (which the
+    # signed-URL image endpoint should treat as "not found" - a much safer
+    # failure than serving a phantom row from an unwritten file).
+    for pending_write in pending_diagram_writes:
+        try:
+            pending_write["storage_path"].write_bytes(pending_write["png_bytes"])
+        except Exception as error:
+            # Best-effort - the question and its DB asset row are already
+            # committed and correct either way; losing one diagram image to
+            # a disk error shouldn't fail a job that otherwise succeeded.
+            print(f"Failed to write diagram asset {pending_write['storage_path']}: {error}")
 
     return len(questions)
 

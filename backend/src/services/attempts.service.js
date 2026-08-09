@@ -2,6 +2,7 @@ import { pool } from "../db/pool.js";
 import { httpError } from "../lib/http-error.js";
 import * as attemptsRepo from "../repositories/attempts.repository.js";
 import * as mockTestsRepo from "../repositories/mock-tests.repository.js";
+import { attachDiagramUrls } from "./question-assets.service.js";
 
 export async function startAttempt({
   mockTestId,
@@ -45,6 +46,19 @@ export async function startAttempt({
 
     await client.query("COMMIT");
 
+    const clientQuestions = await attachDiagramUrls(
+      questions.map((question) => ({
+        questionId: question.questionId,
+        questionNo: question.questionNo,
+        topic: question.topic,
+        text: question.text,
+        options: question.options,
+        questionType: question.questionType,
+      })),
+      workspaceId,
+      { shareToken: metadata?.shareToken },
+    );
+
     return {
       attempt: serializeAttempt(attempt),
       mockTest: {
@@ -61,14 +75,7 @@ export async function startAttempt({
       // server-side at submit time (see submitAttempt below) - the client
       // never sees the answer key until the attempt is 'submitted' (see
       // getAttempt), and its own submitted score is never trusted either.
-      questions: questions.map((question) => ({
-        questionId: question.questionId,
-        questionNo: question.questionNo,
-        topic: question.topic,
-        text: question.text,
-        options: question.options,
-        questionType: question.questionType,
-      })),
+      questions: clientQuestions,
     };
   } catch (error) {
     await client.query("ROLLBACK");
@@ -246,7 +253,7 @@ export async function submitAttempt({ attemptId, workspaceId }) {
   }
 }
 
-export async function getAttempt({ attemptId, workspaceId }) {
+export async function getAttempt({ attemptId, workspaceId, shareToken }) {
   const attempt = await attemptsRepo.findAttemptById(attemptId, workspaceId);
   if (!attempt) {
     throw httpError(404, "Attempt not found");
@@ -259,9 +266,8 @@ export async function getAttempt({ attemptId, workspaceId }) {
 
   const isSubmitted = attempt.status === "submitted";
 
-  return {
-    attempt: serializeAttemptWithMockTest(attempt),
-    questions: rows.map((row) => ({
+  const questions = await attachDiagramUrls(
+    rows.map((row) => ({
       questionId: row.question_id,
       questionNo: row.question_no,
       topic: row.topic,
@@ -283,6 +289,13 @@ export async function getAttempt({ attemptId, workspaceId }) {
           }
         : {}),
     })),
+    workspaceId,
+    { shareToken },
+  );
+
+  return {
+    attempt: serializeAttemptWithMockTest(attempt),
+    questions,
   };
 }
 

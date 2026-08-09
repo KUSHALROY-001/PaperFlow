@@ -17,6 +17,11 @@ def _question_item_schema(*, nullable_as_union):
             return {"type": [json_type, "null"]}
         return {"type": json_type, "nullable": True}
 
+    def optional_array(item_type, **extra):
+        if nullable_as_union:
+            return {"type": ["array", "null"], "items": {"type": item_type}, **extra}
+        return {"type": "array", "items": {"type": item_type}, "nullable": True, **extra}
+
     properties = {
         "question_no": {"type": "integer"},
         "topic": optional("string"),
@@ -37,12 +42,50 @@ def _question_item_schema(*, nullable_as_union):
         "confidence": {"type": "integer"},
         "needs_review": {"type": "boolean"},
         "issues": {"type": "array", "items": {"type": "string"}},
+        "has_diagram": {
+            "type": "boolean",
+            "description": (
+                "true ONLY if a diagram, circuit, graph, chart, or figure is "
+                "VISUALLY PRESENT on the page image for this question - not "
+                "just because the question text mentions 'figure', 'shown "
+                "below', 'as shown', or similar wording. This field is "
+                "required for every question: you must explicitly decide "
+                "true or false, never skip it. When the question text itself "
+                "references a figure (e.g. 'as shown in the figure'), treat "
+                "that as a strong hint to look carefully at the page region "
+                "near this question for the actual visual before deciding."
+            ),
+        },
+        # [ymin, xmin, ymax, xmax], normalized 0-1000 against the page image
+        # the model was actually shown - matches Gemini's own established
+        # object-detection bbox convention rather than inventing a new one,
+        # so the model draws on training it's already good at. Cropping
+        # must happen against the *same* render used for the vision call
+        # (same AI_PDF_RENDER_SCALE) or these coordinates won't line up -
+        # see gemini_provider.py.
+        "diagram_bbox": {
+            **optional_array("integer", minItems=4, maxItems=4),
+            "description": (
+                "Required key (value may be null). When has_diagram is true, "
+                "the tight bounding box around the figure as "
+                "[ymin, xmin, ymax, xmax], each 0-1000, normalized against "
+                "THIS image's own width/height. When has_diagram is false, "
+                "set this to null - do not omit the key."
+            ),
+        },
     }
 
     schema = {
         "type": "object",
         "properties": properties,
-        "required": ["question_no", "text", "options", "correct_option_indexes"],
+        "required": [
+            "question_no",
+            "text",
+            "options",
+            "correct_option_indexes",
+            "has_diagram",
+            "diagram_bbox",
+        ],
     }
 
     if nullable_as_union:
@@ -243,6 +286,25 @@ def normalize_ai_questions(payload, *, source="ai"):
             }
         )
 
+        has_diagram = bool(item.get("has_diagram", False))
+        diagram_bbox = item.get("diagram_bbox")
+        if not (
+            isinstance(diagram_bbox, list)
+            and len(diagram_bbox) == 4
+            and all(isinstance(value, (int, float)) for value in diagram_bbox)
+        ):
+            # Malformed/missing bbox from the model - downgrade to "no
+            # diagram" rather than carrying a garbage value through to
+            # asset_extractor.crop_diagram, which would just reject it
+            # anyway. Doing it here means callers only ever need to check
+            # has_diagram, not re-validate the bbox shape themselves. The
+            # actual geometric validation (0-1000 range, degenerate-box
+            # rejection) happens once, in asset_extractor.py, right before
+            # it's used for cropping - not duplicated here with a second
+            # ruleset that could drift out of sync with it.
+            has_diagram = False
+            diagram_bbox = None
+
         normalized.append(
             {
                 "question_no": question_no,
@@ -256,6 +318,8 @@ def normalize_ai_questions(payload, *, source="ai"):
                 "source_page": parse_positive_int(item.get("source_page") or item.get("sourcePage")),
                 "confidence": max(0, min(confidence, 100)),
                 "metadata": metadata,
+                "has_diagram": has_diagram,
+                "diagram_bbox": diagram_bbox,
             }
         )
 

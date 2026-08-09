@@ -4,6 +4,7 @@ from contextlib import contextmanager
 import psycopg
 from psycopg.rows import dict_row
 
+from .asset_extractor import build_diagram_storage_path
 from .config import DATABASE_URL
 
 
@@ -151,7 +152,7 @@ def update_job(connection, job_id, *, status=None, stage=None, progress=None, su
     )
 
 
-def replace_questions(connection, *, workspace_id, mock_test_id, questions):
+def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_path=None):
     existing = connection.execute(
         "SELECT id FROM questions WHERE mock_test_id = %s",
         [mock_test_id],
@@ -161,6 +162,14 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions):
         connection.execute("DELETE FROM questions WHERE id = %s", [row["id"]])
 
     inserted_count = 0
+    # (storage_path, png_bytes) pairs to actually write to disk - deferred
+    # until AFTER the caller's transaction commits (see worker.py), so a
+    # rolled-back transaction never leaves an orphaned PNG file on disk
+    # referencing a question row that doesn't exist. The question_assets
+    # DB row itself IS inserted now, inside the transaction, since
+    # inserting it doesn't require the file to exist yet - only serving it
+    # later does.
+    pending_diagram_writes = []
 
     for question in questions:
         # question_type used to be hardcoded to 'single' here regardless of
@@ -218,9 +227,26 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions):
                 [question_row["id"], index, option],
             )
 
+        # _diagram_crop_bytes is an in-memory-only carrier attached by
+        # ai/provider.py#_attach_diagram_crops - never a real question
+        # field, and never written into `questions.metadata` above (it's
+        # read via .get() here, not part of the dict passed to json.dumps
+        # for metadata).
+        crop_bytes = question.get("_diagram_crop_bytes")
+        if crop_bytes and pdf_path:
+            storage_path = build_diagram_storage_path(pdf_path, question_row["id"])
+            connection.execute(
+                """
+                INSERT INTO question_assets (question_id, asset_type, storage_path, page_number)
+                VALUES (%s, 'diagram', %s, %s)
+                """,
+                [question_row["id"], str(storage_path), question.get("source_page")],
+            )
+            pending_diagram_writes.append({"storage_path": storage_path, "png_bytes": crop_bytes})
+
         inserted_count += 1
 
-    return inserted_count
+    return inserted_count, pending_diagram_writes
 
 
 def mark_mock_test_after_processing(connection, mock_test_id, question_count):

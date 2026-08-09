@@ -1,4 +1,5 @@
 import { Flag, ChevronLeft, ChevronRight } from "lucide-react";
+import { resolveAssetUrl } from "@/lib/api";
 
 export default function SessionQuestionView({
   q,
@@ -55,6 +56,15 @@ export default function SessionQuestionView({
         <p className="text-lg font-bold text-foreground mb-8 leading-relaxed">
           {q.text}
         </p>
+
+        {q.diagramUrl && (
+          <img
+            src={resolveAssetUrl(q.diagramUrl)}
+            alt="Question diagram"
+            className="max-w-full rounded-xl border border-border mb-6"
+            loading="lazy"
+          />
+        )}
 
         <div className="space-y-3">
           {q.options.map((opt, i) => (

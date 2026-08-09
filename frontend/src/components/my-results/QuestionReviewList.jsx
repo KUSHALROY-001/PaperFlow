@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { CheckCircle, XCircle, ChevronRight, ChevronDown } from "lucide-react";
+import { resolveAssetUrl } from "@/lib/api";
 
 export default function QuestionReviewList({ questions }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -74,6 +75,16 @@ export default function QuestionReviewList({ questions }) {
                         </span>
                       )}
                     </div>
+
+                    {q.diagramUrl && (
+                      <img
+                        src={resolveAssetUrl(q.diagramUrl)}
+                        alt="Question diagram"
+                        className="max-w-full rounded-xl border border-border mt-2 mb-2"
+                        loading="lazy"
+                      />
+                    )}
+
                     {!correct && !skipped && (
                       <p className="text-xs text-red-500 mt-1 font-semibold">
                         Your answer:{" "}

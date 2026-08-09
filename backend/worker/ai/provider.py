@@ -1,3 +1,4 @@
+from ..asset_extractor import crop_diagram
 from ..config import (
     AI_GENERATE_FROM_NOTES,
     AI_MAX_CHARS_PER_CHUNK,
@@ -15,6 +16,29 @@ Return only valid JSON. Do not include markdown.
 Use zero-based option indexes.
 If an answer is missing or uncertain, choose the most likely option, lower confidence, set needs_review true, and explain in issues.
 Keep original meaning. Do not invent questions that are not present in the text.
+
+If a question references a diagram, circuit, graph, chart, or figure that
+you can see in the attached page image, set has_diagram to true and report
+diagram_bbox as [ymin, xmin, ymax, xmax], each a number from 0 to 1000,
+normalized relative to the attached image's own width and height (top-left
+corner is [0, 0, 0, 0]; bottom-right is [1000, 1000, 1000, 1000]). Only set
+has_diagram to true when the figure is visually present on the page you
+were shown - never for a question that merely mentions a diagram in words
+with nothing to point to. Set has_diagram to false and diagram_bbox to null
+for every question without a visible figure.
+
+has_diagram and diagram_bbox are REQUIRED fields on every single question -
+never omit them, and never skip making an explicit decision for a question
+just because it looks text-only at a glance. Specifically: for EVERY
+question, first check whether its own text contains wording like "shown in
+the figure", "as shown below", "given below", "in the diagram", or similar -
+if it does, that is a strong signal to look carefully at the page region
+near that question for the actual visual (a circuit, geometric figure,
+graph, or chart) before deciding has_diagram. Getting this wrong in either
+direction is costly: missing a real diagram loses the student a question
+they cannot answer without it, and false-flagging a purely textual question
+wastes a crop for nothing - so look before you decide, on every question,
+rather than defaulting to false out of habit.
 Expected shape:
 {
   "questions": [
@@ -29,7 +53,9 @@ Expected shape:
       "source_page": 1,
       "confidence": 0,
       "needs_review": true,
-      "issues": []
+      "issues": [],
+      "has_diagram": false,
+      "diagram_bbox": null
     }
   ]
 }
@@ -133,6 +159,87 @@ def generate_questions_from_notes(pages, provider):
     }
 
 
+def _attach_diagram_crops(ai_questions, page_images):
+    """
+    For each question the model flagged has_diagram=True with a usable
+    diagram_bbox, crop it from the exact page image rendered for this
+    chunk's vision call (page_images, keyed by 1-based page number - see
+    gemini_provider.py#generate_json_from_pdf_images) and attach the PNG
+    bytes in-memory as "_diagram_crop_bytes".
+
+    This key is NOT part of the question schema - it's a transient
+    carrier consumed by db.py#replace_questions when saving the file to
+    disk, and must be stripped before a question dict is ever serialized
+    into output_summary or any other JSON column (raw image bytes don't
+    belong there). worker.py is responsible for stripping it after saving.
+
+    Returns a stats dict - not just silently succeeding/failing per
+    question. Losing this observability once already cost real debugging
+    time: with no trace of *why* a question with has_diagram=True ended
+    up with no crop (source_page mismatch, missing page_images because
+    that chunk's fetch failed, or a bad/degenerate bbox), the only way to
+    find out was writing standalone diagnostic scripts against a live
+    account. Surfacing these counts in output_summary means the very next
+    job's own summary answers "did the model even try, and if so where
+    did it fail" without needing to reproduce anything.
+    """
+    stats = {"flaggedByModel": 0, "cropped": 0, "noMatchingPageImage": 0, "cropFailed": 0}
+
+    for question in ai_questions:
+        if not question.get("has_diagram") or not question.get("diagram_bbox"):
+            continue
+
+        stats["flaggedByModel"] += 1
+
+        source_page = question.get("source_page")
+        page_image = page_images.get(source_page) if source_page else None
+        if page_image is None and source_page and len(page_images) > 1:
+            # The model was explicitly told to use the ABSOLUTE PDF page
+            # number for source_page (see SYSTEM_PROMPT and the per-chunk
+            # prompt in gemini_provider.py), and does so correctly for
+            # the large majority of chunks - but real-world testing
+            # against a full document showed it occasionally reverts to
+            # POSITION-WITHIN-THIS-CHUNK instead (1st image, 2nd image...)
+            # for an entire chunk at a time, seemingly at random, with no
+            # single prompt tweak having fully eliminated it. Recovering
+            # from it here is more robust than chasing prompt wording
+            # further: if source_page isn't a real page in this chunk but
+            # IS a valid 1-based index into the chunk's own pages (sorted
+            # ascending, matching the order pages were actually attached
+            # to the request), treat that as the likely intended page
+            # rather than discarding a diagram the model DID correctly
+            # locate and box, just under the wrong page-numbering
+            # convention.
+            chunk_pages_sorted = sorted(page_images.keys())
+            if 1 <= source_page <= len(chunk_pages_sorted):
+                page_image = page_images[chunk_pages_sorted[source_page - 1]]
+        if page_image is None:
+            # Model didn't report a usable source_page for this question,
+            # or it doesn't match any page actually in this chunk (and
+            # isn't a valid position-in-chunk index either) - fall back
+            # to the chunk's own single page if it only covered one,
+            # otherwise there's no sane page to crop from.
+            if len(page_images) == 1:
+                page_image = next(iter(page_images.values()))
+            else:
+                stats["noMatchingPageImage"] += 1
+                continue
+
+        crop_bytes = crop_diagram(
+            page_image["png_bytes"],
+            page_image["width"],
+            page_image["height"],
+            question["diagram_bbox"],
+        )
+        if crop_bytes:
+            question["_diagram_crop_bytes"] = crop_bytes
+            stats["cropped"] += 1
+        else:
+            stats["cropFailed"] += 1
+
+    return stats
+
+
 def _missing_question_numbers(questions_by_no, regex_questions):
     # Best-effort "how many questions should there be" estimate: the
     # highest question_no either extractor has actually detected so far.
@@ -223,6 +330,7 @@ def enhance_questions_with_ai(
 
     questions_by_no = {}
     errors = []
+    diagram_stats = {"flaggedByModel": 0, "cropped": 0, "noMatchingPageImage": 0, "cropFailed": 0}
 
     # For a scanned document, OCR has already flattened the page into a 1D
     # text stream - and that flattening can scramble which question number
@@ -239,7 +347,22 @@ def enhance_questions_with_ai(
     # OCR-flattening failure mode doesn't apply - the text layer's reading
     # order comes from the PDF itself, not from OCR guessing - so text-first
     # stays the default there, since it's meaningfully cheaper per page.
-    if was_scanned and pdf_path and hasattr(provider, "generate_json_from_pdf_images"):
+    # Per-page routing: was_scanned alone (whole-document) misses the JEE
+    # case - a genuine text-layer PDF that still has SOME pages with
+    # circuit diagrams, graphs, or dense equations mixed in with plain-text
+    # pages. Those pages need vision too, even though the document as a
+    # whole isn't scanned. pdf_extract.classify_page_content already
+    # computed needsVision per page; was_scanned still forces every page in
+    # (an OCR'd document has no reliable text-layer reading order at all,
+    # per the incident in the comment above), but a non-scanned document
+    # now only sends the SPECIFIC pages that actually need it.
+    vision_page_numbers = sorted(
+        {page_data["page"] for page_data in pages if was_scanned or page_data.get("needsVision")}
+    )
+    vision_page_set = set(vision_page_numbers)
+    text_only_pages = pages if was_scanned else [p for p in pages if p["page"] not in vision_page_set]
+
+    if vision_page_numbers and pdf_path and hasattr(provider, "generate_json_from_pdf_images"):
         # Every entry below is labeled with its TRUE start_page/end_page,
         # always - whether it succeeded or failed (including after its
         # internal retry) - so an error here always names the real pages
@@ -248,6 +371,7 @@ def enhance_questions_with_ai(
             SYSTEM_PROMPT,
             build_pdf_prompt(regex_questions),
             pdf_path,
+            page_numbers=vision_page_numbers,
             on_progress=lambda chunk_number, total_chunks: report(
                 f"AI cleanup (vision {chunk_number}/{total_chunks})"
             ),
@@ -260,6 +384,17 @@ def enhance_questions_with_ai(
             try:
                 payload = extract_json_payload(result["response_text"])
                 ai_questions = normalize_ai_questions(payload, source=f"{provider.name}_image_ai_v1")
+                chunk_diagram_stats = _attach_diagram_crops(ai_questions, result.get("page_images") or {})
+                for key in diagram_stats:
+                    diagram_stats[key] += chunk_diagram_stats[key]
+                # This is the FIRST (highest-priority) pass to write into
+                # questions_by_no, so unconditional overwrite is fine here
+                # - within this same pass, a later chunk winning over an
+                # earlier one for the same question_no (e.g. a page split
+                # oddly across two chunks) is reasonable last-result-wins
+                # behavior. Every pass AFTER this one uses setdefault
+                # instead, specifically so it can never clobber what this
+                # pass already found.
                 for question in ai_questions:
                     questions_by_no[question["question_no"]] = question
             except Exception as error:
@@ -270,9 +405,14 @@ def enhance_questions_with_ai(
     # not all - a couple of chunks still failed even after their retry) of
     # the document used to short-circuit every fallback below entirely,
     # since questions_by_no was already non-empty.
+    #
+    # Only processes text_only_pages - the pages already sent to vision
+    # above would just be re-extracted worse from their (possibly garbled,
+    # possibly diagram-only) text layer, wasting a call to recover nothing
+    # new.
     missing = _missing_question_numbers(questions_by_no, regex_questions)
-    if missing:
-        chunks = list(chunk_pages(pages))
+    if missing and text_only_pages:
+        chunks = list(chunk_pages(text_only_pages))
         total_chunks = len(chunks)
         for chunk_index, chunk in enumerate(chunks, start=1):
             report(f"AI cleanup (text {chunk_index}/{total_chunks})")
@@ -281,20 +421,33 @@ def enhance_questions_with_ai(
                 response_text = provider.generate_json(SYSTEM_PROMPT, user_prompt)
                 payload = extract_json_payload(response_text)
                 ai_questions = normalize_ai_questions(payload, source=f"{provider.name}_ai_v1")
+                # Only fills question numbers not already found by an
+                # earlier, higher-priority pass (the primary vision pass
+                # above runs first specifically so it wins) - never
+                # overwrites an existing entry, which previously discarded
+                # already-successful diagram crops the moment ANY question
+                # number was still missing elsewhere in the document (see
+                # _attach_diagram_crops / diagram_stats above - a crop
+                # recorded there was being silently thrown away right
+                # here).
                 for question in ai_questions:
-                    questions_by_no[question["question_no"]] = question
+                    questions_by_no.setdefault(question["question_no"], question)
             except Exception as error:
                 errors.append({"chunk": chunk_index, "message": str(error)})
 
-    # Scanned docs already tried images first above - this fallback now only
-    # fires for a non-scanned (genuine text-layer) PDF whose text-chunk pass
-    # above still left gaps, e.g. an oddly-formatted text-layer PDF.
+    # Scanned docs already sent every page to vision above - this fallback
+    # now only fires for pages that were text-only-routed (not flagged
+    # needsVision) but whose text-chunk pass above still left gaps, e.g. an
+    # oddly-formatted text-layer page. Re-tries those SPECIFIC pages
+    # through vision as a second opinion, not the whole document again.
     missing = _missing_question_numbers(questions_by_no, regex_questions)
-    if missing and not was_scanned and pdf_path and hasattr(provider, "generate_json_from_pdf_images"):
+    fallback_vision_pages = sorted({p["page"] for p in text_only_pages}) if not was_scanned else []
+    if missing and fallback_vision_pages and pdf_path and hasattr(provider, "generate_json_from_pdf_images"):
         chunk_results = provider.generate_json_from_pdf_images(
             SYSTEM_PROMPT,
             build_pdf_prompt(regex_questions),
             pdf_path,
+            page_numbers=fallback_vision_pages,
             on_progress=lambda chunk_number, total_chunks: report(
                 f"AI cleanup (vision fallback {chunk_number}/{total_chunks})"
             ),
@@ -307,8 +460,16 @@ def enhance_questions_with_ai(
             try:
                 payload = extract_json_payload(result["response_text"])
                 ai_questions = normalize_ai_questions(payload, source=f"{provider.name}_image_ai_v1")
+                chunk_diagram_stats = _attach_diagram_crops(ai_questions, result.get("page_images") or {})
+                for key in diagram_stats:
+                    diagram_stats[key] += chunk_diagram_stats[key]
+                # Gap-fill-only rule (setdefault, not overwrite): this is a
+                # "second opinion" retry of specific text-only-routed pages,
+                # never authoritative over a question the primary vision
+                # pass above already found and possibly cropped a diagram
+                # for.
                 for question in ai_questions:
-                    questions_by_no[question["question_no"]] = question
+                    questions_by_no.setdefault(question["question_no"], question)
             except Exception as error:
                 errors.append({"chunk": f"{pages_label}_parse", "message": str(error)})
 
@@ -322,8 +483,21 @@ def enhance_questions_with_ai(
             )
             payload = extract_json_payload(response_text)
             ai_questions = normalize_ai_questions(payload, source=f"{provider.name}_pdf_ai_v1")
+            # This is the LAST-resort, lowest-fidelity pass - it reads the
+            # raw PDF file directly rather than rendered page images, so it
+            # structurally CANNOT crop a diagram (no page_images exist for
+            # it to crop from - _attach_diagram_crops is never called for
+            # this path at all). Previously this loop overwrote every
+            # question_no it returned unconditionally, which meant ANY
+            # remaining gap elsewhere in the document (a completely
+            # unrelated missing question) caused this pass to run and
+            # silently re-clobber EVERY already-successful vision result
+            # with a diagram-crop-incapable duplicate - discarding correct,
+            # already-cropped diagrams for questions that were never
+            # actually missing. setdefault fixes that: this pass can only
+            # ever fill in numbers no earlier pass found.
             for question in ai_questions:
-                questions_by_no[question["question_no"]] = question
+                questions_by_no.setdefault(question["question_no"], question)
         except Exception as error:
             errors.append({"chunk": "pdf", "message": str(error)})
 
@@ -365,6 +539,7 @@ def enhance_questions_with_ai(
             "documentType": "questions",
             "visionFirst": was_scanned,
             "missingQuestionNumbers": final_missing,
+            "diagramStats": diagram_stats,
         }
 
     # AI found *something*. Reconcile it with the regex parser's result
@@ -392,6 +567,7 @@ def enhance_questions_with_ai(
         "documentType": "questions",
         "visionFirst": was_scanned,
         "missingQuestionNumbers": final_missing,
+        "diagramStats": diagram_stats,
     }
 
 
@@ -431,6 +607,10 @@ def build_user_prompt(chunk, regex_questions):
     return f"""
 Extract and clean all MCQ questions from this PDF text chunk.
 Use the regex parser preview as hints only. Prefer the PDF text when there is a conflict.
+No page image is attached for this chunk - leave has_diagram false and
+diagram_bbox null for every question here, even if the text mentions a
+figure; diagram detection only happens on the vision extraction path,
+which has the actual page image to look at.
 
 Regex parser preview:
 {regex_preview}

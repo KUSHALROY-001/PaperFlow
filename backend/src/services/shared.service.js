@@ -12,8 +12,15 @@ function generateShareToken() {
   return crypto.randomBytes(24).toString("base64url");
 }
 
-export async function createOrGetShareLink({ mockTestId, workspaceId, expiresAt }) {
-  const mockTest = await mockTestsRepo.findMockTestById(mockTestId, workspaceId);
+export async function createOrGetShareLink({
+  mockTestId,
+  workspaceId,
+  expiresAt,
+}) {
+  const mockTest = await mockTestsRepo.findMockTestById(
+    mockTestId,
+    workspaceId,
+  );
   if (!mockTest) {
     throw httpError(404, "Mock test not found");
   }
@@ -48,7 +55,10 @@ export async function createOrGetShareLink({ mockTestId, workspaceId, expiresAt 
 }
 
 export async function listShares({ mockTestId, workspaceId }) {
-  const mockTest = await mockTestsRepo.findMockTestById(mockTestId, workspaceId);
+  const mockTest = await mockTestsRepo.findMockTestById(
+    mockTestId,
+    workspaceId,
+  );
   if (!mockTest) {
     throw httpError(404, "Mock test not found");
   }
@@ -58,7 +68,10 @@ export async function listShares({ mockTestId, workspaceId }) {
 }
 
 export async function revokeShareLink({ shareId, mockTestId, workspaceId }) {
-  const mockTest = await mockTestsRepo.findMockTestById(mockTestId, workspaceId);
+  const mockTest = await mockTestsRepo.findMockTestById(
+    mockTestId,
+    workspaceId,
+  );
   if (!mockTest) {
     throw httpError(404, "Mock test not found");
   }
@@ -76,14 +89,28 @@ export async function revokeShareLink({ shareId, mockTestId, workspaceId }) {
 async function resolveShare(shareToken) {
   const share = await sharedRepo.findValidShareByToken(shareToken);
   if (!share) {
-    throw httpError(404, "This share link is invalid, expired, or has been revoked");
+    throw httpError(
+      404,
+      "This share link is invalid, expired, or has been revoked",
+    );
   }
   return share;
 }
 
+// Used by the public diagram-serving route: resolving through the same
+// share-validity check as every other shared endpoint means a revoked or
+// expired share also immediately stops serving that test's diagram
+// images, not just its questions/attempts.
+export async function resolveWorkspaceForShareToken(shareToken) {
+  const share = await resolveShare(shareToken);
+  return share.workspace_id;
+}
+
 export async function getSharedMockTest(shareToken) {
   const share = await resolveShare(shareToken);
-  const questions = await mockTestsRepo.listPlayableQuestions(share.mock_test_id);
+  const questions = await mockTestsRepo.listPlayableQuestions(
+    share.mock_test_id,
+  );
 
   return {
     mockTest: {
@@ -106,11 +133,20 @@ export async function startSharedAttempt({ shareToken, guestName }) {
     mockTestId: share.mock_test_id,
     workspaceId: share.workspace_id,
     userId: null,
-    metadata: { source: "shared_link", shareToken, guestName: guestName || null },
+    metadata: {
+      source: "shared_link",
+      shareToken,
+      guestName: guestName || null,
+    },
   });
 }
 
-export async function saveSharedAnswer({ shareToken, attemptId, questionId, selectedOptionIndexes }) {
+export async function saveSharedAnswer({
+  shareToken,
+  attemptId,
+  questionId,
+  selectedOptionIndexes,
+}) {
   const share = await resolveShare(shareToken);
 
   return attemptsService.saveAnswer({
@@ -136,6 +172,7 @@ export async function getSharedAttempt({ shareToken, attemptId }) {
   return attemptsService.getAttempt({
     attemptId,
     workspaceId: share.workspace_id,
+    shareToken,
   });
 }
 

@@ -1,5 +1,20 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
+// The diagram endpoints (see backend attachDiagramUrls) return a
+// BACKEND-relative path like "/api/questions/:id/diagram?access_token=...",
+// the same shape every other apiRequest() call already prefixes with
+// API_BASE_URL before fetching. An <img src> tag doesn't go through
+// apiRequest at all, so without this the browser resolves that relative
+// path against the FRONTEND's own origin (wherever the Vite dev server or
+// static host is running) instead of the backend - a silent 404 with
+// nothing in the console pointing at why, since a broken <img> just shows
+// no image. Every diagramUrl consumer should wrap it in this rather than
+// using question.diagramUrl directly as a src.
+export function resolveAssetUrl(path) {
+  if (!path) return path;
+  return `${API_BASE_URL}${path}`;
+}
+
 const TOKEN_KEY = "paperflow_token";
 const WORKSPACE_KEY = "paperflow_workspace_id";
 

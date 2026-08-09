@@ -1,4 +1,5 @@
 import { Flag, ChevronLeft, ChevronRight } from "lucide-react";
+import { resolveAssetUrl } from "@/lib/api";
 
 export default function SharedMockSessionView({
   q,
@@ -35,6 +36,14 @@ export default function SharedMockSessionView({
         <p className="text-base font-bold text-foreground mb-6 leading-relaxed">
           {q.text}
         </p>
+        {q.diagramUrl && (
+          <img
+            src={resolveAssetUrl(q.diagramUrl)}
+            alt="Question diagram"
+            className="max-w-full rounded-xl border border-border mb-6"
+            loading="lazy"
+          />
+        )}
         <div className="space-y-3">
           {q.options.map((opt, i) => (
             <button

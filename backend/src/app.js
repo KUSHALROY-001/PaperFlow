@@ -13,6 +13,8 @@ import { sharedRouter } from "./routes/shared.routes.js";
 import { teamRouter } from "./routes/team.routes.js";
 import { requireAuth } from "./middleware/require-auth.js";
 import { errorHandler } from "./middleware/error-handler.js";
+import { asyncHandler } from "./lib/async-handler.js";
+import * as questionAssetsController from "./controllers/question-assets.controller.js";
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -60,6 +62,16 @@ export function createApp() {
   app.use("/api/extraction-templates", requireAuth, extractionTemplatesRouter);
   app.use("/api/mock-tests", requireAuth, mockTestsRouter);
   app.use("/api/processing-jobs", requireAuth, processingJobsRouter);
+  // Deliberately public, registered BEFORE the requireAuth-wrapped
+  // /api/questions mount below so this exact path is handled here first
+  // and never reaches that middleware. A plain <img src="..."> request
+  // carries no Authorization header - this route's own signed
+  // access_token query param (see lib/diagram-signed-url.js) is its
+  // entire authentication, the same pattern /api/shared already uses.
+  app.get(
+    "/api/questions/:questionId/diagram",
+    asyncHandler(questionAssetsController.serveDiagram),
+  );
   app.use("/api/questions", requireAuth, questionsRouter);
   app.use("/api/attempts", requireAuth, attemptsRouter);
   app.use("/api/team", requireAuth, teamRouter);

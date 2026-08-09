@@ -1,4 +1,5 @@
 import { Plus, Trash2 } from "lucide-react";
+import { resolveAssetUrl } from "@/lib/api";
 
 export default function QuestionForm({
   selected,
@@ -78,7 +79,7 @@ export default function QuestionForm({
           value={selected.text}
           onChange={(e) => !isViewer && updateSelected("text", e.target.value)}
           rows={3}
-          className={`w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all text-sm resize-none ${
+          className={`w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all text-xs sm:text-sm resize-none ${
             isViewer ? "cursor-not-allowed opacity-60" : ""
           }`}
         />
@@ -187,6 +188,14 @@ export default function QuestionForm({
         <p className="text-sm font-bold text-foreground mb-4">
           {selected.text}
         </p>
+        {selected.diagramUrl && (
+          <img
+            src={resolveAssetUrl(selected.diagramUrl)}
+            alt="Question diagram"
+            className="max-w-full rounded-xl border border-border mb-4"
+            loading="lazy"
+          />
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {selected.options.map((opt, i) => (
             <div
