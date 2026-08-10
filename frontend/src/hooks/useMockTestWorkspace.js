@@ -60,6 +60,16 @@ export function useMockTestWorkspace() {
     },
   });
 
+  // Gated on the Submissions tab being active (unlike questionsData/
+  // jobsData above, which the top-level stat cards need regardless of
+  // tab) - no reason to fetch every taker's name/score on every page
+  // load when most visits never open this tab.
+  const { data: submissionsData, isLoading: isLoadingSubmissions } = useQuery({
+    queryKey: ["submissions", mockTestId],
+    queryFn: () => api.listSubmissions(mockTestId),
+    enabled: Boolean(mockTestId) && activeTab === "submissions",
+  });
+
   const cluster = clusterData?.cluster;
   const clusterMockTests = mockTestsData?.mockTests || [];
   const mocktest = mocktestData?.mockTest;
@@ -73,6 +83,7 @@ export function useMockTestWorkspace() {
     () => (questionsData?.questions || []).map(mapQuestion),
     [questionsData],
   );
+  const submissions = submissionsData?.submissions || [];
 
   useEffect(() => {
     if (!latestJobId || !["completed", "failed"].includes(latestJobStatus))
@@ -120,6 +131,31 @@ export function useMockTestWorkspace() {
       }
     : null;
 
+  // Only ever reachable pre-upload (see the guard OverviewTab uses to show
+  // its upload panel: no job has ever been queued yet). Reprocessing an
+  // existing file is a separate action (handleReprocess) that requires no
+  // file input at all - this is specifically for a template-created mock
+  // test that has never had a PDF attached.
+  const handleUpload = async (file, documentType) => {
+    try {
+      setActionError("");
+      await api.uploadMockTestDocument(mocktest.id, file, documentType);
+      await queryClient.invalidateQueries({
+        queryKey: ["mock-test", mockTestId],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["processing-jobs", "mock-test", mockTestId],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["mock-tests", clusterId],
+      });
+      await queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+      setActiveTab("processing");
+    } catch (error) {
+      setActionError(error.message || "Could not upload document");
+    }
+  };
+
   const handleReprocess = async () => {
     try {
       await api.reprocessMockTest(mocktest.id);
@@ -136,6 +172,26 @@ export function useMockTestWorkspace() {
       setActionError("");
     } catch (error) {
       setActionError(error.message || "Could not reprocess mock test");
+    }
+  };
+
+  // The backend has no guard against publishing an empty or
+  // still-processing mock test (publishMockTest just unconditionally sets
+  // status='published') - MockTestWorkspace.jsx disables the button
+  // client-side (no questions yet, or still processing) as the actual
+  // safety net here, same spirit as the existing Reprocess/Delete guards.
+  const handlePublish = async () => {
+    try {
+      await api.publishMockTest(mocktest.id);
+      await queryClient.invalidateQueries({
+        queryKey: ["mock-test", mockTestId],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["mock-tests", clusterId],
+      });
+      setActionError("");
+    } catch (error) {
+      setActionError(error.message || "Could not publish mock test");
     }
   };
 
@@ -182,6 +238,24 @@ export function useMockTestWorkspace() {
     }
   };
 
+  const handleDeleteSubmission = async (attemptId) => {
+    try {
+      await api.deleteAttempt(attemptId);
+      await queryClient.invalidateQueries({
+        queryKey: ["submissions", mockTestId],
+      });
+    } catch (error) {
+      // Re-thrown (not just captured into actionError) so
+      // SubmissionCard's own try/catch around this call can react locally
+      // - keep its confirm dialog open and show its own inline error,
+      // instead of the dialog silently closing as if the delete had
+      // succeeded while the real error only surfaces in the page-level
+      // banner above the tabs.
+      setActionError(error.message || "Could not delete this submission");
+      throw error;
+    }
+  };
+
   return {
     clusterId,
     cluster,
@@ -190,6 +264,8 @@ export function useMockTestWorkspace() {
     isLoading,
     latestJob,
     questions,
+    submissions,
+    isLoadingSubmissions,
     ocrSummary,
     aiSummary,
     activeTab,
@@ -198,9 +274,12 @@ export function useMockTestWorkspace() {
     status,
     stats: { lowConfidence, topicsFound, approvedCount },
     metadata,
+    handleUpload,
     handleReprocess,
+    handlePublish,
     handleQuestionStatusChange,
     handleQuestionDelete,
     handleDelete,
+    handleDeleteSubmission,
   };
 }

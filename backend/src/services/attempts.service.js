@@ -326,6 +326,29 @@ export async function listAttemptsForMockTest({
   return rows.map(serializeAttempt);
 }
 
+/*
+ * Owner-facing: every submission on this mock test, member or guest. See
+ * attempts.repository.js#listAllAttemptsForMockTest for why this is a
+ * separate query rather than listAttemptsForMockTest above with userId
+ * made optional - the two have genuinely different access models (one
+ * user's own history vs. an owner auditing everyone).
+ */
+export async function listAllAttemptsForMockTest({ mockTestId, workspaceId }) {
+  const mockTest = await mockTestsRepo.findMockTestById(
+    mockTestId,
+    workspaceId,
+  );
+  if (!mockTest) {
+    throw httpError(404, "Mock test not found");
+  }
+
+  const rows = await attemptsRepo.listAllAttemptsForMockTest(
+    mockTestId,
+    workspaceId,
+  );
+  return rows.map(serializeSubmission);
+}
+
 export async function abandonAttempt({ attemptId, workspaceId }) {
   const attempt = await attemptsRepo.abandonAttempt(attemptId, workspaceId);
   if (!attempt) {
@@ -356,6 +379,27 @@ function serializeAttempt(row) {
     wrongCount: row.wrong_count,
     unattemptedCount: row.unattempted_count,
     score: Number(row.score),
+  };
+}
+
+/*
+ * row.user_name comes from listAllAttemptsForMockTest's LEFT JOIN users -
+ * only present for a workspace member's own attempt. A guest/shared-link
+ * attempt has user_id NULL (so user_name is also NULL) and instead
+ * carries its display name in metadata.guestName, set once at attempt
+ * creation time (see shared.service.js#startSharedAttempt) - never
+ * updatable afterward, which is fine here since this is just a display
+ * label, not an identity/auth concern.
+ */
+function serializeSubmission(row) {
+  const metadata = row.metadata || {};
+  const isGuest = row.user_id === null;
+  return {
+    ...serializeAttempt(row),
+    isGuest,
+    takerName: isGuest
+      ? metadata.guestName || "Anonymous (shared link)"
+      : row.user_name,
   };
 }
 

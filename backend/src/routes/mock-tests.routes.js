@@ -116,6 +116,11 @@ mockTestsRouter.get(
   "/:mockTestId/attempts",
   asyncHandler(attemptsController.listForMockTest),
 );
+mockTestsRouter.get(
+  "/:mockTestId/submissions",
+  requireRole("editor"),
+  asyncHandler(attemptsController.listSubmissionsForMockTest),
+);
 
 mockTestsRouter.post(
   "/:mockTestId/share",

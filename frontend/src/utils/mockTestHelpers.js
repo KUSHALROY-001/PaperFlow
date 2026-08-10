@@ -7,6 +7,7 @@ export const tabs = [
   { id: "processing", label: "Processing" },
   { id: "review", label: "Review" },
   { id: "output", label: "Output" },
+  { id: "submissions", label: "Submissions" },
 ];
 
 export const statusConfig = {

@@ -101,6 +101,50 @@ function normalizeDocumentType(value) {
   return value;
 }
 
+// Pulled out of mockTest.settings (snapshotted at apply time - see
+// applyTemplate in extraction-templates.service.js) rather than re-fetched
+// from extraction_templates here, so a job always reflects the template as
+// it was when the user actually applied it, not whatever it looks like by
+// upload time. Returns undefined (not stripped keys) when this mock test
+// wasn't created from a template, so it's easy to spread away cleanly in
+// inputConfig without leaving a stray `templateContext: undefined` unless
+// there really is one.
+function buildTemplateContext(mockTest) {
+  const settings = mockTest.settings || {};
+  if (!settings.templateId) {
+    return undefined;
+  }
+
+  // As of 010_extraction_templates_syllabus.sql, settings.sections holds
+  // structured objects ({ name, topics, questionCount?, marksPerCorrect?,
+  // negativeMarksPerWrong? }) snapshotted at apply time by applyTemplate in
+  // extraction-templates.service.js - not the flat topic-name strings this
+  // used to be. Keep both shapes usable here: flatten topics across all
+  // sections for a plain syllabus list, and pass the structured sections
+  // through too so a per-section marking scheme survives (see Phase 4 -
+  // question-level marks aren't applied from this yet, but the data should
+  // already be there when that lands rather than needing another snapshot
+  // migration).
+  const sections = Array.isArray(settings.sections) ? settings.sections : [];
+  const syllabusTopics = [
+    ...new Set(
+      sections.flatMap((section) =>
+        Array.isArray(section?.topics) ? section.topics : [],
+      ),
+    ),
+  ];
+
+  return {
+    templateId: settings.templateId,
+    templateName: settings.templateName ?? null,
+    sections,
+    syllabusTopics,
+    expectedQuestionCount: settings.expectedQuestionCount ?? null,
+    marksPerCorrect: mockTest.marks_per_correct ?? null,
+    negativeMarksPerWrong: mockTest.negative_marks_per_wrong ?? null,
+  };
+}
+
 // Shared by both the fresh-upload flow and the reprocess flow: insert a
 // processing_jobs row + its first event + flip the mock test to "processing",
 // all in one transaction, then kick the worker.
@@ -115,6 +159,7 @@ async function queueProcessingJob({
   extraInputConfig = {},
 }) {
   const client = await pool.connect();
+  const templateContext = buildTemplateContext(mockTest);
 
   try {
     await client.query("BEGIN");
@@ -128,6 +173,7 @@ async function queueProcessingJob({
         originalFilename,
         storageKey,
         documentType,
+        ...(templateContext ? { templateContext } : {}),
         ...extraInputConfig,
       },
     });

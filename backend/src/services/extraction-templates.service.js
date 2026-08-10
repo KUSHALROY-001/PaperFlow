@@ -114,6 +114,21 @@ function ratingValue(value) {
   return rating;
 }
 
+// Unlike nonNegativeNumber above (built around "value is optional, fall
+// back to a sensible default like 1 or 0.25 if it's missing/garbage"),
+// a section's marksPerCorrect/negativeMarksPerWrong override is only
+// ever validated here once the caller has ALREADY confirmed the key is
+// present - so garbage input at this point (e.g. "marksPerCorrect":
+// "abc") should be a real 400, not silently coerced into null the way
+// reusing nonNegativeNumber with no fallback would do.
+function requiredNonNegativeNumber(value, fieldName) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw httpError(400, `${fieldName} must be a number 0 or greater`);
+  }
+  return parsed;
+}
+
 function normalizeStringArray(value, fieldName) {
   if (value === undefined || value === null) {
     return undefined;
@@ -126,6 +141,66 @@ function normalizeStringArray(value, fieldName) {
   return value
     .map((item) => (typeof item === "string" ? item.trim() : String(item)))
     .filter(Boolean);
+}
+
+// sections used to be a flat array of topic-name strings (see migration
+// 002); as of 010_extraction_templates_syllabus.sql each element is a
+// structured object instead - { name, topics, questionCount?,
+// marksPerCorrect?, negativeMarksPerWrong? } - so it needs its own
+// validator rather than reusing normalizeStringArray above.
+function normalizeSections(value, fieldName) {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+
+  if (!Array.isArray(value)) {
+    throw httpError(400, `${fieldName} must be an array`);
+  }
+
+  return value.map((item, index) => {
+    if (typeof item !== "object" || item === null || Array.isArray(item)) {
+      throw httpError(
+        400,
+        `${fieldName}[${index}] must be an object with a "name" field`,
+      );
+    }
+
+    const name = requiredString(item.name, `${fieldName}[${index}].name`);
+    const topics =
+      normalizeStringArray(item.topics, `${fieldName}[${index}].topics`) ?? [];
+
+    const section = { name, topics };
+
+    // These three stay OMITTED (not defaulted to 0/null) when not
+    // supplied - a section without its own override is meant to fall
+    // back to the mock test's own top-level marksPerCorrect /
+    // negativeMarksPerWrong / no fixed count, not to silently acquire a
+    // 0 that looks like a deliberate value. See buildTemplateContext in
+    // mock-tests.service.js, which reads these the same way.
+    if (item.questionCount !== undefined && item.questionCount !== null) {
+      section.questionCount = requiredPositiveInteger(
+        item.questionCount,
+        `${fieldName}[${index}].questionCount`,
+      );
+    }
+    if (item.marksPerCorrect !== undefined && item.marksPerCorrect !== null) {
+      section.marksPerCorrect = requiredNonNegativeNumber(
+        item.marksPerCorrect,
+        `${fieldName}[${index}].marksPerCorrect`,
+      );
+    }
+    if (
+      item.negativeMarksPerWrong !== undefined &&
+      item.negativeMarksPerWrong !== null
+    ) {
+      section.negativeMarksPerWrong = requiredNonNegativeNumber(
+        item.negativeMarksPerWrong,
+        `${fieldName}[${index}].negativeMarksPerWrong`,
+      );
+    }
+
+    return section;
+  });
 }
 
 function handleDuplicateTemplate(error) {
@@ -206,7 +281,7 @@ export async function createTemplate(workspaceId, userId, body) {
     0.25,
   );
   const tags = normalizeStringArray(body.tags, "tags") ?? [];
-  const sections = normalizeStringArray(body.sections, "sections") ?? [];
+  const sections = normalizeSections(body.sections, "sections") ?? [];
   const isPopular = Boolean(body.isPopular);
   const rating = ratingValue(body.rating);
   const settings =
@@ -263,7 +338,7 @@ export async function updateTemplate(templateId, workspaceId, body) {
   const durationMinutesProvided = body.durationMinutes !== undefined;
   const ratingProvided = body.rating !== undefined;
   const tags = normalizeStringArray(body.tags, "tags");
-  const sections = normalizeStringArray(body.sections, "sections");
+  const sections = normalizeSections(body.sections, "sections");
 
   const template = await templatesRepo.updateTemplate(templateId, workspaceId, {
     slug:
@@ -391,6 +466,12 @@ export async function applyTemplate(templateId, workspaceId, userId, body) {
         templateName: template.name,
         sections: template.sections ?? [],
         tags: template.tags ?? [],
+        // Snapshotted at apply time, not looked up again later - a template
+        // can be edited or deleted after this mock test exists, and the job
+        // that eventually consumes this (queueProcessingJob in
+        // mock-tests.service.js) should see what the user actually applied,
+        // not whatever the template happens to say by upload time.
+        expectedQuestionCount: template.questionCount ?? null,
       },
     });
 

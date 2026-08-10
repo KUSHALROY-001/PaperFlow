@@ -19,6 +19,17 @@ export async function listForMockTest(req, res) {
   res.json({ attempts });
 }
 
+// Owner-facing - see require-role.js gating on this route (editor+ only,
+// same bar as managing share links) since this exposes every taker's
+// name and score, not just the requesting user's own.
+export async function listSubmissionsForMockTest(req, res) {
+  const submissions = await attemptsService.listAllAttemptsForMockTest({
+    mockTestId: req.params.mockTestId,
+    workspaceId: req.workspaceId,
+  });
+  res.json({ submissions });
+}
+
 export async function listMine(req, res) {
   const attempts = await attemptsService.listMyAttempts({
     userId: req.user.id,

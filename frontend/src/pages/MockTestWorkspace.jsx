@@ -6,8 +6,10 @@ import {
   ChevronLeft,
   Clock,
   FileText,
+  Globe,
   Play,
   RotateCcw,
+  Share2,
   Trash2,
   Zap,
 } from "lucide-react";
@@ -19,11 +21,14 @@ import OverviewTab from "../components/cluster/OverviewTab";
 import ProcessingTab from "../components/cluster/ProcessingTab";
 import ReviewTab from "../components/cluster/ReviewTab";
 import OutputTab from "../components/cluster/OutputTab";
+import SubmissionsTab from "../components/cluster/SubmissionsTab";
+import ShareLinkModal from "../components/cluster/ShareLinkModal";
 import { ConfirmDialog } from "../components/design-system/ConfirmDialog";
 
 export default function MockTestWorkspace() {
   const { isViewer } = useAuth();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const {
     clusterId,
@@ -33,6 +38,8 @@ export default function MockTestWorkspace() {
     isLoading,
     latestJob,
     questions,
+    submissions,
+    isLoadingSubmissions,
     ocrSummary,
     aiSummary,
     activeTab,
@@ -41,10 +48,13 @@ export default function MockTestWorkspace() {
     status,
     stats,
     metadata,
+    handleUpload,
     handleReprocess,
+    handlePublish,
     handleQuestionStatusChange,
     handleQuestionDelete,
     handleDelete,
+    handleDeleteSubmission,
   } = useMockTestWorkspace();
 
   if (isLoading) {
@@ -143,6 +153,42 @@ export default function MockTestWorkspace() {
             >
               <Play className="w-4 h-4 text-emerald-500" /> Start Test
             </Link>
+            {mocktest.status !== "published" && (
+              <button
+                disabled={
+                  isViewer ||
+                  questions.length === 0 ||
+                  mocktest.status === "processing"
+                }
+                onClick={() =>
+                  !isViewer && questions.length > 0 && handlePublish()
+                }
+                title={
+                  isViewer
+                    ? "Editor role is required to publish"
+                    : questions.length === 0
+                      ? "Add or extract at least one question before publishing"
+                      : mocktest.status === "processing"
+                        ? "Wait for extraction to finish before publishing"
+                        : "Publish this mock test"
+                }
+                className={`flex flex-1 items-center justify-center gap-2 px-4 py-2 border font-semibold rounded-xl transition-all text-xs sm:text-sm sm:flex-none ${
+                  isViewer ||
+                  questions.length === 0 ||
+                  mocktest.status === "processing"
+                    ? "border-border bg-muted text-muted-foreground/40 cursor-not-allowed opacity-50"
+                    : "bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20"
+                }`}
+              >
+                <Globe className="w-4 h-4" /> Publish
+              </button>
+            )}
+            <button
+              onClick={() => setShowShareModal(true)}
+              className="flex flex-1 items-center justify-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/30 text-orange-600 dark:text-orange-400 font-semibold rounded-xl hover:bg-orange-500/20 transition-all text-xs sm:text-sm sm:flex-none"
+            >
+              <Share2 className="w-4 h-4 text-orange-500" /> Share
+            </button>
             <button
               disabled={isViewer}
               onClick={() => !isViewer && handleReprocess()}
@@ -273,6 +319,8 @@ export default function MockTestWorkspace() {
           clusterId={clusterId}
           setActiveTab={setActiveTab}
           onReprocess={handleReprocess}
+          onUpload={handleUpload}
+          isViewer={isViewer}
         />
       )}
       {activeTab === "processing" && (
@@ -289,8 +337,16 @@ export default function MockTestWorkspace() {
             aiSummary.enabled
               ? `AI: ${aiSummary.questionsFromAi || 0} question(s) returned by ${aiSummary.provider}.`
               : "AI processing summary will appear here.",
+            // Only present when the mock test came from a template with at
+            // least one section carrying its own marksPerCorrect/
+            // negativeMarksPerWrong (see ai/provider.py#_apply_section_marks)
+            // - omitted from the array entirely otherwise, same as the
+            // templateMatch line would be if we surfaced that here too.
+            aiSummary.sectionMarksApplied?.questionsMatched
+              ? `Applied section-specific marking to ${aiSummary.sectionMarksApplied.questionsMatched} question(s).`
+              : null,
             `${questions.length} question(s) currently saved.`,
-          ]}
+          ].filter(Boolean)}
         />
       )}
       {activeTab === "review" && (
@@ -305,6 +361,19 @@ export default function MockTestWorkspace() {
       {activeTab === "output" && (
         <OutputTab questions={questions} metadata={metadata} />
       )}
+      {activeTab === "submissions" && (
+        <SubmissionsTab
+          submissions={submissions}
+          isLoading={isLoadingSubmissions}
+          onDeleteSubmission={handleDeleteSubmission}
+        />
+      )}
+
+      <ShareLinkModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        mockTestId={mocktest.id}
+      />
 
       {showDeleteConfirm && (
         <ConfirmDialog

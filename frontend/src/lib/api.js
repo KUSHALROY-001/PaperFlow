@@ -143,6 +143,11 @@ export const api = {
       method: "POST",
     });
   },
+  publishMockTest(mockTestId) {
+    return apiRequest(`/api/mock-tests/${mockTestId}/publish`, {
+      method: "POST",
+    });
+  },
   deleteMockTest(mockTestId) {
     return apiRequest(`/api/mock-tests/${mockTestId}`, {
       method: "DELETE",
@@ -269,6 +274,11 @@ export const api = {
     return apiRequest(`/api/mock-tests/${mockTestId}/share/${shareId}`, {
       method: "DELETE",
     });
+  },
+  // Owner-facing: everyone who has taken this mock test, member or guest
+  // (via a shared link) - see attempts.service.js#listAllAttemptsForMockTest.
+  listSubmissions(mockTestId) {
+    return apiRequest(`/api/mock-tests/${mockTestId}/submissions`);
   },
 
   // --- Public shared-test-taking (no auth - token is the credential) ---

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { formatDate } from "@/lib/date";
 import PhaseWaterCard from "./PhaseWaterCard";
+import UploadPdfPanel from "./UploadPdfPanel";
 
 // Promoted from an inline function inside pages/MockTestWorkspace.jsx — no behavior changes.
 export default function OverviewTab({
@@ -23,6 +24,8 @@ export default function OverviewTab({
   clusterId,
   setActiveTab,
   onReprocess,
+  onUpload,
+  isViewer,
 }) {
   const [showAllTopics, setShowAllTopics] = useState(false);
   const isProcessing =
@@ -32,6 +35,11 @@ export default function OverviewTab({
     questions.length > 0 ||
     mocktest.status === "published" ||
     mocktest.status === "review";
+  // A template-created mock test starts in "draft" with no job ever queued -
+  // that combination is the real "nothing uploaded yet" signal (as opposed
+  // to a fresh 404-avoided in-between state), distinct from isProcessing
+  // and isReady above.
+  const needsFirstUpload = !latestJob && mocktest.status === "draft";
   const topics = [
     ...new Set(questions.map((question) => question.topic).filter(Boolean)),
   ].sort();
@@ -53,6 +61,14 @@ export default function OverviewTab({
   return (
     <div className="grid lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 space-y-4">
+        {needsFirstUpload && (
+          <UploadPdfPanel
+            mocktest={mocktest}
+            isViewer={isViewer}
+            onUpload={onUpload}
+          />
+        )}
+
         <div className="surface-card rounded-2xl border border-border p-4 sm:p-6">
           <h3 className="font-bold text-foreground mb-4">Pipeline Status</h3>
           <div className="grid gap-3 sm:grid-cols-2">

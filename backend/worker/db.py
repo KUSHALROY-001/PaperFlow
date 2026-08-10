@@ -196,9 +196,11 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
               source_page,
               confidence,
               status,
-              metadata
+              metadata,
+              marks_per_correct,
+              negative_marks_per_wrong
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'needs_review', %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'needs_review', %s, %s, %s)
             RETURNING id
             """,
             [
@@ -215,6 +217,17 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
                 question.get("source_page"),
                 question.get("confidence", 60),
                 json.dumps(question.get("metadata", {})),
+                # Set only when ai/provider.py#_apply_section_marks matched
+                # this question's topic to a template section carrying its
+                # own marking override - None (-> SQL NULL) otherwise,
+                # which is exactly the "no override, fall back to the mock
+                # test's own marks_per_correct/negative_marks_per_wrong"
+                # state attempts.service.js's scoring already expects (both
+                # columns are nullable for precisely this reason - the
+                # question editor has always been able to set them by hand
+                # per-question, same columns, same fallback rule).
+                question.get("marks_per_correct"),
+                question.get("negative_marks_per_wrong"),
             ],
         ).fetchone()
 

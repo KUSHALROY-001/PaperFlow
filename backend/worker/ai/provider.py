@@ -111,6 +111,97 @@ Notes:
 """.strip()
 
 
+# template_context comes from processing_jobs.input_config.templateContext
+# (see mock-tests.service.js#buildTemplateContext) - present only when this
+# job's mock test was created via "Apply Template" (extraction-templates
+# .service.js#applyTemplate). None/empty for every other job, in which case
+# this returns "" and the prompt is completely unchanged from before this
+# feature existed.
+#
+# Deliberately built as an ADDENDUM appended per-call rather than mutating
+# the module-level SYSTEM_PROMPT constant - that constant is shared across
+# every job this worker process ever runs, not just the one currently being
+# processed, so mutating it would leak one job's template context into every
+# other job's prompt until the worker restarts.
+def _build_syllabus_guidance(template_context):
+    if not template_context:
+        return ""
+
+    sections = template_context.get("sections") or []
+    template_name = template_context.get("templateName")
+    expected_count = template_context.get("expectedQuestionCount")
+
+    lines = []
+    if template_name:
+        lines.append(
+            f'This document is expected to follow the "{template_name}" exam format.'
+        )
+
+    if sections:
+        lines.append(
+            'Classify each question\'s "topic" field using ONLY the section '
+            "names listed below - pick whichever one the question's subject "
+            "matter actually belongs to. Do not invent a topic name that "
+            "isn't in this list, and do not leave topic null just because a "
+            "question doesn't obviously fit - pick the closest match. Use "
+            '"subtopic" for the more specific concept within that section '
+            "if the question clearly matches one of the topics listed under "
+            "it, but topic itself must be one of the section names exactly "
+            "as written below."
+        )
+        for section in sections:
+            name = section.get("name")
+            if not name:
+                continue
+            topics = section.get("topics") or []
+            lines.append(f"- {name}: {', '.join(topics)}" if topics else f"- {name}")
+
+    if expected_count:
+        lines.append(
+            f"This exam is expected to have approximately {expected_count} "
+            "questions in total. This is a guide for sanity-checking your "
+            "own extraction, not a hard rule - extract exactly what is "
+            "actually present in the PDF; never pad with invented questions "
+            "or drop real ones just to hit this number."
+        )
+
+    if not lines:
+        return ""
+
+    return "\n\nExam format context (from the applied template):\n" + "\n".join(lines)
+
+
+# Called once, in the wrapper below, against whatever final question list
+# a given return path actually produced - so this check applies uniformly
+# no matter which of enhance_questions_with_ai's several early-return paths
+# (disabled provider, notes-document short-circuit, regex-only fallback,
+# full AI+regex merge, ...) ends up being the one that fires, without
+# needing the same few lines duplicated at each of them individually.
+def _check_template_match(template_context, final_questions):
+    if not template_context:
+        return None
+
+    expected = template_context.get("expectedQuestionCount")
+    if not expected:
+        return None
+
+    actual = len(final_questions)
+    # Meaningful deviation = more than 15% off OR more than 2 questions off,
+    # whichever is the larger absolute gap - a flat percentage alone would
+    # be too strict for a small exam (15% of 10 questions rounds to just
+    # 1-2) and a flat count alone would be too strict for a large one (2
+    # questions off out of 150 is noise, not a real signal).
+    threshold = max(2, round(expected * 0.15))
+    deviation = abs(actual - expected)
+
+    return {
+        "templateName": template_context.get("templateName"),
+        "expectedQuestionCount": expected,
+        "actualQuestionCount": actual,
+        "deviates": deviation > threshold,
+    }
+
+
 # Only called when both the regex parser and normal extraction found zero
 # questions - see the "not ai_questions and regex_count == 0" check in
 # enhance_questions_with_ai. That combination is the actual signal that the
@@ -282,13 +373,14 @@ def get_provider():
     raise RuntimeError(f"Unsupported AI_PROVIDER: {AI_PROVIDER}")
 
 
-def enhance_questions_with_ai(
+def _enhance_questions_with_ai_inner(
     pages,
     regex_questions,
     pdf_path=None,
     document_type="questions",
     was_scanned=False,
     on_progress=None,
+    template_context=None,
 ):
     def report(message):
         # Best-effort progress checkpoint - never let a progress-reporting
@@ -300,6 +392,12 @@ def enhance_questions_with_ai(
                 on_progress(message)
             except Exception:
                 pass
+
+    # Computed once per job, reused at every call site below that used to
+    # pass the bare SYSTEM_PROMPT constant directly - see
+    # _build_syllabus_guidance for why this is a per-call addendum rather
+    # than a mutation of that shared constant.
+    system_prompt = SYSTEM_PROMPT + _build_syllabus_guidance(template_context)
 
     regex_count = len(regex_questions)
     provider = get_provider()
@@ -368,7 +466,7 @@ def enhance_questions_with_ai(
         # internal retry) - so an error here always names the real pages
         # that need attention, never a shifted position in a shorter list.
         chunk_results = provider.generate_json_from_pdf_images(
-            SYSTEM_PROMPT,
+            system_prompt,
             build_pdf_prompt(regex_questions),
             pdf_path,
             page_numbers=vision_page_numbers,
@@ -418,7 +516,7 @@ def enhance_questions_with_ai(
             report(f"AI cleanup (text {chunk_index}/{total_chunks})")
             user_prompt = build_user_prompt(chunk, regex_questions)
             try:
-                response_text = provider.generate_json(SYSTEM_PROMPT, user_prompt)
+                response_text = provider.generate_json(system_prompt, user_prompt)
                 payload = extract_json_payload(response_text)
                 ai_questions = normalize_ai_questions(payload, source=f"{provider.name}_ai_v1")
                 # Only fills question numbers not already found by an
@@ -444,7 +542,7 @@ def enhance_questions_with_ai(
     fallback_vision_pages = sorted({p["page"] for p in text_only_pages}) if not was_scanned else []
     if missing and fallback_vision_pages and pdf_path and hasattr(provider, "generate_json_from_pdf_images"):
         chunk_results = provider.generate_json_from_pdf_images(
-            SYSTEM_PROMPT,
+            system_prompt,
             build_pdf_prompt(regex_questions),
             pdf_path,
             page_numbers=fallback_vision_pages,
@@ -477,7 +575,7 @@ def enhance_questions_with_ai(
     if missing and pdf_path and hasattr(provider, "generate_json_from_pdf"):
         try:
             response_text = provider.generate_json_from_pdf(
-                SYSTEM_PROMPT,
+                system_prompt,
                 build_pdf_prompt(regex_questions),
                 pdf_path,
             )
@@ -569,6 +667,113 @@ def enhance_questions_with_ai(
         "missingQuestionNumbers": final_missing,
         "diagramStats": diagram_stats,
     }
+
+
+# Applied to the FINAL question list only, at the same call site as
+# _check_template_match and for the same reason: this needs to run exactly
+# once regardless of which of _enhance_questions_with_ai_inner's several
+# return paths (disabled provider, notes-generated, regex-only fallback,
+# full AI+regex merge) produced the list, rather than duplicated at each of
+# those return statements - and it needs to run AFTER reconcile_questions,
+# not before, since reconcile.py's per-question merge only knows about the
+# extraction schema's own fields and would silently drop anything added
+# earlier.
+#
+# Every question already has a "topic" by this point that - whenever
+# sections were supplied - the model was instructed to pick EXCLUSIVELY
+# from the section names in template_context["sections"] (see
+# _build_syllabus_guidance). This turns that classification into an actual
+# scoring override: marks_per_correct/negative_marks_per_wrong get set on
+# the question dict here, which worker.py -> db.py#replace_questions then
+# persists onto questions.marks_per_correct / .negative_marks_per_wrong -
+# both nullable columns that already existed before this feature (see
+# migrations/001_initial_schema.sql; the question editor has always let a
+# user set these by hand per-question). attempts.service.js's scoring
+# already falls back per-question -> mock test default whenever a
+# question's own value is NULL:
+#   const marksPerCorrect = row.question_marks_per_correct ?? mockTest.marks_per_correct
+# so a section with no override, or a question the model couldn't
+# confidently classify into any section, is deliberately left alone here
+# (both keys stay absent) rather than being defaulted to something that
+# would shadow that fallback.
+def _apply_section_marks(template_context, questions):
+    if not template_context:
+        return {"sectionsWithOverrides": 0, "questionsMatched": 0}
+
+    sections = template_context.get("sections") or []
+    overrides_by_name = {}
+    for section in sections:
+        name = section.get("name")
+        if not name:
+            continue
+        marks = section.get("marksPerCorrect")
+        negative = section.get("negativeMarksPerWrong")
+        if marks is None and negative is None:
+            continue
+        overrides_by_name[name] = {
+            "marks_per_correct": marks,
+            "negative_marks_per_wrong": negative,
+        }
+
+    if not overrides_by_name:
+        return {"sectionsWithOverrides": 0, "questionsMatched": 0}
+
+    matched = 0
+    for question in questions:
+        override = overrides_by_name.get(question.get("topic"))
+        if not override:
+            continue
+
+        if override["marks_per_correct"] is not None:
+            question["marks_per_correct"] = override["marks_per_correct"]
+        if override["negative_marks_per_wrong"] is not None:
+            question["negative_marks_per_wrong"] = override["negative_marks_per_wrong"]
+        matched += 1
+
+    return {
+        "sectionsWithOverrides": len(overrides_by_name),
+        "questionsMatched": matched,
+    }
+
+
+# Public entry point (worker.py calls this one). Wraps
+# _enhance_questions_with_ai_inner purely so _check_template_match and
+# _apply_section_marks each run against whatever final question list
+# actually came back, exactly once, regardless of which of that function's
+# several early-return paths (a disabled provider, a notes-document
+# short-circuit, a regex-only fallback when every AI attempt failed, or the
+# full AI+regex merge) is the one that happened to fire - instead of
+# needing the same few lines duplicated at each of those five-plus return
+# statements individually, with the real risk of a future one added there
+# getting missed.
+def enhance_questions_with_ai(
+    pages,
+    regex_questions,
+    pdf_path=None,
+    document_type="questions",
+    was_scanned=False,
+    on_progress=None,
+    template_context=None,
+):
+    questions, summary = _enhance_questions_with_ai_inner(
+        pages,
+        regex_questions,
+        pdf_path=pdf_path,
+        document_type=document_type,
+        was_scanned=was_scanned,
+        on_progress=on_progress,
+        template_context=template_context,
+    )
+
+    template_match = _check_template_match(template_context, questions)
+    if template_match:
+        summary["templateMatch"] = template_match
+
+    section_marks = _apply_section_marks(template_context, questions)
+    if section_marks["sectionsWithOverrides"]:
+        summary["sectionMarksApplied"] = section_marks
+
+    return questions, summary
 
 
 def chunk_pages(pages):

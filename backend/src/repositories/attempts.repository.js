@@ -92,6 +92,33 @@ export async function listAttemptsForMockTest(mockTestId, workspaceId, userId) {
   return result.rows;
 }
 
+/*
+ * Unlike listAttemptsForMockTest above (scoped to one user's own
+ * attempts), this returns EVERY attempt on a mock test - both workspace
+ * members' own attempts AND anonymous shared-link/guest attempts
+ * (user_id IS NULL, guest's display name stored in metadata->guestName
+ * at creation - see shared.service.js#startSharedAttempt). This is what
+ * backs the mock-test owner's "who took this and how did they do"
+ * Submissions view - callers MUST verify the mock test belongs to
+ * workspaceId themselves first (see attempts.service.js), the same
+ * convention shared.service.js already uses for share-link management.
+ */
+export async function listAllAttemptsForMockTest(mockTestId, workspaceId) {
+  const result = await pool.query(
+    `
+    SELECT ea.*, u.name AS user_name
+    FROM exam_attempts ea
+    LEFT JOIN users u ON u.id = ea.user_id
+    WHERE ea.mock_test_id = $1
+      AND ea.workspace_id = $2
+    ORDER BY ea.started_at DESC
+    `,
+    [mockTestId, workspaceId],
+  );
+
+  return result.rows;
+}
+
 export async function upsertAnswer(
   client,
   { attemptId, questionId, selectedOptionIndexes },

@@ -108,6 +108,13 @@ def process_job(job):
     # before this field existed behave exactly as they did before.
     document_type = (job.get("input_config") or {}).get("documentType", "questions")
 
+    # Present only when this job's mock test was created via "Apply
+    # Template" (see mock-tests.service.js#buildTemplateContext /
+    # extraction-templates.service.js#applyTemplate) - None for every other
+    # job, in which case enhance_questions_with_ai's prompt and summary are
+    # completely unchanged from before this existed.
+    template_context = (job.get("input_config") or {}).get("templateContext")
+
     with get_connection() as connection:
         update_job(
             connection,
@@ -142,6 +149,7 @@ def process_job(job):
         document_type=document_type,
         was_scanned=bool(ocr_summary.get("converted")),
         on_progress=report_ai_progress,
+        template_context=template_context,
     )
 
     with get_connection() as connection:

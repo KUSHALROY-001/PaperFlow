@@ -31,9 +31,7 @@ export default function TemplatePreviewModal({ template, onClose, onApply }) {
               key={i}
               className="bg-muted/60 border border-border rounded-xl p-3 text-center"
             >
-              <div className="text-sm font-bold text-foreground">
-                {s.value}
-              </div>
+              <div className="text-sm font-bold text-foreground">{s.value}</div>
               <div className="text-xs text-muted-foreground">{s.label}</div>
             </div>
           ))}
@@ -42,11 +40,30 @@ export default function TemplatePreviewModal({ template, onClose, onApply }) {
           <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
             Sections
           </div>
-          <div className="space-y-1.5">
-            {template.sections.map((s, i) => (
-              <div key={i} className="flex items-center gap-2 text-xs sm:text-sm">
-                <ChevronRight className="w-3.5 h-3.5 text-orange-500 shrink-0" />
-                <span className="text-foreground font-medium">{s}</span>
+          <div className="space-y-2.5">
+            {template.sections.map((section, i) => (
+              <div
+                key={i}
+                className="flex items-start gap-2 text-xs sm:text-sm"
+              >
+                <ChevronRight className="w-3.5 h-3.5 text-orange-500 shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-foreground font-medium">
+                      {section.name}
+                    </span>
+                    {section.questionCount != null && (
+                      <span className="text-[10px] font-semibold text-muted-foreground bg-muted rounded-full px-1.5 py-0.5">
+                        {section.questionCount} Qs
+                      </span>
+                    )}
+                  </div>
+                  {section.topics && section.topics.length > 0 && (
+                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                      {section.topics.join(" · ")}
+                    </p>
+                  )}
+                </div>
               </div>
             ))}
           </div>
