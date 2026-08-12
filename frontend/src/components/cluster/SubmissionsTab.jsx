@@ -1,11 +1,7 @@
 import { Users, Loader2 } from "lucide-react";
 import SubmissionCard from "./SubmissionCard";
 
-export default function SubmissionsTab({
-  submissions,
-  isLoading,
-  onDeleteSubmission,
-}) {
+export default function SubmissionsTab({ submissions, isLoading }) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
@@ -31,14 +27,16 @@ export default function SubmissionsTab({
   }
 
   return (
-    <div className="space-y-3">
-      {submissions.map((submission) => (
-        <SubmissionCard
-          key={submission.id}
-          submission={submission}
-          onDeleteSubmission={onDeleteSubmission}
-        />
-      ))}
+    <div className="space-y-4">
+      <div className="text-sm font-semibold text-muted-foreground">
+        {submissions.length} total submission
+        {submissions.length === 1 ? "" : "s"}
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {submissions.map((submission) => (
+          <SubmissionCard key={submission.id} submission={submission} />
+        ))}
+      </div>
     </div>
   );
 }

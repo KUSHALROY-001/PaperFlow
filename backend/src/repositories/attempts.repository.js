@@ -1,5 +1,13 @@
 import { pool } from "../db/pool.js";
 
+// `ON CONFLICT ... DO NOTHING` targets the partial unique index added in
+// migration 011 (one in_progress attempt per workspace/mock test/user).
+// It's a no-op for guest inserts (user_id IS NULL never matches that
+// index's predicate) and returns no row when a concurrent request already
+// won the race for a logged-in user - callers must re-select in that case
+// (see startAttempt in attempts.service.js). This closes the race where
+// two near-simultaneous start calls for the same user both pass the
+// service's "reuse if one exists" SELECT before either INSERT commits.
 export async function insertAttempt(
   client,
   { workspaceId, mockTestId, userId, totalQuestions, metadata },
@@ -15,12 +23,15 @@ export async function insertAttempt(
       metadata
     )
     VALUES ($1, $2, $3, 'in_progress', $4, $5)
+    ON CONFLICT (workspace_id, mock_test_id, user_id)
+      WHERE status = 'in_progress' AND user_id IS NOT NULL
+      DO NOTHING
     RETURNING *
     `,
     [workspaceId, mockTestId, userId, totalQuestions, metadata || {}],
   );
 
-  return result.rows[0];
+  return result.rows[0] || null;
 }
 
 export async function findAttemptById(attemptId, workspaceId) {
@@ -33,6 +44,30 @@ export async function findAttemptById(attemptId, workspaceId) {
       AND ea.workspace_id = $2
     `,
     [attemptId, workspaceId],
+  );
+
+  return result.rows[0] || null;
+}
+
+// Same shape as findAttemptById above, but scoped by ownership instead of
+// workspace - used for a logged-in user looking at their OWN attempt (My
+// Results expand-to-review, and the review right after a member submits
+// their own test). Unlike a guest's shared-link attempt, a member's own
+// attempt has no meaningful "current workspace" once My Results went
+// cross-workspace (see listAttemptsForUser) - a claimed result can belong
+// to a workspace this user isn't even a member of, so workspace_id is the
+// wrong thing to scope by here; user_id is the only identifier that's
+// always correct.
+export async function findAttemptByIdForUser(attemptId, userId) {
+  const result = await pool.query(
+    `
+    SELECT ea.*, mt.name AS mock_test_name, mt.duration_minutes, mt.status AS mock_test_status
+    FROM exam_attempts ea
+    JOIN mock_tests mt ON mt.id = ea.mock_test_id
+    WHERE ea.id = $1
+      AND ea.user_id = $2
+    `,
+    [attemptId, userId],
   );
 
   return result.rows[0] || null;
@@ -56,7 +91,16 @@ export async function findAttemptForUpdate(client, attemptId, workspaceId) {
   return result.rows[0] || null;
 }
 
-export async function listAttemptsForUser(userId, workspaceId) {
+// "My Results" - a personal, cross-workspace history of everything this
+// user owns (their own workspace attempts, plus any anonymous shared-link
+// attempts they've claimed after the fact - see claimAttempt below).
+// Deliberately NOT scoped to a single workspace_id: a claimed guest
+// attempt may belong to a workspace this user isn't even a member of.
+// Must only ever return attempts owned by this exact logged-in user -
+// guest/shared-link attempts (user_id IS NULL) belong to the mock test's
+// Submissions view (see listAllAttemptsForMockTest), not here - do not
+// add an `OR ea.user_id IS NULL` fallback to this query.
+export async function listAttemptsForUser(userId) {
   const result = await pool.query(
     `
     SELECT
@@ -65,15 +109,51 @@ export async function listAttemptsForUser(userId, workspaceId) {
       mt.duration_minutes
     FROM exam_attempts ea
     JOIN mock_tests mt ON mt.id = ea.mock_test_id
-    WHERE ea.workspace_id = $1
-      AND (ea.user_id = $2 OR ($2::uuid IS NULL AND ea.user_id IS NULL) OR ea.user_id IS NULL)
+    WHERE ea.user_id = $1
       AND ea.status = 'submitted'
     ORDER BY ea.submitted_at DESC, ea.started_at DESC
     `,
-    [workspaceId, userId],
+    [userId],
   );
 
   return result.rows;
+}
+
+// Links a previously-anonymous, already-submitted shared-link attempt to a
+// user account ("save my result" after the fact). All four conditions are
+// enforced in the WHERE clause so a single matched row is proof the claim
+// is valid - no separate read-then-write race:
+//   - mock_test_id must match the mock test the given share token actually
+//     resolves to (caller passes it in, resolved server-side from the
+//     token - never trust a client-supplied mockTestId here)
+//   - user_id IS NULL: can only claim an attempt nobody owns yet, so this
+//     can never hijack someone else's already-claimed result
+//   - status = 'submitted': never claim (or thereby appear to "resume")
+//     an in-progress attempt
+//   - metadata->>'shareToken' must match: the attempt must have actually
+//     been started through this exact share link, not just any attempt
+//     that happens to sit on the same mock test
+export async function claimAttempt({
+  attemptId,
+  mockTestId,
+  shareToken,
+  userId,
+}) {
+  const result = await pool.query(
+    `
+    UPDATE exam_attempts
+    SET user_id = $1
+    WHERE id = $2
+      AND mock_test_id = $3
+      AND user_id IS NULL
+      AND status = 'submitted'
+      AND metadata->>'shareToken' = $4
+    RETURNING *
+    `,
+    [userId, attemptId, mockTestId, shareToken],
+  );
+
+  return result.rows[0] || null;
 }
 
 export async function listAttemptsForMockTest(mockTestId, workspaceId, userId) {
@@ -106,9 +186,17 @@ export async function listAttemptsForMockTest(mockTestId, workspaceId, userId) {
 export async function listAllAttemptsForMockTest(mockTestId, workspaceId) {
   const result = await pool.query(
     `
-    SELECT ea.*, u.name AS user_name
+    SELECT ea.*, u.name AS user_name, u.email AS user_email,
+      -- ea.user_id being set is NOT the same as "is a member of this
+      -- workspace": claimAttempt (see attempts.repository.js#claimAttempt)
+      -- lets ANY authenticated account attach itself to a guest attempt,
+      -- regardless of workspace membership. Only a matching
+      -- workspace_members row proves this person actually belongs here.
+      (wm.id IS NOT NULL) AS is_member
     FROM exam_attempts ea
     LEFT JOIN users u ON u.id = ea.user_id
+    LEFT JOIN workspace_members wm
+      ON wm.user_id = ea.user_id AND wm.workspace_id = ea.workspace_id
     WHERE ea.mock_test_id = $1
       AND ea.workspace_id = $2
     ORDER BY ea.started_at DESC
@@ -266,6 +354,12 @@ export async function finalizeAttempt(
   return result.rows[0];
 }
 
+// Finds this exact identity's own in-progress attempt to resume, if any.
+// For a logged-in user that's user_id = $3; for an anonymous guest
+// (userId null) it's specifically an attempt that is ALSO anonymous - never
+// falls back to "any in-progress attempt on this mock test regardless of
+// owner", which would incorrectly resume a stranger's attempt (a logged-in
+// user picking up a guest's session, or one guest picking up another's).
 export async function findActiveAttemptForUser(
   client,
   { mockTestId, workspaceId, userId },
@@ -276,13 +370,13 @@ export async function findActiveAttemptForUser(
     FROM exam_attempts
     WHERE mock_test_id = $1
       AND workspace_id = $2
-      AND (user_id = $3 OR ($3::uuid IS NULL AND user_id IS NULL) OR user_id IS NULL)
+      AND ${userId ? "user_id = $3" : "user_id IS NULL"}
       AND status = 'in_progress'
     ORDER BY started_at DESC
     LIMIT 1
     FOR UPDATE
     `,
-    [mockTestId, workspaceId, userId || null],
+    userId ? [mockTestId, workspaceId, userId] : [mockTestId, workspaceId],
   );
 
   return result.rows[0] || null;
@@ -313,14 +407,19 @@ export async function abandonAttempt(attemptId, workspaceId) {
   return result.rows[0] || null;
 }
 
-export async function deleteAttempt(attemptId, workspaceId) {
+// My Results self-delete only (the Submissions tab dropped delete
+// entirely - see SubmissionCard.jsx). Scoped strictly by ownership: a
+// claimed attempt can belong to a workspace this user isn't a member of,
+// so workspace_id isn't a safe or even reliably correct scope here -
+// user_id is the only thing that's always both required and sufficient.
+export async function deleteAttempt(attemptId, userId) {
   const result = await pool.query(
     `
     DELETE FROM exam_attempts
-    WHERE id = $1 AND workspace_id = $2
+    WHERE id = $1 AND user_id = $2
     RETURNING *
     `,
-    [attemptId, workspaceId],
+    [attemptId, userId],
   );
 
   return result.rows[0] || null;

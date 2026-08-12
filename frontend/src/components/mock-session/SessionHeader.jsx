@@ -7,6 +7,7 @@ import { ConfirmDialog } from "../design-system/ConfirmDialog";
 
 export default function SessionHeader({
   mockTestName,
+  subtitle,
   answeredCount,
   totalQuestions,
   timeLeft,
@@ -34,6 +35,7 @@ export default function SessionHeader({
             {mockTestName}
           </div>
           <div className="text-xs text-muted-foreground font-semibold">
+            {subtitle ? `${subtitle} · ` : ""}
             {answeredCount}/{totalQuestions} answered
           </div>
         </div>

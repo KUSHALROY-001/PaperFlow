@@ -10,6 +10,7 @@ export default function SessionQuestionNav({
   answers,
   flagged,
   onSelectQuestion,
+  exitHref = "/dashboard",
 }) {
   const navigate = useNavigate();
   const [showExitModal, setShowExitModal] = useState(false);
@@ -27,7 +28,7 @@ export default function SessionQuestionNav({
 
   const handleConfirmExit = () => {
     setShowExitModal(false);
-    navigate("/dashboard");
+    navigate(exitHref);
   };
 
   return (
@@ -35,7 +36,7 @@ export default function SessionQuestionNav({
       <aside className="w-full lg:w-56 bg-card border-b lg:border-b-0 lg:border-r border-border flex flex-col p-4 lg:fixed lg:h-full z-10 font-sans">
         <div className="shrink-0 mb-4">
           <Link
-            to="/dashboard"
+            to={exitHref}
             onClick={handleExitClick}
             className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-orange-500 transition-colors"
           >

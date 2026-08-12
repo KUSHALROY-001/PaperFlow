@@ -308,6 +308,19 @@ export const api = {
       method: "POST",
     });
   },
+  abandonSharedAttempt(token, attemptId) {
+    return apiRequest(`/api/shared/${token}/attempts/${attemptId}/abandon`, {
+      method: "POST",
+    });
+  },
+  // "Save this result" - links an already-submitted anonymous attempt to
+  // the currently logged-in account. Requires auth (unlike every other
+  // /api/shared/* call above).
+  claimSharedAttempt(token, attemptId) {
+    return apiRequest(`/api/shared/${token}/attempts/${attemptId}/claim`, {
+      method: "POST",
+    });
+  },
 
   // --- Settings (profile, preferences, password, account) ---
   getProfile() {

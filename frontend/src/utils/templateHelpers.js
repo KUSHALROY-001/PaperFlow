@@ -48,18 +48,27 @@ export function formatDuration(minutes) {
   return `${rounded} hr${rounded === 1 ? "" : "s"}`;
 }
 
-// Normalizes a raw extraction_templates row (snake_case, jsonb arrays) into
-// the shape this page's JSX was already written against.
+// Normalizes a raw extraction_templates row (already camelCased by
+// extraction-templates.repository.js's TEMPLATE_COLUMNS) into the shape
+// this page's JSX was already written against.
 export function mapTemplate(row) {
   return {
     id: row.id,
     name: row.name,
     description: row.description,
     category: CATEGORY_LABELS[row.category] || row.category,
-    questions: row.question_count,
-    duration: formatDuration(row.duration_minutes),
+    // Bug fix: these four used to read row.question_count / .duration_minutes
+    // / .usage_count / .is_popular (snake_case). TEMPLATE_COLUMNS aliases
+    // every multi-word column to camelCase in the query itself
+    // (`t.question_count AS "questionCount"`, etc.) - the row this function
+    // actually receives never had snake_case keys for these, so all four
+    // silently evaluated to undefined for every template (rendering as
+    // "undefined Qs" / always "Variable" duration / undefined uses /
+    // always falsy popular) regardless of what was actually in the DB.
+    questions: row.questionCount,
+    duration: formatDuration(row.durationMinutes),
     difficulty: row.difficulty,
-    uses: row.usage_count,
+    uses: row.usageCount,
     // Fixed: the original `row.rating === null ? null : Number(row.rating)`
     // only caught an explicit null. If the backend ever omits the field
     // instead of sending null (`undefined`), Number(undefined) is NaN,
@@ -69,7 +78,26 @@ export function mapTemplate(row) {
     rating: row.rating == null ? null : Number(row.rating),
     tags: Array.isArray(row.tags) ? row.tags : [],
     color: row.color,
-    popular: row.is_popular,
+    popular: row.isPopular,
     sections: Array.isArray(row.sections) ? row.sections : [],
+    // extraction-templates.repository.js's TEMPLATE_COLUMNS already aliases
+    // these to camelCase (workspace_id AS "workspaceId", etc.) - previously
+    // just never read here, so every template looked ownerless downstream
+    // regardless of who actually created it. workspaceId is null for the
+    // official seeded templates and set for anything a workspace created
+    // itself; systemTemplate is the same fact already computed server-side
+    // (`workspace_id IS NULL`) so call sites that just need a boolean don't
+    // each have to redo that null-check themselves.
+    workspaceId: row.workspaceId ?? null,
+    createdBy: row.createdBy ?? null,
+    isOwn: row.systemTemplate === false,
+    // Raw (unformatted) values, kept alongside the display-formatted ones
+    // above rather than replacing them - CreateTemplateModal's edit mode
+    // needs the actual number to prefill a <input type="number">, not the
+    // "3 hrs" string `duration` renders as everywhere else.
+    questionCountRaw: row.questionCount,
+    durationMinutesRaw: row.durationMinutes,
+    marksPerCorrect: row.marksPerCorrect,
+    negativeMarksPerWrong: row.negativeMarksPerWrong,
   };
 }

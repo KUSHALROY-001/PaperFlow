@@ -54,7 +54,6 @@ export default function MockTestWorkspace() {
     handleQuestionStatusChange,
     handleQuestionDelete,
     handleDelete,
-    handleDeleteSubmission,
   } = useMockTestWorkspace();
 
   if (isLoading) {
@@ -365,7 +364,6 @@ export default function MockTestWorkspace() {
         <SubmissionsTab
           submissions={submissions}
           isLoading={isLoadingSubmissions}
-          onDeleteSubmission={handleDeleteSubmission}
         />
       )}
 

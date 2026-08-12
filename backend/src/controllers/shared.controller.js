@@ -61,10 +61,29 @@ export async function submitSharedAttempt(req, res) {
   res.json({ attempt });
 }
 
+export async function abandonSharedAttempt(req, res) {
+  const attempt = await sharedService.abandonSharedAttempt({
+    shareToken: req.params.token,
+    attemptId: req.params.attemptId,
+  });
+  res.json({ attempt });
+}
+
 export async function getSharedAttempt(req, res) {
   const result = await sharedService.getSharedAttempt({
     shareToken: req.params.token,
     attemptId: req.params.attemptId,
   });
   res.json(result);
+}
+
+// --- Authenticated: linking an already-submitted guest attempt to an account ---
+
+export async function claimSharedAttempt(req, res) {
+  const attempt = await sharedService.claimSharedAttempt({
+    shareToken: req.params.token,
+    attemptId: req.params.attemptId,
+    userId: req.user.id,
+  });
+  res.json({ attempt });
 }

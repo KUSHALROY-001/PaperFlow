@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
-import { useMockSession } from "@/hooks/useMockSession";
+import { useExamSession } from "@/hooks/useExamSession";
 import SessionLoading from "../components/mock-session/SessionLoading";
 import SessionError from "../components/mock-session/SessionError";
 import SessionResultsView from "../components/mock-session/SessionResultsView";
@@ -9,6 +10,7 @@ import SessionHeader from "../components/mock-session/SessionHeader";
 import SessionQuestionView from "../components/mock-session/SessionQuestionView";
 
 export default function MockSession() {
+  const navigate = useNavigate();
   const {
     loading,
     loadError,
@@ -28,7 +30,13 @@ export default function MockSession() {
     handleSubmit,
     handleAnswer,
     toggleFlag,
-  } = useMockSession();
+    handleCancelSession,
+  } = useExamSession({ mode: "member" });
+
+  const handleCancel = async () => {
+    await handleCancelSession();
+    navigate(-1);
+  };
 
   const [slideDirection, setSlideDirection] = useState("");
 
@@ -120,6 +128,7 @@ export default function MockSession() {
           timeLeft={timeLeft}
           submitting={submitting}
           handleSubmit={handleSubmit}
+          onCancelSession={handleCancel}
         />
 
         {submitError && (

@@ -31,9 +31,9 @@ export async function listSubmissionsForMockTest(req, res) {
 }
 
 export async function listMine(req, res) {
+  // Personal history, not workspace-scoped - see listMyAttempts.
   const attempts = await attemptsService.listMyAttempts({
     userId: req.user.id,
-    workspaceId: req.workspaceId,
   });
   res.json({ attempts });
 }
@@ -41,7 +41,7 @@ export async function listMine(req, res) {
 export async function getOne(req, res) {
   const result = await attemptsService.getAttempt({
     attemptId: req.params.attemptId,
-    workspaceId: req.workspaceId,
+    userId: req.user.id,
   });
   res.json(result);
 }
@@ -49,7 +49,7 @@ export async function getOne(req, res) {
 export async function remove(req, res) {
   const attempt = await attemptsService.deleteAttempt({
     attemptId: req.params.attemptId,
-    workspaceId: req.workspaceId,
+    userId: req.user.id,
   });
   res.json({ attempt });
 }

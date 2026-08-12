@@ -27,12 +27,20 @@ export async function startAttempt({
   try {
     await client.query("BEGIN");
 
-    // Reuse existing active in_progress attempt if one exists for this user and mock test
-    let attempt = await attemptsRepo.findActiveAttemptForUser(client, {
-      mockTestId,
-      workspaceId,
-      userId: userId || null,
-    });
+    // Reuse an existing in_progress attempt if one exists for this user and
+    // mock test - but only for logged-in users, who have a stable user_id
+    // to scope the lookup to. Anonymous guest attempts (userId null) have
+    // no such identity: "in_progress AND user_id IS NULL" would match ANY
+    // guest's in-progress attempt on this mock test, so two different
+    // people opening the same shared link could end up merged onto the
+    // same attempt. Guests always start a brand-new attempt instead.
+    let attempt = userId
+      ? await attemptsRepo.findActiveAttemptForUser(client, {
+          mockTestId,
+          workspaceId,
+          userId,
+        })
+      : null;
 
     if (!attempt) {
       attempt = await attemptsRepo.insertAttempt(client, {
@@ -42,6 +50,23 @@ export async function startAttempt({
         totalQuestions: questions.length,
         metadata: metadata || {},
       });
+    }
+
+    // A concurrent request for the same user/mock test can win the race
+    // between our SELECT above and this INSERT (see migration 011 and
+    // insertAttempt's ON CONFLICT) - when that happens we get null back
+    // instead of a duplicate row, so fetch the attempt the other request
+    // created rather than erroring out.
+    if (!attempt && userId) {
+      attempt = await attemptsRepo.findActiveAttemptForUser(client, {
+        mockTestId,
+        workspaceId,
+        userId,
+      });
+    }
+
+    if (!attempt) {
+      throw httpError(409, "Could not start this test session - please retry");
     }
 
     await client.query("COMMIT");
@@ -253,8 +278,26 @@ export async function submitAttempt({ attemptId, workspaceId }) {
   }
 }
 
-export async function getAttempt({ attemptId, workspaceId, shareToken }) {
-  const attempt = await attemptsRepo.findAttemptById(attemptId, workspaceId);
+// Two distinct scoping modes share this function:
+//   - userId set: a logged-in member looking at their OWN attempt (My
+//     Results, or right after submitting their own test) - ownership
+//     scoped, since a claimed attempt may not even belong to a workspace
+//     this user is a member of. See findAttemptByIdForUser.
+//   - userId absent: a guest viewing their shared-link attempt via
+//     shared.service.js#getSharedAttempt, which has no user identity at
+//     all - workspace(+shareToken)-scoped instead, as before.
+// Either way, attachDiagramUrls below uses attempt.workspace_id straight
+// off the row we actually found, not the caller's workspaceId argument -
+// that's what's real regardless of which path found it.
+export async function getAttempt({
+  attemptId,
+  workspaceId,
+  userId,
+  shareToken,
+}) {
+  const attempt = userId
+    ? await attemptsRepo.findAttemptByIdForUser(attemptId, userId)
+    : await attemptsRepo.findAttemptById(attemptId, workspaceId);
   if (!attempt) {
     throw httpError(404, "Attempt not found");
   }
@@ -289,7 +332,7 @@ export async function getAttempt({ attemptId, workspaceId, shareToken }) {
           }
         : {}),
     })),
-    workspaceId,
+    attempt.workspace_id,
     { shareToken },
   );
 
@@ -299,13 +342,46 @@ export async function getAttempt({ attemptId, workspaceId, shareToken }) {
   };
 }
 
-export async function listMyAttempts({ userId, workspaceId }) {
-  const rows = await attemptsRepo.listAttemptsForUser(userId, workspaceId);
+// Personal, cross-workspace history - deliberately not scoped to a single
+// workspace (see listAttemptsForUser in the repository for why).
+export async function listMyAttempts({ userId }) {
+  const rows = await attemptsRepo.listAttemptsForUser(userId);
   return rows.map(serializeAttemptWithMockTest);
 }
 
-export async function deleteAttempt({ attemptId, workspaceId }) {
-  const attempt = await attemptsRepo.deleteAttempt(attemptId, workspaceId);
+// "Save this result" - links an already-submitted, still-anonymous
+// shared-link attempt to a user's account. mockTestId comes from the
+// caller (shared.service.js, resolved server-side from the share token) -
+// never trust a client-supplied mock test id here. See
+// attemptsRepo.claimAttempt for the full set of conditions that must hold
+// for the claim to succeed.
+export async function claimAttempt({
+  attemptId,
+  mockTestId,
+  shareToken,
+  userId,
+}) {
+  const attempt = await attemptsRepo.claimAttempt({
+    attemptId,
+    mockTestId,
+    shareToken,
+    userId,
+  });
+
+  if (!attempt) {
+    throw httpError(
+      404,
+      "This result is no longer available to save - it may already be saved, or the link may have expired.",
+    );
+  }
+
+  return serializeAttempt(attempt);
+}
+
+// My Results self-delete only - see attempts.repository.js#deleteAttempt
+// for why this is ownership- not workspace-scoped.
+export async function deleteAttempt({ attemptId, userId }) {
+  const attempt = await attemptsRepo.deleteAttempt(attemptId, userId);
   if (!attempt) {
     throw httpError(404, "Attempt not found");
   }
@@ -366,7 +442,7 @@ function sameNumbersRegardlessOfOrder(a, b) {
   return sortedA.every((value, index) => value === sortedB[index]);
 }
 
-function serializeAttempt(row) {
+export function serializeAttempt(row) {
   return {
     id: row.id,
     mockTestId: row.mock_test_id,
@@ -391,15 +467,23 @@ function serializeAttempt(row) {
  * updatable afterward, which is fine here since this is just a display
  * label, not an identity/auth concern.
  */
+/*
+ * "Member" here means row.is_member (a real workspace_members row), NOT
+ * "row.user_id is set" - claimAttempt lets any logged-in account attach
+ * itself to a guest attempt regardless of workspace membership, so
+ * user_id alone would mislabel a claimed-but-outside-workspace attempt
+ * as a member submission. See attempts.repository.js#listAllAttemptsForMockTest.
+ */
 function serializeSubmission(row) {
   const metadata = row.metadata || {};
-  const isGuest = row.user_id === null;
+  const isMember = row.is_member === true;
   return {
     ...serializeAttempt(row),
-    isGuest,
-    takerName: isGuest
-      ? metadata.guestName || "Anonymous (shared link)"
-      : row.user_name,
+    isGuest: !isMember,
+    takerName: isMember
+      ? row.user_name
+      : metadata.guestName || row.user_name || "Anonymous (shared link)",
+    takerEmail: isMember ? row.user_email : null,
   };
 }
 

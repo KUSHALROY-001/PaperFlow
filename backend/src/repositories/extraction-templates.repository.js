@@ -69,7 +69,7 @@ export async function listAccessibleTemplates(
     `
     ${templateSelect}
     WHERE ${conditions.join(" AND ")}
-    ORDER BY t.is_popular DESC, t.usage_count DESC, t.name ASC
+    ORDER BY (t.workspace_id IS NOT NULL) DESC, t.is_popular DESC, t.usage_count DESC, t.name ASC
     `,
     params,
   );

@@ -166,6 +166,19 @@ export async function submitSharedAttempt({ shareToken, attemptId }) {
   });
 }
 
+// Mirrors member-mode's abandon (see attempts.controller.js#abandon) so a
+// guest who cancels mid-session doesn't leave a permanently-stuck
+// 'in_progress' attempt behind - it'd otherwise sit forever in the mock
+// test owner's Submissions tab looking like someone is still taking it.
+export async function abandonSharedAttempt({ shareToken, attemptId }) {
+  const share = await resolveShare(shareToken);
+
+  return attemptsService.abandonAttempt({
+    attemptId,
+    workspaceId: share.workspace_id,
+  });
+}
+
 export async function getSharedAttempt({ shareToken, attemptId }) {
   const share = await resolveShare(shareToken);
 
@@ -173,6 +186,17 @@ export async function getSharedAttempt({ shareToken, attemptId }) {
     attemptId,
     workspaceId: share.workspace_id,
     shareToken,
+  });
+}
+
+export async function claimSharedAttempt({ shareToken, attemptId, userId }) {
+  const share = await resolveShare(shareToken);
+
+  return attemptsService.claimAttempt({
+    attemptId,
+    mockTestId: share.mock_test_id,
+    shareToken,
+    userId,
   });
 }
 

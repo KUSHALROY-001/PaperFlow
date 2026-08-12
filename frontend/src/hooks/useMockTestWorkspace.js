@@ -238,24 +238,6 @@ export function useMockTestWorkspace() {
     }
   };
 
-  const handleDeleteSubmission = async (attemptId) => {
-    try {
-      await api.deleteAttempt(attemptId);
-      await queryClient.invalidateQueries({
-        queryKey: ["submissions", mockTestId],
-      });
-    } catch (error) {
-      // Re-thrown (not just captured into actionError) so
-      // SubmissionCard's own try/catch around this call can react locally
-      // - keep its confirm dialog open and show its own inline error,
-      // instead of the dialog silently closing as if the delete had
-      // succeeded while the real error only surfaces in the page-level
-      // banner above the tabs.
-      setActionError(error.message || "Could not delete this submission");
-      throw error;
-    }
-  };
-
   return {
     clusterId,
     cluster,
@@ -280,6 +262,6 @@ export function useMockTestWorkspace() {
     handleQuestionStatusChange,
     handleQuestionDelete,
     handleDelete,
-    handleDeleteSubmission,
+
   };
 }

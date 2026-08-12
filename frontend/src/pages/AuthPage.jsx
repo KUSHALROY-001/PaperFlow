@@ -3,7 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import ThemeToggle from "../components/ThemeToggle";
 import { useAuth } from "@/lib/AuthContext";
+import { api } from "@/lib/api";
 import { PENDING_INVITE_TOKEN_KEY } from "./AcceptInvite";
+import { PENDING_CLAIM_KEY } from "@/hooks/useExamSession";
 
 function MockCraftLogo() {
   return (
@@ -73,9 +75,28 @@ export default function AuthPage({ mode, title, description }) {
         navigate(`/accept-invite?token=${pendingInviteToken}`, {
           replace: true,
         });
-      } else {
-        navigate("/dashboard", { replace: true });
+        return;
       }
+
+      // Same idea for a guest who just took a shared mock test and chose
+      // "log in to save this result" from the results screen (see
+      // useExamSession's PENDING_CLAIM_KEY) - claim it now that they're
+      // authenticated, then send them straight to My Results.
+      const pendingClaimRaw = sessionStorage.getItem(PENDING_CLAIM_KEY);
+      if (pendingClaimRaw) {
+        sessionStorage.removeItem(PENDING_CLAIM_KEY);
+        try {
+          const { attemptId, shareToken } = JSON.parse(pendingClaimRaw);
+          await api.claimSharedAttempt(shareToken, attemptId);
+        } catch {
+          // Link may have expired between submitting and logging in - not
+          // worth blocking the login itself over, just skip the redirect.
+        }
+        navigate("/my-results", { replace: true });
+        return;
+      }
+
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       setError(err.message || "Authentication failed");
     } finally {

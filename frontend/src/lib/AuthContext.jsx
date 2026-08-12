@@ -114,6 +114,11 @@ export function AuthProvider({ children }) {
   );
   const role = currentWorkspace?.role || user?.role || "owner";
   const isViewer = role === "viewer";
+  // Mirrors requireRole("admin") in require-role.js (ROLE_RANK: viewer < editor
+  // < admin < owner) - "admin or higher", not an exact match, so an owner
+  // still passes an isAdmin check the same way the backend's requireRole
+  // would let them through an admin-gated route.
+  const isAdmin = role === "admin" || role === "owner";
 
   const value = useMemo(
     () => ({
@@ -134,6 +139,7 @@ export function AuthProvider({ children }) {
       currentWorkspace,
       role,
       isViewer,
+      isAdmin,
     }),
     [
       authChecked,
@@ -150,6 +156,7 @@ export function AuthProvider({ children }) {
       currentWorkspace,
       role,
       isViewer,
+      isAdmin,
     ],
   );
 

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CheckCircle, XCircle, ChevronRight, ChevronDown } from "lucide-react";
 import { resolveAssetUrl } from "@/lib/api";
+import { getOptionText } from "@/utils/mockTestHelpers";
 
 export default function QuestionReviewList({ questions }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -89,7 +90,10 @@ export default function QuestionReviewList({ questions }) {
                       <p className="text-xs text-red-500 mt-1 font-semibold">
                         Your answer:{" "}
                         <span className="font-bold">
-                          {q.options[q.selectedOptionIndexes[0]]}
+                          {getOptionText(
+                            q.options,
+                            q.selectedOptionIndexes[0],
+                          )}
                         </span>
                       </p>
                     )}
@@ -98,7 +102,7 @@ export default function QuestionReviewList({ questions }) {
                         Correct:{" "}
                         <span className="font-bold">
                           {q.correctOptionIndexes
-                            .map((i) => q.options[i])
+                            .map((i) => getOptionText(q.options, i))
                             .join(", ")}
                         </span>
                       </p>

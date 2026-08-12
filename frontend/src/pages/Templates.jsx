@@ -1,16 +1,20 @@
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Search, Star } from "lucide-react";
+import { Plus, Search, Star } from "lucide-react";
 import { useTemplates } from "@/hooks/useTemplates";
+import { useAuth } from "@/lib/AuthContext";
 import { CATEGORY_OPTIONS } from "@/utils/templateHelpers";
 import PopularTemplateCard from "../components/templates/PopularTemplateCard";
 import TemplateCard from "../components/templates/TemplateCard";
 import TemplatePreviewModal from "../components/templates/TemplatePreviewModal";
 import ApplyTemplateModal from "../components/templates/ApplyTemplateModal";
+import CreateTemplateModal from "../components/templates/CreateTemplateModal";
+import { ConfirmDialog } from "../components/design-system/ConfirmDialog";
 
 export default function Templates() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { isViewer } = useAuth();
 
   const {
     search,
@@ -21,6 +25,14 @@ export default function Templates() {
     setPreview,
     applyTarget,
     setApplyTarget,
+    showCreateModal,
+    setShowCreateModal,
+    editTarget,
+    setEditTarget,
+    deleteTarget,
+    setDeleteTarget,
+    actionError,
+    handleDeleteTemplate,
     isLoading,
     error,
     templates,
@@ -48,13 +60,34 @@ export default function Templates() {
           {error && (
             <p className="text-xs text-red-500 mt-1">{error.message}</p>
           )}
+          {actionError && (
+            <p className="text-xs text-red-500 mt-1">{actionError}</p>
+          )}
         </div>
-        <div className="text-left sm:text-right">
-          <div className="text-2xl font-extrabold text-foreground tracking-tight">
-            {templates.length}
-          </div>
-          <div className="text-xs text-muted-foreground font-medium">
-            Templates available
+        <div className="text-left sm:text-right flex sm:flex-col items-center sm:items-end gap-3 sm:gap-1">
+          <button
+            disabled={isViewer}
+            onClick={() => !isViewer && setShowCreateModal(true)}
+            title={
+              isViewer
+                ? "Editor role is required to create templates"
+                : undefined
+            }
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all order-2 sm:order-1 ${
+              isViewer
+                ? "border border-border bg-muted text-muted-foreground/40 cursor-not-allowed opacity-50"
+                : "bg-orange-500/10 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30 hover:bg-orange-500/20"
+            }`}
+          >
+            <Plus className="w-4 h-4" /> Create Template
+          </button>
+          <div className="order-1 sm:order-2">
+            <div className="text-2xl font-extrabold text-foreground tracking-tight">
+              {templates.length}
+            </div>
+            <div className="text-xs text-muted-foreground font-medium">
+              Templates available
+            </div>
           </div>
         </div>
       </div>
@@ -123,6 +156,8 @@ export default function Templates() {
             template={t}
             onPreview={setPreview}
             onApply={setApplyTarget}
+            onEdit={setEditTarget}
+            onDelete={setDeleteTarget}
           />
         ))}
       </div>
@@ -156,6 +191,43 @@ export default function Templates() {
             setApplyTarget(null);
             navigate(`/cluster/${clusterId}/mocktest/${mockTestId}`);
           }}
+        />
+      )}
+
+      {showCreateModal && (
+        <CreateTemplateModal
+          onClose={() => setShowCreateModal(false)}
+          onSaved={() => {
+            queryClient.invalidateQueries({
+              queryKey: ["extraction-templates"],
+            });
+            setShowCreateModal(false);
+          }}
+        />
+      )}
+
+      {editTarget && (
+        <CreateTemplateModal
+          initialTemplate={editTarget}
+          onClose={() => setEditTarget(null)}
+          onSaved={() => {
+            queryClient.invalidateQueries({
+              queryKey: ["extraction-templates"],
+            });
+            setEditTarget(null);
+          }}
+        />
+      )}
+
+      {deleteTarget && (
+        <ConfirmDialog
+          open={Boolean(deleteTarget)}
+          onOpenChange={(open) => !open && setDeleteTarget(null)}
+          title={`Delete "${deleteTarget.name}"?`}
+          description="Mock tests already created from this template keep their questions and settings — this only removes the template itself from your workspace. This action cannot be undone."
+          confirmLabel="Delete Template"
+          destructive={true}
+          onConfirm={handleDeleteTemplate}
         />
       )}
     </div>
