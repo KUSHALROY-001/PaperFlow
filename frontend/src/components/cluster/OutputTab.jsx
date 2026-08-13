@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Copy, Download, Edit2 } from "lucide-react";
-import QuestionContent from "../shared/QuestionContent";
+import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
 
 const viewTabs = ["Visual", "JSON", "Metadata"];
 
@@ -124,6 +124,7 @@ export default function OutputTab({ questions, metadata }) {
                 hasCode={question.hasCode}
                 codeLanguage={question.codeLanguage}
                 diagramUrl={question.diagramUrl}
+                placement={question.placement}
                 textClassName="text-lg font-semibold text-foreground"
               />
 
@@ -144,6 +145,11 @@ export default function OutputTab({ questions, metadata }) {
                   );
                 })}
               </div>
+              {question.placement === "below_options" && (
+                <div className="mt-4">
+                  <QuestionDiagram diagramUrl={question.diagramUrl} />
+                </div>
+              )}
             </div>
           ))}
         </div>

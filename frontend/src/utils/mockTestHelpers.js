@@ -73,6 +73,9 @@ export function mapQuestion(question) {
     // diagram and no code formatting regardless of what was actually
     // extracted - see components/shared/QuestionContent.jsx.
     diagramUrl: question.diagramUrl,
+    // Part C: where the diagram renders relative to text/options - see
+    // attachDiagramUrls, which sets this whenever any asset exists.
+    placement: question.placement || "below_text",
     hasCode: question.has_code || false,
     codeLanguage: question.code_language || null,
   };

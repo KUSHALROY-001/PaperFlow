@@ -1,5 +1,21 @@
 import { resolveAssetUrl } from "@/lib/api";
 
+// Extracted so the 6 QuestionContent consumers (see below) can render it
+// themselves after their own options block for placement === "below_options" -
+// QuestionContent only ever renders inline (above or below the text), it
+// never has access to the options list that comes after it.
+export function QuestionDiagram({ diagramUrl, className = "" }) {
+  if (!diagramUrl) return null;
+  return (
+    <img
+      src={resolveAssetUrl(diagramUrl)}
+      alt="Question diagram"
+      className={`max-w-full rounded-xl border border-border ${className}`}
+      loading="lazy"
+    />
+  );
+}
+
 // Shared by QuestionForm.jsx (editor Live Preview), OutputTab.jsx (Visual
 // view) and ReviewTab.jsx. Before this, all three had their own ad-hoc
 // rendering: QuestionForm was the only one that showed diagramUrl at all
@@ -27,15 +43,28 @@ import { resolveAssetUrl } from "@/lib/api";
 // label on the code block even without highlighting, and stays available
 // on the question object for a highlighter to pick up later without
 // another data-plumbing pass.
+//
+// placement (Part C - see migration 015): "above_text" renders the
+// diagram before the text, "below_text" (the default, and the only
+// position that ever existed before this) renders it after - both handled
+// inline here. "below_options" renders NOTHING here; the consumer renders
+// <QuestionDiagram> itself after its own options block instead, since this
+// component has no visibility into what comes after it.
 export default function QuestionContent({
   text,
   hasCode = false,
   codeLanguage,
   diagramUrl,
+  placement = "below_text",
   textClassName = "text-sm text-foreground",
 }) {
+  const showAboveText = diagramUrl && placement === "above_text";
+  const showBelowText =
+    diagramUrl && placement !== "above_text" && placement !== "below_options";
+
   return (
     <div className="space-y-3">
+      {showAboveText && <QuestionDiagram diagramUrl={diagramUrl} />}
       {hasCode ? (
         <div className="rounded-xl border border-border bg-muted/60 overflow-hidden">
           {codeLanguage && (
@@ -57,14 +86,7 @@ export default function QuestionContent({
         // the same way.
         <p className={`whitespace-pre-wrap ${textClassName}`}>{text}</p>
       )}
-      {diagramUrl && (
-        <img
-          src={resolveAssetUrl(diagramUrl)}
-          alt="Question diagram"
-          className="max-w-full rounded-xl border border-border"
-          loading="lazy"
-        />
-      )}
+      {showBelowText && <QuestionDiagram diagramUrl={diagramUrl} />}
     </div>
   );
 }

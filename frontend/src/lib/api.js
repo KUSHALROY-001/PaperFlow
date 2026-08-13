@@ -179,6 +179,46 @@ export const api = {
       method: "DELETE",
     });
   },
+  // rect: { x, y, width, height } in pixel coordinates against the
+  // question's diagramOriginalUrl image (see DiagramCropModal) - the
+  // backend crops question_assets.original_storage_path down to this rect
+  // and overwrites storage_path with the result.
+  updateDiagramCrop(questionId, rect) {
+    return apiRequest(`/api/questions/${questionId}/diagram-crop`, {
+      method: "PUT",
+      body: JSON.stringify(rect),
+    });
+  },
+  // Discards the manual crop and restores storage_path back to the
+  // original extraction (padding_pct=0.25) crop.
+  resetDiagramCrop(questionId) {
+    return apiRequest(`/api/questions/${questionId}/diagram-crop`, {
+      method: "DELETE",
+    });
+  },
+  // Part C: manual image insert. Works whether the question currently has
+  // no diagram at all or already has one (extracted or manual) - the
+  // backend replaces whatever's there. isFormData in apiRequest handles
+  // the content-type header, so this is just a plain FormData body.
+  uploadDiagramImage(questionId, file) {
+    const formData = new FormData();
+    formData.append("image", file);
+    return apiRequest(`/api/questions/${questionId}/diagram`, {
+      method: "POST",
+      body: formData,
+    });
+  },
+  updateDiagramPlacement(questionId, placement) {
+    return apiRequest(`/api/questions/${questionId}/diagram-placement`, {
+      method: "PATCH",
+      body: JSON.stringify({ placement }),
+    });
+  },
+  deleteDiagramImage(questionId) {
+    return apiRequest(`/api/questions/${questionId}/diagram`, {
+      method: "DELETE",
+    });
+  },
   getPlayableMockTest(mockTestId) {
     return apiRequest(`/api/mock-tests/${mockTestId}/play`);
   },

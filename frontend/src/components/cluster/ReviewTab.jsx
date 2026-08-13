@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { ConfirmDialog } from "../design-system/ConfirmDialog";
-import QuestionContent from "../shared/QuestionContent";
+import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
 
 const filters = [
   { id: "all", label: "All" },
@@ -213,6 +213,7 @@ export default function ReviewTab({
                       hasCode={question.hasCode}
                       codeLanguage={question.codeLanguage}
                       diagramUrl={question.diagramUrl}
+                      placement={question.placement}
                       textClassName="text-base sm:text-lg font-bold text-foreground"
                     />
                     <p className="mt-1.5 text-xs text-muted-foreground">
@@ -332,6 +333,9 @@ export default function ReviewTab({
                       </div>
                     );
                   })}
+                  {question.placement === "below_options" && (
+                    <QuestionDiagram diagramUrl={question.diagramUrl} />
+                  )}
                   {question.status === "rejected" && (
                     <div className="inline-flex items-center gap-2 rounded-full bg-red-500/10 border border-red-500/20 px-3 py-1.5 text-xs font-semibold text-red-500">
                       <ShieldAlert className="h-3.5 w-3.5" />

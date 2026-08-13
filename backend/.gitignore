@@ -5,3 +5,4 @@ uploads/
 __pycache__/
 *.pyc
 worker-smoke.pdf
+package-lock.json

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { CheckCircle, XCircle, ChevronRight, ChevronDown } from "lucide-react";
 import { getOptionText } from "@/utils/mockTestHelpers";
-import QuestionContent from "../shared/QuestionContent";
+import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
 
 export default function QuestionReviewList({ questions }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -80,6 +80,7 @@ export default function QuestionReviewList({ questions }) {
                       hasCode={q.hasCode}
                       codeLanguage={q.codeLanguage}
                       diagramUrl={q.diagramUrl}
+                      placement={q.placement}
                       textClassName="font-bold text-foreground text-xs leading-relaxed"
                     />
 
@@ -100,6 +101,11 @@ export default function QuestionReviewList({ questions }) {
                             .join(", ")}
                         </span>
                       </p>
+                    )}
+                    {q.placement === "below_options" && (
+                      <div className="mt-2">
+                        <QuestionDiagram diagramUrl={q.diagramUrl} />
+                      </div>
                     )}
                   </div>
                 </div>

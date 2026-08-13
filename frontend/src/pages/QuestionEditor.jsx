@@ -185,6 +185,7 @@ export default function QuestionEditor() {
         ) : selected ? (
           <QuestionForm
             selected={selected}
+            mockTestId={mockTestId}
             extractedTopics={extractedTopics}
             isCustomTopic={isCustomTopic}
             setIsCustomTopic={setIsCustomTopic}

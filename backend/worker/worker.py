@@ -168,7 +168,7 @@ def process_job(job):
                     "questionsParsed": len(questions),
                 },
             )
-            inserted, pending_diagram_writes = replace_questions(
+            inserted, pending_diagram_writes, diagrams_extracted = replace_questions(
                 connection,
                 workspace_id=job["workspace_id"],
                 mock_test_id=job["mock_test_id"],
@@ -188,7 +188,11 @@ def process_job(job):
                     "ai": ai_summary,
                     "questionsParsed": len(questions),
                     "questionsInserted": inserted,
-                    "diagramsExtracted": len(pending_diagram_writes),
+                    # NOT len(pending_diagram_writes) - that list holds two
+                    # file writes per diagram since the manual-crop feature
+                    # (storage_path + its original_storage_path sibling).
+                    # See db.py#replace_questions.
+                    "diagramsExtracted": diagrams_extracted,
                 },
             )
 

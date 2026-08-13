@@ -13,6 +13,24 @@ export async function ensureUploadDir(workspaceId, mockTestId) {
   return targetDir;
 }
 
+// Manually-uploaded diagrams (Part C - see question-assets.controller.js
+// #uploadDiagramImage) aren't tied to a source PDF the way extracted ones
+// are, so they can't reuse asset_extractor.py's pdf-relative diagrams/
+// convention - there is no pdf_path on the Node side for a question that
+// was never re-processed. A sibling directory under the same
+// uploads/<workspaceId>/<mockTestId>/ root keeps the same top-level
+// layout and still gets cleaned up by deleteMockTestUploadDir below.
+export async function ensureManualDiagramDir(workspaceId, mockTestId) {
+  const targetDir = path.join(
+    uploadsRoot,
+    workspaceId,
+    mockTestId,
+    "manual-diagrams",
+  );
+  await mkdir(targetDir, { recursive: true });
+  return targetDir;
+}
+
 export function buildStorageKey(workspaceId, mockTestId, filename) {
   return path.posix.join("uploads", workspaceId, mockTestId, filename);
 }

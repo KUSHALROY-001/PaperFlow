@@ -1,8 +1,12 @@
-import { Plus, Trash2 } from "lucide-react";
-import QuestionContent from "../shared/QuestionContent";
+import { useState } from "react";
+import { Crop, Plus, Trash2 } from "lucide-react";
+import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
+import DiagramCropModal from "./DiagramCropModal";
+import DiagramUploadControl from "./DiagramUploadControl";
 
 export default function QuestionForm({
   selected,
+  mockTestId,
   extractedTopics,
   isCustomTopic,
   setIsCustomTopic,
@@ -13,6 +17,8 @@ export default function QuestionForm({
   removeOption,
   isViewer,
 }) {
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+  const [diagramError, setDiagramError] = useState("");
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto w-full space-y-6">
       <div className="surface-card rounded-2xl p-3 sm:p-6 border border-border">
@@ -190,8 +196,48 @@ export default function QuestionForm({
           hasCode={selected.hasCode}
           codeLanguage={selected.codeLanguage}
           diagramUrl={selected.diagramUrl}
+          placement={selected.placement}
           textClassName="text-sm font-bold text-foreground"
         />
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3">
+          {selected.diagramUrl && (
+            <button
+              type="button"
+              disabled={isViewer || !selected.diagramOriginalUrl}
+              onClick={() =>
+                !isViewer &&
+                selected.diagramOriginalUrl &&
+                setIsCropModalOpen(true)
+              }
+              title={
+                isViewer
+                  ? "Editor role is required to edit the crop"
+                  : !selected.diagramOriginalUrl
+                    ? "This diagram has no original image saved - re-extract from the original PDF to get one"
+                    : undefined
+              }
+              className={`flex items-center gap-1.5 text-xs font-bold transition-all ${
+                isViewer || !selected.diagramOriginalUrl
+                  ? "text-muted-foreground/40 cursor-not-allowed opacity-50"
+                  : "text-orange-500 hover:underline"
+              }`}
+            >
+              <Crop className="w-3.5 h-3.5" /> Edit Crop
+            </button>
+          )}
+        </div>
+        <DiagramUploadControl
+          questionId={selected.id}
+          mockTestId={mockTestId}
+          diagramUrl={selected.diagramUrl}
+          placement={selected.placement}
+          source={selected.source}
+          isViewer={isViewer}
+          onError={setDiagramError}
+        />
+        {diagramError && (
+          <p className="mt-2 text-xs font-bold text-red-500">{diagramError}</p>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
           {selected.options.map((opt, i) => (
             <div
@@ -205,7 +251,23 @@ export default function QuestionForm({
             </div>
           ))}
         </div>
+        {selected.placement === "below_options" && (
+          <div className="mt-4">
+            <QuestionDiagram diagramUrl={selected.diagramUrl} />
+          </div>
+        )}
       </div>
+
+      {isCropModalOpen && (
+        <DiagramCropModal
+          key={selected.id}
+          questionId={selected.id}
+          mockTestId={mockTestId}
+          diagramOriginalUrl={selected.diagramOriginalUrl}
+          hasManualCrop={selected.hasManualCrop}
+          onClose={() => setIsCropModalOpen(false)}
+        />
+      )}
     </main>
   );
 }

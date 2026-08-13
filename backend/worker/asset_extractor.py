@@ -32,11 +32,37 @@ def build_diagram_storage_path(pdf_path, question_id):
     scratch) - .../uploads/{workspace}/{mockTestId}/{uploadedFileId}/diagrams/{question_id}.png,
     the same base layout as .../ocr/{name}.searchable.pdf already uses one
     directory over.
+
+    This is the "currently served" path (question_assets.storage_path) -
+    see build_diagram_original_storage_path below for its immutable
+    sibling.
     """
     source_path = Path(pdf_path)
     diagrams_dir = source_path.parent / "diagrams"
     diagrams_dir.mkdir(parents=True, exist_ok=True)
     return diagrams_dir / f"{question_id}.png"
+
+
+def build_diagram_original_storage_path(pdf_path, question_id):
+    """
+    Sibling of build_diagram_storage_path, same diagrams/ directory, same
+    question_id, distinct filename (`.original.png` suffix) so the two
+    never collide on disk - question_assets.original_storage_path.
+
+    At extraction time this holds byte-identical content to
+    build_diagram_storage_path's file (both are written from the same
+    crop_diagram() output - there is currently only one crop produced
+    per diagram, sized via padding_pct to already be the intentionally
+    oversized "room to crop further" version). They diverge only once a
+    manual crop is saved: storage_path gets overwritten with the
+    user's tighter crop, while this path is never touched again, so a
+    later re-crop (or a "reset to auto-crop") always has the original,
+    full-quality, non-lossy-recropped image to start from again.
+    """
+    source_path = Path(pdf_path)
+    diagrams_dir = source_path.parent / "diagrams"
+    diagrams_dir.mkdir(parents=True, exist_ok=True)
+    return diagrams_dir / f"{question_id}.original.png"
 
 
 def normalized_bbox_to_pixels(bbox_normalized, pixel_width, pixel_height):
@@ -100,16 +126,19 @@ def crop_diagram(
     pixmap_height,
     bbox_normalized,
     *,
-    # Bumped from 0.03 (3%) after real-world review showed most crops
-    # from that setting clipped part of the actual diagram - vision
-    # model bounding boxes are estimates, not pixel-precise detections,
-    # and 3% of a tightly-drawn box's own size was rarely enough slack
-    # to cover the gap. 0.10 trades a bit more incidental surrounding
-    # whitespace/text for reliably NOT cutting off diagram content,
-    # which is the right tradeoff here - a crop with a sliver of extra
-    # margin is still useful; a crop missing part of the actual figure
-    # usually isn't.
-    padding_pct=0.10,
+    # Bumped from 0.03 (3%) -> 0.10 (10%) after real-world review showed
+    # most crops from 3% clipped part of the actual diagram - vision
+    # model bounding boxes are estimates, not pixel-precise detections.
+    # Bumped again from 0.10 -> 0.25 so the crop is deliberately
+    # oversized (final size = original + 2*padding_pct = 1.5x the
+    # detected box in each dimension) rather than just "safely padded" -
+    # the intent is no longer just "don't clip the diagram", it's "leave
+    # enough surrounding room that a user can manually crop the result
+    # down to whatever tighter final size they actually want", per the
+    # manual-crop-tool feature. A crop with generous extra margin is
+    # still useful and now expected; a crop missing part of the actual
+    # figure still usually isn't.
+    padding_pct=0.25,
     # Flat floor so a small diagram (where padding_pct alone would round
     # to just 1-2px) still gets a real margin. Chosen relative to a
     # typical AI_PDF_RENDER_SCALE=1.5 page render (roughly 900-1300px

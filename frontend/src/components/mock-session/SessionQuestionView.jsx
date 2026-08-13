@@ -1,5 +1,5 @@
 import { Flag, ChevronLeft, ChevronRight } from "lucide-react";
-import QuestionContent from "../shared/QuestionContent";
+import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
 
 export default function SessionQuestionView({
   q,
@@ -59,6 +59,7 @@ export default function SessionQuestionView({
             hasCode={q.hasCode}
             codeLanguage={q.codeLanguage}
             diagramUrl={q.diagramUrl}
+            placement={q.placement}
             textClassName="text-lg font-bold text-foreground leading-relaxed"
           />
         </div>
@@ -82,6 +83,11 @@ export default function SessionQuestionView({
             </button>
           ))}
         </div>
+        {q.placement === "below_options" && (
+          <div className="mt-4">
+            <QuestionDiagram diagramUrl={q.diagramUrl} />
+          </div>
+        )}
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-8 pt-6 border-t border-border">
           <button

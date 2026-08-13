@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { CheckCircle, XCircle, BarChart2, Home, LogIn } from "lucide-react";
 import { getOptionText } from "@/utils/mockTestHelpers";
-import QuestionContent from "../shared/QuestionContent";
+import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
 
 export default function SessionResultsView({
   review,
@@ -123,6 +123,7 @@ export default function SessionResultsView({
                         hasCode={rq.hasCode}
                         codeLanguage={rq.codeLanguage}
                         diagramUrl={rq.diagramUrl}
+                        placement={rq.placement}
                         textClassName="font-bold text-foreground"
                       />
                       {!correct && !skipped && (
@@ -141,6 +142,11 @@ export default function SessionResultsView({
                             .map((i) => getOptionText(rq.options, i))
                             .join(", ")}
                         </p>
+                      )}
+                      {rq.placement === "below_options" && (
+                        <div className="mt-2">
+                          <QuestionDiagram diagramUrl={rq.diagramUrl} />
+                        </div>
                       )}
                     </div>
                   </div>

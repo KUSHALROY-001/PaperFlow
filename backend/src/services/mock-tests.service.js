@@ -12,7 +12,10 @@ import {
 } from "../lib/validators.js";
 import { startWorkerOnce } from "../lib/worker-runner.js";
 import * as mockTestsRepo from "../repositories/mock-tests.repository.js";
-import { attachDiagramUrls } from "./question-assets.service.js";
+import {
+  attachDiagramUrls,
+  attachDiagramOriginalUrls,
+} from "./question-assets.service.js";
 
 export async function listMockTests(workspaceId) {
   return mockTestsRepo.listMockTests(workspaceId);
@@ -304,7 +307,12 @@ export async function listQuestions(mockTestId, workspaceId) {
     mockTestId,
     workspaceId,
   );
-  return attachDiagramUrls(questions, workspaceId, { idField: "id" });
+  const withDiagrams = await attachDiagramUrls(questions, workspaceId, {
+    idField: "id",
+  });
+  return attachDiagramOriginalUrls(withDiagrams, workspaceId, {
+    idField: "id",
+  });
 }
 
 export async function getPlayableMockTest(mockTestId, workspaceId) {
