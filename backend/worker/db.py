@@ -198,9 +198,11 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
               status,
               metadata,
               marks_per_correct,
-              negative_marks_per_wrong
+              negative_marks_per_wrong,
+              has_code,
+              code_language
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'needs_review', %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'needs_review', %s, %s, %s, %s, %s)
             RETURNING id
             """,
             [
@@ -228,6 +230,15 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
                 # per-question, same columns, same fallback rule).
                 question.get("marks_per_correct"),
                 question.get("negative_marks_per_wrong"),
+                # has_code/code_language: set by ai/schemas.py's per-question
+                # normalization (same has_diagram-shaped pattern) once
+                # reconcile.py carries them through to the final merged
+                # question dict. bool(...) rather than a bare .get() because
+                # the regex-only fallback path (when every AI attempt fails)
+                # never sets "has_code" at all - the column is NOT NULL, so
+                # this needs a real False, not None, for that path.
+                bool(question.get("has_code", False)),
+                question.get("code_language"),
             ],
         ).fetchone()
 

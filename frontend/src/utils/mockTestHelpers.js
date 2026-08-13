@@ -65,6 +65,16 @@ export function mapQuestion(question) {
     correctOptionIndexes: question.correct_option_indexes || [correctIndex],
     aiIssues,
     aiNeedsReview: metadata.aiNeedsReview,
+    // Bug fix: these three were never mapped through at all, even though
+    // the raw API row (mock-tests.service.js#listQuestions - a plain
+    // `SELECT q.*` plus attachDiagramUrls) already has them. OutputTab and
+    // ReviewTab both consume mapQuestion's output, not the raw row, so
+    // every question rendered through either tab looked like it had no
+    // diagram and no code formatting regardless of what was actually
+    // extracted - see components/shared/QuestionContent.jsx.
+    diagramUrl: question.diagramUrl,
+    hasCode: question.has_code || false,
+    codeLanguage: question.code_language || null,
   };
 }
 

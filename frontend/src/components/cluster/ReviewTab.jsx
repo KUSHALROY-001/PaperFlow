@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { ConfirmDialog } from "../design-system/ConfirmDialog";
+import QuestionContent from "../shared/QuestionContent";
 
 const filters = [
   { id: "all", label: "All" },
@@ -195,18 +196,29 @@ export default function ReviewTab({
                       </Link>
                     )}
                   </div>
-                  <button
-                    type="button"
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => toggleExpanded(question.id)}
-                    className="w-full text-left"
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        toggleExpanded(question.id);
+                      }
+                    }}
+                    className="w-full text-left cursor-pointer"
                   >
-                    <h3 className="text-base sm:text-lg font-bold text-foreground">
-                      {question.text}
-                    </h3>
+                    <QuestionContent
+                      text={question.text}
+                      hasCode={question.hasCode}
+                      codeLanguage={question.codeLanguage}
+                      diagramUrl={question.diagramUrl}
+                      textClassName="text-base sm:text-lg font-bold text-foreground"
+                    />
                     <p className="mt-1.5 text-xs text-muted-foreground">
                       Source: {question.sourceLine}
                     </p>
-                  </button>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">

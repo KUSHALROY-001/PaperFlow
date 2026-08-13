@@ -1,5 +1,5 @@
 import { Plus, Trash2 } from "lucide-react";
-import { resolveAssetUrl } from "@/lib/api";
+import QuestionContent from "../shared/QuestionContent";
 
 export default function QuestionForm({
   selected,
@@ -185,18 +185,14 @@ export default function QuestionForm({
         <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">
           Live Preview
         </div>
-        <p className="text-sm font-bold text-foreground mb-4">
-          {selected.text}
-        </p>
-        {selected.diagramUrl && (
-          <img
-            src={resolveAssetUrl(selected.diagramUrl)}
-            alt="Question diagram"
-            className="max-w-full rounded-xl border border-border mb-4"
-            loading="lazy"
-          />
-        )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <QuestionContent
+          text={selected.text}
+          hasCode={selected.hasCode}
+          codeLanguage={selected.codeLanguage}
+          diagramUrl={selected.diagramUrl}
+          textClassName="text-sm font-bold text-foreground"
+        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
           {selected.options.map((opt, i) => (
             <div
               key={i}

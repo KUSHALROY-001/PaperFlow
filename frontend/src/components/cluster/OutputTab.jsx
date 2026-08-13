@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Copy, Download, Edit2 } from "lucide-react";
+import QuestionContent from "../shared/QuestionContent";
 
 const viewTabs = ["Visual", "JSON", "Metadata"];
 
@@ -21,6 +22,12 @@ export default function OutputTab({ questions, metadata }) {
         answer: question.answer,
         confidence: question.confidence,
         status: question.status,
+        hasCode: question.hasCode,
+        codeLanguage: question.codeLanguage,
+        // diagramUrl deliberately excluded here - it's a short-lived
+        // HMAC-signed URL (see question-assets.service.js#buildDiagramUrl),
+        // not a stable link. Including it in a JSON someone downloads and
+        // opens later would just be a dead/expired URL by then.
       })),
     }),
     [metadata, questions],
@@ -112,9 +119,13 @@ export default function OutputTab({ questions, metadata }) {
                 </Link>
               </div>
 
-              <h3 className="text-lg font-semibold text-foreground">
-                {question.text}
-              </h3>
+              <QuestionContent
+                text={question.text}
+                hasCode={question.hasCode}
+                codeLanguage={question.codeLanguage}
+                diagramUrl={question.diagramUrl}
+                textClassName="text-lg font-semibold text-foreground"
+              />
 
               <div className="mt-5 grid gap-3 md:grid-cols-2">
                 {question.options.map((option) => {

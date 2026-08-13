@@ -79,6 +79,8 @@ export async function startAttempt({
         text: question.text,
         options: question.options,
         questionType: question.questionType,
+        hasCode: question.hasCode,
+        codeLanguage: question.codeLanguage,
       })),
       workspaceId,
       { shareToken: metadata?.shareToken },
@@ -317,6 +319,13 @@ export async function getAttempt({
       text: row.question_text,
       questionType: row.question_type,
       options: row.options,
+      // Unlike correctOptionIndexes/explanation/isCorrect/marksAwarded
+      // below, these two are never gated on isSubmitted - they describe
+      // how to DISPLAY the question body, not the answer key, so there's
+      // nothing to leak by including them while an attempt is still in
+      // progress.
+      hasCode: row.has_code,
+      codeLanguage: row.code_language,
       selectedOptionIndexes: row.selected_option_indexes || [],
       // Correct answers, explanations, and per-question correctness are
       // ONLY included once the attempt is submitted - resuming an

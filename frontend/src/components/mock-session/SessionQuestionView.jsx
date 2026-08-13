@@ -1,5 +1,5 @@
 import { Flag, ChevronLeft, ChevronRight } from "lucide-react";
-import { resolveAssetUrl } from "@/lib/api";
+import QuestionContent from "../shared/QuestionContent";
 
 export default function SessionQuestionView({
   q,
@@ -53,18 +53,15 @@ export default function SessionQuestionView({
           </button>
         </div>
 
-        <p className="text-lg font-bold text-foreground mb-8 leading-relaxed">
-          {q.text}
-        </p>
-
-        {q.diagramUrl && (
-          <img
-            src={resolveAssetUrl(q.diagramUrl)}
-            alt="Question diagram"
-            className="max-w-full rounded-xl border border-border mb-6"
-            loading="lazy"
+        <div className="mb-8">
+          <QuestionContent
+            text={q.text}
+            hasCode={q.hasCode}
+            codeLanguage={q.codeLanguage}
+            diagramUrl={q.diagramUrl}
+            textClassName="text-lg font-bold text-foreground leading-relaxed"
           />
-        )}
+        </div>
 
         <div className="space-y-3">
           {q.options.map((opt, i) => (

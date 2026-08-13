@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { CheckCircle, XCircle, ChevronRight, ChevronDown } from "lucide-react";
-import { resolveAssetUrl } from "@/lib/api";
 import { getOptionText } from "@/utils/mockTestHelpers";
+import QuestionContent from "../shared/QuestionContent";
 
 export default function QuestionReviewList({ questions }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -65,35 +65,29 @@ export default function QuestionReviewList({ questions }) {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
-                      <p className="font-bold text-foreground text-xs leading-relaxed">
-                        {q.text}
-                      </p>
-                      {/* On desktop: Topic badge on right side */}
-                      {q.topic && (
-                        <span className="hidden sm:inline-block text-xs bg-orange-500/15 text-orange-500 border border-orange-500/20 px-2 py-0.5 rounded-lg font-bold shrink-0">
-                          {q.topic}
-                        </span>
-                      )}
-                    </div>
-
-                    {q.diagramUrl && (
-                      <img
-                        src={resolveAssetUrl(q.diagramUrl)}
-                        alt="Question diagram"
-                        className="max-w-full rounded-xl border border-border mt-2 mb-2"
-                        loading="lazy"
-                      />
+                    {/* On desktop: Topic badge on its own line above the
+                        question, same layout ReviewTab.jsx uses - keeps
+                        QuestionContent's code block/diagram full-width
+                        instead of squeezed into a flex row beside it. */}
+                    {q.topic && (
+                      <span className="hidden sm:inline-block text-xs bg-orange-500/15 text-orange-500 border border-orange-500/20 px-2 py-0.5 rounded-lg font-bold shrink-0 mb-1.5">
+                        {q.topic}
+                      </span>
                     )}
+
+                    <QuestionContent
+                      text={q.text}
+                      hasCode={q.hasCode}
+                      codeLanguage={q.codeLanguage}
+                      diagramUrl={q.diagramUrl}
+                      textClassName="font-bold text-foreground text-xs leading-relaxed"
+                    />
 
                     {!correct && !skipped && (
                       <p className="text-xs text-red-500 mt-1 font-semibold">
                         Your answer:{" "}
                         <span className="font-bold">
-                          {getOptionText(
-                            q.options,
-                            q.selectedOptionIndexes[0],
-                          )}
+                          {getOptionText(q.options, q.selectedOptionIndexes[0])}
                         </span>
                       </p>
                     )}

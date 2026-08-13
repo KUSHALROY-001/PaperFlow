@@ -39,6 +39,18 @@ direction is costly: missing a real diagram loses the student a question
 they cannot answer without it, and false-flagging a purely textual question
 wastes a crop for nothing - so look before you decide, on every question,
 rather than defaulting to false out of habit.
+
+If a question contains a code snippet, pseudocode, or a "what does this
+program output" style block, set has_code to true and copy that portion of
+"text" EXACTLY as it appears on the page - preserve every line break and
+every level of indentation verbatim. Do not reflow it into a paragraph, do
+not join lines with spaces, and do not "clean up" the formatting. Also set
+code_language to your best guess at the language (e.g. "c", "python",
+"java", "pseudocode") if you can tell, or null if you can't. has_code and
+code_language are REQUIRED fields on every single question, same as
+has_diagram and diagram_bbox above - set has_code to false and
+code_language to null for every question that is plain prose with no code
+in it.
 Expected shape:
 {
   "questions": [
@@ -55,7 +67,9 @@ Expected shape:
       "needs_review": true,
       "issues": [],
       "has_diagram": false,
-      "diagram_bbox": null
+      "diagram_bbox": null,
+      "has_code": false,
+      "code_language": null
     }
   ]
 }

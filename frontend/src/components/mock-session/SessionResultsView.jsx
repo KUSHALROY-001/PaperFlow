@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { CheckCircle, XCircle, BarChart2, Home, LogIn } from "lucide-react";
 import { getOptionText } from "@/utils/mockTestHelpers";
+import QuestionContent from "../shared/QuestionContent";
 
 export default function SessionResultsView({
   review,
@@ -117,7 +118,13 @@ export default function SessionResultsView({
                       <XCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
                     )}
                     <div>
-                      <p className="font-bold text-foreground">{rq.text}</p>
+                      <QuestionContent
+                        text={rq.text}
+                        hasCode={rq.hasCode}
+                        codeLanguage={rq.codeLanguage}
+                        diagramUrl={rq.diagramUrl}
+                        textClassName="font-bold text-foreground"
+                      />
                       {!correct && !skipped && (
                         <p className="text-xs text-red-500 font-semibold mt-1">
                           Your answer:{" "}

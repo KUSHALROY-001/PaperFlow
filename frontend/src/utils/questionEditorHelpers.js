@@ -18,7 +18,6 @@ export const topicCategories = [
 
 export function toEditorQuestion(question) {
   const options = question.options?.map((option) => option.optionText) || [];
-  console.log("question", question);
   return {
     id: question.id,
     persisted: true,
@@ -34,6 +33,13 @@ export function toEditorQuestion(question) {
     // silently never reaches QuestionForm.jsx's `{selected.diagramUrl &&
     // <img .../>}` check, even though the API response has it.
     diagramUrl: question.diagramUrl,
+    // Same story as diagramUrl above, for the code-formatting fields -
+    // findQuestionById is a plain `SELECT *`, so has_code/code_language
+    // are already on the raw row; this is the only place that would
+    // otherwise silently drop them before QuestionForm.jsx's preview ever
+    // sees them.
+    hasCode: question.has_code || false,
+    codeLanguage: question.code_language || null,
   };
 }
 

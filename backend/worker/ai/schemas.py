@@ -73,6 +73,29 @@ def _question_item_schema(*, nullable_as_union):
                 "set this to null - do not omit the key."
             ),
         },
+        "has_code": {
+            "type": "boolean",
+            "description": (
+                "true if the question body contains a code snippet, "
+                "pseudocode, or a syntax-highlighted-looking block (program "
+                "output questions, 'what does this print' questions, etc). "
+                "This field is required for every question: you must "
+                "explicitly decide true or false, never skip it. When true, "
+                "'text' MUST preserve the code's original line breaks and "
+                "indentation exactly as they appear on the page - do not "
+                "reflow, join lines, or otherwise treat it as prose."
+            ),
+        },
+        "code_language": {
+            **optional("string"),
+            "description": (
+                "Required key (value may be null). When has_code is true, "
+                "your best guess at the language (e.g. 'c', 'python', "
+                "'java', 'pseudocode') for syntax highlighting purposes - "
+                "null if you can't tell. When has_code is false, set this "
+                "to null - do not omit the key."
+            ),
+        },
     }
 
     schema = {
@@ -85,6 +108,8 @@ def _question_item_schema(*, nullable_as_union):
             "correct_option_indexes",
             "has_diagram",
             "diagram_bbox",
+            "has_code",
+            "code_language",
         ],
     }
 
@@ -305,6 +330,14 @@ def normalize_ai_questions(payload, *, source="ai"):
             has_diagram = False
             diagram_bbox = None
 
+        has_code = bool(item.get("has_code", False))
+        code_language = clean_optional_text(item.get("code_language"))
+        if not has_code:
+            # Same reasoning as has_diagram/diagram_bbox above - don't
+            # carry a stray language guess through for a question the
+            # model itself said isn't code.
+            code_language = None
+
         normalized.append(
             {
                 "question_no": question_no,
@@ -320,6 +353,8 @@ def normalize_ai_questions(payload, *, source="ai"):
                 "metadata": metadata,
                 "has_diagram": has_diagram,
                 "diagram_bbox": diagram_bbox,
+                "has_code": has_code,
+                "code_language": code_language,
             }
         )
 

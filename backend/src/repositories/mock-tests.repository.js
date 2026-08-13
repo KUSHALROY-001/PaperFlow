@@ -274,7 +274,9 @@ export async function listPlayableQuestions(mockTestId) {
       options,
       "correctOptionIndex",
       "questionType",
-      explanation
+      explanation,
+      "hasCode",
+      "codeLanguage"
     FROM playable_mock_test_questions
     WHERE mock_test_id = $1
     ORDER BY "questionNo" ASC

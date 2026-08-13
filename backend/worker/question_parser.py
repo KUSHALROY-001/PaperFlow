@@ -36,9 +36,28 @@ MAX_PLAUSIBLE_OPTIONS = 6
 MAX_PLAUSIBLE_OPTION_LENGTH = 220
 
 
+def _collapse_horizontal_whitespace(text):
+    # `re.sub(r"[ \t]+", " ", text)` applied to the whole blob (the
+    # previous approach here, and in remove_options_from_text below) is
+    # NOT line-aware - it collapses leading indentation on every line down
+    # to a single space just as aggressively as it collapses accidental
+    # multi-space runs mid-sentence. For ordinary prose that's invisible,
+    # but for a code/pseudocode snippet it destroys exactly the structure
+    # (nested indent levels) that makes it readable as code. Collapse
+    # runs of horizontal whitespace only WITHIN each line's content,
+    # leaving that line's own leading whitespace untouched.
+    lines = []
+    for line in text.split("\n"):
+        stripped = line.rstrip()
+        indent_len = len(stripped) - len(stripped.lstrip(" \t"))
+        indent, rest = stripped[:indent_len], stripped[indent_len:]
+        lines.append(indent + re.sub(r"[ \t]+", " ", rest))
+    return "\n".join(lines)
+
+
 def normalize_text(text):
     text = text.replace("\r\n", "\n").replace("\r", "\n")
-    text = re.sub(r"[ \t]+", " ", text)
+    text = _collapse_horizontal_whitespace(text)
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
 
@@ -133,7 +152,20 @@ def remove_options_from_text(text):
         text = text[: first_option.start()]
 
     text = ANSWER_RE.sub("", text)
-    return re.sub(r"\s+", " ", text).strip()
+
+    # Previously this was `re.sub(r"\s+", " ", text).strip()`, which
+    # collapses EVERY run of whitespace - including newlines and
+    # indentation - into a single space. That destroys any code/pseudocode
+    # formatting present in the source question (see normalize_text above,
+    # which now deliberately preserves per-line indentation for exactly
+    # this reason - this function was undoing that work). Reuse the same
+    # line-aware collapse instead of a blob-wide one.
+    text = _collapse_horizontal_whitespace(text)
+    # ANSWER_RE removal above can leave a run of blank lines behind (e.g.
+    # an "Answer: B" line sitting between two blank lines); re-cap it the
+    # same way normalize_text does.
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
 
 
 def infer_topic(block):

@@ -253,6 +253,8 @@ export async function listQuestionsWithAnswersForAttempt(
       q.explanation,
       q.question_type,
       q.correct_option_indexes,
+      q.has_code,
+      q.code_language,
       COALESCE(
         (
           SELECT jsonb_agg(

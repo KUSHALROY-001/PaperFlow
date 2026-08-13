@@ -28,6 +28,7 @@ import { ConfirmDialog } from "../components/design-system/ConfirmDialog";
 export default function MockTestWorkspace() {
   const { isViewer } = useAuth();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showReprocessConfirm, setShowReprocessConfirm] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
 
   const {
@@ -190,14 +191,16 @@ export default function MockTestWorkspace() {
             </button>
             <button
               disabled={isViewer}
-              onClick={() => !isViewer && handleReprocess()}
+              onClick={() => !isViewer && setShowReprocessConfirm(true)}
               className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
                 isViewer
                   ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-50"
                   : "border-border text-muted-foreground hover:text-foreground hover:border-orange-500/40"
               }`}
               title={
-                isViewer ? "Editor role is required to reprocess" : "Reprocess"
+                isViewer
+                  ? "Editor role is required to reprocess"
+                  : "Re-extract from the original PDF"
               }
             >
               <RotateCcw className="w-4 h-4" />
@@ -384,6 +387,25 @@ export default function MockTestWorkspace() {
           onConfirm={async () => {
             setShowDeleteConfirm(false);
             await handleDelete();
+          }}
+        />
+      )}
+
+      {showReprocessConfirm && (
+        <ConfirmDialog
+          open={showReprocessConfirm}
+          onOpenChange={setShowReprocessConfirm}
+          title="Re-extract from the original PDF?"
+          description={
+            questions.length > 0
+              ? `This re-runs extraction on the original PDF using the latest pipeline (useful if this mock test was extracted before a formatting fix) and replaces all ${questions.length} current question(s). Any manual edits, approvals, or flags made in the Review tab will be lost.`
+              : "This re-runs extraction on the original PDF using the latest pipeline."
+          }
+          confirmLabel="Re-extract"
+          destructive={questions.length > 0}
+          onConfirm={async () => {
+            setShowReprocessConfirm(false);
+            await handleReprocess();
           }}
         />
       )}
