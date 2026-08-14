@@ -12,6 +12,7 @@ import {
 import { useAuth } from "@/lib/AuthContext";
 import { ConfirmDialog } from "../design-system/ConfirmDialog";
 import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
+import MathText from "../shared/MathText";
 
 const filters = [
   { id: "all", label: "All" },
@@ -323,7 +324,9 @@ export default function ReviewTab({
                             : "bg-card text-muted-foreground border border-border"
                         }`}
                       >
-                        <span>{option}</span>
+                        <span>
+                          <MathText text={option} />
+                        </span>
                         {correct && (
                           <span className="inline-flex items-center gap-1 text-xs font-bold">
                             <CheckCircle2 className="h-4 w-4" />

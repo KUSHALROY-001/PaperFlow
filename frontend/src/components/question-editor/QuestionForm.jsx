@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Crop, Plus, Trash2 } from "lucide-react";
+import { Crop, Plus, Sparkles, Trash2 } from "lucide-react";
 import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
+import MathText from "../shared/MathText";
+import { wrapBareLatex } from "@/utils/questionEditorHelpers";
 import DiagramCropModal from "./DiagramCropModal";
 import DiagramUploadControl from "./DiagramUploadControl";
 
@@ -19,6 +21,22 @@ export default function QuestionForm({
 }) {
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const [diagramError, setDiagramError] = useState("");
+
+  // Runs the text + every option through wrapBareLatex in one shot rather
+  // than looping updateOption per index - updateOption reads
+  // selected.options from its own closure, so calling it repeatedly in a
+  // synchronous loop would have each call overwrite the previous one's
+  // change instead of accumulating them. Building the full next array here
+  // and setting it with a single updateSelected("options", ...) call
+  // sidesteps that.
+  const handleCleanUpMath = () => {
+    updateSelected("text", wrapBareLatex(selected.text));
+    updateSelected(
+      "options",
+      selected.options.map((option) => wrapBareLatex(option)),
+    );
+  };
+
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto w-full space-y-6">
       <div className="surface-card rounded-2xl p-3 sm:p-6 border border-border">
@@ -77,15 +95,29 @@ export default function QuestionForm({
           </div>
         </div>
 
-        <label className="block text-xs sm:text-sm font-bold text-foreground mb-2">
-          Question Text
-        </label>
+        <div className="flex items-center justify-between gap-3 mb-2">
+          <label className="block text-xs sm:text-sm font-bold text-foreground">
+            Question Text
+          </label>
+          <button
+            type="button"
+            disabled={isViewer}
+            onClick={() => !isViewer && handleCleanUpMath()}
+            title="Wrap bare pasted LaTeX (e.g. \frac{1}{2} with no $ signs around it) in math delimiters so it renders correctly - check the Live Preview below after"
+            className={`flex items-center gap-1 text-[11px] font-bold transition-all shrink-0 ${
+              isViewer
+                ? "text-muted-foreground/40 cursor-not-allowed opacity-50"
+                : "text-orange-500 hover:underline"
+            }`}
+          >
+            <Sparkles className="w-3 h-3" /> Clean up pasted math
+          </button>
+        </div>
         <textarea
           disabled={isViewer}
           value={selected.text}
           onChange={(e) => !isViewer && updateSelected("text", e.target.value)}
-          rows={3}
-          className={`w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all text-xs sm:text-sm resize-none ${
+          className={`w-full min-h-24 px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all text-xs sm:text-sm resize-vertical ${
             isViewer ? "cursor-not-allowed opacity-60" : ""
           }`}
         />
@@ -247,7 +279,7 @@ export default function QuestionForm({
               <span className="font-bold mr-2">
                 {String.fromCharCode(65 + i)}.
               </span>
-              {opt}
+              <MathText text={opt} />
             </div>
           ))}
         </div>

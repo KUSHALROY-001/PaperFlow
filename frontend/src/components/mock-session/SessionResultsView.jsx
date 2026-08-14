@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { CheckCircle, XCircle, BarChart2, Home, LogIn } from "lucide-react";
 import { getOptionText } from "@/utils/mockTestHelpers";
 import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
+import MathText from "../shared/MathText";
 
 export default function SessionResultsView({
   review,
@@ -129,18 +130,23 @@ export default function SessionResultsView({
                       {!correct && !skipped && (
                         <p className="text-xs text-red-500 font-semibold mt-1">
                           Your answer:{" "}
-                          {getOptionText(
-                            rq.options,
-                            rq.selectedOptionIndexes[0],
-                          )}
+                          <MathText
+                            text={getOptionText(
+                              rq.options,
+                              rq.selectedOptionIndexes[0],
+                            )}
+                          />
                         </p>
                       )}
                       {!correct && rq.correctOptionIndexes?.length > 0 && (
                         <p className="text-xs text-emerald-500 font-semibold mt-0.5">
                           Correct:{" "}
-                          {rq.correctOptionIndexes
-                            .map((i) => getOptionText(rq.options, i))
-                            .join(", ")}
+                          {rq.correctOptionIndexes.map((i, idx) => (
+                            <span key={i}>
+                              {idx > 0 && ", "}
+                              <MathText text={getOptionText(rq.options, i)} />
+                            </span>
+                          ))}
                         </p>
                       )}
                       {rq.placement === "below_options" && (

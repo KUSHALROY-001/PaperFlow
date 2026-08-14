@@ -1,4 +1,5 @@
 import { resolveAssetUrl } from "@/lib/api";
+import MathText from "./MathText";
 
 // Extracted so the 6 QuestionContent consumers (see below) can render it
 // themselves after their own options block for placement === "below_options" -
@@ -44,6 +45,16 @@ export function QuestionDiagram({ diagramUrl, className = "" }) {
 // on the question object for a highlighter to pick up later without
 // another data-plumbing pass.
 //
+// Non-code text runs through MathText (see shared/MathText.jsx) rather
+// than being printed raw, so $...$/$$...$$/\(...\)/\[...\] LaTeX spans
+// the AI extractor emits (worker/ai/provider.py's SYSTEM_PROMPT) render as
+// typeset math instead of literal backslash commands. Text with no math
+// delimiters at all passes through MathText unchanged, so this is safe as
+// the default for every question regardless of whether it has math in it.
+// Deliberately NOT applied inside the hasCode branch below - a code
+// snippet's `$` or backslashes are code syntax, not math delimiters, and
+// running them through MathText would misinterpret them.
+//
 // placement (Part C - see migration 015): "above_text" renders the
 // diagram before the text, "below_text" (the default, and the only
 // position that ever existed before this) renders it after - both handled
@@ -84,7 +95,9 @@ export default function QuestionContent({
         // too. This isn't code-specific; it's just not destroying newlines
         // that were never the code-formatting bug but were silently broken
         // the same way.
-        <p className={`whitespace-pre-wrap ${textClassName}`}>{text}</p>
+        <p className={`whitespace-pre-wrap ${textClassName}`}>
+          <MathText text={text} />
+        </p>
       )}
       {showBelowText && <QuestionDiagram diagramUrl={diagramUrl} />}
     </div>

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Copy, Download, Edit2 } from "lucide-react";
 import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
+import MathText from "../shared/MathText";
 
 const viewTabs = ["Visual", "JSON", "Metadata"];
 
@@ -140,7 +141,7 @@ export default function OutputTab({ questions, metadata }) {
                           : "border-border bg-card text-muted-foreground"
                       }`}
                     >
-                      {option}
+                      <MathText text={option} />
                     </div>
                   );
                 })}

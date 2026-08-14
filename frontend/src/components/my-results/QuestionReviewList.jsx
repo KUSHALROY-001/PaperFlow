@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CheckCircle, XCircle, ChevronRight, ChevronDown } from "lucide-react";
 import { getOptionText } from "@/utils/mockTestHelpers";
 import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
+import MathText from "../shared/MathText";
 
 export default function QuestionReviewList({ questions }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -88,7 +89,12 @@ export default function QuestionReviewList({ questions }) {
                       <p className="text-xs text-red-500 mt-1 font-semibold">
                         Your answer:{" "}
                         <span className="font-bold">
-                          {getOptionText(q.options, q.selectedOptionIndexes[0])}
+                          <MathText
+                            text={getOptionText(
+                              q.options,
+                              q.selectedOptionIndexes[0],
+                            )}
+                          />
                         </span>
                       </p>
                     )}
@@ -96,9 +102,12 @@ export default function QuestionReviewList({ questions }) {
                       <p className="text-xs text-emerald-500 mt-0.5 font-semibold">
                         Correct:{" "}
                         <span className="font-bold">
-                          {q.correctOptionIndexes
-                            .map((i) => getOptionText(q.options, i))
-                            .join(", ")}
+                          {q.correctOptionIndexes.map((i, idx) => (
+                            <span key={i}>
+                              {idx > 0 && ", "}
+                              <MathText text={getOptionText(q.options, i)} />
+                            </span>
+                          ))}
                         </span>
                       </p>
                     )}

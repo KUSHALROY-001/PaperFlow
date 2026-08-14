@@ -1,5 +1,6 @@
 import { Flag, ChevronLeft, ChevronRight } from "lucide-react";
 import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
+import MathText from "../shared/MathText";
 
 export default function SessionQuestionView({
   q,
@@ -79,7 +80,7 @@ export default function SessionQuestionView({
               <span className="font-bold text-orange-500 mr-3">
                 {String.fromCharCode(65 + i)}.
               </span>
-              {opt}
+              <MathText text={opt} />
             </button>
           ))}
         </div>

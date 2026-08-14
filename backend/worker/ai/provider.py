@@ -51,6 +51,25 @@ code_language are REQUIRED fields on every single question, same as
 has_diagram and diagram_bbox above - set has_code to false and
 code_language to null for every question that is plain prose with no code
 in it.
+
+If "text", any entry in "options", or "explanation" contains a mathematical
+expression - a fraction, exponent, root, integral, summation, matrix, ratio,
+Greek letter, or any other notation that would normally be typeset rather
+than typed as plain characters - write it as LaTeX and wrap it in math
+delimiters: $...$ for an expression inline within a sentence, $$...$$ for a
+standalone displayed equation on its own line. Every LaTeX command MUST be
+inside a $ or $$ pair - never write a bare command like \\frac{1}{2} or
+x^{2} outside delimiters, since anything outside delimiters is rendered as
+literal prose and a bare backslash command will show up on the page exactly
+as typed, backslash and all, instead of as math. Use standard LaTeX
+commands: \\frac{a}{b} for fractions, ^{...} and _{...} for exponents and
+subscripts, \\sqrt{...} for roots, \\int, \\sum, \\pi, \\theta, \\times,
+\\div, \\left( \\right) for auto-sized brackets, and so on - do not invent
+ad hoc notation for something LaTeX already has a command for. A question
+with no math in it at all needs no delimiters anywhere; do not wrap plain
+numbers or ordinary words in $ signs. Exception: inside a has_code block,
+leave the text as source code exactly as instructed above - do not add math
+delimiters there, even if the code contains mathematical operators.
 Expected shape:
 {
   "questions": [
@@ -96,6 +115,11 @@ Use zero-based option indexes.
 Every question was authored by you, not verified against an existing answer
 key, so set confidence to 50, needs_review to true, and issues to
 ["Question generated from notes, not extracted from an existing exam"].
+If a question or option needs a mathematical expression (a fraction,
+exponent, root, or similar), write it as LaTeX wrapped in $...$ for inline
+math or $$...$$ for a standalone equation - never write a bare LaTeX
+command outside $ delimiters. Skip this entirely for questions with no math
+in them.
 Expected shape:
 {
   "questions": [

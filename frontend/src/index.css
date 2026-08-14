@@ -1,5 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
+/* MathText (components/shared/MathText.jsx) renders KaTeX markup via
+   renderToString/dangerouslySetInnerHTML - this stylesheet is what makes
+   that markup actually look like typeset math instead of raw MathML/spans. */
+@import "katex/dist/katex.min.css";
 
 :root {
   color-scheme: light;
