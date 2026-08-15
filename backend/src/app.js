@@ -1,3 +1,5 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
@@ -15,6 +17,8 @@ import { requireAuth } from "./middleware/require-auth.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { asyncHandler } from "./lib/async-handler.js";
 import * as questionAssetsController from "./controllers/question-assets.controller.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -55,6 +59,16 @@ export function createApp() {
   app.get("/health", (_req, res) => {
     res.json({ ok: true, service: "paperflow-api" });
   });
+
+  // Serves katex.min.css and its @font-face files (woff2/ttf) for
+  // pdf-export/render-html.js's <link>. Deliberately public/unauthenticated
+  // like the diagram routes below - it's static third-party CSS/fonts, not
+  // workspace data, and Puppeteer's own page has no session/JWT to send
+  // even if this required one.
+  app.use(
+    "/static/katex",
+    express.static(path.join(__dirname, "../node_modules/katex/dist")),
+  );
 
   app.use("/api/auth", authRouter);
   app.use("/api/dashboard", requireAuth, dashboardRouter);

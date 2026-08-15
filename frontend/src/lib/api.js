@@ -67,6 +67,39 @@ export async function apiRequest(path, options = {}) {
 }
 
 export const api = {
+  // Own fetch rather than apiRequest() - a successful response here is a
+  // binary PDF, not JSON, so apiRequest's `response.text()` -> JSON.parse
+  // pipeline would corrupt it. An error response is still plain JSON
+  // (see error-handler.js), so that path is handled the same way
+  // apiRequest does it.
+  async exportMockTestPdf(mockTestId) {
+    const { token, workspaceId } = getStoredAuth();
+    let response;
+    try {
+      response = await fetch(
+        `${API_BASE_URL}/api/mock-tests/${mockTestId}/pdf-export`,
+        {
+          method: "POST",
+          headers: {
+            ...(token ? { authorization: `Bearer ${token}` } : {}),
+            ...(workspaceId ? { "x-workspace-id": workspaceId } : {}),
+          },
+        },
+      );
+    } catch {
+      throw new Error(
+        `Cannot connect to the backend at ${API_BASE_URL}. Start the backend with: cd backend && npm run dev`,
+      );
+    }
+
+    if (!response.ok) {
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : null;
+      throw new Error(data?.error?.message || "Could not generate PDF");
+    }
+
+    return response.blob();
+  },
   signup(payload) {
     return apiRequest("/api/auth/signup", {
       method: "POST",

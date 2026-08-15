@@ -1,4 +1,4 @@
-import { Plus, Save, CheckCircle } from "lucide-react";
+import { Plus, Save, CheckCircle, Sigma } from "lucide-react";
 
 export default function EditorHeader({
   questionsCount,
@@ -8,6 +8,7 @@ export default function EditorHeader({
   isSaving,
   saved,
   isViewer,
+  onShowLatexReference,
 }) {
   return (
     <header className="min-h-14 bg-card/80 backdrop-blur-md border-b border-border flex flex-col gap-3 sm:flex-row sm:items-center px-4 sm:px-6 py-3 sticky top-16 z-20">
@@ -20,6 +21,13 @@ export default function EditorHeader({
         </span>
       </div>
       <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={onShowLatexReference}
+          className="inline-flex items-center gap-2 px-4 py-2 font-bold rounded-xl text-xs sm:text-sm transition-all border border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+        >
+          <Sigma className="w-4 h-4" /> Show LaTeX
+        </button>
         <button
           onClick={() => !isViewer && addQuestion()}
           disabled={isViewer}

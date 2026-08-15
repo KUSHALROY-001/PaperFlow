@@ -361,7 +361,11 @@ export default function MockTestWorkspace() {
         />
       )}
       {activeTab === "output" && (
-        <OutputTab questions={questions} metadata={metadata} />
+        <OutputTab
+          questions={questions}
+          metadata={metadata}
+          mockTestId={mocktest.id}
+        />
       )}
       {activeTab === "submissions" && (
         <SubmissionsTab

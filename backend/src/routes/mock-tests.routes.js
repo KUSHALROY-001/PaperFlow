@@ -98,6 +98,15 @@ mockTestsRouter.get(
   "/:mockTestId/questions",
   asyncHandler(mockTestsController.listQuestions),
 );
+// No requireRole restriction - matches GET .../questions above (any
+// workspace member who can view questions can download them as a PDF
+// too). loadMockTest gives req.mockTest for both the workspace-ownership
+// check and the export's filename/title.
+mockTestsRouter.post(
+  "/:mockTestId/pdf-export",
+  loadMockTest,
+  asyncHandler(mockTestsController.exportPdf),
+);
 mockTestsRouter.put(
   "/:mockTestId/questions/reorder",
   requireRole("editor"),

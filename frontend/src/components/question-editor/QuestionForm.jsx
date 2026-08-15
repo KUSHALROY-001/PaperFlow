@@ -188,12 +188,13 @@ export default function QuestionForm({
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
-                <input
+                <textarea
                   disabled={isViewer}
                   value={opt}
                   onChange={(e) => !isViewer && updateOption(i, e.target.value)}
                   placeholder={`Option ${String.fromCharCode(65 + i)}`}
-                  className={`w-full sm:flex-1 px-4 py-2.5 rounded-xl border text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all ${
+                  rows={2}
+                  className={`w-full sm:flex-1 px-4 py-2.5 rounded-xl border text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all resize-vertical min-h-10 ${
                     isViewer
                       ? "cursor-not-allowed opacity-60 border-border bg-card text-foreground"
                       : isCorrect
@@ -270,11 +271,11 @@ export default function QuestionForm({
         {diagramError && (
           <p className="mt-2 text-xs font-bold text-red-500">{diagramError}</p>
         )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
+        <div className="grid grid-cols-1 gap-2 mt-4">
           {selected.options.map((opt, i) => (
             <div
               key={i}
-              className={`px-3 py-2.5 rounded-xl text-xs sm:text-sm ${selected.correctOptionIndexes.includes(i) ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20 font-bold" : "bg-card text-foreground border border-border"}`}
+              className={`px-3 py-2.5 rounded-xl text-xs sm:text-sm whitespace-pre-wrap ${selected.correctOptionIndexes.includes(i) ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20 font-bold" : "bg-card text-foreground border border-border"}`}
             >
               <span className="font-bold mr-2">
                 {String.fromCharCode(65 + i)}.

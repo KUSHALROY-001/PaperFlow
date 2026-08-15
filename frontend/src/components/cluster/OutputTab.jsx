@@ -1,14 +1,17 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Copy, Download, Edit2 } from "lucide-react";
+import { Copy, Download, Edit2, Loader2 } from "lucide-react";
 import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
+import { api } from "@/lib/api";
 
 const viewTabs = ["Visual", "JSON", "Metadata"];
 
-export default function OutputTab({ questions, metadata }) {
+export default function OutputTab({ questions, metadata, mockTestId }) {
   const [activeView, setActiveView] = useState("Visual");
   const [copied, setCopied] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [pdfError, setPdfError] = useState("");
 
   const exportPayload = useMemo(
     () => ({
@@ -42,14 +45,38 @@ export default function OutputTab({ questions, metadata }) {
     window.setTimeout(() => setCopied(false), 1500);
   };
 
-  const handleDownload = () => {
-    const blob = new Blob([jsonContent], { type: "application/json" });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${metadata.clusterId}-mockcraft.json`;
-    link.click();
-    window.URL.revokeObjectURL(url);
+  // Replaces the old JSON-blob download (still available via the JSON
+  // tab / Copy button, both untouched). This used to run entirely
+  // client-side through pdf-lib (see utils/generateMockTestPdf.js,
+  // now unused), flattening math into a plain-text ASCII approximation
+  // because pdf-lib has no math-layout engine - which is exactly why the
+  // downloaded PDF looked worse than the screen. Now hits the backend's
+  // Puppeteer export (see backend/src/lib/pdf-export), which renders the
+  // question HTML through the SAME katex.renderToString call MathText.jsx
+  // uses on screen, then prints that real DOM to PDF - the export is a
+  // faithful copy of the Output tab, not a re-derivation of it.
+  const handleDownload = async () => {
+    setPdfError("");
+    setIsGeneratingPdf(true);
+    try {
+      const blob = await api.exportMockTestPdf(mockTestId);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      // metadata comes from useMockTestWorkspace.js, which names this
+      // field mockTestName (mirroring the mock_tests.name DB column) -
+      // not `title`, which doesn't exist on this object and was silently
+      // falling back to the hardcoded default below every time.
+      link.download = `${(metadata?.mockTestName || "mock-test").toLowerCase().replace(/[^a-z0-9]+/g, "-")}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      setPdfError(error.message || "Could not generate PDF");
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   return (
@@ -75,7 +102,7 @@ export default function OutputTab({ questions, metadata }) {
           })}
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap items-start gap-3">
           <button
             type="button"
             onClick={handleCopy}
@@ -84,14 +111,28 @@ export default function OutputTab({ questions, metadata }) {
             <Copy className="h-4 w-4 text-orange-500" />
             {copied ? "Copied" : "Copy"}
           </button>
-          <button
-            type="button"
-            onClick={handleDownload}
-            className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition-all hover:bg-muted"
-          >
-            <Download className="h-4 w-4 text-orange-500" />
-            Download
-          </button>
+          <div>
+            <button
+              type="button"
+              disabled={isGeneratingPdf}
+              onClick={handleDownload}
+              className={`inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition-all ${
+                isGeneratingPdf
+                  ? "opacity-60 cursor-not-allowed"
+                  : "hover:bg-muted"
+              }`}
+            >
+              {isGeneratingPdf ? (
+                <Loader2 className="h-4 w-4 text-orange-500 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4 text-orange-500" />
+              )}
+              {isGeneratingPdf ? "Generating\u2026" : "Download"}
+            </button>
+            {pdfError && (
+              <p className="mt-2 text-xs font-bold text-red-500">{pdfError}</p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -135,7 +176,7 @@ export default function OutputTab({ questions, metadata }) {
                   return (
                     <div
                       key={option}
-                      className={`rounded-2xl border px-4 py-3 text-sm font-medium ${
+                      className={`rounded-2xl border px-4 py-3 text-sm font-medium whitespace-pre-wrap ${
                         correct
                           ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
                           : "border-border bg-card text-muted-foreground"

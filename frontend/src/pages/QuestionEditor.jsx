@@ -6,6 +6,7 @@ import EditorSidebar from "../components/question-editor/EditorSidebar";
 import EditorHeader from "../components/question-editor/EditorHeader";
 import EmptyEditorView from "../components/question-editor/EmptyEditorView";
 import QuestionForm from "../components/question-editor/QuestionForm";
+import LatexReferenceModal from "../components/question-editor/LatexReferenceModal";
 import FloatingDragGhost from "../components/question-editor/FloatingDragGhost";
 import { ConfirmDialog } from "../components/design-system/ConfirmDialog";
 
@@ -13,6 +14,7 @@ export default function QuestionEditor() {
   const navigate = useNavigate();
   const { isViewer } = useAuth();
   const [pendingLeavePath, setPendingLeavePath] = useState(null);
+  const [isLatexReferenceOpen, setIsLatexReferenceOpen] = useState(false);
 
   const {
     clusterId,
@@ -172,6 +174,7 @@ export default function QuestionEditor() {
           isSaving={isSaving}
           saved={saved}
           isViewer={isViewer}
+          onShowLatexReference={() => setIsLatexReferenceOpen(true)}
         />
 
         {error && (
@@ -205,6 +208,10 @@ export default function QuestionEditor() {
         }
         mousePos={mousePos}
       />
+
+      {isLatexReferenceOpen && (
+        <LatexReferenceModal onClose={() => setIsLatexReferenceOpen(false)} />
+      )}
 
       {pendingLeavePath && (
         <ConfirmDialog
