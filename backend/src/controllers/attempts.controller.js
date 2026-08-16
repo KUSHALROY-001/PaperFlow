@@ -5,10 +5,13 @@ export async function start(req, res) {
     mockTestId: req.params.mockTestId,
     workspaceId: req.workspaceId,
     userId: req.user.id,
-    // Query param, not body - matches OverviewTab.jsx's existing
-    // /session/:id?topic=X link, which this endpoint's URL is reached
-    // from directly with no client-side transformation needed.
-    topic: req.query.topic,
+    // Query params, not body - matches OverviewTab.jsx's "Start Practice"
+    // button, which builds /session/:id?topics=A&topics=B... with one
+    // repeated `topics` param per selected topic. Express's query parser
+    // gives req.query.topics as a string for exactly one occurrence, an
+    // array for two or more, and undefined for none -
+    // startAttempt/normalizeTopics handles all three shapes.
+    topics: req.query.topics,
     metadata: { source: "workspace" },
   });
   res.status(201).json(result);

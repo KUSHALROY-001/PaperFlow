@@ -4,11 +4,67 @@ import * as attemptsRepo from "../repositories/attempts.repository.js";
 import * as mockTestsRepo from "../repositories/mock-tests.repository.js";
 import { attachDiagramUrls } from "./question-assets.service.js";
 
+// Shared by startAttempt below and attempts.controller.js#start (which
+// hands this whatever shape req.query.topics comes through as - a single
+// string for one repeated query param, an array for two or more, or
+// undefined for none). Collapses all of that, plus blanks/duplicates, to
+// either a sorted array of at least one non-empty topic, or null for "no
+// topic filter, the whole mock test" - the one shape every downstream
+// repository function (insertAttempt, findActiveAttemptForUser,
+// listPlayableQuestions, listQuestionsForScoring,
+// listQuestionsWithAnswersForAttempt) expects.
+// A topic-scoped practice session pulling e.g. 10 questions out of a
+// 90-question/180-minute mock test used to get the FULL 180 minutes on
+// its clock - every question's pace was implicitly ~2 minutes, but the
+// session length never scaled down with the smaller question set. This
+// derives a proportional duration instead: same per-question pace as the
+// full test, applied to however many questions this specific session
+// actually has.
+//
+// Only kicks in when the session is a genuine subset (fewer questions
+// than the full test has) - a full-test attempt (no topic filter, or a
+// topic filter that happens to cover every question) always gets the
+// mock test's own configured duration untouched.
+const MIN_SESSION_DURATION_MINUTES = 5;
+
+export function computeSessionDurationMinutes({
+  fullDurationMinutes,
+  totalQuestionsInTest,
+  questionsInSession,
+}) {
+  const fullDuration = Number(fullDurationMinutes) || 0;
+  const totalQuestions = Number(totalQuestionsInTest) || 0;
+
+  if (
+    !fullDuration ||
+    !totalQuestions ||
+    questionsInSession >= totalQuestions
+  ) {
+    return fullDuration;
+  }
+
+  const perQuestionMinutes = fullDuration / totalQuestions;
+  const scaled = Math.round(perQuestionMinutes * questionsInSession);
+  // A tiny topic (say 2 questions out of 90) can scale down to just a
+  // minute or two of real clock time - technically proportional, but not
+  // a usable session length. Floor it instead of handing someone a timer
+  // that expires before they've finished reading the first question.
+  return Math.max(scaled, MIN_SESSION_DURATION_MINUTES);
+}
+
+export function normalizeTopics(topics) {
+  const list = Array.isArray(topics) ? topics : topics ? [topics] : [];
+  const cleaned = [
+    ...new Set(list.map((t) => (t || "").trim()).filter(Boolean)),
+  ].sort();
+  return cleaned.length ? cleaned : null;
+}
+
 export async function startAttempt({
   mockTestId,
   workspaceId,
   userId,
-  topic,
+  topics,
   metadata,
 }) {
   const mockTest = await mockTestsRepo.findMockTestById(
@@ -19,31 +75,46 @@ export async function startAttempt({
     throw httpError(404, "Mock test not found");
   }
 
-  // Trim/normalize to null so "", "  ", and absent all mean the same
-  // thing ("no topic filter, whole mock test") everywhere downstream -
-  // insertAttempt's conflict target, findActiveAttemptForUser's lookup,
-  // and listQuestionsForScoring at submit time all rely on that.
-  const normalizedTopic = topic && topic.trim() ? topic.trim() : null;
+  // Normalize to a de-duplicated, alphabetically-sorted array, or null for
+  // "no topic filter, whole mock test" - undefined, [], and an
+  // all-blank/whitespace list all collapse to that same null everywhere
+  // downstream (insertAttempt's conflict target, findActiveAttemptForUser's
+  // lookup, and listQuestionsForScoring at submit time all rely on it).
+  // Sorting matters beyond cosmetics: it's what lets two requests that
+  // picked the same topics in a different order still be recognized as
+  // the same topic set by the DB-level uniqueness check in insertAttempt.
+  const normalizedTopics = normalizeTopics(topics);
 
   const questions = await mockTestsRepo.listPlayableQuestions(
     mockTestId,
-    normalizedTopic,
+    normalizedTopics,
   );
   if (questions.length === 0) {
     throw httpError(
       400,
-      normalizedTopic
-        ? `No questions found for topic "${normalizedTopic}"`
+      normalizedTopics
+        ? `No questions found for topic${normalizedTopics.length > 1 ? "s" : ""} "${normalizedTopics.join(", ")}"`
         : "This mock test has no questions yet",
     );
   }
+
+  // Computed here (not inside insertAttempt) so it's available even on
+  // the resume path below, where insertAttempt is never called at all -
+  // a resumed attempt that predates migration 019 has no duration_minutes
+  // of its own yet, and needs this same fallback value rather than
+  // silently reporting 0/undefined.
+  const sessionDurationMinutes = computeSessionDurationMinutes({
+    fullDurationMinutes: mockTest.duration_minutes,
+    totalQuestionsInTest: mockTest.total_questions,
+    questionsInSession: questions.length,
+  });
 
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
 
     // Reuse an existing in_progress attempt if one exists for this user,
-    // mock test, AND topic - but only for logged-in users, who have a
+    // mock test, AND topic set - but only for logged-in users, who have a
     // stable user_id to scope the lookup to. Anonymous guest attempts
     // (userId null) have no such identity: "in_progress AND user_id IS
     // NULL" would match ANY guest's in-progress attempt on this mock
@@ -51,17 +122,17 @@ export async function startAttempt({
     // end up merged onto the same attempt. Guests always start a
     // brand-new attempt instead.
     //
-    // Scoping by topic too (not just user/mock test) matters as soon as
-    // topic-wise practice exists: without it, a student with an
+    // Scoping by topic set too (not just user/mock test) matters as soon
+    // as topic-wise practice exists: without it, a student with an
     // in-progress full-test attempt who then clicks into Topic-wise
-    // Practice for one topic would silently resume the full-test attempt
-    // instead - right question set shown as wrong, or vice versa.
+    // Practice for some topics would silently resume the full-test
+    // attempt instead - right question set shown as wrong, or vice versa.
     let attempt = userId
       ? await attemptsRepo.findActiveAttemptForUser(client, {
           mockTestId,
           workspaceId,
           userId,
-          topic: normalizedTopic,
+          topics: normalizedTopics,
         })
       : null;
 
@@ -70,23 +141,24 @@ export async function startAttempt({
         workspaceId,
         mockTestId,
         userId: userId || null,
-        topic: normalizedTopic,
+        topics: normalizedTopics,
         totalQuestions: questions.length,
+        durationMinutes: sessionDurationMinutes,
         metadata: metadata || {},
       });
     }
 
-    // A concurrent request for the same user/mock test/topic can win the
-    // race between our SELECT above and this INSERT (see migration 011,
-    // 016, and insertAttempt's ON CONFLICT) - when that happens we get
-    // null back instead of a duplicate row, so fetch the attempt the
-    // other request created rather than erroring out.
+    // A concurrent request for the same user/mock test/topic set can win
+    // the race between our SELECT above and this INSERT (see migration
+    // 011, 016, 017, and insertAttempt's ON CONFLICT) - when that happens
+    // we get null back instead of a duplicate row, so fetch the attempt
+    // the other request created rather than erroring out.
     if (!attempt && userId) {
       attempt = await attemptsRepo.findActiveAttemptForUser(client, {
         mockTestId,
         workspaceId,
         userId,
-        topic: normalizedTopic,
+        topics: normalizedTopics,
       });
     }
 
@@ -118,7 +190,12 @@ export async function startAttempt({
         id: mockTest.id,
         name: mockTest.name,
         description: mockTest.description,
-        durationMinutes: mockTest.duration_minutes,
+        // Prefer whatever's actually persisted on the attempt itself -
+        // stable across resumes even if the mock test's question count
+        // later changes - and only fall back to a fresh computation for
+        // an attempt row that predates migration 019 and never had one
+        // stored.
+        durationMinutes: attempt.duration_minutes ?? sessionDurationMinutes,
         marksPerCorrect: Number(mockTest.marks_per_correct),
         negativeMarking: Number(mockTest.negative_marks_per_wrong),
         totalQuestions: mockTest.total_questions,
@@ -239,7 +316,7 @@ export async function submitAttempt({ attemptId, workspaceId }) {
     const rows = await attemptsRepo.listQuestionsForScoring(
       attempt.mock_test_id,
       attemptId,
-      attempt.topic,
+      attempt.topics,
     );
 
     let attemptedCount = 0;
@@ -334,7 +411,7 @@ export async function getAttempt({
   const rows = await attemptsRepo.listQuestionsWithAnswersForAttempt(
     attemptId,
     attempt.mock_test_id,
-    attempt.topic,
+    attempt.topics,
   );
 
   const isSubmitted = attempt.status === "submitted";
@@ -484,7 +561,7 @@ export function serializeAttempt(row) {
   return {
     id: row.id,
     mockTestId: row.mock_test_id,
-    topic: row.topic,
+    topics: row.topics || [],
     status: row.status,
     startedAt: row.started_at,
     submittedAt: row.submitted_at,
@@ -530,6 +607,12 @@ function serializeAttemptWithMockTest(row) {
   return {
     ...serializeAttempt(row),
     mockTestName: row.mock_test_name,
-    durationMinutes: row.duration_minutes,
+    // row.duration_minutes is the SESSION's own duration (see migration
+    // 019) - proportionally shorter than the full mock test for a
+    // topic-scoped practice attempt. Falls back to
+    // row.mock_test_duration_minutes (the mock_tests JOIN column, see
+    // attempts.repository.js's alias) only for an attempt row that
+    // predates that migration and never had its own value stored.
+    durationMinutes: row.duration_minutes ?? row.mock_test_duration_minutes,
   };
 }

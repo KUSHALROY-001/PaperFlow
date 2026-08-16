@@ -13,11 +13,8 @@ import {
   Search,
   User,
   LogOut,
-  BarChart2,
   Users,
   UserPlus,
-  Upload,
-  Puzzle,
   CreditCard,
   Library,
   ClipboardList,
@@ -40,18 +37,13 @@ const navSections = [
   },
   {
     label: "Tools",
-    items: [
-      { icon: Library, label: "Templates", to: "/templates" },
-      { icon: Upload, label: "Batch Upload", to: "/batch" },
-      { icon: BarChart2, label: "Analytics", to: "/analytics" },
-    ],
+    items: [{ icon: Library, label: "Templates", to: "/templates" }],
   },
   {
     label: "Workspace",
     items: [
       { icon: Users, label: "Team", to: "/team" },
       { icon: UserPlus, label: "Invitations", to: "/invitations" },
-      { icon: Puzzle, label: "Integrations", to: "/integrations" },
       { icon: CreditCard, label: "Billing", to: "/billing" },
       { icon: Settings, label: "Settings", to: "/settings" },
     ],

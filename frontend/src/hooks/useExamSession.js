@@ -30,10 +30,13 @@ export function useExamSession({ mode }) {
   const [searchParams] = useSearchParams();
   const mockTestId = mode === "member" ? params.id : undefined;
   const shareToken = mode === "guest" ? params.token : undefined;
-  // Member-mode only, for now - matches OverviewTab.jsx's existing
-  // "Topic-wise Practice" links (/session/:id?topic=X). Guest/shared
-  // links have no equivalent entry point yet.
-  const topic = mode === "member" ? searchParams.get("topic") : null;
+  // Member-mode only, for now - matches OverviewTab.jsx's "Start Practice"
+  // button, which builds /session/:id?topics=A&topics=B... (one repeated
+  // `topics` param per selected topic). Guest/shared links have no
+  // equivalent entry point yet. getAll returns [] when there's no
+  // `topics` param at all, matching api.startAttempt's "empty/absent
+  // means the whole mock test" handling.
+  const topics = mode === "member" ? searchParams.getAll("topics") : [];
   const { isAuthenticated } = useAuth();
 
   // 'guest' starts at 'loading' -> 'intro' (collect name) -> 'session' -> 'result'
@@ -76,7 +79,7 @@ export function useExamSession({ mode }) {
       try {
         setLoading(true);
         setLoadError(null);
-        const result = await api.startAttempt(mockTestId, topic);
+        const result = await api.startAttempt(mockTestId, topics);
         if (cancelled) return;
         setSession(result);
         setTimeLeft((result.mockTest?.durationMinutes || 20) * 60);
@@ -96,7 +99,7 @@ export function useExamSession({ mode }) {
     return () => {
       cancelled = true;
     };
-  }, [mode, mockTestId, topic]);
+  }, [mode, mockTestId, topics.join("|")]);
 
   // --- Guest mode: load the shared test's public info on mount ---
   useEffect(() => {
@@ -322,7 +325,7 @@ export function useExamSession({ mode }) {
     mode,
     mockTestId,
     shareToken,
-    topic,
+    topics,
     phase,
     loading,
     loadError,

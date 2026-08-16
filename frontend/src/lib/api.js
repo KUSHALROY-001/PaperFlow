@@ -298,11 +298,22 @@ export const api = {
   },
 
   // --- Attempts (workspace-authenticated) ---
-  startAttempt(mockTestId, topic) {
-    // topic is optional - undefined/null/"" all mean "the whole mock
-    // test", matching startAttempt (attempts.service.js) treating an
-    // absent query param the same way.
-    const query = topic ? `?topic=${encodeURIComponent(topic)}` : "";
+  startAttempt(mockTestId, topics) {
+    // Accepts a single topic string (back-compat with any caller that
+    // still passes one), an array of topics for multi-topic practice, or
+    // nothing/null/"" meaning "the whole mock test" - matching
+    // startAttempt (attempts.service.js#normalizeTopics) treating all of
+    // those the same way. Sends one repeated `topics=` query param per
+    // topic rather than a single comma-joined value, so a topic name that
+    // happens to contain a comma still round-trips correctly.
+    const list = Array.isArray(topics)
+      ? topics.filter(Boolean)
+      : topics
+        ? [topics]
+        : [];
+    const query = list.length
+      ? `?${list.map((t) => `topics=${encodeURIComponent(t)}`).join("&")}`
+      : "";
     return apiRequest(`/api/mock-tests/${mockTestId}/attempts${query}`, {
       method: "POST",
     });

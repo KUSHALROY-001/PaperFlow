@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   AlertCircle,
+  Check,
   CheckCircle,
   ChevronDown,
   ChevronUp,
@@ -27,7 +28,12 @@ export default function OverviewTab({
   onUpload,
   isViewer,
 }) {
+  const navigate = useNavigate();
   const [showAllTopics, setShowAllTopics] = useState(false);
+  // Which topics are currently toggled on in the multi-select below - a
+  // Set rather than an array since membership checks (is this topic
+  // selected?) happen on every render of every chip.
+  const [selectedTopics, setSelectedTopics] = useState(new Set());
   const isProcessing =
     mocktest.status === "processing" ||
     ["queued", "running"].includes(latestJob?.status);
@@ -47,6 +53,32 @@ export default function OverviewTab({
     return map;
   }, new Map());
   const topics = [...topicCounts.keys()].sort();
+
+  const toggleTopic = (topic) => {
+    setSelectedTopics((current) => {
+      const next = new Set(current);
+      if (next.has(topic)) {
+        next.delete(topic);
+      } else {
+        next.add(topic);
+      }
+      return next;
+    });
+  };
+
+  const selectedTopicsCount = selectedTopics.size;
+  const selectedQuestionsCount = [...selectedTopics].reduce(
+    (sum, topic) => sum + (topicCounts.get(topic) || 0),
+    0,
+  );
+
+  const startTopicPractice = () => {
+    if (selectedTopicsCount === 0) return;
+    const query = [...selectedTopics]
+      .map((topic) => `topics=${encodeURIComponent(topic)}`)
+      .join("&");
+    navigate(`/session/${mocktest.id}?${query}`);
+  };
   const currentStage =
     latestJob?.current_stage ||
     (isReady ? "Questions available" : "Waiting for PDF upload");
@@ -150,29 +182,74 @@ export default function OverviewTab({
 
         {topics.length > 0 && (
           <div className="surface-card rounded-2xl p-4 sm:p-6 border border-border">
-            <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
-              <Filter className="w-4 h-4 text-orange-500" /> Topic-wise Practice
-            </h3>
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <h3 className="font-bold text-foreground flex items-center gap-2">
+                <Filter className="w-4 h-4 text-orange-500" /> Topic-wise
+                Practice
+              </h3>
+              {topics.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedTopics((current) =>
+                      current.size === topics.length
+                        ? new Set()
+                        : new Set(topics),
+                    )
+                  }
+                  className="text-xs font-semibold text-orange-500 hover:underline shrink-0"
+                >
+                  {selectedTopicsCount === topics.length
+                    ? "Clear all"
+                    : "Select all"}
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              Select one or more topics, then start a practice session covering
+              just those questions.
+            </p>
             <div className="grid gap-2 sm:grid-cols-2">
               {topics.map((topic, index) => {
                 const isHiddenOnMobile = !showAllTopics && index >= 2;
                 const count = topicCounts.get(topic) || 0;
+                const isSelected = selectedTopics.has(topic);
                 return (
-                  <Link
+                  <button
+                    type="button"
                     key={topic}
-                    to={`/session/${mocktest.id}?topic=${encodeURIComponent(topic)}`}
-                    className={`items-center justify-between gap-2 px-3.5 py-2.5 border border-border bg-card text-foreground font-medium rounded-xl hover:border-orange-500/40 hover:bg-muted transition-colors text-xs sm:text-sm ${
+                    onClick={() => toggleTopic(topic)}
+                    aria-pressed={isSelected}
+                    className={`items-center justify-between gap-2 px-3.5 py-2.5 border font-medium rounded-xl transition-colors text-xs sm:text-sm ${
                       isHiddenOnMobile ? "hidden sm:flex" : "flex"
+                    } ${
+                      isSelected
+                        ? "border-orange-500/40 bg-orange-500/10 text-orange-600 dark:text-orange-400"
+                        : "border-border bg-card text-foreground hover:border-orange-500/40 hover:bg-muted"
                     }`}
                   >
                     <span className="flex min-w-0 items-center gap-2">
-                      <Play className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                      <span
+                        className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-md border transition-colors ${
+                          isSelected
+                            ? "border-orange-500 bg-orange-500 text-white"
+                            : "border-border"
+                        }`}
+                      >
+                        {isSelected && <Check className="w-3 h-3" />}
+                      </span>
                       <span className="truncate">{topic}</span>
                     </span>
-                    <span className="ml-2 shrink-0 rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-bold text-orange-500">
+                    <span
+                      className={`ml-2 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        isSelected
+                          ? "bg-orange-500/15 text-orange-600 dark:text-orange-400"
+                          : "bg-orange-500/10 text-orange-500"
+                      }`}
+                    >
                       {count}
                     </span>
-                  </Link>
+                  </button>
                 );
               })}
             </div>
@@ -194,6 +271,17 @@ export default function OverviewTab({
                 )}
               </button>
             )}
+            <button
+              type="button"
+              onClick={startTopicPractice}
+              disabled={selectedTopicsCount === 0}
+              className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-orange-500"
+            >
+              <Play className="w-4 h-4" />
+              {selectedTopicsCount === 0
+                ? "Select topics to start"
+                : `Start Practice — ${selectedTopicsCount} topic${selectedTopicsCount > 1 ? "s" : ""}, ${selectedQuestionsCount} question${selectedQuestionsCount > 1 ? "s" : ""}`}
+            </button>
           </div>
         )}
       </div>

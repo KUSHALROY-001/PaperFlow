@@ -2,9 +2,9 @@ import { FileText, ListChecks } from "lucide-react";
 
 // Sits above ResultsFilterTabs.jsx (which filters passed/failed WITHIN
 // whichever session type is selected here) - this is the split the whole
-// page was missing: a full mock test attempt (attempt.topic === null) and
-// a topic-wise practice attempt (attempt.topic set - see
-// migrations/016_exam_attempts_topic.sql) were previously interleaved in
+// page was missing: a full mock test attempt (attempt.topics is
+// empty/absent) and a topic-wise practice attempt (attempt.topics has one
+// or more entries - see migrations/017_exam_attempts_multi_topic.sql) were previously interleaved in
 // one flat list with nothing to tell them apart.
 export default function SessionTypeTabs({
   sessionType,

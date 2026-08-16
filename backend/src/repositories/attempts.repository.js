@@ -1,18 +1,28 @@
 import { pool } from "../db/pool.js";
 
 // `ON CONFLICT ... DO NOTHING` targets the partial unique index added in
-// migration 011 and made topic-aware in migration 016 (one in_progress
-// attempt per workspace/mock test/user/topic - NULL topic meaning the
-// whole mock test is its own distinct "topic" for this purpose). It's a
-// no-op for guest inserts (user_id IS NULL never matches that index's
-// predicate) and returns no row when a concurrent request already won the
-// race for a logged-in user - callers must re-select in that case (see
-// startAttempt in attempts.service.js). This closes the race where two
-// near-simultaneous start calls for the same user/topic both pass the
-// service's "reuse if one exists" SELECT before either INSERT commits.
+// migration 011 and made topic-aware in migration 016, then generalized
+// to a topic SET in migration 017 (one in_progress attempt per
+// workspace/mock test/user/exact topic set - an empty/null topics array
+// meaning the whole mock test is its own distinct "topic set" for this
+// purpose). It's a no-op for guest inserts (user_id IS NULL never matches
+// that index's predicate) and returns no row when a concurrent request
+// already won the race for a logged-in user - callers must re-select in
+// that case (see startAttempt in attempts.service.js). This closes the
+// race where two near-simultaneous start calls for the same user/topic
+// set both pass the service's "reuse if one exists" SELECT before either
+// INSERT commits.
 export async function insertAttempt(
   client,
-  { workspaceId, mockTestId, userId, topic, totalQuestions, metadata },
+  {
+    workspaceId,
+    mockTestId,
+    userId,
+    topics,
+    totalQuestions,
+    durationMinutes,
+    metadata,
+  },
 ) {
   const result = await client.query(
     `
@@ -20,13 +30,14 @@ export async function insertAttempt(
       workspace_id,
       mock_test_id,
       user_id,
-      topic,
+      topics,
       status,
       total_questions,
+      duration_minutes,
       metadata
     )
-    VALUES ($1, $2, $3, $4, 'in_progress', $5, $6)
-    ON CONFLICT (workspace_id, mock_test_id, user_id, (COALESCE(topic, '')))
+    VALUES ($1, $2, $3, $4, 'in_progress', $5, $6, $7)
+    ON CONFLICT (workspace_id, mock_test_id, user_id, (COALESCE(topics, ARRAY[]::text[])))
       WHERE status = 'in_progress' AND user_id IS NOT NULL
       DO NOTHING
     RETURNING *
@@ -35,8 +46,9 @@ export async function insertAttempt(
       workspaceId,
       mockTestId,
       userId,
-      topic || null,
+      topics && topics.length ? topics : null,
       totalQuestions,
+      durationMinutes ?? null,
       metadata || {},
     ],
   );
@@ -47,7 +59,7 @@ export async function insertAttempt(
 export async function findAttemptById(attemptId, workspaceId) {
   const result = await pool.query(
     `
-    SELECT ea.*, mt.name AS mock_test_name, mt.duration_minutes, mt.status AS mock_test_status
+    SELECT ea.*, mt.name AS mock_test_name, mt.duration_minutes AS mock_test_duration_minutes, mt.status AS mock_test_status
     FROM exam_attempts ea
     JOIN mock_tests mt ON mt.id = ea.mock_test_id
     WHERE ea.id = $1
@@ -71,7 +83,7 @@ export async function findAttemptById(attemptId, workspaceId) {
 export async function findAttemptByIdForUser(attemptId, userId) {
   const result = await pool.query(
     `
-    SELECT ea.*, mt.name AS mock_test_name, mt.duration_minutes, mt.status AS mock_test_status
+    SELECT ea.*, mt.name AS mock_test_name, mt.duration_minutes AS mock_test_duration_minutes, mt.status AS mock_test_status
     FROM exam_attempts ea
     JOIN mock_tests mt ON mt.id = ea.mock_test_id
     WHERE ea.id = $1
@@ -116,7 +128,7 @@ export async function listAttemptsForUser(userId) {
     SELECT
       ea.*,
       mt.name AS mock_test_name,
-      mt.duration_minutes
+      mt.duration_minutes AS mock_test_duration_minutes
     FROM exam_attempts ea
     JOIN mock_tests mt ON mt.id = ea.mock_test_id
     WHERE ea.user_id = $1
@@ -252,6 +264,7 @@ export async function listAnswersForAttempt(attemptId) {
 export async function listQuestionsWithAnswersForAttempt(
   attemptId,
   mockTestId,
+  topics,
 ) {
   const result = await pool.query(
     `
@@ -283,9 +296,13 @@ export async function listQuestionsWithAnswersForAttempt(
     FROM questions q
     LEFT JOIN exam_answers ea ON ea.question_id = q.id AND ea.attempt_id = $1
     WHERE q.mock_test_id = $2
+      -- Same topic-scoping as listQuestionsForScoring above - a
+      -- topic-practice attempt's review must only ever show its own
+      -- topics' questions, not the whole mock test's.
+      AND ($3::text[] IS NULL OR q.topic = ANY($3::text[]))
     ORDER BY q.question_no ASC
     `,
-    [attemptId, mockTestId],
+    [attemptId, mockTestId, topics && topics.length ? topics : null],
   );
 
   return result.rows;
@@ -293,12 +310,12 @@ export async function listQuestionsWithAnswersForAttempt(
 
 // Scoring inputs only - just what's needed to grade each answer, joined
 // against this attempt's existing answers.
-// topic (nullable) narrows scoring to just that topic's questions - a
-// topic-practice attempt must never have every OTHER topic's unanswered
-// questions counted against it as "unattempted" (which is exactly what
-// would happen if this stayed scoped to the whole mock_test_id
-// regardless of the attempt's own topic).
-export async function listQuestionsForScoring(mockTestId, attemptId, topic) {
+// topics (nullable array) narrows scoring to just those topics' questions
+// - a topic-practice attempt must never have every OTHER topic's
+// unanswered questions counted against it as "unattempted" (which is
+// exactly what would happen if this stayed scoped to the whole
+// mock_test_id regardless of the attempt's own topics).
+export async function listQuestionsForScoring(mockTestId, attemptId, topics) {
   const result = await pool.query(
     `
     SELECT
@@ -310,9 +327,9 @@ export async function listQuestionsForScoring(mockTestId, attemptId, topic) {
     FROM questions q
     LEFT JOIN exam_answers ea ON ea.question_id = q.id AND ea.attempt_id = $2
     WHERE q.mock_test_id = $1
-      AND ($3::text IS NULL OR q.topic = $3)
+      AND ($3::text[] IS NULL OR q.topic = ANY($3::text[]))
     `,
-    [mockTestId, attemptId, topic || null],
+    [mockTestId, attemptId, topics && topics.length ? topics : null],
   );
 
   return result.rows;
@@ -381,7 +398,7 @@ export async function finalizeAttempt(
 // user picking up a guest's session, or one guest picking up another's).
 export async function findActiveAttemptForUser(
   client,
-  { mockTestId, workspaceId, userId, topic },
+  { mockTestId, workspaceId, userId, topics },
 ) {
   const result = await client.query(
     `
@@ -393,16 +410,24 @@ export async function findActiveAttemptForUser(
       AND status = 'in_progress'
       -- IS NOT DISTINCT FROM (not =) so two NULLs - both meaning "the
       -- whole mock test, no topic filter" - correctly match each other.
-      -- A plain "topic = $N" would never match two NULLs and would
-      -- resume the wrong (or no) attempt for the most common case.
-      AND topic IS NOT DISTINCT FROM ${userId ? "$4" : "$3"}
+      -- A plain "topics = $N" would never match two NULLs and would
+      -- resume the wrong (or no) attempt for the most common case. The
+      -- caller is responsible for passing topics pre-sorted (see
+      -- attempts.service.js#startAttempt) so the same set selected in a
+      -- different order still resumes the same attempt.
+      AND topics IS NOT DISTINCT FROM ${userId ? "$4" : "$3"}::text[]
     ORDER BY started_at DESC
     LIMIT 1
     FOR UPDATE
     `,
     userId
-      ? [mockTestId, workspaceId, userId, topic || null]
-      : [mockTestId, workspaceId, topic || null],
+      ? [
+          mockTestId,
+          workspaceId,
+          userId,
+          topics && topics.length ? topics : null,
+        ]
+      : [mockTestId, workspaceId, topics && topics.length ? topics : null],
   );
 
   return result.rows[0] || null;

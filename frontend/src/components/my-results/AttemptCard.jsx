@@ -92,11 +92,14 @@ export default function AttemptCard({ attempt, onDeleteAttempt }) {
         <div className="flex-1 min-w-0">
           <div className="font-bold text-foreground flex items-center gap-2 flex-wrap">
             {attempt.mockTestName}
-            {attempt.topic && (
-              <span className="inline-flex items-center rounded-md bg-sky-500/10 text-sky-500 border border-sky-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide">
-                {attempt.topic}
+            {attempt.topics?.map((topic) => (
+              <span
+                key={topic}
+                className="inline-flex items-center rounded-md bg-sky-500/10 text-sky-500 border border-sky-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+              >
+                {topic}
               </span>
-            )}
+            ))}
           </div>
           <div className="text-xs text-muted-foreground mt-0.5">
             {formatDateTime(attempt.startedAt)}

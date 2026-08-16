@@ -21,11 +21,12 @@ export function formatDateTime(iso) {
 }
 
 export function useMyResults() {
-  // "full" = attempt.topic is null (the whole mock test) - "practice" =
-  // attempt.topic is set (see migrations/016_exam_attempts_topic.sql).
-  // Both were previously mixed into one flat list with no way to tell
-  // them apart, and a practice attempt's review pulled in every other
-  // topic's questions too (fixed separately in
+  // "full" = attempt.topics is empty/absent (the whole mock test) -
+  // "practice" = attempt.topics has one or more entries (see
+  // migrations/017_exam_attempts_multi_topic.sql). Both were previously
+  // mixed into one flat list with no way to tell them apart, and a
+  // practice attempt's review pulled in every other topic's questions too
+  // (fixed separately in
   // attempts.repository.js#listQuestionsWithAnswersForAttempt) - this is
   // the other half: keeping the two kinds of session in their own tab
   // instead of interleaved.
@@ -58,11 +59,11 @@ export function useMyResults() {
 
   // Counts across ALL attempts (not just the selected tab) so both tab
   // labels can show a count regardless of which one is active.
-  const fullCount = attempts.filter((a) => !a.topic).length;
-  const practiceCount = attempts.filter((a) => a.topic).length;
+  const fullCount = attempts.filter((a) => !a.topics?.length).length;
+  const practiceCount = attempts.filter((a) => a.topics?.length).length;
 
   const attemptsOfType = attempts.filter((a) =>
-    sessionType === "practice" ? !!a.topic : !a.topic,
+    sessionType === "practice" ? !!a.topics?.length : !a.topics?.length,
   );
 
   const submittedAttempts = attemptsOfType.filter(

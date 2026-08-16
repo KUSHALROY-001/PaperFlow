@@ -262,7 +262,7 @@ export async function listQuestionsWithOptions(mockTestId, workspaceId) {
   return result.rows;
 }
 
-export async function listPlayableQuestions(mockTestId, topic) {
+export async function listPlayableQuestions(mockTestId, topics) {
   const result = await pool.query(
     `
     SELECT
@@ -280,10 +280,10 @@ export async function listPlayableQuestions(mockTestId, topic) {
       "codeSnippet"
     FROM playable_mock_test_questions
     WHERE mock_test_id = $1
-      AND ($2::text IS NULL OR topic = $2)
+      AND ($2::text[] IS NULL OR topic = ANY($2::text[]))
     ORDER BY "questionNo" ASC
     `,
-    [mockTestId, topic || null],
+    [mockTestId, topics && topics.length ? topics : null],
   );
 
   return result.rows;
