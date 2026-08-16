@@ -40,9 +40,13 @@ export default function OverviewTab({
   // to a fresh 404-avoided in-between state), distinct from isProcessing
   // and isReady above.
   const needsFirstUpload = !latestJob && mocktest.status === "draft";
-  const topics = [
-    ...new Set(questions.map((question) => question.topic).filter(Boolean)),
-  ].sort();
+  const topicCounts = questions.reduce((map, question) => {
+    const topic = question.topic?.trim();
+    if (!topic) return map;
+    map.set(topic, (map.get(topic) || 0) + 1);
+    return map;
+  }, new Map());
+  const topics = [...topicCounts.keys()].sort();
   const currentStage =
     latestJob?.current_stage ||
     (isReady ? "Questions available" : "Waiting for PDF upload");
@@ -152,16 +156,22 @@ export default function OverviewTab({
             <div className="grid gap-2 sm:grid-cols-2">
               {topics.map((topic, index) => {
                 const isHiddenOnMobile = !showAllTopics && index >= 2;
+                const count = topicCounts.get(topic) || 0;
                 return (
                   <Link
                     key={topic}
                     to={`/session/${mocktest.id}?topic=${encodeURIComponent(topic)}`}
-                    className={`items-center gap-2 px-3.5 py-2.5 border border-border bg-card text-foreground font-medium rounded-xl hover:border-orange-500/40 hover:bg-muted transition-colors text-xs sm:text-sm truncate ${
+                    className={`items-center justify-between gap-2 px-3.5 py-2.5 border border-border bg-card text-foreground font-medium rounded-xl hover:border-orange-500/40 hover:bg-muted transition-colors text-xs sm:text-sm ${
                       isHiddenOnMobile ? "hidden sm:flex" : "flex"
                     }`}
                   >
-                    <Play className="w-3.5 h-3.5 text-orange-500 shrink-0" />{" "}
-                    {topic}
+                    <span className="flex min-w-0 items-center gap-2">
+                      <Play className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                      <span className="truncate">{topic}</span>
+                    </span>
+                    <span className="ml-2 shrink-0 rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-bold text-orange-500">
+                      {count}
+                    </span>
                   </Link>
                 );
               })}

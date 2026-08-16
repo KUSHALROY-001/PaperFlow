@@ -298,8 +298,12 @@ export const api = {
   },
 
   // --- Attempts (workspace-authenticated) ---
-  startAttempt(mockTestId) {
-    return apiRequest(`/api/mock-tests/${mockTestId}/attempts`, {
+  startAttempt(mockTestId, topic) {
+    // topic is optional - undefined/null/"" all mean "the whole mock
+    // test", matching startAttempt (attempts.service.js) treating an
+    // absent query param the same way.
+    const query = topic ? `?topic=${encodeURIComponent(topic)}` : "";
+    return apiRequest(`/api/mock-tests/${mockTestId}/attempts${query}`, {
       method: "POST",
     });
   },

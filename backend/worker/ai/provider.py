@@ -70,6 +70,22 @@ with no math in it at all needs no delimiters anywhere; do not wrap plain
 numbers or ordinary words in $ signs. Exception: inside a has_code block,
 leave the text as source code exactly as instructed above - do not add math
 delimiters there, even if the code contains mathematical operators.
+
+If "text" contains a table - a List-I/List-II matching table, a data table,
+a comparison table, or any other grid of rows and columns visible on the
+page - represent it as a GitHub-Flavored-Markdown table embedded directly
+in "text" at the point where it appears, not flattened into a bulleted
+paragraph. Every row (including the header) must start and end with `|`,
+and the header row must be followed by a separator row of dashes, e.g.:
+List-I | List-II
+---|---
+(A) Rhizopus | (I) Mushroom
+(B) Ustilago | (II) Smut fungus
+Copy each cell's text/table position exactly as printed - do not try to
+pre-match List-I entries to their List-II answers; that pairing is what the
+question is testing, and collapsing it here would give away or corrupt the
+answer. A question with no table in it needs no `|` characters anywhere;
+do not force plain prose into a one-column table.
 Expected shape:
 {
   "questions": [

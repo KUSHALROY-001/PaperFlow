@@ -262,7 +262,7 @@ export async function listQuestionsWithOptions(mockTestId, workspaceId) {
   return result.rows;
 }
 
-export async function listPlayableQuestions(mockTestId) {
+export async function listPlayableQuestions(mockTestId, topic) {
   const result = await pool.query(
     `
     SELECT
@@ -279,9 +279,10 @@ export async function listPlayableQuestions(mockTestId) {
       "codeLanguage"
     FROM playable_mock_test_questions
     WHERE mock_test_id = $1
+      AND ($2::text IS NULL OR topic = $2)
     ORDER BY "questionNo" ASC
     `,
-    [mockTestId],
+    [mockTestId, topic || null],
   );
 
   return result.rows;

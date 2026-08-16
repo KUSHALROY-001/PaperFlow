@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 
@@ -27,8 +27,13 @@ export const PENDING_CLAIM_KEY = "paperflow_pending_claim";
  */
 export function useExamSession({ mode }) {
   const params = useParams();
+  const [searchParams] = useSearchParams();
   const mockTestId = mode === "member" ? params.id : undefined;
   const shareToken = mode === "guest" ? params.token : undefined;
+  // Member-mode only, for now - matches OverviewTab.jsx's existing
+  // "Topic-wise Practice" links (/session/:id?topic=X). Guest/shared
+  // links have no equivalent entry point yet.
+  const topic = mode === "member" ? searchParams.get("topic") : null;
   const { isAuthenticated } = useAuth();
 
   // 'guest' starts at 'loading' -> 'intro' (collect name) -> 'session' -> 'result'
@@ -71,7 +76,7 @@ export function useExamSession({ mode }) {
       try {
         setLoading(true);
         setLoadError(null);
-        const result = await api.startAttempt(mockTestId);
+        const result = await api.startAttempt(mockTestId, topic);
         if (cancelled) return;
         setSession(result);
         setTimeLeft((result.mockTest?.durationMinutes || 20) * 60);
@@ -91,7 +96,7 @@ export function useExamSession({ mode }) {
     return () => {
       cancelled = true;
     };
-  }, [mode, mockTestId]);
+  }, [mode, mockTestId, topic]);
 
   // --- Guest mode: load the shared test's public info on mount ---
   useEffect(() => {
@@ -317,6 +322,7 @@ export function useExamSession({ mode }) {
     mode,
     mockTestId,
     shareToken,
+    topic,
     phase,
     loading,
     loadError,

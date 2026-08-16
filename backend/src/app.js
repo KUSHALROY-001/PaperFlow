@@ -36,17 +36,43 @@ const allowedOrigins = new Set(
 export function createApp() {
   const app = express();
 
-  app.use(
-    cors({
-      origin(origin, callback) {
-        if (!origin || allowedOrigins.has(origin)) {
-          callback(null, true);
-          return;
-        }
+  // katex.min.css's @font-face rules are loaded by Puppeteer's PDF-export
+  // page (src/lib/pdf-export/render-html.js), which is rendered via
+  // page.setContent() rather than an actual http(s) navigation. Pages
+  // loaded that way have an opaque origin, and per the CSS Fonts spec
+  // browsers send that as the literal string "null" for cross-origin font
+  // requests specifically - plain <img>/<link> loads (the diagram images,
+  // the CSS file itself) mostly don't send an Origin header at all, which
+  // is why only the font files were ever hitting this check. `"null"` is
+  // a truthy JS string, so it skipped the `!origin` branch below and got
+  // rejected by the strict allowlist just like any other unknown origin -
+  // silently, since a failed @font-face load has no visible error, it
+  // just falls back to a substitute font. Net effect: every exported PDF
+  // was rendering math with broken/fallback glyphs instead of KaTeX's own
+  // fonts, with nothing showing in anyone's UI to say so.
+  //
+  // Using cors()'s per-request delegate form (rather than the single
+  // static options object this used to be) so /static/katex - already
+  // documented below as intentionally public/unauthenticated - can get a
+  // permissive policy that correctly reflects back an Origin of "null",
+  // without loosening the strict allowlist for every authenticated API
+  // route.
+  const publicStaticPrefixes = ["/static/katex"];
 
-        callback(new Error(`CORS blocked origin: ${origin}`));
-      },
-      credentials: true,
+  app.use(
+    cors((req, callback) => {
+      if (publicStaticPrefixes.some((prefix) => req.path.startsWith(prefix))) {
+        callback(null, { origin: true, credentials: false });
+        return;
+      }
+
+      const origin = req.headers.origin;
+      if (!origin || allowedOrigins.has(origin)) {
+        callback(null, { origin: true, credentials: true });
+        return;
+      }
+
+      callback(new Error(`CORS blocked origin: ${origin}`));
     }),
   );
   app.use(express.json({ limit: "2mb" }));

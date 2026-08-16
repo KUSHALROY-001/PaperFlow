@@ -1,16 +1,18 @@
 import { pool } from "../db/pool.js";
 
 // `ON CONFLICT ... DO NOTHING` targets the partial unique index added in
-// migration 011 (one in_progress attempt per workspace/mock test/user).
-// It's a no-op for guest inserts (user_id IS NULL never matches that
-// index's predicate) and returns no row when a concurrent request already
-// won the race for a logged-in user - callers must re-select in that case
-// (see startAttempt in attempts.service.js). This closes the race where
-// two near-simultaneous start calls for the same user both pass the
+// migration 011 and made topic-aware in migration 016 (one in_progress
+// attempt per workspace/mock test/user/topic - NULL topic meaning the
+// whole mock test is its own distinct "topic" for this purpose). It's a
+// no-op for guest inserts (user_id IS NULL never matches that index's
+// predicate) and returns no row when a concurrent request already won the
+// race for a logged-in user - callers must re-select in that case (see
+// startAttempt in attempts.service.js). This closes the race where two
+// near-simultaneous start calls for the same user/topic both pass the
 // service's "reuse if one exists" SELECT before either INSERT commits.
 export async function insertAttempt(
   client,
-  { workspaceId, mockTestId, userId, totalQuestions, metadata },
+  { workspaceId, mockTestId, userId, topic, totalQuestions, metadata },
 ) {
   const result = await client.query(
     `
@@ -18,17 +20,25 @@ export async function insertAttempt(
       workspace_id,
       mock_test_id,
       user_id,
+      topic,
       status,
       total_questions,
       metadata
     )
-    VALUES ($1, $2, $3, 'in_progress', $4, $5)
-    ON CONFLICT (workspace_id, mock_test_id, user_id)
+    VALUES ($1, $2, $3, $4, 'in_progress', $5, $6)
+    ON CONFLICT (workspace_id, mock_test_id, user_id, (COALESCE(topic, '')))
       WHERE status = 'in_progress' AND user_id IS NOT NULL
       DO NOTHING
     RETURNING *
     `,
-    [workspaceId, mockTestId, userId, totalQuestions, metadata || {}],
+    [
+      workspaceId,
+      mockTestId,
+      userId,
+      topic || null,
+      totalQuestions,
+      metadata || {},
+    ],
   );
 
   return result.rows[0] || null;
@@ -282,7 +292,12 @@ export async function listQuestionsWithAnswersForAttempt(
 
 // Scoring inputs only - just what's needed to grade each answer, joined
 // against this attempt's existing answers.
-export async function listQuestionsForScoring(mockTestId, attemptId) {
+// topic (nullable) narrows scoring to just that topic's questions - a
+// topic-practice attempt must never have every OTHER topic's unanswered
+// questions counted against it as "unattempted" (which is exactly what
+// would happen if this stayed scoped to the whole mock_test_id
+// regardless of the attempt's own topic).
+export async function listQuestionsForScoring(mockTestId, attemptId, topic) {
   const result = await pool.query(
     `
     SELECT
@@ -294,8 +309,9 @@ export async function listQuestionsForScoring(mockTestId, attemptId) {
     FROM questions q
     LEFT JOIN exam_answers ea ON ea.question_id = q.id AND ea.attempt_id = $2
     WHERE q.mock_test_id = $1
+      AND ($3::text IS NULL OR q.topic = $3)
     `,
-    [mockTestId, attemptId],
+    [mockTestId, attemptId, topic || null],
   );
 
   return result.rows;
@@ -364,7 +380,7 @@ export async function finalizeAttempt(
 // user picking up a guest's session, or one guest picking up another's).
 export async function findActiveAttemptForUser(
   client,
-  { mockTestId, workspaceId, userId },
+  { mockTestId, workspaceId, userId, topic },
 ) {
   const result = await client.query(
     `
@@ -374,11 +390,18 @@ export async function findActiveAttemptForUser(
       AND workspace_id = $2
       AND ${userId ? "user_id = $3" : "user_id IS NULL"}
       AND status = 'in_progress'
+      -- IS NOT DISTINCT FROM (not =) so two NULLs - both meaning "the
+      -- whole mock test, no topic filter" - correctly match each other.
+      -- A plain "topic = $N" would never match two NULLs and would
+      -- resume the wrong (or no) attempt for the most common case.
+      AND topic IS NOT DISTINCT FROM ${userId ? "$4" : "$3"}
     ORDER BY started_at DESC
     LIMIT 1
     FOR UPDATE
     `,
-    userId ? [mockTestId, workspaceId, userId] : [mockTestId, workspaceId],
+    userId
+      ? [mockTestId, workspaceId, userId, topic || null]
+      : [mockTestId, workspaceId, topic || null],
   );
 
   return result.rows[0] || null;

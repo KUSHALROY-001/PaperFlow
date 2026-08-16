@@ -15,6 +15,7 @@ export default function MockSession() {
     loading,
     loadError,
     session,
+    topic,
     current,
     setCurrent,
     answers,
@@ -123,6 +124,7 @@ export default function MockSession() {
       <div className="flex-1 lg:ml-56 flex flex-col min-w-0">
         <SessionHeader
           mockTestName={session?.mockTest?.name}
+          subtitle={topic}
           answeredCount={answeredCount}
           totalQuestions={questions.length}
           timeLeft={timeLeft}

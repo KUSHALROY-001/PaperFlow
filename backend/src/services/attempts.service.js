@@ -8,6 +8,7 @@ export async function startAttempt({
   mockTestId,
   workspaceId,
   userId,
+  topic,
   metadata,
 }) {
   const mockTest = await mockTestsRepo.findMockTestById(
@@ -18,27 +19,49 @@ export async function startAttempt({
     throw httpError(404, "Mock test not found");
   }
 
-  const questions = await mockTestsRepo.listPlayableQuestions(mockTestId);
+  // Trim/normalize to null so "", "  ", and absent all mean the same
+  // thing ("no topic filter, whole mock test") everywhere downstream -
+  // insertAttempt's conflict target, findActiveAttemptForUser's lookup,
+  // and listQuestionsForScoring at submit time all rely on that.
+  const normalizedTopic = topic && topic.trim() ? topic.trim() : null;
+
+  const questions = await mockTestsRepo.listPlayableQuestions(
+    mockTestId,
+    normalizedTopic,
+  );
   if (questions.length === 0) {
-    throw httpError(400, "This mock test has no questions yet");
+    throw httpError(
+      400,
+      normalizedTopic
+        ? `No questions found for topic "${normalizedTopic}"`
+        : "This mock test has no questions yet",
+    );
   }
 
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
 
-    // Reuse an existing in_progress attempt if one exists for this user and
-    // mock test - but only for logged-in users, who have a stable user_id
-    // to scope the lookup to. Anonymous guest attempts (userId null) have
-    // no such identity: "in_progress AND user_id IS NULL" would match ANY
-    // guest's in-progress attempt on this mock test, so two different
-    // people opening the same shared link could end up merged onto the
-    // same attempt. Guests always start a brand-new attempt instead.
+    // Reuse an existing in_progress attempt if one exists for this user,
+    // mock test, AND topic - but only for logged-in users, who have a
+    // stable user_id to scope the lookup to. Anonymous guest attempts
+    // (userId null) have no such identity: "in_progress AND user_id IS
+    // NULL" would match ANY guest's in-progress attempt on this mock
+    // test, so two different people opening the same shared link could
+    // end up merged onto the same attempt. Guests always start a
+    // brand-new attempt instead.
+    //
+    // Scoping by topic too (not just user/mock test) matters as soon as
+    // topic-wise practice exists: without it, a student with an
+    // in-progress full-test attempt who then clicks into Topic-wise
+    // Practice for one topic would silently resume the full-test attempt
+    // instead - right question set shown as wrong, or vice versa.
     let attempt = userId
       ? await attemptsRepo.findActiveAttemptForUser(client, {
           mockTestId,
           workspaceId,
           userId,
+          topic: normalizedTopic,
         })
       : null;
 
@@ -47,21 +70,23 @@ export async function startAttempt({
         workspaceId,
         mockTestId,
         userId: userId || null,
+        topic: normalizedTopic,
         totalQuestions: questions.length,
         metadata: metadata || {},
       });
     }
 
-    // A concurrent request for the same user/mock test can win the race
-    // between our SELECT above and this INSERT (see migration 011 and
-    // insertAttempt's ON CONFLICT) - when that happens we get null back
-    // instead of a duplicate row, so fetch the attempt the other request
-    // created rather than erroring out.
+    // A concurrent request for the same user/mock test/topic can win the
+    // race between our SELECT above and this INSERT (see migration 011,
+    // 016, and insertAttempt's ON CONFLICT) - when that happens we get
+    // null back instead of a duplicate row, so fetch the attempt the
+    // other request created rather than erroring out.
     if (!attempt && userId) {
       attempt = await attemptsRepo.findActiveAttemptForUser(client, {
         mockTestId,
         workspaceId,
         userId,
+        topic: normalizedTopic,
       });
     }
 
@@ -213,6 +238,7 @@ export async function submitAttempt({ attemptId, workspaceId }) {
     const rows = await attemptsRepo.listQuestionsForScoring(
       attempt.mock_test_id,
       attemptId,
+      attempt.topic,
     );
 
     let attemptedCount = 0;
@@ -455,6 +481,7 @@ export function serializeAttempt(row) {
   return {
     id: row.id,
     mockTestId: row.mock_test_id,
+    topic: row.topic,
     status: row.status,
     startedAt: row.started_at,
     submittedAt: row.submitted_at,

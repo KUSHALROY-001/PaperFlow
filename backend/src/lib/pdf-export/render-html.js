@@ -1,4 +1,5 @@
 import { escapeHtml, renderTextWithMath } from "./math-html.js";
+import { renderQuestionTextHtml } from "./table-html.js";
 
 // The `questions` array this module receives comes straight from
 // mock-tests.service.js#listQuestions, which is a plain `SELECT q.*` (see
@@ -50,7 +51,7 @@ function questionBodyHtml(question) {
       </div>
     `;
   }
-  return `<p class="question-text">${renderTextWithMath(question.text)}</p>`;
+  return renderQuestionTextHtml(question.text);
 }
 
 function optionsHtml(question) {
@@ -183,6 +184,30 @@ export function renderMockTestHtml({ mockTest, questions, baseUrl }) {
     margin: 0 0 10px;
     white-space: pre-wrap;
   }
+  .q-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 10px;
+    font-size: 9.5pt;
+    font-weight: 400;
+    /* A List-I/List-II table is short enough to always fit on one page in
+       practice; avoiding a split here matters more than the (rare) case
+       of a table taller than a full page, which will still split despite
+       this - same trade-off as .question's break-inside: avoid above. */
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .q-table th, .q-table td {
+    border: 1px solid #ddd;
+    padding: 6px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  .q-table th {
+    background: #f7f7f7;
+    font-weight: 700;
+  }
+  .q-table tbody tr:nth-child(even) { background: #fafafa; }
   .diagram {
     display: block;
     max-width: 100%;

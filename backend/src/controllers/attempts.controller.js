@@ -5,6 +5,10 @@ export async function start(req, res) {
     mockTestId: req.params.mockTestId,
     workspaceId: req.workspaceId,
     userId: req.user.id,
+    // Query param, not body - matches OverviewTab.jsx's existing
+    // /session/:id?topic=X link, which this endpoint's URL is reached
+    // from directly with no client-side transformation needed.
+    topic: req.query.topic,
     metadata: { source: "workspace" },
   });
   res.status(201).json(result);

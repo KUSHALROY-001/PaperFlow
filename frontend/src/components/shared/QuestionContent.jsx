@@ -1,5 +1,8 @@
+import { useMemo } from "react";
 import { resolveAssetUrl } from "@/lib/api";
 import MathText from "./MathText";
+import QuestionTable from "./QuestionTable";
+import { splitIntoTextBlocks } from "@/utils/textBlocks";
 
 // Extracted so the 6 QuestionContent consumers (see below) can render it
 // themselves after their own options block for placement === "below_options" -
@@ -45,15 +48,21 @@ export function QuestionDiagram({ diagramUrl, className = "" }) {
 // on the question object for a highlighter to pick up later without
 // another data-plumbing pass.
 //
-// Non-code text runs through MathText (see shared/MathText.jsx) rather
-// than being printed raw, so $...$/$$...$$/\(...\)/\[...\] LaTeX spans
-// the AI extractor emits (worker/ai/provider.py's SYSTEM_PROMPT) render as
-// typeset math instead of literal backslash commands. Text with no math
-// delimiters at all passes through MathText unchanged, so this is safe as
-// the default for every question regardless of whether it has math in it.
+// Non-code text runs through splitIntoTextBlocks (see utils/textBlocks.js)
+// before MathText - a question that embeds a GitHub-Flavored-Markdown
+// table (worker/ai/provider.py's SYSTEM_PROMPT now instructs the model to
+// emit one for a List-I/List-II or data table, instead of flattening it
+// into a bulleted paragraph that loses the original grid layout entirely)
+// renders as a real <table> via QuestionTable, interleaved with ordinary
+// <p> blocks for the surrounding prose. Text with no table in it produces
+// exactly one prose block - identical output to the old single-<p>
+// rendering, so this is safe as the unconditional default.
+//
 // Deliberately NOT applied inside the hasCode branch below - a code
 // snippet's `$` or backslashes are code syntax, not math delimiters, and
-// running them through MathText would misinterpret them.
+// running them through MathText (or table-splitting, for that matter -
+// ASCII art / a formatted table IN code is still code) would misinterpret
+// them.
 //
 // placement (Part C - see migration 015): "above_text" renders the
 // diagram before the text, "below_text" (the default, and the only
@@ -72,6 +81,10 @@ export default function QuestionContent({
   const showAboveText = diagramUrl && placement === "above_text";
   const showBelowText =
     diagramUrl && placement !== "above_text" && placement !== "below_options";
+  const blocks = useMemo(
+    () => (hasCode ? null : splitIntoTextBlocks(text)),
+    [text, hasCode],
+  );
 
   return (
     <div className="space-y-3">
@@ -88,16 +101,26 @@ export default function QuestionContent({
           </pre>
         </div>
       ) : (
-        // whitespace-pre-wrap (not the default whitespace-normal every one
-        // of these three used before) so a non-code question with its own
-        // real line breaks - a passage-style question, a multi-line
-        // "Consider the following statements" list - still reads correctly
-        // too. This isn't code-specific; it's just not destroying newlines
-        // that were never the code-formatting bug but were silently broken
-        // the same way.
-        <p className={`whitespace-pre-wrap ${textClassName}`}>
-          <MathText text={text} />
-        </p>
+        blocks.map((block, index) =>
+          block.type === "table" ? (
+            <QuestionTable
+              key={index}
+              header={block.header}
+              rows={block.rows}
+            />
+          ) : (
+            // whitespace-pre-wrap (not the default whitespace-normal every
+            // one of these three used before) so a non-code question with
+            // its own real line breaks - a passage-style question, a
+            // multi-line "Consider the following statements" list - still
+            // reads correctly too. This isn't code-specific; it's just not
+            // destroying newlines that were never the code-formatting bug
+            // but were silently broken the same way.
+            <p key={index} className={`whitespace-pre-wrap ${textClassName}`}>
+              <MathText text={block.content} />
+            </p>
+          ),
+        )
       )}
       {showBelowText && <QuestionDiagram diagramUrl={diagramUrl} />}
     </div>
