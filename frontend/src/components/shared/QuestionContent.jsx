@@ -74,6 +74,7 @@ export default function QuestionContent({
   text,
   hasCode = false,
   codeLanguage,
+  codeSnippet,
   diagramUrl,
   placement = "below_text",
   textClassName = "text-sm text-foreground",
@@ -81,25 +82,57 @@ export default function QuestionContent({
   const showAboveText = diagramUrl && placement === "above_text";
   const showBelowText =
     diagramUrl && placement !== "above_text" && placement !== "below_options";
+  // codeSnippet (migration 017) holds ONLY the code, with `text` holding
+  // just the prose lead-in ("What will be output of the following code
+  // snippet?") - but a question extracted before that migration has
+  // hasCode=true and no codeSnippet at all, and there's nothing left to
+  // split it with after the fact, so that case falls back to the old
+  // behavior: the whole `text` field, prose included, renders inside the
+  // code box exactly as it always did.
+  const codeBody = hasCode ? (codeSnippet ?? text) : null;
+  const leadInText = hasCode && codeSnippet ? text : null;
   const blocks = useMemo(
     () => (hasCode ? null : splitIntoTextBlocks(text)),
     [text, hasCode],
+  );
+  const leadInBlocks = useMemo(
+    () => (leadInText ? splitIntoTextBlocks(leadInText) : null),
+    [leadInText],
   );
 
   return (
     <div className="space-y-3">
       {showAboveText && <QuestionDiagram diagramUrl={diagramUrl} />}
       {hasCode ? (
-        <div className="rounded-xl border border-border bg-muted/60 overflow-hidden">
-          {codeLanguage && (
-            <div className="px-3 py-1.5 border-b border-border bg-muted text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-              {codeLanguage}
-            </div>
-          )}
-          <pre className="overflow-x-auto p-3 sm:p-4 text-xs sm:text-sm leading-relaxed">
-            <code className="font-mono whitespace-pre">{text}</code>
-          </pre>
-        </div>
+        <>
+          {leadInBlocks &&
+            leadInBlocks.map((block, index) =>
+              block.type === "table" ? (
+                <QuestionTable
+                  key={index}
+                  header={block.header}
+                  rows={block.rows}
+                />
+              ) : (
+                <p
+                  key={index}
+                  className={`whitespace-pre-wrap ${textClassName}`}
+                >
+                  <MathText text={block.content} />
+                </p>
+              ),
+            )}
+          <div className="rounded-xl border border-border bg-muted/60 overflow-hidden">
+            {codeLanguage && (
+              <div className="px-3 py-1.5 border-b border-border bg-muted text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                {codeLanguage}
+              </div>
+            )}
+            <pre className="overflow-x-auto p-3 sm:p-4 text-xs sm:text-sm leading-relaxed">
+              <code className="font-mono whitespace-pre">{codeBody}</code>
+            </pre>
+          </div>
+        </>
       ) : (
         blocks.map((block, index) =>
           block.type === "table" ? (

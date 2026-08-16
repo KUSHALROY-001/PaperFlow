@@ -4,6 +4,7 @@ import { Copy, Download, Edit2, Loader2 } from "lucide-react";
 import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
 import { api } from "@/lib/api";
+import ScrollToTopButton from "../shared/ScrollToTopButton";
 
 const viewTabs = ["Visual", "JSON", "Metadata"];
 
@@ -28,6 +29,7 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
         status: question.status,
         hasCode: question.hasCode,
         codeLanguage: question.codeLanguage,
+        codeSnippet: question.codeSnippet,
         // diagramUrl deliberately excluded here - it's a short-lived
         // HMAC-signed URL (see question-assets.service.js#buildDiagramUrl),
         // not a stable link. Including it in a JSON someone downloads and
@@ -165,6 +167,7 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
                 text={question.text}
                 hasCode={question.hasCode}
                 codeLanguage={question.codeLanguage}
+                codeSnippet={question.codeSnippet}
                 diagramUrl={question.diagramUrl}
                 placement={question.placement}
                 textClassName="text-lg font-semibold text-foreground"
@@ -220,6 +223,7 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
           ))}
         </div>
       )}
+      <ScrollToTopButton />
     </div>
   );
 }

@@ -1,4 +1,13 @@
-import { FileText, Zap } from "lucide-react";
+import {
+  ClipboardCheck,
+  Download,
+  FileText,
+  ListChecks,
+  ScanSearch,
+  ScanText,
+  Sparkles,
+  UploadCloud,
+} from "lucide-react";
 
 // Extracted from pages/MockTestWorkspace.jsx — no behavior changes.
 
@@ -78,6 +87,7 @@ export function mapQuestion(question) {
     placement: question.placement || "below_text",
     hasCode: question.has_code || false,
     codeLanguage: question.code_language || null,
+    codeSnippet: question.code_snippet || null,
   };
 }
 
@@ -96,68 +106,115 @@ export function normalizeJobStage(stage = "") {
   return stage.toLowerCase();
 }
 
-export function buildProcessingPhases(mocktest, latestJob) {
+// Feeds ProcessingTimeline.jsx - a single connected vertical list of steps
+// (replaced the old two-side-by-side-cards layout, PhaseCard in
+// ProcessingTab.jsx). Flat rather than grouped into phases: the reference
+// design has no phase grouping at all, just one continuous timeline, and
+// nothing else in the app read the phase-level title/icon this used to
+// carry (only MockTestWorkspace.jsx consumed the old buildProcessingPhases
+// output, and only to hand it straight to ProcessingTab).
+//
+// The worker (worker/worker.py) only ever reports ~6 distinct stages -
+// "Extracting PDF text"(20), "Converting scanned PDF with OCR"(35),
+// "Parsing questions"(55), "AI cleanup (text X/Y)"(68, repeated per chunk -
+// see worker/ai/provider.py#report), "Saving questions"(80), "Completed"
+// (100) - but this timeline shows 8 UI steps, so several steps below
+// necessarily share the same backend threshold/stage keyword (e.g. "AI
+// cleanup", "Question detection" and "Option parsing" all correspond to
+// the same "AI cleanup" stage - the worker never reports detection and
+// parsing separately). Picking the single FURTHEST-reached step as the
+// only "active" one (and treating every earlier step - including ones
+// that share its threshold - as already "complete") is what keeps exactly
+// one step "Processing" at a time instead of every same-threshold step
+// lighting up together.
+const PROCESSING_STEP_DEFS = [
+  {
+    label: "PDF uploaded",
+    description: "Your file has been uploaded successfully",
+    icon: UploadCloud,
+    threshold: 0,
+  },
+  {
+    label: "OCR searchable PDF",
+    description: "Scanned PDF is now OCR searchable",
+    icon: ScanText,
+    threshold: 35,
+  },
+  {
+    label: "PDF text extracted",
+    description: "Text content extracted from PDF",
+    icon: FileText,
+    threshold: 55,
+  },
+  {
+    label: "AI cleanup",
+    description: "Cleaning and structuring extracted text using AI",
+    icon: Sparkles,
+    threshold: 68,
+  },
+  {
+    label: "Question detection",
+    description: "Identifying questions in the cleaned text",
+    icon: ScanSearch,
+    threshold: 68,
+  },
+  {
+    label: "Option parsing",
+    description: "Extracting options for each question",
+    icon: ListChecks,
+    threshold: 68,
+  },
+  {
+    label: "Answer extraction",
+    description: "Identifying the correct answer for each question",
+    icon: ClipboardCheck,
+    threshold: 80,
+  },
+  {
+    label: "Ready for export",
+    description: "Finalizing questions for review and export",
+    icon: Download,
+    threshold: 100,
+  },
+];
+
+export function buildProcessingSteps(mocktest, latestJob) {
   const isProcessing = mocktest?.status === "processing";
   const hasQuestions = Number(mocktest?.total_questions || 0) > 0;
-  const stage = normalizeJobStage(latestJob?.current_stage);
   const progress = Number(latestJob?.progress_percent || 0);
   const isFailed = latestJob?.status === "failed";
 
-  const statusFor = (threshold, stageMatchers = []) => {
-    if (isFailed) return "pending";
-    if (
-      hasQuestions ||
-      latestJob?.status === "completed" ||
-      progress >= threshold
-    )
-      return "complete";
-    if (
-      isProcessing &&
-      stageMatchers.some((matcher) => stage.includes(matcher))
-    )
-      return "active";
-    return "pending";
-  };
+  if (isFailed) {
+    return PROCESSING_STEP_DEFS.map((step) => ({ ...step, status: "pending" }));
+  }
 
-  return [
-    {
-      title: "Phase 1: Upload & AI Extraction",
-      icon: FileText,
-      steps: [
-        {
-          label: "PDF uploaded",
-          status: latestJob || hasQuestions ? "complete" : "pending",
-        },
-        {
-          label: "OCR searchable PDF",
-          status: statusFor(45, ["ocr", "converting scanned"]),
-        },
-        {
-          label: "PDF text extracted",
-          status: statusFor(55, ["extracting", "parsing"]),
-        },
-        { label: "AI cleanup", status: statusFor(75, ["ai cleanup"]) },
-      ],
-    },
-    {
-      title: "Phase 2: Review & Export",
-      icon: Zap,
-      steps: [
-        { label: "Question detection", status: statusFor(80, ["parsing"]) },
-        { label: "Option parsing", status: statusFor(80, ["parsing"]) },
-        {
-          label: "Answer extraction",
-          status: statusFor(80, ["ai cleanup", "saving"]),
-        },
-        {
-          label: "Ready for JSON export",
-          status: hasQuestions
-            ? "complete"
-            : isProcessing
-              ? "active"
-              : "pending",
-        },
-      ],
-    },
-  ];
+  if (hasQuestions || latestJob?.status === "completed") {
+    return PROCESSING_STEP_DEFS.map((step) => ({
+      ...step,
+      status: "complete",
+    }));
+  }
+
+  if (!latestJob) {
+    return PROCESSING_STEP_DEFS.map((step) => ({ ...step, status: "pending" }));
+  }
+
+  // The single furthest step whose threshold we've reached - the LAST
+  // match wins on purpose, so a tied group (three steps at threshold 68)
+  // collapses to its final member instead of its first.
+  let activeIndex = 0;
+  PROCESSING_STEP_DEFS.forEach((step, index) => {
+    if (progress >= step.threshold) {
+      activeIndex = index;
+    }
+  });
+
+  return PROCESSING_STEP_DEFS.map((step, index) => {
+    let status;
+    if (index < activeIndex) status = "complete";
+    else if (index === activeIndex)
+      status = isProcessing ? "active" : "pending";
+    else status = "pending";
+    return { ...step, status };
+  });
 }

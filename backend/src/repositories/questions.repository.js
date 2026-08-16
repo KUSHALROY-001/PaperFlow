@@ -139,6 +139,8 @@ export async function updateQuestion(client, questionId, workspaceId, fields) {
     confidence,
     status,
     metadata,
+    codeSnippetProvided,
+    codeSnippet,
   } = fields;
 
   const result = await client.query(
@@ -158,7 +160,8 @@ export async function updateQuestion(client, questionId, workspaceId, fields) {
       source_page = CASE WHEN $19::boolean THEN $20 ELSE source_page END,
       confidence = CASE WHEN $21::boolean THEN $22 ELSE confidence END,
       status = COALESCE($23::question_status, status),
-      metadata = COALESCE($24, metadata)
+      metadata = COALESCE($24, metadata),
+      code_snippet = CASE WHEN $25::boolean THEN $26 ELSE code_snippet END
     WHERE id = $1
       AND workspace_id = $2
     RETURNING *
@@ -188,6 +191,8 @@ export async function updateQuestion(client, questionId, workspaceId, fields) {
       confidence,
       status,
       metadata,
+      codeSnippetProvided,
+      codeSnippet,
     ],
   );
 

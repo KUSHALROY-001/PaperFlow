@@ -18,6 +18,36 @@ MATH_SYMBOL_RE = re.compile(
 
 MATH_SYMBOL_DENSITY_THRESHOLD = 0.01
 
+# A plain C/Java/Python snippet has none of the signals above (no raster
+# image, no vector drawing, no math symbols) - it's just ordinary-looking
+# text to this classifier, so it was falling through to the plain
+# get_text("text") path below. That call flattens the page into a 1D
+# stream and does NOT reliably reproduce a code block's original
+# indentation (many source PDFs position each line via glyph coordinates
+# rather than literal repeated space characters, which get_text("text")
+# has no way to reconstruct) - the AI model then receives already-flattened
+# text and has no visual layout left to preserve, no matter how firmly
+# provider.py's system prompt tells it to preserve indentation "exactly as
+# it appears on the page". Detecting likely code by its punctuation/keyword
+# profile and routing those pages through vision instead - where the model
+# actually sees the rendered indentation - fixes this at the source instead
+# of asking a text-only extraction to recover information it never had.
+CODE_KEYWORD_RE = re.compile(
+    r"\b(?:#include|int\s+main|void\s+main|public\s+class|def\s+\w+\(|"
+    r"import\s+\w+|for\s*\(|while\s*\(|printf|System\.out|console\.log)\b"
+)
+CODE_PUNCTUATION_DENSITY_THRESHOLD = 0.02
+
+
+def _looks_like_code(text):
+    if CODE_KEYWORD_RE.search(text):
+        return True
+    # Fallback for snippets that dodge every keyword above (e.g. a bare
+    # pseudocode block) - braces/semicolons are rare in ordinary MCQ prose
+    # but dense in almost any code snippet.
+    punctuation_count = text.count("{") + text.count("}") + text.count(";")
+    return (punctuation_count / max(len(text), 1)) > CODE_PUNCTUATION_DENSITY_THRESHOLD
+
 
 def classify_page_content(page):
     """
@@ -47,6 +77,7 @@ def classify_page_content(page):
         has_raster_images
         or has_vector_drawings
         or math_symbol_density > MATH_SYMBOL_DENSITY_THRESHOLD
+        or _looks_like_code(text)
     )
 
     return {

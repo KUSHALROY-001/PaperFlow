@@ -58,6 +58,7 @@ export function toEditorQuestion(question) {
     // sees them.
     hasCode: question.has_code || false,
     codeLanguage: question.code_language || null,
+    codeSnippet: question.code_snippet || null,
   };
 }
 
@@ -147,7 +148,9 @@ function isAnchor(token, kind) {
   // A backslash command is unambiguous. A bare "^" or "_" is too - plain
   // English essentially never uses either character, so their presence is
   // as strong a signal that this run is math as an actual LaTeX command.
-  return kind === "latex" || (kind === "symbol" && (token === "^" || token === "_"));
+  return (
+    kind === "latex" || (kind === "symbol" && (token === "^" || token === "_"))
+  );
 }
 
 function wrapPlainSegment(segment) {
@@ -213,6 +216,8 @@ export function wrapBareLatex(text) {
   // them). Only the plain segments get scanned for bare LaTeX to wrap.
   return String(text)
     .split(ALREADY_DELIMITED_RE)
-    .map((segment, index) => (index % 2 === 1 ? segment : wrapPlainSegment(segment)))
+    .map((segment, index) =>
+      index % 2 === 1 ? segment : wrapPlainSegment(segment),
+    )
     .join("");
 }

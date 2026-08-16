@@ -3,11 +3,17 @@ import { useMyResults } from "@/hooks/useMyResults";
 import ResultsHeader from "../components/my-results/ResultsHeader";
 import ResultsSummaryRow from "../components/my-results/ResultsSummaryRow";
 import ScoreTrendStrip from "../components/my-results/ScoreTrendStrip";
+import SessionTypeTabs from "../components/my-results/SessionTypeTabs";
 import ResultsFilterTabs from "../components/my-results/ResultsFilterTabs";
 import AttemptCard from "../components/my-results/AttemptCard";
+import ScrollToTopButton from "../components/shared/ScrollToTopButton";
 
 export default function MyResults() {
   const {
+    sessionType,
+    setSessionType,
+    fullCount,
+    practiceCount,
     filter,
     setFilter,
     loading,
@@ -51,13 +57,22 @@ export default function MyResults() {
 
       <ScoreTrendStrip submittedAttempts={submittedAttempts} />
 
+      <SessionTypeTabs
+        sessionType={sessionType}
+        setSessionType={setSessionType}
+        fullCount={fullCount}
+        practiceCount={practiceCount}
+      />
+
       <ResultsFilterTabs filter={filter} setFilter={setFilter} />
 
       <div className="space-y-3">
         {filtered.length === 0 ? (
           <div className="surface-card rounded-2xl p-10 border border-border text-center text-muted-foreground text-sm">
             {totalAttempts === 0
-              ? "You haven't taken any mock tests yet."
+              ? sessionType === "practice"
+                ? "You haven't done any topic-wise practice yet."
+                : "You haven't taken any mock tests yet."
               : "No attempts match this filter."}
           </div>
         ) : (
@@ -70,6 +85,7 @@ export default function MyResults() {
           ))
         )}
       </div>
+      <ScrollToTopButton />
     </div>
   );
 }

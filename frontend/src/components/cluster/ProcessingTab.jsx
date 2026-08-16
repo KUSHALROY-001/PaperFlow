@@ -1,73 +1,11 @@
-import { CheckCircle2, Circle, FileText, Sparkles, Zap } from "lucide-react";
+import { FileText, Sparkles, Zap } from "lucide-react";
+import ProcessingTimeline from "./ProcessingTimeline";
 
-function PhaseCard({ phase }) {
-  const isRunning = phase?.steps?.some((step) => step.status === "active");
-  const isComplete = phase?.steps?.every((step) => step.status === "complete");
-
-  return (
-    <div className="rounded-3xl p-4 sm:p-5 surface-card border border-border">
-      <div className="mb-5 flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-500/15 text-orange-500">
-          <phase.icon className="h-5 w-5" />
-        </div>
-        <div>
-          <h3 className="font-bold text-foreground">{phase.title}</h3>
-          <p className="text-xs text-muted-foreground">
-            Structured cleanup and confidence scoring
-          </p>
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        {phase.steps.map((step) => {
-          let icon = <Circle className="h-4 w-4 text-muted-foreground/40" />;
-
-          if (step.status === "complete") {
-            icon = <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
-          } else if (step.status === "active") {
-            icon = (
-              <div className="flex h-4 w-4 items-center justify-center rounded-full bg-orange-500/20 animate-pulse">
-                <Zap className="h-2.5 w-2.5 text-orange-500 fill-orange-500" />
-              </div>
-            );
-          }
-
-          return (
-            <div key={step.label} className="flex items-center gap-3">
-              {icon}
-              <span className="text-sm text-muted-foreground font-medium">
-                {step.label}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="mt-5 h-2 overflow-hidden rounded-full bg-muted/80 border border-border/40 relative">
-        <div
-          className={`h-full rounded-full transition-all duration-500 relative overflow-hidden ${
-            isComplete
-              ? "w-full bg-emerald-500"
-              : isRunning
-                ? "w-3/4 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500"
-                : "w-0 bg-muted-foreground/20"
-          }`}
-        >
-          {isRunning && (
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent animate-progress-shine" />
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default function ProcessingTab({ phases, documentPreview, job }) {
+export default function ProcessingTab({ steps, documentPreview, job }) {
   const progress = Number(job?.progress_percent || 0);
   const statusLabel = job?.status ? job.status.replace("_", " ") : "idle";
   const isProcessing =
-    !job?.status ||
-    ["queued", "running", "processing"].includes(job?.status);
+    !job?.status || ["queued", "running", "processing"].includes(job?.status);
 
   return (
     <div className="space-y-6 font-inter">
@@ -128,8 +66,12 @@ export default function ProcessingTab({ phases, documentPreview, job }) {
         </div>
 
         <div className="mt-2.5 flex items-center justify-between text-xs font-semibold text-muted-foreground">
-          <span>{isProcessing ? "Extracting & processing PDF..." : "Status"}</span>
-          <span className="font-bold text-foreground font-mono">{progress}%</span>
+          <span>
+            {isProcessing ? "Extracting & processing PDF..." : "Status"}
+          </span>
+          <span className="font-bold text-foreground font-mono">
+            {progress}%
+          </span>
         </div>
 
         {job?.error_message && (
@@ -139,9 +81,8 @@ export default function ProcessingTab({ phases, documentPreview, job }) {
         )}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[0.9fr_0.9fr_1.2fr]">
-        <PhaseCard phase={phases[0]} />
-        <PhaseCard phase={phases[1]} />
+      <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+        <ProcessingTimeline steps={steps} />
 
         <div className="rounded-3xl p-4 sm:p-6 surface-card border border-border">
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

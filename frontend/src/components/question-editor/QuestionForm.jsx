@@ -123,6 +123,30 @@ export default function QuestionForm({
         />
       </div>
 
+      {selected.hasCode && (
+        <div className="surface-card rounded-2xl p-3 sm:p-6 border border-border">
+          <label className="block text-xs sm:text-sm font-bold text-foreground mb-2">
+            Code Snippet
+          </label>
+          <p className="text-[11px] text-muted-foreground mb-2">
+            Only the code goes here - "Question Text" above is just the prose
+            lead-in shown before it (e.g. "What will be output of the following
+            code snippet?"). Indentation and line breaks here are preserved
+            exactly as typed.
+          </p>
+          <textarea
+            disabled={isViewer}
+            value={selected.codeSnippet || ""}
+            onChange={(e) =>
+              !isViewer && updateSelected("codeSnippet", e.target.value)
+            }
+            className={`w-full min-h-32 px-4 py-3 rounded-xl border border-border bg-card text-foreground font-mono whitespace-pre focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all text-xs sm:text-sm resize-vertical ${
+              isViewer ? "cursor-not-allowed opacity-60" : ""
+            }`}
+          />
+        </div>
+      )}
+
       <div className="surface-card rounded-2xl p-3 sm:p-6 border border-border">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
           <label className="text-xs sm:text-sm font-bold text-foreground">
@@ -193,8 +217,23 @@ export default function QuestionForm({
                   value={opt}
                   onChange={(e) => !isViewer && updateOption(i, e.target.value)}
                   placeholder={`Option ${String.fromCharCode(65 + i)}`}
-                  rows={2}
-                  className={`w-full sm:flex-1 px-4 py-2.5 rounded-xl border text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all resize-vertical min-h-10 ${
+                  rows={1}
+                  ref={(el) => {
+                    if (!el) return;
+                    // Auto-grows to fit content instead of staying pinned
+                    // at a fixed 2-row height with a manual resize handle.
+                    // Without this, pressing Enter on a big option DID add
+                    // a newline to the value - it just never became
+                    // visible, since the box itself never got taller, so
+                    // it looked like Enter was doing nothing. Runs on
+                    // every render (a fresh inline ref like this makes
+                    // React re-invoke it each time) so it also re-fits
+                    // when switching between questions with different
+                    // option lengths, not just while typing.
+                    el.style.height = "auto";
+                    el.style.height = `${el.scrollHeight}px`;
+                  }}
+                  className={`w-full sm:flex-1 px-4 py-2.5 rounded-xl border text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all resize-none overflow-hidden min-h-10 ${
                     isViewer
                       ? "cursor-not-allowed opacity-60 border-border bg-card text-foreground"
                       : isCorrect
@@ -228,6 +267,7 @@ export default function QuestionForm({
           text={selected.text}
           hasCode={selected.hasCode}
           codeLanguage={selected.codeLanguage}
+          codeSnippet={selected.codeSnippet}
           diagramUrl={selected.diagramUrl}
           placement={selected.placement}
           textClassName="text-sm font-bold text-foreground"

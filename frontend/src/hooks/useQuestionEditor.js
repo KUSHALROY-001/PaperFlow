@@ -240,6 +240,14 @@ export function useQuestionEditor() {
         status: "approved",
       };
 
+      // Only sent for a code question - saveQuestion is also the path for
+      // ordinary (non-code) questions, and there's nothing to send for
+      // those since hasCode/codeSnippet aren't editable independent of
+      // extraction for them.
+      if (question.hasCode) {
+        payload.codeSnippet = question.codeSnippet;
+      }
+
       if (question.persisted) {
         return api.updateQuestion(question.id, payload);
       }

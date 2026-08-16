@@ -21,6 +21,15 @@ export function formatDateTime(iso) {
 }
 
 export function useMyResults() {
+  // "full" = attempt.topic is null (the whole mock test) - "practice" =
+  // attempt.topic is set (see migrations/016_exam_attempts_topic.sql).
+  // Both were previously mixed into one flat list with no way to tell
+  // them apart, and a practice attempt's review pulled in every other
+  // topic's questions too (fixed separately in
+  // attempts.repository.js#listQuestionsWithAnswersForAttempt) - this is
+  // the other half: keeping the two kinds of session in their own tab
+  // instead of interleaved.
+  const [sessionType, setSessionType] = useState("full");
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -47,8 +56,19 @@ export function useMyResults() {
     };
   }, []);
 
-  const submittedAttempts = attempts.filter((a) => a.status === "submitted");
-  const totalAttempts = attempts.length;
+  // Counts across ALL attempts (not just the selected tab) so both tab
+  // labels can show a count regardless of which one is active.
+  const fullCount = attempts.filter((a) => !a.topic).length;
+  const practiceCount = attempts.filter((a) => a.topic).length;
+
+  const attemptsOfType = attempts.filter((a) =>
+    sessionType === "practice" ? !!a.topic : !a.topic,
+  );
+
+  const submittedAttempts = attemptsOfType.filter(
+    (a) => a.status === "submitted",
+  );
+  const totalAttempts = attemptsOfType.length;
   const avgScore = submittedAttempts.length
     ? Math.round(
         submittedAttempts.reduce((sum, a) => sum + scorePercent(a), 0) /
@@ -59,7 +79,7 @@ export function useMyResults() {
     ? Math.max(...submittedAttempts.map(scorePercent))
     : 0;
 
-  const filtered = attempts.filter((a) => {
+  const filtered = attemptsOfType.filter((a) => {
     if (filter === "all") return true;
     if (a.status !== "submitted") return false;
     const pct = scorePercent(a);
@@ -75,6 +95,10 @@ export function useMyResults() {
   }, []);
 
   return {
+    sessionType,
+    setSessionType,
+    fullCount,
+    practiceCount,
     filter,
     setFilter,
     loading,

@@ -189,6 +189,8 @@ export async function updateQuestion(questionId, workspaceId, body) {
         confidence: optionalNumber(body.confidence, null),
         status: body.status || null,
         metadata: body.metadata || null,
+        codeSnippetProvided: body.codeSnippet !== undefined,
+        codeSnippet: optionalString(body.codeSnippet),
       },
     );
 
@@ -272,4 +274,3 @@ export async function reorderQuestions(mockTestId, workspaceId, items) {
     client.release();
   }
 }
-

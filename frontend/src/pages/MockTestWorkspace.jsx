@@ -16,7 +16,7 @@ import {
 import { formatDate } from "@/lib/date";
 import { useMockTestWorkspace } from "@/hooks/useMockTestWorkspace";
 import { useAuth } from "@/lib/AuthContext";
-import { tabs, buildProcessingPhases } from "@/utils/mockTestHelpers";
+import { tabs, buildProcessingSteps } from "@/utils/mockTestHelpers";
 import OverviewTab from "../components/cluster/OverviewTab";
 import ProcessingTab from "../components/cluster/ProcessingTab";
 import ReviewTab from "../components/cluster/ReviewTab";
@@ -327,7 +327,7 @@ export default function MockTestWorkspace() {
       )}
       {activeTab === "processing" && (
         <ProcessingTab
-          phases={buildProcessingPhases(mocktest, latestJob)}
+          steps={buildProcessingSteps(mocktest, latestJob)}
           job={latestJob}
           documentPreview={[
             latestJob?.current_stage || "Waiting for a PDF upload.",

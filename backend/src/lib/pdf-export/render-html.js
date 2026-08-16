@@ -20,6 +20,7 @@ function normalizeQuestion(question) {
     correctOptionIndexes: question.correct_option_indexes,
     hasCode: question.has_code,
     codeLanguage: question.code_language,
+    codeSnippet: question.code_snippet,
   };
 }
 
@@ -42,12 +43,22 @@ function diagramHtml(question, { baseUrl }) {
 function questionBodyHtml(question) {
   if (question.hasCode) {
     // Matches QuestionContent.jsx's hasCode branch: monospace, whitespace
-    // preserved, no MathText run over it (a code snippet's $ or
-    // backslashes are syntax, not math delimiters).
+    // preserved, no MathText/table-splitting run over the code itself (a
+    // code snippet's $ or backslashes are syntax, not math delimiters).
+    //
+    // codeSnippet (migration 017) holds ONLY the code, with `text` holding
+    // just the prose lead-in - but a row extracted before that migration
+    // has no codeSnippet at all (has_code true, code_snippet NULL), and
+    // there's nothing to split it with after the fact, so that case falls
+    // back to the old behavior: the entire `text` field, prose included,
+    // goes in the code box exactly as it always has.
+    const codeBody = question.codeSnippet ?? question.text;
+    const leadIn = question.codeSnippet ? question.text : "";
     return `
+      ${leadIn ? renderQuestionTextHtml(leadIn) : ""}
       <div class="code-block">
         ${question.codeLanguage ? `<div class="code-lang">${escapeHtml(question.codeLanguage)}</div>` : ""}
-        <pre><code>${escapeHtml(question.text)}</code></pre>
+        <pre><code>${escapeHtml(codeBody)}</code></pre>
       </div>
     `;
   }

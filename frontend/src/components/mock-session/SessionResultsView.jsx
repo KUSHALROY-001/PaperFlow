@@ -123,6 +123,7 @@ export default function SessionResultsView({
                         text={rq.text}
                         hasCode={rq.hasCode}
                         codeLanguage={rq.codeLanguage}
+                        codeSnippet={rq.codeSnippet}
                         diagramUrl={rq.diagramUrl}
                         placement={rq.placement}
                         textClassName="font-bold text-foreground"

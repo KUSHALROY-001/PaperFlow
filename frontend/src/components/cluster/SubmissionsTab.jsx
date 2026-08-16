@@ -1,5 +1,6 @@
 import { Users, Loader2 } from "lucide-react";
 import SubmissionCard from "./SubmissionCard";
+import ScrollToTopButton from "../shared/ScrollToTopButton";
 
 export default function SubmissionsTab({ submissions, isLoading }) {
   if (isLoading) {
@@ -14,13 +15,10 @@ export default function SubmissionsTab({ submissions, isLoading }) {
     return (
       <div className="surface-card rounded-2xl border border-border p-10 text-center">
         <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-        <h3 className="font-bold text-foreground mb-1">
-          No submissions yet
-        </h3>
+        <h3 className="font-bold text-foreground mb-1">No submissions yet</h3>
         <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-          Once someone takes this test - whether a workspace member or
-          someone using a shared link - their attempt and score will show
-          up here.
+          Once someone takes this test - whether a workspace member or someone
+          using a shared link - their attempt and score will show up here.
         </p>
       </div>
     );
@@ -37,6 +35,7 @@ export default function SubmissionsTab({ submissions, isLoading }) {
           <SubmissionCard key={submission.id} submission={submission} />
         ))}
       </div>
+      <ScrollToTopButton />
     </div>
   );
 }

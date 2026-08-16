@@ -59,6 +59,7 @@ export default function SessionQuestionView({
             text={q.text}
             hasCode={q.hasCode}
             codeLanguage={q.codeLanguage}
+            codeSnippet={q.codeSnippet}
             diagramUrl={q.diagramUrl}
             placement={q.placement}
             textClassName="text-lg font-bold text-foreground leading-relaxed"

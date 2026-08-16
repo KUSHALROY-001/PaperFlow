@@ -211,9 +211,10 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
               marks_per_correct,
               negative_marks_per_wrong,
               has_code,
-              code_language
+              code_language,
+              code_snippet
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'needs_review', %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'needs_review', %s, %s, %s, %s, %s, %s)
             RETURNING id
             """,
             [
@@ -250,6 +251,7 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
                 # this needs a real False, not None, for that path.
                 bool(question.get("has_code", False)),
                 question.get("code_language"),
+                question.get("code_snippet"),
             ],
         ).fetchone()
 

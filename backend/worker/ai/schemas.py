@@ -80,10 +80,7 @@ def _question_item_schema(*, nullable_as_union):
                 "pseudocode, or a syntax-highlighted-looking block (program "
                 "output questions, 'what does this print' questions, etc). "
                 "This field is required for every question: you must "
-                "explicitly decide true or false, never skip it. When true, "
-                "'text' MUST preserve the code's original line breaks and "
-                "indentation exactly as they appear on the page - do not "
-                "reflow, join lines, or otherwise treat it as prose."
+                "explicitly decide true or false, never skip it."
             ),
         },
         "code_language": {
@@ -94,6 +91,23 @@ def _question_item_schema(*, nullable_as_union):
                 "'java', 'pseudocode') for syntax highlighting purposes - "
                 "null if you can't tell. When has_code is false, set this "
                 "to null - do not omit the key."
+            ),
+        },
+        "code_snippet": {
+            **optional("string"),
+            "description": (
+                "Required key (value may be null). When has_code is true, "
+                "the code ONLY - not the question's prose lead-in (e.g. "
+                "'What will be output of the following code snippet?') - "
+                "copied EXACTLY as it appears on the page, preserving every "
+                "line break and every level of indentation verbatim. Do not "
+                "reflow it into a paragraph, join lines, or 'clean up' the "
+                "formatting. 'text' should then hold ONLY the prose "
+                "lead-in, with the code left out of it (so the code isn't "
+                "duplicated between the two fields) - if there is no prose "
+                "at all before the code, 'text' may be an empty string. "
+                "When has_code is false, set this to null - do not omit "
+                "the key."
             ),
         },
     }
@@ -110,6 +124,7 @@ def _question_item_schema(*, nullable_as_union):
             "diagram_bbox",
             "has_code",
             "code_language",
+            "code_snippet",
         ],
     }
 
@@ -332,11 +347,13 @@ def normalize_ai_questions(payload, *, source="ai"):
 
         has_code = bool(item.get("has_code", False))
         code_language = clean_optional_text(item.get("code_language"))
+        code_snippet = clean_optional_text(item.get("code_snippet"))
         if not has_code:
             # Same reasoning as has_diagram/diagram_bbox above - don't
-            # carry a stray language guess through for a question the
-            # model itself said isn't code.
+            # carry a stray language guess (or code body) through for a
+            # question the model itself said isn't code.
             code_language = None
+            code_snippet = None
 
         normalized.append(
             {
@@ -355,6 +372,7 @@ def normalize_ai_questions(payload, *, source="ai"):
                 "diagram_bbox": diagram_bbox,
                 "has_code": has_code,
                 "code_language": code_language,
+                "code_snippet": code_snippet,
             }
         )
 

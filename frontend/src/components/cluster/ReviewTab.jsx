@@ -13,6 +13,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { ConfirmDialog } from "../design-system/ConfirmDialog";
 import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
+import ScrollToTopButton from "../shared/ScrollToTopButton";
 
 const filters = [
   { id: "all", label: "All" },
@@ -213,6 +214,7 @@ export default function ReviewTab({
                       text={question.text}
                       hasCode={question.hasCode}
                       codeLanguage={question.codeLanguage}
+                      codeSnippet={question.codeSnippet}
                       diagramUrl={question.diagramUrl}
                       placement={question.placement}
                       textClassName="text-base sm:text-lg font-bold text-foreground"
@@ -376,6 +378,7 @@ export default function ReviewTab({
           }}
         />
       )}
+      <ScrollToTopButton />
     </div>
   );
 }
