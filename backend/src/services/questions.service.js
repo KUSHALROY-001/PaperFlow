@@ -228,6 +228,34 @@ export async function deleteQuestion(questionId, workspaceId) {
   }
 }
 
+const BULK_STATUS_LIMIT = 100;
+
+export async function bulkUpdateStatus(workspaceId, body) {
+  const questionIds = requiredArray(body.questionIds, "questionIds");
+  const status = body.status;
+
+  if (!["approved", "rejected"].includes(status)) {
+    throw httpError(
+      400,
+      "status must be 'approved' or 'rejected' for bulk updates",
+    );
+  }
+  if (questionIds.length > BULK_STATUS_LIMIT) {
+    throw httpError(
+      400,
+      `Cannot update more than ${BULK_STATUS_LIMIT} questions at once`,
+    );
+  }
+
+  const updatedIds = await questionsRepo.bulkUpdateStatus(
+    questionIds,
+    workspaceId,
+    status,
+  );
+
+  return { updatedIds };
+}
+
 export async function reorderQuestions(mockTestId, workspaceId, items) {
   if (!Array.isArray(items) || items.length === 0) {
     throw httpError(400, "items array is required");

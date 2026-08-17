@@ -1,4 +1,5 @@
-import { Plus, Save, CheckCircle, Sigma } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Plus, Save, CheckCircle, Sigma, ArrowLeft } from "lucide-react";
 
 export default function EditorHeader({
   questionsCount,
@@ -9,14 +10,24 @@ export default function EditorHeader({
   saved,
   isViewer,
   onShowLatexReference,
+  returnTo,
 }) {
   return (
     <header className="min-h-14 bg-card/80 backdrop-blur-md border-b border-border flex flex-col gap-3 sm:flex-row sm:items-center px-4 sm:px-6 py-3 sticky top-16 z-20">
-      <div className="flex-1">
+      <div className="flex-1 flex items-center gap-3 min-w-0">
+        {returnTo && (
+          <Link
+            to={returnTo}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors shrink-0"
+            title="Return to the Review Queue"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to Review Queue
+          </Link>
+        )}
         <span className="text-sm font-bold text-foreground">
           {questionsCount} Questions
         </span>
-        <span className="text-xs text-muted-foreground ml-2">
+        <span className="text-xs text-muted-foreground">
           {issueCount} with issues
         </span>
       </div>

@@ -1,4 +1,5 @@
 import * as sharedService from "../services/shared.service.js";
+import { requiredString } from "../lib/validators.js";
 
 // --- Authenticated: managing share links for a mock test ---
 
@@ -31,7 +32,16 @@ export async function revokeShareLink(req, res) {
 // --- Public: taking a shared mock test, no auth required ---
 
 export async function getSharedMockTest(req, res) {
-  const result = await sharedService.getSharedMockTest(req.params.token);
+  // req.query.topics can be a single string or an array depending on how
+  // many "topics=" params were in the URL (Express's default query
+  // parser) - normalize to an array either way.
+  const topics = req.query.topics
+    ? [].concat(req.query.topics)
+    : undefined;
+  const result = await sharedService.getSharedMockTest(
+    req.params.token,
+    topics,
+  );
   res.json(result);
 }
 
@@ -39,6 +49,15 @@ export async function startSharedAttempt(req, res) {
   const result = await sharedService.startSharedAttempt({
     shareToken: req.params.token,
     guestName: req.body.guestName,
+    // Required (not optionalString) - this is the one behavior change
+    // guests see: an extra field before starting a test. Without a
+    // required email, some attempts stay permanently unlinkable to any
+    // student record, which defeats the point of the roster this powers
+    // (see students.repository.js). requiredString also lowercases-trims
+    // nothing itself, but taker_email is CITEXT (case-insensitive
+    // compare) so "Name@X.com" and "name@x.com" still group together.
+    guestEmail: requiredString(req.body.guestEmail, "guestEmail"),
+    topics: req.body.topics,
   });
   res.status(201).json(result);
 }

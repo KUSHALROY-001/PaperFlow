@@ -18,6 +18,8 @@ export default function SharedMock() {
     mockTestInfo,
     name,
     setName,
+    email,
+    setEmail,
     starting,
     startError,
     session,
@@ -126,6 +128,8 @@ export default function SharedMock() {
         mockTestInfo={mockTestInfo}
         name={name}
         setName={setName}
+        email={email}
+        setEmail={setEmail}
         starting={starting}
         startError={startError}
         handleStart={handleStart}

@@ -207,3 +207,26 @@ export async function deleteQuestion(questionId, workspaceId) {
 
   return result.rowCount > 0;
 }
+
+// Bulk approve/reject for the Review Queue's list view (Phase 3 - "these
+// 10 are all obviously fine"). Scoped to `status = 'needs_review'` so a
+// stale selection (e.g. someone else already decided one of these
+// questions in another tab between page-load and this click) can't
+// silently flip an already-approved/rejected question back and forth -
+// those ids just don't come back in the result, and the caller can tell
+// exactly which of its requested ids actually changed.
+export async function bulkUpdateStatus(questionIds, workspaceId, status) {
+  const result = await pool.query(
+    `
+    UPDATE questions
+    SET status = $1::question_status
+    WHERE id = ANY($2::uuid[])
+      AND workspace_id = $3
+      AND status = 'needs_review'
+    RETURNING id
+    `,
+    [status, questionIds, workspaceId],
+  );
+
+  return result.rows.map((row) => row.id);
+}

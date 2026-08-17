@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation, Outlet } from "react-router-dom";
+import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
@@ -17,9 +17,14 @@ import {
   UserPlus,
   CreditCard,
   Library,
+  BookMarked,
   ClipboardList,
+  ListChecks,
+  GraduationCap,
+  Info,
   Menu,
   X,
+  Copy,
 } from "lucide-react";
 import CreateClusterModal from "./CreateClusterModal";
 import ThemeToggle from "./ThemeToggle";
@@ -33,16 +38,27 @@ const navSections = [
       { icon: LayoutDashboard, label: "Dashboard", to: "/dashboard" },
       { icon: FolderOpen, label: "Clusters", to: "/clusters" },
       { icon: Zap, label: "Active Jobs", to: "/jobs" },
+      { icon: ListChecks, label: "Review Queue", to: "/review-queue" },
     ],
   },
   {
     label: "Tools",
-    items: [{ icon: Library, label: "Templates", to: "/templates" }],
+    items: [
+      { icon: Library, label: "Templates", to: "/templates" },
+      { icon: BookMarked, label: "Question Bank", to: "/question-bank" },
+      { icon: Copy, label: "Duplicates", to: "/duplicates" },
+    ],
   },
   {
     label: "Workspace",
     items: [
       { icon: Users, label: "Team", to: "/team" },
+      {
+        icon: GraduationCap,
+        label: "Students",
+        to: "/students",
+        hasInfo: true,
+      },
       { icon: UserPlus, label: "Invitations", to: "/invitations" },
       { icon: CreditCard, label: "Billing", to: "/billing" },
       { icon: Settings, label: "Settings", to: "/settings" },
@@ -76,13 +92,36 @@ function MockCraftLogo() {
         </svg>
       </div>
       <span className="text-xl font-extrabold text-foreground tracking-tight">
-        MockCraft
+        PaperFlow
       </span>
     </div>
   );
 }
 
-function SidebarContent({ location, onNavigate, onCreateCluster }) {
+function SidebarContent({
+  location,
+  onNavigate,
+  onCreateCluster,
+  badges = {},
+}) {
+  const navigate = useNavigate();
+
+  const handleShowInfo = (event, to) => {
+    // Not nested inside the Link below (a <button> inside an <a> is
+    // invalid HTML and unreliable to click in some browsers) - a
+    // sibling instead, so no stopPropagation/preventDefault interaction
+    // with the Link's own navigation is needed here at all.
+    //
+    // ?showInfo=1 rather than clearing localStorage directly here: the
+    // target page's own intro card (see StudentsIntroCard.jsx) needs to
+    // react to this even when it's already mounted (clicking this while
+    // already on /students navigates to the same route, which doesn't
+    // remount anything) - a URL param change is what it can actually
+    // observe reactively; a plain localStorage write from over here
+    // wouldn't be.
+    navigate(`${to}?showInfo=1`);
+    onNavigate?.();
+  };
   return (
     <>
       <div className="p-5 border-b border-border">
@@ -91,7 +130,7 @@ function SidebarContent({ location, onNavigate, onCreateCluster }) {
         </Link>
       </div>
 
-      <nav className="flex-1 p-3.5 space-y-4 overflow-y-auto scrollbar-hidden">
+      <nav className="flex-1 space-y-4 overflow-y-auto scrollbar-hidden">
         {navSections.map((section, si) => (
           <div key={si}>
             {section.label && (
@@ -104,26 +143,48 @@ function SidebarContent({ location, onNavigate, onCreateCluster }) {
                 const active =
                   location.pathname === item.to ||
                   (item.to === "/clusters" &&
-                    location.pathname.startsWith("/cluster/"));
+                    location.pathname.startsWith("/cluster/")) ||
+                  (item.to === "/students" &&
+                    location.pathname.startsWith("/students/"));
+                const badgeCount = badges[item.to];
                 return (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    onClick={onNavigate}
-                    className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                      active
-                        ? "bg-orange-500/10 text-orange-500 dark:bg-orange-500/15 dark:text-orange-500 font-semibold"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
-                  >
-                    <item.icon
-                      className={`w-4 h-4 ${active ? "text-orange-500" : ""}`}
-                    />
-                    {item.label}
-                    {active && (
-                      <ChevronRight className="w-3.5 h-3.5 ml-auto text-orange-500" />
+                  <div key={item.to} className="flex items-center gap-1">
+                    <Link
+                      to={item.to}
+                      onClick={onNavigate}
+                      className={`flex-1 flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all min-w-0 ${
+                        active
+                          ? "text-orange-500 dark:text-orange-500 font-semibold"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <item.icon
+                        className={`w-4 h-4 shrink-0 ${active ? "text-orange-500" : ""}`}
+                      />
+                      <span className="truncate">{item.label}</span>
+                      {Boolean(badgeCount) && (
+                        <span
+                          className={`ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
+                            active
+                              ? "bg-orange-500 text-white"
+                              : "bg-muted-foreground/20 text-muted-foreground"
+                          }`}
+                        >
+                          {badgeCount > 99 ? "99+" : badgeCount}
+                        </span>
+                      )}
+                    </Link>
+                    {item.hasInfo && (
+                      <button
+                        type="button"
+                        onClick={(event) => handleShowInfo(event, item.to)}
+                        title={`What is the ${item.label} page?`}
+                        className="flex mr-2 h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10 transition-colors shrink-0"
+                      >
+                        <Info className="w-3.5 h-3.5" />
+                      </button>
                     )}
-                  </Link>
+                  </div>
                 );
               })}
             </div>
@@ -181,6 +242,26 @@ export default function AppShell() {
   });
   const pendingInviteCount = myInvitationsData?.invitations?.length || 0;
 
+  // Short staleTime + refetch-on-focus (not a long interval) - this badge
+  // is meant to feel "live" while a reviewer is actually working the
+  // queue in another tab, without hammering the endpoint on a timer while
+  // they're off doing something else entirely.
+  const { data: reviewQueueCountData } = useQuery({
+    queryKey: ["review-queue-count", null, null, false],
+    queryFn: () => api.getReviewQueueCount(),
+    staleTime: 15_000,
+    refetchOnWindowFocus: true,
+  });
+  const { data: duplicatesCountData } = useQuery({
+    queryKey: ["duplicates-count"],
+    queryFn: api.countPendingDuplicates,
+    refetchInterval: 60_000,
+  });
+  const navBadges = {
+    "/review-queue": reviewQueueCountData?.count || 0,
+    "/duplicates": duplicatesCountData?.count || 0,
+  };
+
   useEffect(() => {
     setMobileNavOpen(false);
     setShowUserMenu(false);
@@ -206,6 +287,7 @@ export default function AppShell() {
           location={location}
           onNavigate={() => {}}
           onCreateCluster={openClusterModal}
+          badges={navBadges}
         />
       </aside>
 
@@ -232,6 +314,7 @@ export default function AppShell() {
               location={location}
               onNavigate={() => setMobileNavOpen(false)}
               onCreateCluster={openClusterModal}
+              badges={navBadges}
             />
           </aside>
         </div>

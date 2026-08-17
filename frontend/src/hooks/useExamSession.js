@@ -30,13 +30,15 @@ export function useExamSession({ mode }) {
   const [searchParams] = useSearchParams();
   const mockTestId = mode === "member" ? params.id : undefined;
   const shareToken = mode === "guest" ? params.token : undefined;
-  // Member-mode only, for now - matches OverviewTab.jsx's "Start Practice"
-  // button, which builds /session/:id?topics=A&topics=B... (one repeated
-  // `topics` param per selected topic). Guest/shared links have no
-  // equivalent entry point yet. getAll returns [] when there's no
-  // `topics` param at all, matching api.startAttempt's "empty/absent
-  // means the whole mock test" handling.
-  const topics = mode === "member" ? searchParams.getAll("topics") : [];
+  // Reads the same repeated `?topics=A&topics=B` param in both modes now -
+  // member-mode's own "Start Practice" flow (OverviewTab.jsx) and, for
+  // guest mode, links generated from the Students weak-topics panel
+  // (WeakTopicsPanel.jsx), which need a shared/guest link that only
+  // serves one topic's questions to whoever opens it. getAll returns []
+  // when there's no `topics` param at all, matching api.startAttempt's/
+  // api.startSharedAttempt's "empty/absent means the whole mock test"
+  // handling.
+  const topics = searchParams.getAll("topics");
   const { isAuthenticated } = useAuth();
 
   // 'guest' starts at 'loading' -> 'intro' (collect name) -> 'session' -> 'result'
@@ -48,6 +50,7 @@ export function useExamSession({ mode }) {
 
   const [mockTestInfo, setMockTestInfo] = useState(null); // guest only: getSharedMockTest() result
   const [name, setName] = useState(""); // guest only
+  const [email, setEmail] = useState(""); // guest only
   const [starting, setStarting] = useState(false); // guest only
   const [startError, setStartError] = useState(null); // guest only
 
@@ -108,7 +111,7 @@ export function useExamSession({ mode }) {
 
     async function load() {
       try {
-        const result = await api.getSharedMockTest(shareToken);
+        const result = await api.getSharedMockTest(shareToken, topics);
         if (cancelled) return;
         setMockTestInfo(result);
         setPhase("intro");
@@ -124,7 +127,7 @@ export function useExamSession({ mode }) {
     return () => {
       cancelled = true;
     };
-  }, [mode, shareToken]);
+  }, [mode, shareToken, topics.join("|")]);
 
   const questions = session?.questions || [];
   const q = questions[current];
@@ -228,12 +231,21 @@ export function useExamSession({ mode }) {
   }, [session, review, loading, phase]);
 
   const handleStart = async () => {
-    // guest-only: called from the intro screen once a name is entered
-    if (!name.trim() || starting) return;
+    // guest-only: called from the intro screen once a name AND email are
+    // entered - email is required server-side now too (see
+    // shared.controller.js#startSharedAttempt), since it's the only
+    // stable identity the student roster (students.repository.js) has to
+    // group a person's attempts by.
+    if (!name.trim() || !email.trim() || starting) return;
     setStarting(true);
     setStartError(null);
     try {
-      const result = await api.startSharedAttempt(shareToken, name.trim());
+      const result = await api.startSharedAttempt(
+        shareToken,
+        name.trim(),
+        email.trim(),
+        topics,
+      );
       setSession(result);
       setTimeLeft((result.mockTest?.durationMinutes || 20) * 60);
       setPhase("session");
@@ -332,6 +344,8 @@ export function useExamSession({ mode }) {
     mockTestInfo,
     name,
     setName,
+    email,
+    setEmail,
     starting,
     startError,
     session,

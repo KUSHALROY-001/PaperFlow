@@ -106,10 +106,11 @@ export async function resolveWorkspaceForShareToken(shareToken) {
   return share.workspace_id;
 }
 
-export async function getSharedMockTest(shareToken) {
+export async function getSharedMockTest(shareToken, topics) {
   const share = await resolveShare(shareToken);
   const questions = await mockTestsRepo.listPlayableQuestions(
     share.mock_test_id,
+    topics && topics.length ? topics : null,
   );
 
   return {
@@ -126,17 +127,25 @@ export async function getSharedMockTest(shareToken) {
   };
 }
 
-export async function startSharedAttempt({ shareToken, guestName }) {
+export async function startSharedAttempt({
+  shareToken,
+  guestName,
+  guestEmail,
+  topics,
+}) {
   const share = await resolveShare(shareToken);
 
   return attemptsService.startAttempt({
     mockTestId: share.mock_test_id,
     workspaceId: share.workspace_id,
     userId: null,
+    topics,
+    takerEmail: guestEmail,
     metadata: {
       source: "shared_link",
       shareToken,
       guestName: guestName || null,
+      guestEmail: guestEmail || null,
     },
   });
 }

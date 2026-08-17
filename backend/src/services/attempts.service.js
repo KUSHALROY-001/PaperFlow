@@ -65,6 +65,7 @@ export async function startAttempt({
   workspaceId,
   userId,
   topics,
+  takerEmail,
   metadata,
 }) {
   const mockTest = await mockTestsRepo.findMockTestById(
@@ -144,6 +145,7 @@ export async function startAttempt({
         topics: normalizedTopics,
         totalQuestions: questions.length,
         durationMinutes: sessionDurationMinutes,
+        takerEmail: takerEmail && takerEmail.trim() ? takerEmail.trim() : null,
         metadata: metadata || {},
       });
     }

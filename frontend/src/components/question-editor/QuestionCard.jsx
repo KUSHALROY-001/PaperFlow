@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { AlertCircle, GripVertical, Trash2 } from "lucide-react";
+import { AlertCircle, GripVertical, ImageIcon, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 
 function QuestionCard({
@@ -16,6 +16,8 @@ function QuestionCard({
 }) {
   const { isViewer } = useAuth();
 
+  const hasDiagram = Boolean(q.diagramUrl);
+
   return (
     <div
       onMouseDown={(e) => {
@@ -25,7 +27,7 @@ function QuestionCard({
       }}
       onMouseEnter={() => !isViewer && onCardMouseEnter(index)}
       onClick={() => onSelect(q.id)}
-      className={`p-4 rounded-2xl border transition-all duration-150 select-none ${
+      className={`relative p-4 rounded-2xl border transition-all duration-150 select-none ${
         isViewer
           ? "cursor-default border-border bg-card"
           : "cursor-grab active:cursor-grabbing"
@@ -46,7 +48,11 @@ function QuestionCard({
               ? "text-muted-foreground/30 cursor-not-allowed"
               : "text-muted-foreground hover:text-orange-500"
           }`}
-          title={isViewer ? "Editor role is required to reorder questions" : undefined}
+          title={
+            isViewer
+              ? "Editor role is required to reorder questions"
+              : undefined
+          }
         >
           <GripVertical className="w-4 h-4 mt-0.5 shrink-0" />
         </div>
@@ -58,7 +64,7 @@ function QuestionCard({
             <span className="text-xs bg-orange-500/15 text-orange-500 border border-orange-500/20 px-2 py-0.5 rounded-lg font-bold">
               Q{q.questionNo}
             </span>
-            <span className="text-xs bg-orange-500/15 text-orange-500 border border-orange-500/20 px-2 py-0.5 rounded-lg font-bold truncate max-w-[120px]">
+            <span className="text-xs bg-orange-500/15 text-orange-500 border border-orange-500/20 px-2 py-0.5 rounded-lg font-bold truncate max-w-30">
               {q.topic}
             </span>
             {!q.persisted && (
@@ -94,6 +100,12 @@ function QuestionCard({
           <Trash2 className="w-3.5 h-3.5" />
         </button>
       </div>
+
+      {hasDiagram && (
+        <div className="absolute bottom-3 right-3 flex h-7 w-7 items-center justify-center rounded-md border border-border bg-card/90 shadow-sm backdrop-blur-sm">
+          <ImageIcon className="h-4 w-4 text-muted-foreground" />
+        </div>
+      )}
     </div>
   );
 }

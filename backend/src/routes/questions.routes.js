@@ -34,6 +34,15 @@ questionsRouter.post(
   asyncHandler(questionsController.create),
 );
 questionsRouter.get("/:questionId", asyncHandler(questionsController.getOne));
+// Must be registered before PATCH /:questionId - Express matches routes
+// in registration order, and :questionId's param pattern would otherwise
+// swallow "bulk-status" as a literal (nonexistent) question id, since
+// both routes share the same method and nesting level.
+questionsRouter.patch(
+  "/bulk-status",
+  requireRole("editor"),
+  asyncHandler(questionsController.bulkUpdateStatus),
+);
 questionsRouter.patch(
   "/:questionId",
   requireRole("editor"),

@@ -21,6 +21,7 @@ export async function insertAttempt(
     topics,
     totalQuestions,
     durationMinutes,
+    takerEmail,
     metadata,
   },
 ) {
@@ -34,9 +35,10 @@ export async function insertAttempt(
       status,
       total_questions,
       duration_minutes,
+      taker_email,
       metadata
     )
-    VALUES ($1, $2, $3, $4, 'in_progress', $5, $6, $7)
+    VALUES ($1, $2, $3, $4, 'in_progress', $5, $6, $7, $8)
     ON CONFLICT (workspace_id, mock_test_id, user_id, (COALESCE(topics, ARRAY[]::text[])))
       WHERE status = 'in_progress' AND user_id IS NOT NULL
       DO NOTHING
@@ -49,6 +51,7 @@ export async function insertAttempt(
       topics && topics.length ? topics : null,
       totalQuestions,
       durationMinutes ?? null,
+      takerEmail || null,
       metadata || {},
     ],
   );

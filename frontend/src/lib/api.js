@@ -147,6 +147,14 @@ export const api = {
       body: JSON.stringify(payload),
     });
   },
+  // Workspace-wide (unlike listMockTests above, which is cluster-scoped)
+  // - GET /api/mock-tests, already returns cluster_name joined in (see
+  // mock-tests.repository.js#listMockTests). Used by AddToTestModal's
+  // target-mock-test picker, which needs to search across every mock
+  // test in the workspace, not just one cluster at a time.
+  listAllMockTests() {
+    return apiRequest("/api/mock-tests");
+  },
   // documentType: "questions" (default, PDF already has ready-made MCQs) or
   // "notes" (PDF is study notes - ask the AI to write new questions from it
   // instead of trying to extract questions that don't exist). Passed as a
@@ -206,6 +214,37 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify(payload),
     });
+  },
+  bulkUpdateQuestionStatus(questionIds, status) {
+    return apiRequest("/api/questions/bulk-status", {
+      method: "PATCH",
+      body: JSON.stringify({ questionIds, status }),
+    });
+  },
+  // filters: { clusterId, mockTestId, maxConfidence, hasAiIssues, sort,
+  // cursor, limit } - all optional, dropped from the query string when
+  // undefined/null/empty rather than sent as literal "undefined" strings.
+  getReviewQueue(filters = {}) {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        params.set(key, value);
+      }
+    });
+    const query = params.toString();
+    return apiRequest(`/api/review-queue${query ? `?${query}` : ""}`);
+  },
+  getReviewQueueCount(filters = {}) {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        params.set(key, value);
+      }
+    });
+    const query = params.toString();
+    return apiRequest(
+      `/api/review-queue/count${query ? `?${query}` : ""}`,
+    );
   },
   deleteQuestion(questionId) {
     return apiRequest(`/api/questions/${questionId}`, {
@@ -297,6 +336,41 @@ export const api = {
     });
   },
 
+  // --- Question Bank ---
+  // params: { search, topic, subtopic, hasCode, hasDiagram, status,
+  // questionType, clusterId, cursor, limit } - all optional, filtered out
+  // below rather than sent as literal "undefined" query-string values.
+  searchQuestionBank(params = {}) {
+    const searchParams = new URLSearchParams(
+      Object.fromEntries(
+        Object.entries(params).filter(
+          ([, value]) => value !== undefined && value !== null && value !== "",
+        ),
+      ),
+    );
+    const suffix = searchParams.toString() ? `?${searchParams.toString()}` : "";
+    return apiRequest(`/api/question-bank${suffix}`);
+  },
+  listQuestionBankTopics() {
+    return apiRequest("/api/question-bank/topics");
+  },
+  copyQuestionToMockTest(questionId, targetMockTestId) {
+    return apiRequest(`/api/question-bank/${questionId}/copy`, {
+      method: "POST",
+      body: JSON.stringify({ targetMockTestId }),
+    });
+  },
+  // Returns { copied: [...], failed: [{questionId, message}] } - a mixed
+  // result, not a single success/failure, so the caller can tell someone
+  // exactly which of their selected questions didn't make it (and why)
+  // rather than an opaque "some failed" for the whole batch.
+  copyQuestionsToMockTestBulk(questionIds, targetMockTestId) {
+    return apiRequest("/api/question-bank/copy-bulk", {
+      method: "POST",
+      body: JSON.stringify({ questionIds, targetMockTestId }),
+    });
+  },
+
   // --- Attempts (workspace-authenticated) ---
   startAttempt(mockTestId, topics) {
     // Accepts a single topic string (back-compat with any caller that
@@ -323,6 +397,19 @@ export const api = {
   },
   listMyAttempts() {
     return apiRequest("/api/attempts");
+  },
+  // --- Duplicate question review ---
+  listDuplicates() {
+    return apiRequest("/api/duplicates");
+  },
+  countPendingDuplicates() {
+    return apiRequest("/api/duplicates/count");
+  },
+  resolveDuplicate(pairId, { action, keepQuestionId }) {
+    return apiRequest(`/api/duplicates/${pairId}/resolve`, {
+      method: "POST",
+      body: JSON.stringify({ action, keepQuestionId }),
+    });
   },
   getAttempt(attemptId) {
     return apiRequest(`/api/attempts/${attemptId}`);
@@ -370,13 +457,28 @@ export const api = {
   },
 
   // --- Public shared-test-taking (no auth - token is the credential) ---
-  getSharedMockTest(token) {
-    return apiRequest(`/api/shared/${token}`);
+  getSharedMockTest(token, topics) {
+    // Same normalization as startAttempt above - accepts an array, a
+    // single string, or nothing.
+    const list = Array.isArray(topics)
+      ? topics.filter(Boolean)
+      : topics
+        ? [topics]
+        : [];
+    const query = list.length
+      ? `?${list.map((t) => `topics=${encodeURIComponent(t)}`).join("&")}`
+      : "";
+    return apiRequest(`/api/shared/${token}${query}`);
   },
-  startSharedAttempt(token, guestName) {
+  startSharedAttempt(token, guestName, guestEmail, topics) {
+    const list = Array.isArray(topics)
+      ? topics.filter(Boolean)
+      : topics
+        ? [topics]
+        : [];
     return apiRequest(`/api/shared/${token}/attempts`, {
       method: "POST",
-      body: JSON.stringify({ guestName }),
+      body: JSON.stringify({ guestName, guestEmail, topics: list }),
     });
   },
   getSharedAttempt(token, attemptId) {
@@ -408,6 +510,49 @@ export const api = {
     return apiRequest(`/api/shared/${token}/attempts/${attemptId}/claim`, {
       method: "POST",
     });
+  },
+
+  // --- Students (roster, built from taker_email on exam_attempts) ---
+  listStudents(search, cohortId) {
+    const params = new URLSearchParams();
+    if (search) params.set("search", search);
+    if (cohortId) params.set("cohortId", cohortId);
+    const query = params.toString() ? `?${params.toString()}` : "";
+    return apiRequest(`/api/students${query}`);
+  },
+  getStudentDetail(email) {
+    return apiRequest(`/api/students/${encodeURIComponent(email)}`);
+  },
+
+  getWeakTopics(cohortId) {
+    const query = cohortId ? `?cohortId=${encodeURIComponent(cohortId)}` : "";
+    return apiRequest(`/api/students/weak-topics${query}`);
+  },
+
+  // --- Cohorts (Phase 2 - manual grouping of students) ---
+  listCohorts() {
+    return apiRequest(`/api/cohorts`);
+  },
+  createCohort(name) {
+    return apiRequest(`/api/cohorts`, {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    });
+  },
+  listCohortMembers(cohortId) {
+    return apiRequest(`/api/cohorts/${cohortId}/members`);
+  },
+  addCohortMember(cohortId, email) {
+    return apiRequest(`/api/cohorts/${cohortId}/members`, {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  },
+  removeCohortMember(cohortId, email) {
+    return apiRequest(
+      `/api/cohorts/${cohortId}/members/${encodeURIComponent(email)}`,
+      { method: "DELETE" },
+    );
   },
 
   // --- Settings (profile, preferences, password, account) ---

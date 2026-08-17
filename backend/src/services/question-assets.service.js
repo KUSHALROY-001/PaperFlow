@@ -1,5 +1,8 @@
+import { copyFile } from "node:fs/promises";
+import path from "node:path";
 import * as questionAssetsRepo from "../repositories/question-assets.repository.js";
 import { generateDiagramAccessToken } from "../lib/diagram-signed-url.js";
+import { ensureManualDiagramDir } from "../lib/file-storage.js";
 
 function buildDiagramUrl(questionId, workspaceId, { shareToken } = {}) {
   const token = generateDiagramAccessToken(questionId, workspaceId);
@@ -105,5 +108,71 @@ export async function attachDiagramOriginalUrls(
       diagramOriginalUrl: buildDiagramOriginalUrl(id, workspaceId),
       hasManualCrop: asset.hasManualCrop,
     };
+  });
+}
+
+// Used by question-bank.service.js#copyQuestionToMockTest - a copy is
+// meaningless if it silently loses its diagram, but this is real file
+// I/O (not something the pure-DB question-bank.repository.js should be
+// doing), so it lives here alongside every other diagram-file operation
+// in this codebase, called as its own step after the question row copy
+// commits, the same "DB row first, files after, best-effort on the file
+// half" ordering worker.py already uses for extracted diagrams (see
+// worker.py's pending_diagram_writes) - a question that copied correctly
+// but whose diagram failed to clone should still exist as a valid
+// question, just without its image, rather than the whole copy failing
+// over a file-copy error.
+//
+// No-op (returns without doing anything) when the source question has no
+// asset at all - most copied questions won't.
+export async function cloneDiagramAsset({
+  sourceQuestionId,
+  targetQuestionId,
+  targetMockTestId,
+  targetWorkspaceId,
+}) {
+  const sourceAsset =
+    await questionAssetsRepo.findAssetForQuestion(sourceQuestionId);
+  if (!sourceAsset) {
+    return;
+  }
+
+  const targetDir = await ensureManualDiagramDir(
+    targetWorkspaceId,
+    targetMockTestId,
+  );
+  const storagePath = path.join(targetDir, `${targetQuestionId}.png`);
+  await copyFile(sourceAsset.storagePath, storagePath);
+
+  // Mirrors migration 014's own rationale: not every source asset has an
+  // oversized original to clone (anything extracted before that
+  // migration shipped) - when it doesn't, the copy inherits the same
+  // "Edit Crop disabled, re-extract is the only path to a fresh crop"
+  // state the source itself was already in, rather than fabricating an
+  // original that doesn't exist.
+  let originalStoragePath = null;
+  if (sourceAsset.originalStoragePath) {
+    originalStoragePath = path.join(
+      targetDir,
+      `${targetQuestionId}.original.png`,
+    );
+    await copyFile(sourceAsset.originalStoragePath, originalStoragePath);
+  }
+
+  // source/placement carried over as-is - the pixels are identical to
+  // what the source asset already was (still true whether the source was
+  // originally 'extracted' or 'manual'), so there's nothing to
+  // reclassify here. has_manual_crop deliberately NOT carried over
+  // (replaceAssetForQuestion defaults it to false): the CROPPED bytes are
+  // what got copied (storagePath, not a re-derivation from the original),
+  // so the target's crop is already applied and final - "has this been
+  // manually cropped" is about whether the target's OWN crop tool has
+  // been used on it, which it hasn't, independent of the source's history.
+  await questionAssetsRepo.replaceAssetForQuestion(targetQuestionId, {
+    storagePath: String(storagePath),
+    originalStoragePath: originalStoragePath ? String(originalStoragePath) : null,
+    source: sourceAsset.source,
+    placement: sourceAsset.placement,
+    pageNumber: null,
   });
 }

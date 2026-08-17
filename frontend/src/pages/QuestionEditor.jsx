@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuestionEditor } from "@/hooks/useQuestionEditor";
 import { useAuth } from "@/lib/AuthContext";
 import EditorSidebar from "../components/question-editor/EditorSidebar";
@@ -13,6 +13,12 @@ import { ConfirmDialog } from "../components/design-system/ConfirmDialog";
 export default function QuestionEditor() {
   const navigate = useNavigate();
   const { isViewer } = useAuth();
+  const [searchParams] = useSearchParams();
+  // Set when arriving here from the Review Queue's Edit action (see
+  // QueueQuestionCard.jsx) - only that flow ever sets it, so its mere
+  // presence is enough to show the breadcrumb without a dedicated
+  // "cameFromReviewQueue" boolean param.
+  const returnTo = searchParams.get("returnTo");
   const [pendingLeavePath, setPendingLeavePath] = useState(null);
   const [isLatexReferenceOpen, setIsLatexReferenceOpen] = useState(false);
 
@@ -175,6 +181,7 @@ export default function QuestionEditor() {
           saved={saved}
           isViewer={isViewer}
           onShowLatexReference={() => setIsLatexReferenceOpen(true)}
+          returnTo={returnTo}
         />
 
         {error && (

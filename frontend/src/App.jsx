@@ -26,10 +26,12 @@ import MockTestWorkspace from "./pages/MockTestWorkspace";
 import QuestionEditor from "./pages/QuestionEditor";
 import Templates from "./pages/Templates";
 import Team from "./pages/Team";
-import Analytics from "./pages/Analytics";
-import BatchUpload from "./pages/BatchUpload";
+import Students from "./pages/Students";
+import StudentDetail from "./pages/StudentDetail";
+import QuestionBank from "./pages/QuestionBank";
+import ReviewQueue from "./pages/ReviewQueue";
+import Duplicates from "./pages/Duplicates";
 import SharedMock from "./pages/SharedMock";
-import Integrations from "./pages/Integrations";
 import Billing from "./pages/Billing";
 import MyResults from "./pages/MyResults";
 import AuthPage from "./pages/AuthPage";
@@ -110,12 +112,14 @@ const AuthenticatedApp = () => {
           element={<QuestionEditor />}
         />
         <Route path="/jobs" element={<ActiveJobs />} />
+        <Route path="/review-queue" element={<ReviewQueue />} />
         <Route path="/templates" element={<Templates />} />
+        <Route path="/duplicates" element={<Duplicates />} />
         <Route path="/team" element={<Team />} />
+        <Route path="/students" element={<Students />} />
+        <Route path="/students/:email" element={<StudentDetail />} />
         <Route path="/invitations" element={<MyInvitations />} />
-        <Route path="/analytics" element={<Analytics />} />
-        <Route path="/batch" element={<BatchUpload />} />
-        <Route path="/integrations" element={<Integrations />} />
+        <Route path="/question-bank" element={<QuestionBank />} />
         <Route path="/billing" element={<Billing />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/my-results" element={<MyResults />} />

@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .config import MAX_JOBS_PER_RUN, OCR_ENABLED, POLL_INTERVAL_SECONDS
 from .ai import enhance_questions_with_ai
+from .duplicate_detector import detect_duplicates_for_mock_test
 from .db import (
     claim_next_job,
     get_connection,
@@ -211,6 +212,25 @@ def process_job(job):
             # committed and correct either way; losing one diagram image to
             # a disk error shouldn't fail a job that otherwise succeeded.
             print(f"Failed to write diagram asset {pending_write['storage_path']}: {error}")
+
+    # Also deliberately outside the "Saving questions" transaction and
+    # only reached once that committed - scans this job's newly-inserted
+    # questions against the rest of the workspace's question bank (see
+    # duplicate_detector.py; migrations/020_duplicate_detection.sql) so a
+    # reused topic bank gets flagged incrementally, one job at a time,
+    # instead of needing a full workspace rescan on every extraction.
+    # Best-effort like the diagram writes just above: a detection failure
+    # (e.g. the pg_trgm extension missing on some environment) shouldn't
+    # fail a job whose actual questions were extracted and saved fine.
+    try:
+        with get_connection() as connection:
+            new_pairs = detect_duplicates_for_mock_test(
+                connection, job["workspace_id"], job["mock_test_id"]
+            )
+        if new_pairs:
+            print(f"Found {new_pairs} new duplicate question pair(s)")
+    except Exception as error:
+        print(f"Duplicate detection failed for job {job['id']}: {error}")
 
     return len(questions)
 

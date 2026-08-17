@@ -5,14 +5,19 @@ import cors from "cors";
 import morgan from "morgan";
 import { authRouter } from "./routes/auth.routes.js";
 import { attemptsRouter } from "./routes/attempts.routes.js";
+import { duplicatesRouter } from "./routes/duplicates.routes.js";
 import { clustersRouter } from "./routes/clusters.routes.js";
 import { dashboardRouter } from "./routes/dashboard.routes.js";
 import { extractionTemplatesRouter } from "./routes/extraction-templates.routes.js";
 import { mockTestsRouter } from "./routes/mock-tests.routes.js";
 import { processingJobsRouter } from "./routes/processing-jobs.routes.js";
 import { questionsRouter } from "./routes/questions.routes.js";
+import { questionBankRouter } from "./routes/question-bank.routes.js";
+import { reviewQueueRouter } from "./routes/review-queue.routes.js";
 import { sharedRouter } from "./routes/shared.routes.js";
 import { teamRouter } from "./routes/team.routes.js";
+import { studentsRouter } from "./routes/students.routes.js";
+import { cohortsRouter } from "./routes/cohorts.routes.js";
 import { requireAuth } from "./middleware/require-auth.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { asyncHandler } from "./lib/async-handler.js";
@@ -120,8 +125,13 @@ export function createApp() {
     asyncHandler(questionAssetsController.serveDiagramOriginal),
   );
   app.use("/api/questions", requireAuth, questionsRouter);
+  app.use("/api/review-queue", requireAuth, reviewQueueRouter);
+  app.use("/api/question-bank", requireAuth, questionBankRouter);
   app.use("/api/attempts", requireAuth, attemptsRouter);
+  app.use("/api/duplicates", requireAuth, duplicatesRouter);
   app.use("/api/team", requireAuth, teamRouter);
+  app.use("/api/students", requireAuth, studentsRouter);
+  app.use("/api/cohorts", requireAuth, cohortsRouter);
   // Deliberately public - this is how an unauthenticated visitor takes a
   // mock test via a share link. Every handler in shared.routes.js resolves
   // its own workspace scoping from the token, not from req.workspaceId
