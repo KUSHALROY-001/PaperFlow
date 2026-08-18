@@ -9,6 +9,7 @@ import QueueProgressBar from "../components/review-queue/QueueProgressBar";
 import QueueQuestionCard from "../components/review-queue/QueueQuestionCard";
 import QueueListView from "../components/review-queue/QueueListView";
 import QueueEmptyState from "../components/review-queue/QueueEmptyState";
+import ReviewQueueIntroCard from "../components/review-queue/ReviewQueueIntroCard";
 
 const SORT_OPTIONS = [
   { value: "confidence_asc", label: "Lowest confidence first" },
@@ -206,6 +207,8 @@ export default function ReviewQueue() {
 
   return (
     <div className="space-y-5 font-inter max-w-3xl mx-auto">
+      <ReviewQueueIntroCard />
+
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-foreground">
           Review Queue

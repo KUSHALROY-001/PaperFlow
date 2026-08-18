@@ -14,6 +14,14 @@ export async function getOne(req, res) {
   res.json({ mockTest });
 }
 
+export async function getSummary(req, res) {
+  const mockTest = await mockTestsService.getMockTestSummary(
+    req.params.mockTestId,
+    req.workspaceId,
+  );
+  res.json({ mockTest });
+}
+
 export async function update(req, res) {
   const mockTest = await mockTestsService.updateMockTest(
     req.params.mockTestId,
@@ -48,6 +56,14 @@ export async function upload(req, res) {
     documentType: req.body.documentType,
   });
   res.status(201).json(result);
+}
+
+export async function cancelProcessing(req, res) {
+  const result = await mockTestsService.cancelProcessing({
+    mockTest: req.mockTest,
+    workspaceId: req.workspaceId,
+  });
+  res.json(result);
 }
 
 export async function reprocess(req, res) {

@@ -18,6 +18,8 @@ import { sharedRouter } from "./routes/shared.routes.js";
 import { teamRouter } from "./routes/team.routes.js";
 import { studentsRouter } from "./routes/students.routes.js";
 import { cohortsRouter } from "./routes/cohorts.routes.js";
+import { catalogRouter } from "./routes/catalog.routes.js";
+import { workspaceCatalogRouter } from "./routes/workspace-catalog.routes.js";
 import { requireAuth } from "./middleware/require-auth.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { asyncHandler } from "./lib/async-handler.js";
@@ -132,6 +134,13 @@ export function createApp() {
   app.use("/api/team", requireAuth, teamRouter);
   app.use("/api/students", requireAuth, studentsRouter);
   app.use("/api/cohorts", requireAuth, cohortsRouter);
+  app.use("/api/workspace-catalog", requireAuth, workspaceCatalogRouter);
+  // Deliberately public - the browsable Public Test Catalog page
+  // (frontend/src/pages/PublicCatalog.jsx), resolved by workspace
+  // public_slug rather than a share_token. Every handler in
+  // catalog.routes.js resolves its own workspace from :slug, same
+  // reasoning as /api/shared just below.
+  app.use("/api/catalog", catalogRouter);
   // Deliberately public - this is how an unauthenticated visitor takes a
   // mock test via a share link. Every handler in shared.routes.js resolves
   // its own workspace scoping from the token, not from req.workspaceId

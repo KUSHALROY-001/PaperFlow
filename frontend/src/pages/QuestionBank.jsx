@@ -5,6 +5,7 @@ import { EmptyState } from "../components/design-system/EmptyState";
 import BankFilters from "../components/question-bank/BankFilters";
 import BankQuestionCard from "../components/question-bank/BankQuestionCard";
 import AddToTestModal from "../components/question-bank/AddToTestModal";
+import QuestionBankIntroCard from "../components/question-bank/QuestionBankIntroCard";
 
 export default function QuestionBank() {
   const { isViewer } = useAuth();
@@ -52,6 +53,8 @@ export default function QuestionBank() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-16">
+      <QuestionBankIntroCard />
+
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center shrink-0">
           <BookMarked className="w-5 h-5" />

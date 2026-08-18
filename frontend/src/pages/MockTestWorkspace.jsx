@@ -10,6 +10,7 @@ import {
   Play,
   RotateCcw,
   Share2,
+  Square,
   Trash2,
   Zap,
 } from "lucide-react";
@@ -29,6 +30,7 @@ export default function MockTestWorkspace() {
   const { isViewer } = useAuth();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showReprocessConfirm, setShowReprocessConfirm] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
 
   const {
@@ -47,10 +49,12 @@ export default function MockTestWorkspace() {
     setActiveTab,
     actionError,
     status,
+    isProcessing,
     stats,
     metadata,
     handleUpload,
     handleReprocess,
+    handleCancelProcessing,
     handlePublish,
     handleQuestionStatusChange,
     handleQuestionDelete,
@@ -191,19 +195,32 @@ export default function MockTestWorkspace() {
             </button>
             <button
               disabled={isViewer}
-              onClick={() => !isViewer && setShowReprocessConfirm(true)}
+              onClick={() =>
+                !isViewer &&
+                (isProcessing
+                  ? setShowCancelConfirm(true)
+                  : setShowReprocessConfirm(true))
+              }
               className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
                 isViewer
                   ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-50"
-                  : "border-border text-muted-foreground hover:text-foreground hover:border-orange-500/40"
+                  : isProcessing
+                    ? "border-red-500/30 text-red-500 hover:bg-red-500/10 hover:border-red-500/50"
+                    : "border-border text-muted-foreground hover:text-foreground hover:border-orange-500/40"
               }`}
               title={
                 isViewer
                   ? "Editor role is required to reprocess"
-                  : "Re-extract from the original PDF"
+                  : isProcessing
+                    ? "Cancel the current processing job"
+                    : "Re-extract from the original PDF"
               }
             >
-              <RotateCcw className="w-4 h-4" />
+              {isProcessing ? (
+                <Square className="w-4 h-4 fill-current" />
+              ) : (
+                <RotateCcw className="w-4 h-4" />
+              )}
             </button>
             <button
               disabled={isViewer}
@@ -321,6 +338,7 @@ export default function MockTestWorkspace() {
           clusterId={clusterId}
           setActiveTab={setActiveTab}
           onReprocess={handleReprocess}
+          onCancelProcessing={() => setShowCancelConfirm(true)}
           onUpload={handleUpload}
           isViewer={isViewer}
         />
@@ -378,6 +396,7 @@ export default function MockTestWorkspace() {
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
         mockTestId={mocktest.id}
+        mocktest={mocktest}
       />
 
       {showDeleteConfirm && (
@@ -410,6 +429,21 @@ export default function MockTestWorkspace() {
           onConfirm={async () => {
             setShowReprocessConfirm(false);
             await handleReprocess();
+          }}
+        />
+      )}
+
+      {showCancelConfirm && (
+        <ConfirmDialog
+          open={showCancelConfirm}
+          onOpenChange={setShowCancelConfirm}
+          title="Cancel processing?"
+          description="This stops the current extraction job. Nothing extracted so far will be saved - once cancelled, you can start a fresh reprocess."
+          confirmLabel="Cancel Processing"
+          destructive={true}
+          onConfirm={async () => {
+            setShowCancelConfirm(false);
+            await handleCancelProcessing();
           }}
         />
       )}

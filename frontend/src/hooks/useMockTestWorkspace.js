@@ -107,6 +107,13 @@ export function useMockTestWorkspace() {
   }, [latestJobId, latestJobStatus, openedOutputJobId, questions.length]);
 
   const status = statusConfig[mocktest?.status] || statusConfig.draft;
+  // Single source of truth for "is a job currently in flight for this
+  // mock test" - MockTestWorkspace.jsx's top-bar button and
+  // OverviewTab.jsx's quick-action button both key off this to swap
+  // between Reprocess and Cancel, so they can't disagree with each other.
+  const isProcessing =
+    mocktest?.status === "processing" ||
+    ["queued", "running"].includes(latestJobStatus);
   const lowConfidence = questions.filter(
     (question) => question.confidence < 75,
   ).length;
@@ -172,6 +179,29 @@ export function useMockTestWorkspace() {
       setActionError("");
     } catch (error) {
       setActionError(error.message || "Could not reprocess mock test");
+    }
+  };
+
+  // Sibling to handleReprocess above, not a replacement for it - the
+  // Reprocess button in MockTestWorkspace.jsx/OverviewTab.jsx turns into
+  // this Cancel action while a job is queued/running, specifically so
+  // starting a second extraction requires cancelling the first one first
+  // instead of one implicitly superseding the other.
+  const handleCancelProcessing = async () => {
+    try {
+      await api.cancelProcessing(mocktest.id);
+      await queryClient.invalidateQueries({
+        queryKey: ["mock-test", mockTestId],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["processing-jobs", "mock-test", mockTestId],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["mock-tests", clusterId],
+      });
+      setActionError("");
+    } catch (error) {
+      setActionError(error.message || "Could not cancel processing");
     }
   };
 
@@ -254,14 +284,15 @@ export function useMockTestWorkspace() {
     setActiveTab,
     actionError,
     status,
+    isProcessing,
     stats: { lowConfidence, topicsFound, approvedCount },
     metadata,
     handleUpload,
     handleReprocess,
+    handleCancelProcessing,
     handlePublish,
     handleQuestionStatusChange,
     handleQuestionDelete,
     handleDelete,
-
   };
 }

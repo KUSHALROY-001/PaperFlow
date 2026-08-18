@@ -1,6 +1,7 @@
 import { Loader2, AlertTriangle, Copy } from "lucide-react";
 import { useDuplicates } from "@/hooks/useDuplicates";
 import DuplicatePairCard from "../components/duplicates/DuplicatePairCard";
+import DuplicatesIntroCard from "../components/duplicates/DuplicatesIntroCard";
 
 export default function Duplicates() {
   const { pairs, loading, loadError, resolvingId, resolveError, resolve } =
@@ -28,6 +29,8 @@ export default function Duplicates() {
 
   return (
     <div className="p-2 sm:p-6 max-w-4xl mx-auto space-y-5">
+      <DuplicatesIntroCard />
+
       <div>
         <h1 className="text-xl sm:text-2xl font-extrabold text-foreground flex items-center gap-2">
           <Copy className="w-5 h-5 text-orange-500" /> Duplicate Questions

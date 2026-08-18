@@ -7,8 +7,10 @@ from .config import MAX_JOBS_PER_RUN, OCR_ENABLED, POLL_INTERVAL_SECONDS
 from .ai import enhance_questions_with_ai
 from .duplicate_detector import detect_duplicates_for_mock_test
 from .db import (
+    JobCancelled,
     claim_next_job,
     get_connection,
+    is_job_cancelled,
     mark_mock_test_after_processing,
     replace_questions,
     update_job,
@@ -16,6 +18,17 @@ from .db import (
 from .pdf_extract import extract_pdf_pages
 from .pdf_ocr import convert_scanned_pdf_to_searchable_pdf
 from .question_parser import parse_questions
+
+
+def check_not_cancelled(job_id):
+    # Called at every stage boundary in process_job (plus once per AI
+    # chunk - see report_ai_progress below) so a job superseded by a
+    # reprocess request (mock-tests.repository.js#cancelActiveProcessingJobs)
+    # is abandoned within roughly one stage/chunk instead of running all
+    # the way through and overwriting whatever the newer job produced.
+    with get_connection() as connection:
+        if is_job_cancelled(connection, job_id):
+            raise JobCancelled(job_id)
 
 
 def local_path_from_job(job):
@@ -49,6 +62,8 @@ def process_job(job):
         "pagesOcrd": 0,
         "searchablePdfPath": None,
     }
+
+    check_not_cancelled(job["id"])
 
     if OCR_ENABLED and len(pages) == 0:
         with get_connection() as connection:
@@ -88,6 +103,8 @@ def process_job(job):
                 "error": str(error),
             }
 
+    check_not_cancelled(job["id"])
+
     with get_connection() as connection:
         update_job(
             connection,
@@ -116,6 +133,8 @@ def process_job(job):
     # completely unchanged from before this existed.
     template_context = (job.get("input_config") or {}).get("templateContext")
 
+    check_not_cancelled(job["id"])
+
     with get_connection() as connection:
         update_job(
             connection,
@@ -143,6 +162,16 @@ def process_job(job):
             update_job(connection, job["id"], status="running", stage=stage_message, progress=68)
             connection.commit()
 
+        # The AI stage is by far the slowest part of a job, often running
+        # over several chunked calls - this is the one checkpoint inside
+        # it, so a cancelled job stops between chunks instead of finishing
+        # every remaining chunk first. Raising here (rather than just
+        # returning) works precisely because JobCancelled is a
+        # BaseException: ai/provider.py#report wraps this callback in
+        # `except Exception: pass`, which would otherwise silently
+        # swallow anything raised here.
+        check_not_cancelled(job["id"])
+
     questions, ai_summary = enhance_questions_with_ai(
         pages,
         questions,
@@ -155,6 +184,23 @@ def process_job(job):
 
     with get_connection() as connection:
         with connection.transaction():
+            # Locks this job's row and re-checks cancellation as the very
+            # first thing inside the transaction that's about to persist
+            # its results - this is the one check in process_job that
+            # can't settle for "checked recently", since it's the point of
+            # no return. FOR UPDATE closes the race a plain check_not_
+            # cancelled() call just before this block would leave open:
+            # Node cancelling this job in the instant between that check
+            # and this transaction starting. Raising here rolls the
+            # transaction back automatically (psycopg3's transaction
+            # context manager rolls back on any exception).
+            row = connection.execute(
+                "SELECT status FROM processing_jobs WHERE id = %s FOR UPDATE",
+                [job["id"]],
+            ).fetchone()
+            if row is None or row["status"] == "cancelled":
+                raise JobCancelled(job["id"])
+
             update_job(
                 connection,
                 job["id"],
@@ -248,6 +294,16 @@ def process_next_job():
     try:
         count = process_job(job)
         print(f"Completed job {job['id']} with {count} parsed question(s)")
+    except JobCancelled:
+        # Superseded by a newer job for the same mock test (see
+        # mock-tests.repository.js#cancelActiveProcessingJobs) - the row is
+        # already status='cancelled' (either the Node backend set it
+        # directly, or update_job's own "AND status <> 'cancelled'" guard
+        # left it untouched), so there's nothing left to write here. In
+        # particular, don't call mark_mock_test_after_processing: the
+        # mock test's status is the superseding job's responsibility now,
+        # not this abandoned one's.
+        print(f"Job {job['id']} was cancelled (superseded by a newer job) - stopping early")
     except (Exception, KeyboardInterrupt, SystemExit) as error:
         # KeyboardInterrupt/SystemExit are BaseException, not Exception -
         # without listing them explicitly, a Ctrl+C (or SIGTERM converted

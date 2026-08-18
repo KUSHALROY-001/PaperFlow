@@ -28,7 +28,10 @@ export default function ShareLinkModal({ isOpen, onClose, mockTestId }) {
     try {
       await navigator.clipboard.writeText(buildShareUrl(share.shareToken));
       setCopiedId(share.id);
-      setTimeout(() => setCopiedId((current) => (current === share.id ? null : current)), 2000);
+      setTimeout(
+        () => setCopiedId((current) => (current === share.id ? null : current)),
+        2000,
+      );
     } catch {
       // Clipboard access can fail (permissions, insecure context) - the
       // link is still shown as selectable text below, so this isn't a

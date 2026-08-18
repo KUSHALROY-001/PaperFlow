@@ -21,6 +21,7 @@ import {
   ClipboardList,
   ListChecks,
   GraduationCap,
+  Globe,
   Info,
   Menu,
   X,
@@ -38,15 +39,26 @@ const navSections = [
       { icon: LayoutDashboard, label: "Dashboard", to: "/dashboard" },
       { icon: FolderOpen, label: "Clusters", to: "/clusters" },
       { icon: Zap, label: "Active Jobs", to: "/jobs" },
-      { icon: ListChecks, label: "Review Queue", to: "/review-queue" },
+      {
+        icon: ListChecks,
+        label: "Review Queue",
+        to: "/review-queue",
+        hasInfo: true,
+      },
     ],
   },
   {
     label: "Tools",
     items: [
       { icon: Library, label: "Templates", to: "/templates" },
-      { icon: BookMarked, label: "Question Bank", to: "/question-bank" },
-      { icon: Copy, label: "Duplicates", to: "/duplicates" },
+      {
+        icon: BookMarked,
+        label: "Question Bank",
+        to: "/question-bank",
+        hasInfo: true,
+      },
+      { icon: Copy, label: "Duplicates", to: "/duplicates", hasInfo: true },
+      { icon: Globe, label: "Public Catalog", to: "/catalog-settings" },
     ],
   },
   {
@@ -124,7 +136,7 @@ function SidebarContent({
   };
   return (
     <>
-      <div className="p-5 border-b border-border">
+      <div className="h-16 p-4 border-b border-border">
         <Link to="/" onClick={onNavigate}>
           <MockCraftLogo />
         </Link>

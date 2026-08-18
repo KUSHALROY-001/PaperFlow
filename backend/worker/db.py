@@ -115,8 +115,40 @@ def claim_next_job(connection):
         return {**row, **updated}
 
 
+class JobCancelled(BaseException):
+    """Raised when a job this worker is mid-way through has been cancelled
+    out from under it - see is_job_cancelled below. This is a BaseException
+    (not Exception) so it passes straight through the `except Exception:
+    pass` progress-reporting guard in ai/provider.py#report instead of being
+    silently swallowed there, the same way KeyboardInterrupt/SystemExit are
+    deliberately not caught by a bare `except Exception` elsewhere in this
+    worker."""
+
+
+def is_job_cancelled(connection, job_id):
+    # Cheap checkpoint called between processing stages (and once per AI
+    # chunk - see worker.py#report_ai_progress) so a job the Node backend
+    # has superseded (mock-tests.repository.js#cancelActiveProcessingJobs)
+    # gets noticed and abandoned within roughly one stage/chunk of that
+    # happening, instead of running all the way to completion and then
+    # overwriting whatever the newer job already wrote.
+    row = connection.execute(
+        "SELECT status FROM processing_jobs WHERE id = %s",
+        [job_id],
+    ).fetchone()
+    return row is not None and row["status"] == "cancelled"
+
+
 def update_job(connection, job_id, *, status=None, stage=None, progress=None, summary=None, error=None):
-    connection.execute(
+    # AND status <> 'cancelled' below is the actual guard: without it, a
+    # worker process still mid-flight on a job the Node backend already
+    # cancelled (e.g. because the user hit "reprocess" again) would write
+    # status='running' right back over 'cancelled' on its very next
+    # progress checkpoint, resurrecting a job that's supposed to be dead.
+    # The is_job_cancelled() checks elsewhere in this module are what
+    # actually stop the wasted work; this is the last-line backstop that
+    # makes the cancellation itself impossible to undo by accident.
+    cursor = connection.execute(
         """
         UPDATE processing_jobs
         SET status = COALESCE(%s::processing_status, status),
@@ -130,6 +162,8 @@ def update_job(connection, job_id, *, status=None, stage=None, progress=None, su
               ELSE completed_at
             END
         WHERE id = %s
+          AND status <> 'cancelled'
+        RETURNING id
         """,
         [
             status,
@@ -141,6 +175,12 @@ def update_job(connection, job_id, *, status=None, stage=None, progress=None, su
             job_id,
         ],
     )
+
+    if cursor.fetchone() is None:
+        # Job was already cancelled - nothing was written, so don't log a
+        # progress event that would misleadingly suggest this update
+        # actually happened.
+        return
 
     add_job_event(
         connection,

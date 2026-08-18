@@ -31,6 +31,8 @@ import StudentDetail from "./pages/StudentDetail";
 import QuestionBank from "./pages/QuestionBank";
 import ReviewQueue from "./pages/ReviewQueue";
 import Duplicates from "./pages/Duplicates";
+import CatalogSettings from "./pages/CatalogSettings";
+import PublicCatalog from "./pages/PublicCatalog";
 import SharedMock from "./pages/SharedMock";
 import Billing from "./pages/Billing";
 import MyResults from "./pages/MyResults";
@@ -47,7 +49,9 @@ const AuthenticatedApp = () => {
   const isPublicRoute =
     publicPaths.includes(location.pathname) ||
     location.pathname.startsWith("/shared/") ||
-    location.pathname.startsWith("/session/");
+    location.pathname.startsWith("/session/") ||
+    location.pathname === "/catalog" ||
+    location.pathname.startsWith("/catalog/");
 
   if (!isPublicRoute && (isLoadingPublicSettings || isLoadingAuth)) {
     return (
@@ -96,6 +100,8 @@ const AuthenticatedApp = () => {
       <Route path="/shared/:token" element={<SharedMock />} />
       <Route path="/session/:id" element={<MockSession />} />
       <Route path="/accept-invite" element={<AcceptInvite />} />
+      <Route path="/catalog/:slug" element={<PublicCatalog />} />
+      <Route path="/catalog" element={<PublicCatalog />} />
 
       {/* App shell with sidebar */}
       <Route element={<AppShell />}>
@@ -115,6 +121,7 @@ const AuthenticatedApp = () => {
         <Route path="/review-queue" element={<ReviewQueue />} />
         <Route path="/templates" element={<Templates />} />
         <Route path="/duplicates" element={<Duplicates />} />
+        <Route path="/catalog-settings" element={<CatalogSettings />} />
         <Route path="/team" element={<Team />} />
         <Route path="/students" element={<Students />} />
         <Route path="/students/:email" element={<StudentDetail />} />

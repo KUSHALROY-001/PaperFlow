@@ -42,6 +42,8 @@ export async function updateMockTest(mockTestId, workspaceId, fields) {
     marksPerCorrect,
     negativeMarksPerWrong,
     status,
+    isCatalogListedProvided,
+    isCatalogListed,
   } = fields;
 
   const result = await pool.query(
@@ -58,7 +60,8 @@ export async function updateMockTest(mockTestId, workspaceId, fields) {
       published_at = CASE
         WHEN $11 = 'published' THEN COALESCE(published_at, now())
         ELSE published_at
-      END
+      END,
+      is_catalog_listed = CASE WHEN $12::boolean THEN $13 ELSE is_catalog_listed END
     WHERE id = $1
       AND workspace_id = $2
     RETURNING *
@@ -75,6 +78,8 @@ export async function updateMockTest(mockTestId, workspaceId, fields) {
       marksPerCorrect,
       negativeMarksPerWrong,
       status,
+      isCatalogListedProvided,
+      isCatalogListed,
     ],
   );
 
@@ -220,6 +225,36 @@ export async function insertProcessingJob(
   return result.rows[0];
 }
 
+// Called right before a new job is inserted for a mock test (fresh upload
+// or reprocess) so a mock test can never have more than one job racing to
+// write its questions. 'queued' jobs are simply superseded; 'running' jobs
+// are also superseded here, in the DB, immediately - the worker process
+// that's actually executing that job notices via its own cancellation
+// checks (worker/db.py#is_job_cancelled) and stops short instead of
+// finishing and overwriting whatever the new job produces. Excludes
+// 'cancelled' itself so re-running this on a job that's already cancelled
+// is a harmless no-op, not a duplicate cancellation event.
+export async function cancelActiveProcessingJobs(
+  client,
+  { mockTestId, workspaceId },
+) {
+  const result = await client.query(
+    `
+    UPDATE processing_jobs
+    SET status = 'cancelled',
+        current_stage = 'Cancelled (superseded by a new processing job)',
+        completed_at = COALESCE(completed_at, now())
+    WHERE mock_test_id = $1
+      AND workspace_id = $2
+      AND status IN ('queued', 'running')
+    RETURNING id
+    `,
+    [mockTestId, workspaceId],
+  );
+
+  return result.rows;
+}
+
 export async function insertProcessingJobEvent(
   client,
   { jobId, stage, message, payload },
@@ -229,8 +264,37 @@ export async function insertProcessingJobEvent(
     INSERT INTO processing_job_events (job_id, stage, message, payload)
     VALUES ($1, $2, $3, $4)
     `,
-    [jobId, stage, message, payload],
+    // processing_job_events.payload is JSONB NOT NULL DEFAULT '{}' - but
+    // that default only kicks in when the column is omitted from the
+    // INSERT entirely. Passing an explicit SQL NULL (which `payload ??
+    // {}` here prevents) bypasses the default and violates NOT NULL, as
+    // opposed to passing the JS object {} itself, which pg serializes to
+    // the jsonb value '{}' same as the default would.
+    [jobId, stage, message, payload ?? {}],
   );
+}
+
+// Topic-wise question counts for a single mock test - the authenticated,
+// same-workspace counterpart to catalog.repository.js#getCatalogMockTestTopics
+// (that one serves public/unauthenticated catalog visitors; this one
+// backs MockTestDetailModal.jsx's in-app version, opened from
+// MockTestCard.jsx). Deliberately the same "no status filter" as
+// playable_mock_test_questions (see migrations/017) and the catalog
+// version - a student picking topics here should see counts that match
+// what a session actually delivers, not a subset filtered by review
+// status that the session itself doesn't filter by either.
+export async function getMockTestTopicCounts(mockTestId) {
+  const result = await pool.query(
+    `
+    SELECT topic, COUNT(*)::int AS count
+    FROM questions
+    WHERE mock_test_id = $1 AND topic IS NOT NULL
+    GROUP BY topic
+    ORDER BY topic ASC
+    `,
+    [mockTestId],
+  );
+  return result.rows;
 }
 
 export async function listQuestionsWithOptions(mockTestId, workspaceId) {

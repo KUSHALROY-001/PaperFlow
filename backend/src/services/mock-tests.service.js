@@ -34,6 +34,21 @@ export async function getMockTestOrFail(mockTestId, workspaceId) {
   return mockTest;
 }
 
+// Backs MockTestDetailModal.jsx (components/cluster) - the details-card
+// shown when a viewer/student clicks a MockTestCard.jsx, mirroring the
+// public catalog's MockTestDetailModal.jsx (components/catalog) but for
+// an already-authenticated same-workspace member. Deliberately returns
+// only summary fields + topic counts, never the questions themselves
+// (options, correct answers) - unlike listQuestions below, which an
+// editor's OverviewTab/ReviewTab need full question content for, this is
+// a pre-attempt preview a student sees before starting, so it must not
+// leak anything a session itself wouldn't show upfront.
+export async function getMockTestSummary(mockTestId, workspaceId) {
+  const mockTest = await getMockTestOrFail(mockTestId, workspaceId);
+  const topics = await mockTestsRepo.getMockTestTopicCounts(mockTestId);
+  return { ...mockTest, topics };
+}
+
 export async function updateMockTest(mockTestId, workspaceId, body) {
   const name =
     body.name === undefined ? undefined : requiredString(body.name, "name");
@@ -42,6 +57,8 @@ export async function updateMockTest(mockTestId, workspaceId, body) {
   const examYearProvided = body.examYear !== undefined;
   const examYear = body.examYear ?? null;
   const status = body.status || null;
+  const isCatalogListedProvided = body.isCatalogListed !== undefined;
+  const isCatalogListed = Boolean(body.isCatalogListed);
 
   const mockTest = await mockTestsRepo.updateMockTest(mockTestId, workspaceId, {
     name,
@@ -53,6 +70,8 @@ export async function updateMockTest(mockTestId, workspaceId, body) {
     marksPerCorrect: optionalNumber(body.marksPerCorrect, null),
     negativeMarksPerWrong: optionalNumber(body.negativeMarksPerWrong, null),
     status,
+    isCatalogListedProvided,
+    isCatalogListed,
   });
 
   if (!mockTest) {
@@ -167,6 +186,24 @@ async function queueProcessingJob({
   try {
     await client.query("BEGIN");
 
+    // A mock test must never have two jobs racing to write its questions -
+    // reprocessing (or, in principle, a second upload) while a job is
+    // still queued/running now supersedes it instead of running alongside
+    // it. See mock-tests.repository.js#cancelActiveProcessingJobs for how
+    // an already-executing worker process notices and stops.
+    const cancelledJobs = await mockTestsRepo.cancelActiveProcessingJobs(
+      client,
+      { mockTestId: mockTest.id, workspaceId },
+    );
+
+    for (const cancelledJob of cancelledJobs) {
+      await mockTestsRepo.insertProcessingJobEvent(client, {
+        jobId: cancelledJob.id,
+        stage: "cancelled",
+        message: "Cancelled - superseded by a new processing job",
+      });
+    }
+
     const job = await mockTestsRepo.insertProcessingJob(client, {
       workspaceId,
       mockTestId: mockTest.id,
@@ -270,6 +307,69 @@ export async function uploadDocument({
   });
 
   return { uploadedFile, processingJob, mockTest: updatedMockTest, worker };
+}
+
+// The reprocess button becomes a Cancel button while a job is queued/
+// running (see MockTestWorkspace.jsx) precisely so this is the only way
+// to get a second reprocess in while one is active - the user cancels
+// first, explicitly, rather than a new reprocess silently superseding an
+// in-flight one (which queueProcessingJob's cancelActiveProcessingJobs
+// call would still handle safely, but this makes it a deliberate action
+// instead of an implicit side effect).
+export async function cancelProcessing({ mockTest, workspaceId }) {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const cancelledJobs = await mockTestsRepo.cancelActiveProcessingJobs(
+      client,
+      { mockTestId: mockTest.id, workspaceId },
+    );
+
+    if (cancelledJobs.length === 0) {
+      throw httpError(
+        400,
+        "This mock test has no active processing job to cancel",
+      );
+    }
+
+    for (const cancelledJob of cancelledJobs) {
+      await mockTestsRepo.insertProcessingJobEvent(client, {
+        jobId: cancelledJob.id,
+        stage: "cancelled",
+        message: "Cancelled by user",
+      });
+    }
+
+    // total_questions is trigger-maintained on the questions table (see
+    // migrations/001_initial_schema.sql) so it's already accurate on the
+    // mockTest snapshot loaded for this request - cancelling never
+    // touches questions itself, so there's nothing to re-query. Mirrors
+    // worker/db.py#mark_mock_test_after_processing's own status logic: a
+    // mock test that already had questions from an earlier successful run
+    // goes back to "review" rather than being left on "processing"
+    // forever; one that's never had any goes back to "draft".
+    const nextStatus = mockTest.total_questions > 0 ? "review" : "draft";
+    const updatedMockTest = await mockTestsRepo.setMockTestStatus(
+      mockTest.id,
+      workspaceId,
+      nextStatus,
+      client,
+    );
+
+    await client.query("COMMIT");
+
+    return {
+      mockTest: updatedMockTest,
+      cancelledJobIds: cancelledJobs.map((job) => job.id),
+    };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function reprocessMockTest({ mockTest, workspaceId, userId }) {

@@ -1,0 +1,226 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { Search, Clock, FileText } from "lucide-react";
+import { api } from "@/lib/api";
+import MockTestDetailModal from "../catalog/MockTestDetailModal";
+
+// Shared by PublicCatalog.jsx (institute mode AND global mode) and
+// CatalogSettings.jsx's "Public Mock Tests" tab - the exact same
+// search/filter/grid/start-test UI and data-fetching used to be
+// duplicated three times across those two files, with only the data
+// source (one institute's slug vs the global cross-institute feed)
+// actually differing between them.
+//
+// slug: pass an institute's public_slug to scope the browser to just
+// that institute (PublicCatalog.jsx's institute mode). Omit it for the
+// global cross-institute feed (PublicCatalog.jsx's own no-slug mode, and
+// CatalogSettings.jsx's "Public Mock Tests" tab - a logged-in team member
+// browsing other institutes' tests isn't materially different from an
+// anonymous student doing the same, so this reuses startCatalogAttempt +
+// /shared/:token in both cases rather than /session/:id, since these
+// tests aren't in the viewer's own workspace even when they ARE logged
+// in).
+//
+// onWorkspaceName / onError: fired once the institute-mode query settles,
+// so a parent that needs the resolved institute's real name for its own
+// header (PublicCatalog.jsx), or wants to render its own "not found"
+// treatment, can - this component itself stays presentational about
+// anything above the search bar.
+export default function CatalogBrowser({ slug, onWorkspaceName, onError }) {
+  const navigate = useNavigate();
+  const isInstituteMode = Boolean(slug);
+
+  const [search, setSearch] = useState("");
+  const [examYear, setExamYear] = useState("");
+  const [startingId, setStartingId] = useState(null);
+  const [startError, setStartError] = useState(null);
+  // { id, slug } of the card currently showing its details modal - slug
+  // is per-row in global mode (each row can belong to a different
+  // institute) but falls back to the shared `slug` prop in institute
+  // mode, mirroring handleStart's targetSlug logic below.
+  const [detailTarget, setDetailTarget] = useState(null);
+
+  // No debounce needed here - the catalog is expected to be a few dozen
+  // tests at most, so re-fetching on every keystroke is cheap and gives
+  // instant-feeling results without the added state a debounce hook
+  // would need.
+  const listingQuery = useQuery({
+    queryKey: isInstituteMode
+      ? ["public-catalog", slug, search, examYear]
+      : ["public-catalog-global", search, examYear],
+    queryFn: () =>
+      isInstituteMode
+        ? api.getPublicCatalog(slug, { search, examYear })
+        : api.getGlobalPublicCatalog({ search, examYear }),
+  });
+  const examYearsQuery = useQuery({
+    queryKey: isInstituteMode
+      ? ["public-catalog-exam-years", slug]
+      : ["public-catalog-global-exam-years"],
+    queryFn: () =>
+      isInstituteMode
+        ? api.getPublicCatalogExamYears(slug)
+        : api.getGlobalPublicCatalogExamYears(),
+  });
+
+  const workspaceName = listingQuery.data?.workspaceName;
+  useEffect(() => {
+    if (isInstituteMode && workspaceName) onWorkspaceName?.(workspaceName);
+  }, [isInstituteMode, workspaceName, onWorkspaceName]);
+  useEffect(() => {
+    if (isInstituteMode && listingQuery.error) onError?.(listingQuery.error);
+  }, [isInstituteMode, listingQuery.error, onError]);
+
+  const mockTests = listingQuery.data?.mockTests || [];
+  const examYears = examYearsQuery.data?.examYears || [];
+
+  const handleStart = async (mockTest) => {
+    // Global-feed rows are aggregated across institutes, so each one
+    // carries its own workspace_slug (see
+    // catalog.repository.js#listAllPublicMockTests) - the slug prop only
+    // applies in institute mode.
+    const targetSlug = isInstituteMode ? slug : mockTest.workspace_slug;
+    setStartError(null);
+    setStartingId(mockTest.id);
+    try {
+      const { share } = await api.startCatalogAttempt(targetSlug, mockTest.id);
+      navigate(`/shared/${share.shareToken}`);
+    } catch (err) {
+      setStartError(err.message || "Couldn't start this test - try again");
+      setStartingId(null);
+    }
+  };
+
+  // Institute mode with a broken/unknown slug: nothing to browse here -
+  // the parent decides how to present that (PublicCatalog.jsx shows a
+  // full-page message via onError above); this component just stops.
+  if (isInstituteMode && listingQuery.error) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={
+              isInstituteMode
+                ? "Search mock tests..."
+                : "Search mock tests or institutes..."
+            }
+            className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all text-foreground placeholder:text-muted-foreground"
+          />
+        </div>
+        {examYears.length > 0 && (
+          <select
+            value={examYear}
+            onChange={(e) => setExamYear(e.target.value)}
+            className="px-3 py-2.5 text-sm rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-orange-500/30 text-foreground"
+          >
+            <option value="">All years</option>
+            {examYears.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
+
+      {startError && (
+        <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-sm text-red-600 dark:text-red-400">
+          {startError}
+        </div>
+      )}
+
+      {listingQuery.isLoading ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="w-8 h-8 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" />
+        </div>
+      ) : mockTests.length === 0 ? (
+        <div className="text-center py-20">
+          <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">
+            {search || examYear
+              ? "No mock tests match your search."
+              : isInstituteMode
+                ? "No mock tests are available here yet."
+                : "No institute has listed a public mock test yet."}
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {mockTests.map((mockTest) => (
+            <div
+              key={mockTest.id}
+              onClick={() =>
+                setDetailTarget({
+                  id: mockTest.id,
+                  slug: isInstituteMode ? slug : mockTest.workspace_slug,
+                })
+              }
+              role="button"
+              tabIndex={0}
+              className="surface-card rounded-2xl p-4 border border-border flex flex-col cursor-pointer transition-colors hover:border-orange-500/40"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="text-sm font-bold text-foreground leading-snug">
+                  {mockTest.name}
+                </h3>
+                {mockTest.exam_year && (
+                  <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500">
+                    {mockTest.exam_year}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {!isInstituteMode && mockTest.workspace_name
+                  ? `${mockTest.workspace_name} · ${mockTest.cluster_name}`
+                  : mockTest.cluster_name}
+              </p>
+              {mockTest.description && (
+                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
+                  {mockTest.description}
+                </p>
+              )}
+              <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-3">
+                <span className="flex items-center gap-1">
+                  <FileText className="w-3 h-3" />
+                  {mockTest.total_questions} questions
+                </span>
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  {mockTest.duration_minutes} min
+                </span>
+              </div>
+              <button
+                type="button"
+                disabled={startingId === mockTest.id}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleStart(mockTest);
+                }}
+                className="mt-4 w-full py-2 border border-orange-500/40 text-orange-500 hover:bg-[#ea580c] hover:border-[#ea580c] hover:text-white disabled:opacity-60 disabled:hover:bg-transparent disabled:hover:text-orange-500 text-xs font-semibold rounded-xl transition-colors"
+              >
+                {startingId === mockTest.id ? "Starting…" : "Start Test"}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {detailTarget && (
+        <MockTestDetailModal
+          mockTestId={detailTarget.id}
+          slug={detailTarget.slug}
+          onClose={() => setDetailTarget(null)}
+        />
+      )}
+    </div>
+  );
+}

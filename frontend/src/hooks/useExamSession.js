@@ -1,3 +1,4 @@
+// frontend/src/hooks/useExamSession.js
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { api } from "@/lib/api";
@@ -134,6 +135,7 @@ export function useExamSession({ mode }) {
   const answeredCount = Object.values(answers).filter(
     (a) => a.selected.length > 0,
   ).length;
+
   const progress = questions.length
     ? Math.round((answeredCount / questions.length) * 100)
     : 0;
@@ -262,18 +264,25 @@ export function useExamSession({ mode }) {
     if (review || !q) return;
     const questionId = q.questionId;
     const attemptId = session.attempt.id;
+
+    const currentSelected = answers[questionId]?.selected?.[0];
+    const isTogglingOff = currentSelected === optionIndex;
+    const newSelected = isTogglingOff ? [] : [optionIndex];
+
     setAnswers((prev) => ({
       ...prev,
-      [questionId]: { selected: [optionIndex], saved: false },
+      [questionId]: { selected: newSelected, saved: false },
     }));
+
     const save =
       mode === "guest"
-        ? api.saveSharedAnswer(shareToken, attemptId, questionId, [optionIndex])
-        : api.saveAttemptAnswer(attemptId, questionId, [optionIndex]);
+        ? api.saveSharedAnswer(shareToken, attemptId, questionId, newSelected)
+        : api.saveAttemptAnswer(attemptId, questionId, newSelected);
+
     save
       .then(() => {
         setAnswers((prev) => {
-          if (prev[questionId]?.selected[0] !== optionIndex) return prev;
+          if (prev[questionId]?.selected[0] !== newSelected[0]) return prev;
           return {
             ...prev,
             [questionId]: { ...prev[questionId], saved: true },

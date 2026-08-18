@@ -173,6 +173,9 @@ export const api = {
   getMockTest(mockTestId) {
     return apiRequest(`/api/mock-tests/${mockTestId}`);
   },
+  getMockTestSummary(mockTestId) {
+    return apiRequest(`/api/mock-tests/${mockTestId}/summary`);
+  },
   updateMockTest(mockTestId, payload) {
     return apiRequest(`/api/mock-tests/${mockTestId}`, {
       method: "PATCH",
@@ -181,6 +184,11 @@ export const api = {
   },
   reprocessMockTest(mockTestId) {
     return apiRequest(`/api/mock-tests/${mockTestId}/reprocess`, {
+      method: "POST",
+    });
+  },
+  cancelProcessing(mockTestId) {
+    return apiRequest(`/api/mock-tests/${mockTestId}/cancel-processing`, {
       method: "POST",
     });
   },
@@ -242,9 +250,7 @@ export const api = {
       }
     });
     const query = params.toString();
-    return apiRequest(
-      `/api/review-queue/count${query ? `?${query}` : ""}`,
-    );
+    return apiRequest(`/api/review-queue/count${query ? `?${query}` : ""}`);
   },
   deleteQuestion(questionId) {
     return apiRequest(`/api/questions/${questionId}`, {
@@ -618,6 +624,62 @@ export const api = {
   },
   acceptInvitation(token) {
     return apiRequest(`/api/team/invitations/${token}/accept`, {
+      method: "POST",
+    });
+  },
+
+  // --- Public Test Catalog admin settings (workspace slug + listing) ---
+  getWorkspaceCatalogSettings() {
+    return apiRequest("/api/workspace-catalog");
+  },
+  updateWorkspacePublicSlug(slug) {
+    return apiRequest("/api/workspace-catalog/slug", {
+      method: "PUT",
+      body: JSON.stringify({ slug }),
+    });
+  },
+
+  // --- Public Test Catalog (unauthenticated - students browsing/searching) ---
+  // Global feed, no institute in mind - the default "Public Mock Tests"
+  // tab on PublicCatalog.jsx. Each row already carries its own
+  // workspaceSlug (see catalog.repository.js#listAllPublicMockTests), so
+  // starting an attempt from here uses that row's slug with the same
+  // startCatalogAttempt below - no separate "global start" endpoint.
+  getGlobalPublicCatalog({ search, examYear } = {}) {
+    const params = new URLSearchParams();
+    if (search) params.set("search", search);
+    if (examYear) params.set("examYear", examYear);
+    const query = params.toString() ? `?${params.toString()}` : "";
+    return apiRequest(`/api/catalog${query}`);
+  },
+  getGlobalPublicCatalogExamYears() {
+    return apiRequest("/api/catalog/exam-years");
+  },
+  getPublicCatalog(slug, { search, examYear } = {}) {
+    const params = new URLSearchParams();
+    if (search) params.set("search", search);
+    if (examYear) params.set("examYear", examYear);
+    const query = params.toString() ? `?${params.toString()}` : "";
+    return apiRequest(`/api/catalog/${slug}${query}`);
+  },
+  getPublicCatalogExamYears(slug) {
+    return apiRequest(`/api/catalog/${slug}/exam-years`);
+  },
+  // Full detail (marking scheme, per-topic question counts) for the
+  // details card opened from a catalog card click - see
+  // components/catalog/MockTestDetailModal.jsx. slug omitted -> global
+  // mode lookup (same "doesn't need an institute in mind" shape as
+  // getGlobalPublicCatalog above); slug given -> scoped to that
+  // institute, same pair as getPublicCatalog/getGlobalPublicCatalog.
+  getPublicCatalogMockTest(mockTestId, slug) {
+    return apiRequest(
+      slug
+        ? `/api/catalog/${slug}/mock-tests/${mockTestId}`
+        : `/api/catalog/mock-tests/${mockTestId}`,
+    );
+  },
+  startCatalogAttempt(slug, mockTestId) {
+    return apiRequest(`/api/catalog/${slug}/mock-tests/${mockTestId}/start`, {
       method: "POST",
     });
   },

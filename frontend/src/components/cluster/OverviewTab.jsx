@@ -11,6 +11,7 @@ import {
   Filter,
   Play,
   RotateCcw,
+  Square,
   Zap,
 } from "lucide-react";
 import { formatDate } from "@/lib/date";
@@ -25,6 +26,7 @@ export default function OverviewTab({
   clusterId,
   setActiveTab,
   onReprocess,
+  onCancelProcessing,
   onUpload,
   isViewer,
 }) {
@@ -165,11 +167,30 @@ export default function OverviewTab({
               Questions
             </button>
             <button
-              onClick={onReprocess}
-              disabled={isProcessing}
-              className="flex min-h-12 w-full items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-40"
+              onClick={isProcessing ? onCancelProcessing : onReprocess}
+              disabled={isViewer}
+              title={
+                isViewer
+                  ? "Editor role is required"
+                  : isProcessing
+                    ? "Cancel the current processing job"
+                    : "Re-extract from the original PDF"
+              }
+              className={`flex min-h-12 w-full items-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors disabled:opacity-40 ${
+                isProcessing
+                  ? "border-red-500/30 bg-red-500/10 text-red-600 hover:bg-red-500/20 dark:text-red-400"
+                  : "border-border bg-card text-foreground hover:bg-muted"
+              }`}
             >
-              <RotateCcw className="w-4 h-4 text-orange-500" /> Reprocess
+              {isProcessing ? (
+                <>
+                  <Square className="w-4 h-4 fill-current" /> Cancel Processing
+                </>
+              ) : (
+                <>
+                  <RotateCcw className="w-4 h-4 text-orange-500" /> Reprocess
+                </>
+              )}
             </button>
             <Link
               to={`/cluster/${clusterId}/mock/${mocktest.id}/editor`}

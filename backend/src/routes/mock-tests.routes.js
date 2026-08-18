@@ -64,6 +64,10 @@ const upload = multer({
 
 mockTestsRouter.get("/", asyncHandler(mockTestsController.list));
 mockTestsRouter.get("/:mockTestId", asyncHandler(mockTestsController.getOne));
+mockTestsRouter.get(
+  "/:mockTestId/summary",
+  asyncHandler(mockTestsController.getSummary),
+);
 mockTestsRouter.patch(
   "/:mockTestId",
   requireRole("editor"),
@@ -92,6 +96,12 @@ mockTestsRouter.post(
   requireRole("editor"),
   loadMockTest,
   asyncHandler(mockTestsController.reprocess),
+);
+mockTestsRouter.post(
+  "/:mockTestId/cancel-processing",
+  requireRole("editor"),
+  loadMockTest,
+  asyncHandler(mockTestsController.cancelProcessing),
 );
 
 mockTestsRouter.get(

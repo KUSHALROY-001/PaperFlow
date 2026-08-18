@@ -44,7 +44,7 @@ export default function MockTestCard({ mocktest, clusterId }) {
         onClick={handleCardClick}
         className={`group cursor-pointer transition-all ${
           isProcessing
-            ? "relative p-[2px] rounded-2xl overflow-hidden shadow-lg"
+            ? "relative p-0.5 rounded-2xl overflow-hidden shadow-lg"
             : "surface-card rounded-2xl p-5 border border-border hover:border-orange-500/40 flex flex-col justify-between"
         }`}
       >
@@ -76,9 +76,7 @@ export default function MockTestCard({ mocktest, clusterId }) {
                 >
                   <span
                     className={`w-1.5 h-1.5 rounded-full ${
-                      isProcessing
-                        ? "bg-orange-500 animate-ping"
-                        : status.dot
+                      isProcessing ? "bg-orange-500 animate-ping" : status.dot
                     }`}
                   />
                   {status.label}
