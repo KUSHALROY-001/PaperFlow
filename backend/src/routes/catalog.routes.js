@@ -1,5 +1,6 @@
 import { Router } from "express";
 import * as catalogController from "../controllers/catalog.controller.js";
+import * as subscriptionsController from "../controllers/subscriptions.controller.js";
 import { asyncHandler } from "../lib/async-handler.js";
 
 export const catalogRouter = Router();
@@ -16,6 +17,7 @@ export const catalogRouter = Router();
 // route. Same reasoning for GET "/" vs "/:slug" (empty segment vs one
 // segment technically can't collide, but keeping every literal route
 // above the wildcard is one less thing to reason about later).
+
 catalogRouter.get("/", asyncHandler(catalogController.getGlobalCatalog));
 catalogRouter.get(
   "/exam-years",
@@ -24,6 +26,19 @@ catalogRouter.get(
 catalogRouter.get(
   "/mock-tests/:mockTestId",
   asyncHandler(catalogController.getGlobalCatalogMockTestDetail),
+);
+
+catalogRouter.get(
+  "/subscriptions",
+  asyncHandler(subscriptionsController.getSubscriptions),
+);
+catalogRouter.post(
+  "/subscriptions",
+  asyncHandler(subscriptionsController.subscribePublisher),
+);
+catalogRouter.delete(
+  "/subscriptions/:slug",
+  asyncHandler(subscriptionsController.unsubscribePublisher),
 );
 
 catalogRouter.get("/:slug", asyncHandler(catalogController.getCatalog));

@@ -17,6 +17,16 @@ export function resolveAssetUrl(path) {
 
 const TOKEN_KEY = "paperflow_token";
 const WORKSPACE_KEY = "paperflow_workspace_id";
+const SUBSCRIBER_KEY = "paperflow_subscriber_key";
+
+export function getSubscriberKey() {
+  let key = localStorage.getItem(SUBSCRIBER_KEY);
+  if (!key) {
+    key = `sub_${Math.random().toString(36).substring(2)}${Date.now().toString(36)}`;
+    localStorage.setItem(SUBSCRIBER_KEY, key);
+  }
+  return key;
+}
 
 export function getStoredAuth() {
   return {
@@ -37,6 +47,7 @@ export function clearStoredAuth() {
 
 export async function apiRequest(path, options = {}) {
   const { token, workspaceId } = getStoredAuth();
+  const subscriberKey = getSubscriberKey();
   const isFormData = options.body instanceof FormData;
   let response;
 
@@ -47,6 +58,7 @@ export async function apiRequest(path, options = {}) {
         ...(!isFormData ? { "content-type": "application/json" } : {}),
         ...(token ? { authorization: `Bearer ${token}` } : {}),
         ...(workspaceId ? { "x-workspace-id": workspaceId } : {}),
+        ...(subscriberKey ? { "x-subscriber-key": subscriberKey } : {}),
         ...(options.headers || {}),
       },
     });
@@ -681,6 +693,22 @@ export const api = {
   startCatalogAttempt(slug, mockTestId) {
     return apiRequest(`/api/catalog/${slug}/mock-tests/${mockTestId}/start`, {
       method: "POST",
+    });
+  },
+
+  // --- Subscriptions ---
+  getSubscriptions() {
+    return apiRequest("/api/catalog/subscriptions");
+  },
+  subscribePublisher(slug) {
+    return apiRequest("/api/catalog/subscriptions", {
+      method: "POST",
+      body: JSON.stringify({ slug }),
+    });
+  },
+  unsubscribePublisher(slug) {
+    return apiRequest(`/api/catalog/subscriptions/${encodeURIComponent(slug)}`, {
+      method: "DELETE",
     });
   },
 };

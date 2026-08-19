@@ -11,29 +11,31 @@ import {
   ChevronUp,
   Play,
   Award,
+  Building2,
+  ExternalLink,
+  UserPlus,
+  UserCheck,
 } from "lucide-react";
 import { api } from "@/lib/api";
+import { useSubscriptions } from "@/lib/useSubscriptions";
 
-// Opened from MockTestCard.jsx when a viewer/student (not an editor -
-// see ClusterWorkspace.jsx's isViewer branch) clicks a mock test card,
-// instead of dropping them straight into the full editor workspace they
-// have no use for. This is the authenticated, same-workspace sibling of
-// components/catalog/MockTestDetailModal.jsx - same topic-wise picker
-// (chip layout, select-all/clear-all, "Start Practice — N topics, M
-// questions" copy), same source data shape (mock-tests.service.js
-// #getMockTestSummary mirrors catalog.service.js's topic-count join).
-// What's different: no workspace/cluster breadcrumb (redundant here -
-// the person is already inside that cluster), no share-token flow -
-// starting is just a plain navigate() to /session/:id, since
-// useExamSession.js's member mode creates the attempt itself on mount.
-export default function MockTestDetailModal({ mockTestId, onClose }) {
+export default function MockTestDetailModal({
+  mockTestId,
+  slug,
+  isPublic = true,
+  onClose,
+}) {
   const navigate = useNavigate();
   const [showAllTopics, setShowAllTopics] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState(new Set());
+  const { isSubscribed, toggleSubscription, isSubscribing } = useSubscriptions();
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["mock-test-summary", mockTestId],
-    queryFn: () => api.getMockTestSummary(mockTestId),
+    queryKey: ["mock-test-detail", mockTestId, slug, isPublic],
+    queryFn: () =>
+      isPublic
+        ? api.getPublicCatalogMockTest(mockTestId, slug)
+        : api.getMockTestSummary(mockTestId),
   });
   const mockTest = data?.mockTest;
   const topics = mockTest?.topics || [];
@@ -62,12 +64,27 @@ export default function MockTestDetailModal({ mockTestId, onClose }) {
     0,
   );
 
-  const startAttempt = (topicsToStart) => {
+  const startAttempt = async (topicsToStart) => {
+    const targetSlug = slug || mockTest?.workspace_slug;
     const query = topicsToStart?.length
       ? `?${topicsToStart.map((t) => `topics=${encodeURIComponent(t)}`).join("&")}`
       : "";
-    navigate(`/session/${mockTestId}${query}`);
+
+    if (isPublic && targetSlug) {
+      try {
+        const { share } = await api.startCatalogAttempt(targetSlug, mockTestId);
+        navigate(`/shared/${share.shareToken}${query}`);
+      } catch (err) {
+        console.error("Failed to start catalog attempt:", err);
+      }
+    } else {
+      navigate(`/session/${mockTestId}${query}`);
+    }
   };
+
+  const publisherSlug = slug || mockTest?.workspace_slug;
+  const publisherName = mockTest?.workspace_name;
+  const subscribed = isSubscribed(publisherSlug);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4">
@@ -103,6 +120,61 @@ export default function MockTestDetailModal({ mockTestId, onClose }) {
                 </p>
               )}
             </div>
+
+            {/* Publisher Card & Subscription */}
+            {(publisherName || publisherSlug) && (
+              <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-border bg-card/60 backdrop-blur-sm">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 shrink-0 font-extrabold text-sm">
+                    <Building2 className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+                      Publisher
+                    </span>
+                    <p className="text-sm font-bold text-foreground truncate">
+                      {publisherName || "PaperFlow Publisher"}
+                    </p>
+                    {publisherSlug && (
+                      <a
+                        href={`/catalog/${publisherSlug}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-orange-500 hover:underline font-semibold inline-flex items-center gap-1 mt-0.5"
+                      >
+                        @{publisherSlug}
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+
+                {publisherSlug && (
+                  <button
+                    type="button"
+                    disabled={isSubscribing}
+                    onClick={() => toggleSubscription(publisherSlug)}
+                    className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
+                      subscribed
+                        ? "bg-orange-500/15 text-orange-500 border border-orange-500/30 hover:bg-red-500/15 hover:text-red-500 hover:border-red-500/30"
+                        : "bg-orange-500 text-white hover:bg-orange-600 shadow-md shadow-orange-500/20"
+                    }`}
+                  >
+                    {subscribed ? (
+                      <>
+                        <UserCheck className="w-3.5 h-3.5" />
+                        Subscribed
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="w-3.5 h-3.5" />
+                        Subscribe
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-xl border border-border bg-card px-3.5 py-3">

@@ -9,7 +9,7 @@ export default function Duplicates() {
 
   if (loading) {
     return (
-      <div className="p-6 max-w-4xl mx-auto flex items-center justify-center gap-2 text-muted-foreground">
+      <div className="p-6 max-w-full mx-auto flex items-center justify-center gap-2 text-muted-foreground">
         <Loader2 className="w-5 h-5 animate-spin" /> Loading duplicate
         questions…
       </div>
@@ -18,7 +18,7 @@ export default function Duplicates() {
 
   if (loadError) {
     return (
-      <div className="p-6 max-w-4xl mx-auto">
+      <div className="p-6 max-w-full mx-auto">
         <div className="surface-card rounded-2xl border border-border p-8 text-center">
           <AlertTriangle className="w-8 h-8 text-red-500 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">{loadError}</p>
@@ -28,7 +28,7 @@ export default function Duplicates() {
   }
 
   return (
-    <div className="p-2 sm:p-6 max-w-4xl mx-auto space-y-5">
+    <div className="p-2 sm:p-6 max-w-full mx-auto space-y-5">
       <DuplicatesIntroCard />
 
       <div>

@@ -1,50 +1,35 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Clock, FileText } from "lucide-react";
+import { Search, Clock, FileText, UserCheck } from "lucide-react";
 import { api } from "@/lib/api";
+import { useSubscriptions } from "@/lib/useSubscriptions";
 import MockTestDetailModal from "../catalog/MockTestDetailModal";
 
 // Shared by PublicCatalog.jsx (institute mode AND global mode) and
-// CatalogSettings.jsx's "Public Mock Tests" tab - the exact same
+// PublicMockTests.jsx's "Public Mock Tests" tab - the exact same
 // search/filter/grid/start-test UI and data-fetching used to be
 // duplicated three times across those two files, with only the data
 // source (one institute's slug vs the global cross-institute feed)
 // actually differing between them.
-//
-// slug: pass an institute's public_slug to scope the browser to just
-// that institute (PublicCatalog.jsx's institute mode). Omit it for the
-// global cross-institute feed (PublicCatalog.jsx's own no-slug mode, and
-// CatalogSettings.jsx's "Public Mock Tests" tab - a logged-in team member
-// browsing other institutes' tests isn't materially different from an
-// anonymous student doing the same, so this reuses startCatalogAttempt +
-// /shared/:token in both cases rather than /session/:id, since these
-// tests aren't in the viewer's own workspace even when they ARE logged
-// in).
-//
-// onWorkspaceName / onError: fired once the institute-mode query settles,
-// so a parent that needs the resolved institute's real name for its own
-// header (PublicCatalog.jsx), or wants to render its own "not found"
-// treatment, can - this component itself stays presentational about
-// anything above the search bar.
-export default function CatalogBrowser({ slug, onWorkspaceName, onError }) {
+export default function CatalogBrowser({
+  slug,
+  showSubscriberFilter = true,
+  onWorkspaceName,
+  onError,
+}) {
   const navigate = useNavigate();
   const isInstituteMode = Boolean(slug);
 
   const [search, setSearch] = useState("");
   const [examYear, setExamYear] = useState("");
+  const [selectedSubscriber, setSelectedSubscriber] = useState("");
   const [startingId, setStartingId] = useState(null);
   const [startError, setStartError] = useState(null);
-  // { id, slug } of the card currently showing its details modal - slug
-  // is per-row in global mode (each row can belong to a different
-  // institute) but falls back to the shared `slug` prop in institute
-  // mode, mirroring handleStart's targetSlug logic below.
   const [detailTarget, setDetailTarget] = useState(null);
 
-  // No debounce needed here - the catalog is expected to be a few dozen
-  // tests at most, so re-fetching on every keystroke is cheap and gives
-  // instant-feeling results without the added state a debounce hook
-  // would need.
+  const { subscriptions, isSubscribed } = useSubscriptions();
+
   const listingQuery = useQuery({
     queryKey: isInstituteMode
       ? ["public-catalog", slug, search, examYear]
@@ -72,14 +57,19 @@ export default function CatalogBrowser({ slug, onWorkspaceName, onError }) {
     if (isInstituteMode && listingQuery.error) onError?.(listingQuery.error);
   }, [isInstituteMode, listingQuery.error, onError]);
 
-  const mockTests = listingQuery.data?.mockTests || [];
+  const rawMockTests = listingQuery.data?.mockTests || [];
   const examYears = examYearsQuery.data?.examYears || [];
 
+  const mockTests = rawMockTests.filter((mt) => {
+    if (!selectedSubscriber) return true;
+    const targetSlug = isInstituteMode ? slug : mt.workspace_slug;
+    if (selectedSubscriber === "__all_subscribed__") {
+      return isSubscribed(targetSlug);
+    }
+    return targetSlug?.toLowerCase() === selectedSubscriber.toLowerCase();
+  });
+
   const handleStart = async (mockTest) => {
-    // Global-feed rows are aggregated across institutes, so each one
-    // carries its own workspace_slug (see
-    // catalog.repository.js#listAllPublicMockTests) - the slug prop only
-    // applies in institute mode.
     const targetSlug = isInstituteMode ? slug : mockTest.workspace_slug;
     setStartError(null);
     setStartingId(mockTest.id);
@@ -92,17 +82,14 @@ export default function CatalogBrowser({ slug, onWorkspaceName, onError }) {
     }
   };
 
-  // Institute mode with a broken/unknown slug: nothing to browse here -
-  // the parent decides how to present that (PublicCatalog.jsx shows a
-  // full-page message via onError above); this component just stops.
   if (isInstituteMode && listingQuery.error) {
     return null;
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-2">
-        <div className="relative flex-1">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+        <div className="relative flex-1 sm:max-w-md md:max-w-lg">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           <input
             type="text"
@@ -130,6 +117,34 @@ export default function CatalogBrowser({ slug, onWorkspaceName, onError }) {
             ))}
           </select>
         )}
+        {!isInstituteMode && showSubscriberFilter && (
+          <select
+            value={selectedSubscriber}
+            onChange={(e) => setSelectedSubscriber(e.target.value)}
+            disabled={subscriptions.length === 0}
+            className={`px-3.5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border bg-card focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+              selectedSubscriber
+                ? "border-orange-500 text-orange-500 font-bold"
+                : "border-border text-foreground"
+            }`}
+          >
+            <option value="">
+              {subscriptions.length === 0
+                ? "No Subscriptions"
+                : "Subscribed Publishers"}
+            </option>
+            {subscriptions.length > 0 && (
+              <option value="__all_subscribed__">
+                All Subscribed ({subscriptions.length})
+              </option>
+            )}
+            {subscriptions.map((sub) => (
+              <option key={sub.slug} value={sub.slug}>
+                {sub.workspaceName || sub.slug} (@{sub.slug})
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       {startError && (
@@ -146,11 +161,13 @@ export default function CatalogBrowser({ slug, onWorkspaceName, onError }) {
         <div className="text-center py-20">
           <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">
-            {search || examYear
-              ? "No mock tests match your search."
-              : isInstituteMode
-                ? "No mock tests are available here yet."
-                : "No institute has listed a public mock test yet."}
+            {selectedSubscriber
+              ? "No mock tests found for the selected subscription filter."
+              : search || examYear
+                ? "No mock tests match your search."
+                : isInstituteMode
+                  ? "No mock tests are available here yet."
+                  : "No institute has listed a public mock test yet."}
           </p>
         </div>
       ) : (

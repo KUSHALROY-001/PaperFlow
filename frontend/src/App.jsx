@@ -31,7 +31,7 @@ import StudentDetail from "./pages/StudentDetail";
 import QuestionBank from "./pages/QuestionBank";
 import ReviewQueue from "./pages/ReviewQueue";
 import Duplicates from "./pages/Duplicates";
-import CatalogSettings from "./pages/CatalogSettings";
+import PublicMockTests from "./pages/PublicMockTests";
 import PublicCatalog from "./pages/PublicCatalog";
 import SharedMock from "./pages/SharedMock";
 import Billing from "./pages/Billing";
@@ -121,7 +121,7 @@ const AuthenticatedApp = () => {
         <Route path="/review-queue" element={<ReviewQueue />} />
         <Route path="/templates" element={<Templates />} />
         <Route path="/duplicates" element={<Duplicates />} />
-        <Route path="/catalog-settings" element={<CatalogSettings />} />
+        <Route path="/public-mocktest" element={<PublicMockTests />} />
         <Route path="/team" element={<Team />} />
         <Route path="/students" element={<Students />} />
         <Route path="/students/:email" element={<StudentDetail />} />
