@@ -185,7 +185,6 @@ export async function updateQuestion(questionId, workspaceId, body) {
     body.marksPerCorrect !== undefined ||
     body.negativeMarksPerWrong !== undefined ||
     body.metadata !== undefined ||
-    body.codeSnippet !== undefined ||
     Array.isArray(rawOptions);
 
   const client = await pool.connect();
@@ -238,8 +237,6 @@ export async function updateQuestion(questionId, workspaceId, body) {
         negativeMarksPerWrongProvided: body.negativeMarksPerWrong !== undefined,
         negativeMarksPerWrong: optionalNumber(body.negativeMarksPerWrong, null),
         metadata: body.metadata || null,
-        codeSnippetProvided: body.codeSnippet !== undefined,
-        codeSnippet: optionalString(body.codeSnippet),
       });
 
       if (Array.isArray(rawOptions)) {

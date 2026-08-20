@@ -1,6 +1,6 @@
 import { AlertTriangle, Check, Copy, FolderOpen, Plus } from "lucide-react";
 import { StatusBadge } from "../design-system/StatusBadge";
-import QuestionContent from "../shared/QuestionContent";
+import QuestionContent, { QuestionExplanation } from "../shared/QuestionContent";
 
 const STATUS_TONE = {
   approved: "success",
@@ -144,9 +144,6 @@ export default function BankQuestionCard({
       <QuestionContent
         text={question.text}
         passage={question.passage}
-        explanation={question.explanation}
-        hasCode={question.hasCode}
-        codeLanguage={question.codeLanguage}
         diagramUrl={question.diagramUrl}
         textClassName="text-sm text-foreground"
       />
@@ -165,6 +162,8 @@ export default function BankQuestionCard({
           </div>
         ))}
       </div>
+
+      <QuestionExplanation explanation={question.explanation} />
     </div>
   );
 }

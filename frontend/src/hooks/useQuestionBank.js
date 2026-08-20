@@ -42,7 +42,6 @@ export function useQuestionBank() {
   const [topic, setTopic] = useState("");
   const [status, setStatus] = useState("");
   const [questionType, setQuestionType] = useState("");
-  const [hasCode, setHasCode] = useState(undefined); // undefined | true | false
   const [hasDiagram, setHasDiagram] = useState(undefined);
 
   const [addTarget, setAddTarget] = useState(null); // the bank question currently in the Add-to-Test modal
@@ -87,10 +86,9 @@ export function useQuestionBank() {
       topic: topic || undefined,
       status: status || undefined,
       questionType: questionType || undefined,
-      hasCode,
       hasDiagram,
     }),
-    [debouncedSearch, topic, status, questionType, hasCode, hasDiagram],
+    [debouncedSearch, topic, status, questionType, hasDiagram],
   );
 
   const {
@@ -105,12 +103,6 @@ export function useQuestionBank() {
     queryFn: ({ pageParam }) =>
       api.searchQuestionBank({
         ...filters,
-        // URLSearchParams (inside api.searchQuestionBank) stringifies a
-        // real boolean fine via String(), but keeping the conversion
-        // explicit here documents that the backend's query-string parser
-        // (question-bank.service.js#parseOptionalBoolean) only recognizes
-        // the literal strings "true"/"false", not JS truthiness.
-        hasCode: hasCode === undefined ? undefined : String(hasCode),
         hasDiagram: hasDiagram === undefined ? undefined : String(hasDiagram),
         cursor: pageParam,
       }),
@@ -210,8 +202,6 @@ export function useQuestionBank() {
     setStatus,
     questionType,
     setQuestionType,
-    hasCode,
-    setHasCode,
     hasDiagram,
     setHasDiagram,
     topics: topicsData?.topics || [],

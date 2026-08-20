@@ -18,9 +18,6 @@ function normalizeQuestion(question) {
     text: question.question_text,
     questionNo: question.question_no,
     correctOptionIndexes: question.correct_option_indexes,
-    hasCode: question.has_code,
-    codeLanguage: question.code_language,
-    codeSnippet: question.code_snippet,
   };
 }
 
@@ -40,29 +37,34 @@ function diagramHtml(question, { baseUrl }) {
   return `<img class="diagram" src="${escapeHtml(src)}" alt="Question diagram" />`;
 }
 
-function questionBodyHtml(question) {
-  if (question.hasCode) {
-    // Matches QuestionContent.jsx's hasCode branch: monospace, whitespace
-    // preserved, no MathText/table-splitting run over the code itself (a
-    // code snippet's $ or backslashes are syntax, not math delimiters).
-    //
-    // codeSnippet (migration 017) holds ONLY the code, with `text` holding
-    // just the prose lead-in - but a row extracted before that migration
-    // has no codeSnippet at all (has_code true, code_snippet NULL), and
-    // there's nothing to split it with after the fact, so that case falls
-    // back to the old behavior: the entire `text` field, prose included,
-    // goes in the code box exactly as it always has.
-    const codeBody = question.codeSnippet ?? question.text;
-    const leadIn = question.codeSnippet ? question.text : "";
-    return `
-      ${leadIn ? renderQuestionTextHtml(leadIn) : ""}
-      <div class="code-block">
-        ${question.codeLanguage ? `<div class="code-lang">${escapeHtml(question.codeLanguage)}</div>` : ""}
-        <pre><code>${escapeHtml(codeBody)}</code></pre>
-      </div>
-    `;
+const CODE_FENCE_RE = /```(\w*)\n([\s\S]*?)```/g;
+
+function renderQuestionTextWithCodeHtml(text) {
+  if (!text) return "";
+  const str = String(text);
+  const parts = str.split(CODE_FENCE_RE);
+  let html = "";
+  for (let i = 0; i < parts.length; i += 3) {
+    const prose = parts[i];
+    if (prose) {
+      html += renderQuestionTextHtml(prose);
+    }
+    if (i + 1 < parts.length) {
+      const codeLanguage = parts[i + 1]?.trim() || null;
+      const codeBody = parts[i + 2] ?? "";
+      html += `
+        <div class="code-block">
+          ${codeLanguage ? `<div class="code-lang">${escapeHtml(codeLanguage)}</div>` : ""}
+          <pre style="tab-size:4;-moz-tab-size:4;white-space:pre-wrap;"><code>${escapeHtml(codeBody)}</code></pre>
+        </div>
+      `;
+    }
   }
-  return renderQuestionTextHtml(question.text);
+  return html;
+}
+
+function questionBodyHtml(question) {
+  return renderQuestionTextWithCodeHtml(question.text);
 }
 
 function optionsHtml(question) {
@@ -108,6 +110,16 @@ function answerKeyHtml(questions) {
   `;
 }
 
+function explanationHtml(question) {
+  if (!question.explanation) return "";
+  return `
+    <div class="explanation-box" style="margin-top: 10px; padding: 8px 12px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px;">
+      <div style="font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; color: #059669; margin-bottom: 4px;">Explanation</div>
+      <div>${renderQuestionTextWithCodeHtml(question.explanation)}</div>
+    </div>
+  `;
+}
+
 function questionHtml(question, index, { baseUrl }) {
   const placement = question.placement || "below_text";
   const diagram = diagramHtml(question, { baseUrl });
@@ -123,6 +135,7 @@ function questionHtml(question, index, { baseUrl }) {
       ${placement === "below_text" ? diagram : ""}
       ${optionsHtml(question)}
       ${placement === "below_options" ? diagram : ""}
+      ${explanationHtml(question)}
     </section>
   `;
 }
@@ -247,6 +260,14 @@ export function renderMockTestHtml({ mockTest, questions, baseUrl }) {
     padding: 10px;
     font-family: "SF Mono", Consolas, monospace;
     font-size: 9pt;
+    /* Also set inline on the <pre> tag itself in
+       renderQuestionTextWithCodeHtml() above, deliberately matching this
+       value - inline style always wins over a class rule on specificity,
+       so if the two ever disagree, THIS declaration is the one that's
+       silently dead. (That's exactly what happened before: the inline
+       style used to say white-space:pre, so long code lines could never
+       wrap and got cut off in exported PDFs, which - unlike a browser
+       tab - can't scroll horizontally.) Change both together. */
     white-space: pre-wrap;
   }
   .options {

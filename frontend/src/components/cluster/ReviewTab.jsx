@@ -11,7 +11,10 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { ConfirmDialog } from "../design-system/ConfirmDialog";
-import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
+import QuestionContent, {
+  QuestionDiagram,
+  QuestionExplanation,
+} from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
 import QuestionJumpInput from "../shared/QuestionJumpInput";
 import ScrollToTopButton from "../shared/ScrollToTopButton";
@@ -264,10 +267,6 @@ export default function ReviewTab({
                     <QuestionContent
                       text={question.text}
                       passage={question.passage}
-                      explanation={question.explanation}
-                      hasCode={question.hasCode}
-                      codeLanguage={question.codeLanguage}
-                      codeSnippet={question.codeSnippet}
                       diagramUrl={question.diagramUrl}
                       placement={question.placement}
                       textClassName="text-base sm:text-lg font-bold text-foreground"
@@ -394,6 +393,7 @@ export default function ReviewTab({
                   {question.placement === "below_options" && (
                     <QuestionDiagram diagramUrl={question.diagramUrl} />
                   )}
+                  <QuestionExplanation explanation={question.explanation} />
                   {question.status === "rejected" && (
                     <div className="inline-flex items-center gap-2 rounded-full bg-red-500/10 border border-red-500/20 px-3 py-1.5 text-xs font-semibold text-red-500">
                       <ShieldAlert className="h-3.5 w-3.5" />

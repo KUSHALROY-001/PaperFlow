@@ -1,4 +1,4 @@
-import { Code2, ImageIcon, Search, X } from "lucide-react";
+import { ImageIcon, Search, X } from "lucide-react";
 
 const fieldClass =
   "px-3 py-2 text-sm rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30";
@@ -56,20 +56,17 @@ export default function BankFilters({
   setStatus,
   questionType,
   setQuestionType,
-  hasCode,
-  setHasCode,
   hasDiagram,
   setHasDiagram,
   topics,
 }) {
   const hasActiveFilters =
-    topic || status || questionType || hasCode !== undefined || hasDiagram !== undefined;
+    topic || status || questionType || hasDiagram !== undefined;
 
   const clearFilters = () => {
     setTopic("");
     setStatus("");
     setQuestionType("");
-    setHasCode(undefined);
     setHasDiagram(undefined);
   };
 
@@ -123,12 +120,6 @@ export default function BankFilters({
           ))}
         </select>
 
-        <TriStateToggle
-          icon={Code2}
-          label="Code"
-          value={hasCode}
-          onChange={setHasCode}
-        />
         <TriStateToggle
           icon={ImageIcon}
           label="Diagram"

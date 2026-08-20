@@ -29,9 +29,6 @@ const PENDING_SELECT = `
     qa.passage AS question_a_passage,
     qa.question_text AS question_a_text,
     qa.explanation AS question_a_explanation,
-    qa.has_code AS question_a_has_code,
-    qa.code_language AS question_a_code_language,
-    qa.code_snippet AS question_a_code_snippet,
     COALESCE(
       (
         SELECT jsonb_agg(
@@ -51,9 +48,6 @@ const PENDING_SELECT = `
     qb.passage AS question_b_passage,
     qb.question_text AS question_b_text,
     qb.explanation AS question_b_explanation,
-    qb.has_code AS question_b_has_code,
-    qb.code_language AS question_b_code_language,
-    qb.code_snippet AS question_b_code_snippet,
     COALESCE(
       (
         SELECT jsonb_agg(

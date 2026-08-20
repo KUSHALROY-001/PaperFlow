@@ -21,7 +21,6 @@ export async function searchQuestions(
     search,
     topic,
     subtopic,
-    hasCode,
     hasDiagram,
     status,
     questionType,
@@ -44,10 +43,6 @@ export async function searchQuestions(
   if (subtopic) {
     params.push(subtopic);
     conditions.push(`q.subtopic = $${params.length}`);
-  }
-  if (typeof hasCode === "boolean") {
-    params.push(hasCode);
-    conditions.push(`q.has_code = $${params.length}`);
   }
   if (status) {
     params.push(status);
@@ -102,9 +97,6 @@ export async function searchQuestions(
       q.correct_option_indexes AS "correctOptionIndexes",
       q.marks_per_correct AS "marksPerCorrect",
       q.negative_marks_per_wrong AS "negativeMarksPerWrong",
-      q.has_code AS "hasCode",
-      q.code_language AS "codeLanguage",
-      q.code_snippet AS "codeSnippet",
       q.status,
       q.confidence,
       q.created_at AS "createdAt",

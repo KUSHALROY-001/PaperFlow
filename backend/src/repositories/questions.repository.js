@@ -74,14 +74,12 @@ export async function cloneContent(client, contentId) {
     INSERT INTO question_contents (
       workspace_id, topic, subtopic, passage, question_text, explanation,
       question_type, correct_option_indexes, marks_per_correct,
-      negative_marks_per_wrong, has_code, code_language, code_snippet,
-      metadata
+      negative_marks_per_wrong, metadata
     )
     SELECT
       workspace_id, topic, subtopic, passage, question_text, explanation,
       question_type, correct_option_indexes, marks_per_correct,
-      negative_marks_per_wrong, has_code, code_language, code_snippet,
-      metadata
+      negative_marks_per_wrong, metadata
     FROM question_contents
     WHERE id = $1
     RETURNING id
@@ -219,7 +217,6 @@ export const CONTENT_FIELDS = [
   "marksPerCorrect",
   "negativeMarksPerWrong",
   "metadata",
-  "codeSnippet",
 ];
 
 // In-place update of a content row - only ever called once
@@ -245,8 +242,6 @@ export async function updateContent(client, contentId, fields) {
     negativeMarksPerWrongProvided,
     negativeMarksPerWrong,
     metadata,
-    codeSnippetProvided,
-    codeSnippet,
   } = fields;
 
   const result = await client.query(
@@ -262,8 +257,7 @@ export async function updateContent(client, contentId, fields) {
       correct_option_indexes = COALESCE($12::int[], correct_option_indexes),
       marks_per_correct = CASE WHEN $13::boolean THEN $14 ELSE marks_per_correct END,
       negative_marks_per_wrong = CASE WHEN $15::boolean THEN $16 ELSE negative_marks_per_wrong END,
-      metadata = COALESCE($17, metadata),
-      code_snippet = CASE WHEN $18::boolean THEN $19 ELSE code_snippet END
+      metadata = COALESCE($17, metadata)
     WHERE id = $1
     RETURNING id
     `,
@@ -285,8 +279,6 @@ export async function updateContent(client, contentId, fields) {
       negativeMarksPerWrongProvided,
       negativeMarksPerWrong,
       metadata,
-      codeSnippetProvided,
-      codeSnippet,
     ],
   );
 

@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
 import { CheckCircle, XCircle, BarChart2, Home, LogIn } from "lucide-react";
 import { getOptionText } from "@/utils/mockTestHelpers";
-import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
+import QuestionContent, {
+  QuestionDiagram,
+  QuestionExplanation,
+} from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
 
 export default function SessionResultsView({
@@ -21,7 +24,7 @@ export default function SessionResultsView({
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6 font-sans">
-      <div className="w-full max-w-2xl space-y-6">
+      <div className="w-full max-w-5xl space-y-6">
         <div className="surface-card rounded-3xl p-8 border border-border text-center">
           <div
             className={`w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-5 ${percentage >= 70 ? "bg-emerald-500/15 border border-emerald-500/20" : "bg-amber-500/15 border border-amber-500/20"}`}
@@ -136,10 +139,6 @@ export default function SessionResultsView({
                       <QuestionContent
                         text={rq.text}
                         passage={rq.passage}
-                        explanation={rq.explanation}
-                        hasCode={rq.hasCode}
-                        codeLanguage={rq.codeLanguage}
-                        codeSnippet={rq.codeSnippet}
                         diagramUrl={rq.diagramUrl}
                         placement={rq.placement}
                         textClassName="font-bold text-foreground"
@@ -171,6 +170,7 @@ export default function SessionResultsView({
                           <QuestionDiagram diagramUrl={rq.diagramUrl} />
                         </div>
                       )}
+                      <QuestionExplanation explanation={rq.explanation} />
                     </div>
                   </div>
                 </div>

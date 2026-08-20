@@ -8,7 +8,10 @@ import {
   ShieldAlert,
   SkipForward,
 } from "lucide-react";
-import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
+import QuestionContent, {
+  QuestionDiagram,
+  QuestionExplanation,
+} from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
 
 // Same three-tier bucketing ReviewTab.jsx uses (getConfidenceTone) -
@@ -82,10 +85,6 @@ export default function QueueQuestionCard({
       <QuestionContent
         text={question.text}
         passage={question.passage}
-        explanation={question.explanation}
-        hasCode={question.hasCode}
-        codeLanguage={question.codeLanguage}
-        codeSnippet={question.codeSnippet}
         diagramUrl={question.diagramUrl}
         placement={question.placement}
         textClassName="text-base sm:text-lg font-bold text-foreground"
@@ -118,6 +117,7 @@ export default function QueueQuestionCard({
         {question.placement === "below_options" && (
           <QuestionDiagram diagramUrl={question.diagramUrl} />
         )}
+        <QuestionExplanation explanation={question.explanation} />
       </div>
 
       {question.aiIssues?.length > 0 && (

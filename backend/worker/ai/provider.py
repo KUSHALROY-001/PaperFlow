@@ -40,22 +40,16 @@ they cannot answer without it, and false-flagging a purely textual question
 wastes a crop for nothing - so look before you decide, on every question,
 rather than defaulting to false out of habit.
 
-If a question contains a code snippet, pseudocode, or a "what does this
-program output" style block, set has_code to true and copy ONLY that code
-portion - not the question's own prose lead-in - into "code_snippet",
-EXACTLY as it appears on the page: preserve every line break and every
-level of indentation verbatim. Do not reflow it into a paragraph, do not
-join lines with spaces, and do not "clean up" the formatting. "text" should
-then hold ONLY the prose lead-in (e.g. "What will be output of the
-following code snippet?"), with the code left out of "text" entirely -
-never duplicate the code into both fields. If there is no prose before the
-code at all, "text" may be an empty string. Also set code_language to your
-best guess at the language (e.g. "c", "python", "java", "pseudocode") if
-you can tell, or null if you can't. has_code, code_language, and
-code_snippet are REQUIRED fields on every single question, same as
-has_diagram and diagram_bbox above - set has_code to false and both
-code_language and code_snippet to null for every question that is plain
-prose with no code in it.
+If "text", any entry in "options", or "explanation" contains a code snippet,
+pseudocode, or program output block, wrap it in markdown code fences:
+```language
+...
+```
+where "language" is your best guess at the language (e.g. c, python, java,
+cpp, pseudocode). Preserve every line break and level of indentation verbatim.
+Do not split prose and code across separate fields - include the fenced code
+block directly inside "text", "options", or "explanation" at the position where
+it appears relative to the surrounding prose.
 
 If "text", any entry in "options", or "explanation" contains a mathematical
 expression - a fraction, exponent, root, integral, summation, matrix, ratio,
@@ -72,9 +66,9 @@ subscripts, \\sqrt{...} for roots, \\int, \\sum, \\pi, \\theta, \\times,
 \\div, \\left( \\right) for auto-sized brackets, and so on - do not invent
 ad hoc notation for something LaTeX already has a command for. A question
 with no math in it at all needs no delimiters anywhere; do not wrap plain
-numbers or ordinary words in $ signs. Exception: inside "code_snippet",
-leave the text as source code exactly as instructed above - do not add math
-delimiters there, even if the code contains mathematical operators.
+numbers or ordinary words in $ signs. Exception: inside a code fence,
+leave the text as source code - do not add math delimiters there, even if the
+code contains mathematical operators.
 
 If "text" contains a table - a List-I/List-II matching table, a data table,
 a comparison table, or any other grid of rows and columns visible on the
@@ -107,10 +101,7 @@ Expected shape:
       "needs_review": true,
       "issues": [],
       "has_diagram": false,
-      "diagram_bbox": null,
-      "has_code": false,
-      "code_language": null,
-      "code_snippet": null
+      "diagram_bbox": null
     }
   ]
 }

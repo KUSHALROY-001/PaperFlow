@@ -88,9 +88,6 @@ export function mapQuestion(question) {
     // Part C: where the diagram renders relative to text/options - see
     // attachDiagramUrls, which sets this whenever any asset exists.
     placement: question.placement || "below_text",
-    hasCode: question.has_code || false,
-    codeLanguage: question.code_language || null,
-    codeSnippet: question.code_snippet || null,
   };
 }
 

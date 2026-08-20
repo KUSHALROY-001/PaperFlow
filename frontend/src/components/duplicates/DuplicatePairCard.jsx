@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowLeftRight, Check, Loader2, X } from "lucide-react";
-import QuestionContent from "../shared/QuestionContent";
+import QuestionContent, { QuestionExplanation } from "../shared/QuestionContent";
 
 function QuestionSide({ question, onKeep, disabled, side }) {
   return (
@@ -21,10 +21,6 @@ function QuestionSide({ question, onKeep, disabled, side }) {
         <QuestionContent
           text={question.text}
           passage={question.passage}
-          explanation={question.explanation}
-          hasCode={question.hasCode}
-          codeLanguage={question.codeLanguage}
-          codeSnippet={question.codeSnippet}
           textClassName="text-sm text-foreground"
         />
         {question.options?.length > 0 && (
@@ -39,6 +35,7 @@ function QuestionSide({ question, onKeep, disabled, side }) {
             ))}
           </ul>
         )}
+        <QuestionExplanation explanation={question.explanation} />
       </div>
       <button
         type="button"

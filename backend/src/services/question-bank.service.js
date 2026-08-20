@@ -55,7 +55,6 @@ export async function searchQuestionBank(workspaceId, query) {
     search: optionalString(query.search),
     topic: optionalString(query.topic),
     subtopic: optionalString(query.subtopic),
-    hasCode: parseOptionalBoolean(query.hasCode),
     hasDiagram: parseOptionalBoolean(query.hasDiagram),
     status: query.status
       ? requiredEnum(query.status, STATUS_VALUES, "status")

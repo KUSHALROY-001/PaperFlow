@@ -19,8 +19,6 @@ export default function QuestionBank() {
     setStatus,
     questionType,
     setQuestionType,
-    hasCode,
-    setHasCode,
     hasDiagram,
     setHasDiagram,
     topics,
@@ -79,8 +77,6 @@ export default function QuestionBank() {
         setStatus={setStatus}
         questionType={questionType}
         setQuestionType={setQuestionType}
-        hasCode={hasCode}
-        setHasCode={setHasCode}
         hasDiagram={hasDiagram}
         setHasDiagram={setHasDiagram}
         topics={topics}

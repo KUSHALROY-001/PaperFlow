@@ -1,8 +1,12 @@
 import { useState } from "react";
-import { Crop, Plus, Sparkles, Trash2 } from "lucide-react";
-import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
+import { Code2, Crop, Plus, Sparkles, Trash2 } from "lucide-react";
+import QuestionContent, {
+  QuestionDiagram,
+  QuestionExplanation,
+} from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
 import { wrapBareLatex } from "@/utils/questionEditorHelpers";
+import { autoIndentMarkdown } from "@/utils/codeIndenter";
 import DiagramCropModal from "./DiagramCropModal";
 import DiagramUploadControl from "./DiagramUploadControl";
 
@@ -22,19 +26,66 @@ export default function QuestionForm({
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const [diagramError, setDiagramError] = useState("");
 
-  // Runs the text + every option through wrapBareLatex in one shot rather
-  // than looping updateOption per index - updateOption reads
-  // selected.options from its own closure, so calling it repeatedly in a
-  // synchronous loop would have each call overwrite the previous one's
-  // change instead of accumulating them. Building the full next array here
-  // and setting it with a single updateSelected("options", ...) call
-  // sidesteps that.
   const handleCleanUpMath = () => {
     updateSelected("text", wrapBareLatex(selected.text));
     updateSelected(
       "options",
       selected.options.map((option) => wrapBareLatex(option)),
     );
+  };
+
+  const handleIndentCode = () => {
+    const current = selected.text || "";
+    if (!current.trim()) {
+      const template =
+        "```c\n#include <stdio.h>\n\nint main() {\n    return 0;\n}\n```";
+      updateSelected("text", template);
+      return;
+    }
+    const indented = autoIndentMarkdown(current);
+    updateSelected("text", indented);
+  };
+
+  const handleIndentExplanationCode = () => {
+    const current = selected.explanation || "";
+    if (!current.trim()) return;
+    const indented = autoIndentMarkdown(current);
+    updateSelected("explanation", indented);
+  };
+
+  const handleKeyDownTextarea = (e, field) => {
+    if (isViewer) return;
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const target = e.target;
+      const start = target.selectionStart;
+      const end = target.selectionEnd;
+      const val = target.value;
+
+      if (start === end) {
+        const next = val.substring(0, start) + "    " + val.substring(end);
+        updateSelected(field, next);
+        requestAnimationFrame(() => {
+          target.selectionStart = target.selectionEnd = start + 4;
+        });
+      } else {
+        const selectedText = val.substring(start, end);
+        const lines = selectedText.split("\n");
+        let newLines;
+        if (e.shiftKey) {
+          newLines = lines.map((line) => line.replace(/^ {1,4}/, ""));
+        } else {
+          newLines = lines.map((line) => "    " + line);
+        }
+        const replacement = newLines.join("\n");
+        const next = val.substring(0, start) + replacement + val.substring(end);
+        updateSelected(field, next);
+        requestAnimationFrame(() => {
+          target.selectionStart = start;
+          target.selectionEnd = start + replacement.length;
+        });
+      }
+    }
   };
 
   return (
@@ -95,57 +146,82 @@ export default function QuestionForm({
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3 mb-2">
+        <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
           <label className="block text-xs sm:text-sm font-bold text-foreground">
             Question Text
           </label>
-          <button
-            type="button"
-            disabled={isViewer}
-            onClick={() => !isViewer && handleCleanUpMath()}
-            title="Wrap bare pasted LaTeX (e.g. \frac{1}{2} with no $ signs around it) in math delimiters so it renders correctly - check the Live Preview below after"
-            className={`flex items-center gap-1 text-[11px] font-bold transition-all shrink-0 ${
-              isViewer
-                ? "text-muted-foreground/40 cursor-not-allowed opacity-50"
-                : "text-orange-500 hover:underline"
-            }`}
-          >
-            <Sparkles className="w-3 h-3" /> Clean up pasted math
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              disabled={isViewer}
+              onClick={() => !isViewer && handleIndentCode()}
+              title="Auto-indent code blocks and format braces with 4-space indentation"
+              className={`flex items-center gap-1 text-[11px] font-bold transition-all shrink-0 ${
+                isViewer
+                  ? "text-muted-foreground/40 cursor-not-allowed opacity-50"
+                  : "text-orange-500 hover:underline"
+              }`}
+            >
+              <Code2 className="w-3 h-3" /> Indent code
+            </button>
+            <button
+              type="button"
+              disabled={isViewer}
+              onClick={() => !isViewer && handleCleanUpMath()}
+              title="Wrap bare pasted LaTeX (e.g. \frac{1}{2} with no $ signs around it) in math delimiters so it renders correctly - check the Live Preview below after"
+              className={`flex items-center gap-1 text-[11px] font-bold transition-all shrink-0 ${
+                isViewer
+                  ? "text-muted-foreground/40 cursor-not-allowed opacity-50"
+                  : "text-orange-500 hover:underline"
+              }`}
+            >
+              <Sparkles className="w-3 h-3" /> Clean up pasted math
+            </button>
+          </div>
         </div>
         <textarea
           disabled={isViewer}
           value={selected.text}
           onChange={(e) => !isViewer && updateSelected("text", e.target.value)}
+          onKeyDown={(e) => handleKeyDownTextarea(e, "text")}
           className={`w-full min-h-24 px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all text-xs sm:text-sm resize-vertical ${
             isViewer ? "cursor-not-allowed opacity-60" : ""
           }`}
         />
       </div>
 
-      {selected.hasCode && (
-        <div className="surface-card rounded-2xl p-3 sm:p-6 border border-border">
-          <label className="block text-xs sm:text-sm font-bold text-foreground mb-2">
-            Code Snippet
+      <div className="surface-card rounded-2xl p-3 sm:p-6 border border-border">
+        <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+          <label className="block text-xs sm:text-sm font-bold text-foreground">
+            Explanation (Optional)
           </label>
-          <p className="text-[11px] text-muted-foreground mb-2">
-            Only the code goes here - "Question Text" above is just the prose
-            lead-in shown before it (e.g. "What will be output of the following
-            code snippet?"). Indentation and line breaks here are preserved
-            exactly as typed.
-          </p>
-          <textarea
+          <button
+            type="button"
             disabled={isViewer}
-            value={selected.codeSnippet || ""}
-            onChange={(e) =>
-              !isViewer && updateSelected("codeSnippet", e.target.value)
-            }
-            className={`w-full min-h-32 px-4 py-3 rounded-xl border border-border bg-card text-foreground font-mono whitespace-pre focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all text-xs sm:text-sm resize-vertical ${
-              isViewer ? "cursor-not-allowed opacity-60" : ""
+            onClick={() => !isViewer && handleIndentExplanationCode()}
+            title="Auto-indent code blocks in explanation text"
+            className={`flex items-center gap-1 text-[11px] font-bold transition-all shrink-0 ${
+              isViewer
+                ? "text-muted-foreground/40 cursor-not-allowed opacity-50"
+                : "text-orange-500 hover:underline"
             }`}
-          />
+          >
+            <Code2 className="w-3 h-3" /> Indent code
+          </button>
         </div>
-      )}
+        <textarea
+          disabled={isViewer}
+          value={selected.explanation || ""}
+          onChange={(e) =>
+            !isViewer && updateSelected("explanation", e.target.value)
+          }
+          onKeyDown={(e) => handleKeyDownTextarea(e, "explanation")}
+          placeholder="Add explanation for the correct answer..."
+          className={`w-full min-h-20 px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all text-xs sm:text-sm resize-vertical ${
+            isViewer ? "cursor-not-allowed opacity-60" : ""
+          }`}
+        />
+      </div>
 
       <div className="surface-card rounded-2xl p-3 sm:p-6 border border-border">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
@@ -220,16 +296,6 @@ export default function QuestionForm({
                   rows={1}
                   ref={(el) => {
                     if (!el) return;
-                    // Auto-grows to fit content instead of staying pinned
-                    // at a fixed 2-row height with a manual resize handle.
-                    // Without this, pressing Enter on a big option DID add
-                    // a newline to the value - it just never became
-                    // visible, since the box itself never got taller, so
-                    // it looked like Enter was doing nothing. Runs on
-                    // every render (a fresh inline ref like this makes
-                    // React re-invoke it each time) so it also re-fits
-                    // when switching between questions with different
-                    // option lengths, not just while typing.
                     el.style.height = "auto";
                     el.style.height = `${el.scrollHeight}px`;
                   }}
@@ -272,9 +338,6 @@ export default function QuestionForm({
           text={selected.text}
           passage={selected.passage}
           explanation={selected.explanation}
-          hasCode={selected.hasCode}
-          codeLanguage={selected.codeLanguage}
-          codeSnippet={selected.codeSnippet}
           diagramUrl={selected.diagramUrl}
           placement={selected.placement}
           textClassName="text-sm font-bold text-foreground"
@@ -283,21 +346,15 @@ export default function QuestionForm({
           {selected.diagramUrl && (
             <button
               type="button"
-              disabled={isViewer || !selected.diagramOriginalUrl}
-              onClick={() =>
-                !isViewer &&
-                selected.diagramOriginalUrl &&
-                setIsCropModalOpen(true)
-              }
+              disabled={isViewer}
+              onClick={() => !isViewer && setIsCropModalOpen(true)}
               title={
                 isViewer
                   ? "Editor role is required to edit the crop"
-                  : !selected.diagramOriginalUrl
-                    ? "This diagram has no original image saved - re-extract from the original PDF to get one"
-                    : undefined
+                  : undefined
               }
               className={`flex items-center gap-1.5 text-xs font-bold transition-all ${
-                isViewer || !selected.diagramOriginalUrl
+                isViewer
                   ? "text-muted-foreground/40 cursor-not-allowed opacity-50"
                   : "text-orange-500 hover:underline"
               }`}
@@ -336,6 +393,7 @@ export default function QuestionForm({
             <QuestionDiagram diagramUrl={selected.diagramUrl} />
           </div>
         )}
+        <QuestionExplanation explanation={selected.explanation} />
       </div>
 
       {isCropModalOpen && (
@@ -343,8 +401,7 @@ export default function QuestionForm({
           key={selected.id}
           questionId={selected.id}
           mockTestId={mockTestId}
-          diagramOriginalUrl={selected.diagramOriginalUrl}
-          hasManualCrop={selected.hasManualCrop}
+          diagramUrl={selected.diagramUrl}
           onClose={() => setIsCropModalOpen(false)}
         />
       )}

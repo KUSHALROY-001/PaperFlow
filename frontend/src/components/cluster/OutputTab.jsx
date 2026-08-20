@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Copy, Download, Edit2, Loader2 } from "lucide-react";
-import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
+import QuestionContent, {
+  QuestionDiagram,
+  QuestionExplanation,
+} from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
 import QuestionJumpInput from "../shared/QuestionJumpInput";
 import { api } from "@/lib/api";
@@ -64,9 +67,6 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
         answer: question.answer,
         confidence: question.confidence,
         status: question.status,
-        hasCode: question.hasCode,
-        codeLanguage: question.codeLanguage,
-        codeSnippet: question.codeSnippet,
         // diagramUrl deliberately excluded here - it's a short-lived
         // HMAC-signed URL (see question-assets.service.js#buildDiagramUrl),
         // not a stable link. Including it in a JSON someone downloads and
@@ -210,10 +210,6 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
               <QuestionContent
                 text={question.text}
                 passage={question.passage}
-                explanation={question.explanation}
-                hasCode={question.hasCode}
-                codeLanguage={question.codeLanguage}
-                codeSnippet={question.codeSnippet}
                 diagramUrl={question.diagramUrl}
                 placement={question.placement}
                 textClassName="text-lg font-semibold text-foreground"
@@ -241,6 +237,7 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
                   <QuestionDiagram diagramUrl={question.diagramUrl} />
                 </div>
               )}
+              <QuestionExplanation explanation={question.explanation} />
             </div>
           ))}
         </div>

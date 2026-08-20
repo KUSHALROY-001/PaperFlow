@@ -268,12 +268,9 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
               correct_option_indexes,
               metadata,
               marks_per_correct,
-              negative_marks_per_wrong,
-              has_code,
-              code_language,
-              code_snippet
+              negative_marks_per_wrong
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
             """,
             [
@@ -286,27 +283,8 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
                 question_type,
                 correct_option_indexes,
                 json.dumps(question.get("metadata", {})),
-                # Set only when ai/provider.py#_apply_section_marks matched
-                # this question's topic to a template section carrying its
-                # own marking override - None (-> SQL NULL) otherwise,
-                # which is exactly the "no override, fall back to the mock
-                # test's own marks_per_correct/negative_marks_per_wrong"
-                # state attempts.service.js's scoring already expects (both
-                # columns are nullable for precisely this reason - the
-                # question editor has always been able to set them by hand
-                # per-question, same columns, same fallback rule).
                 question.get("marks_per_correct"),
                 question.get("negative_marks_per_wrong"),
-                # has_code/code_language: set by ai/schemas.py's per-question
-                # normalization (same has_diagram-shaped pattern) once
-                # reconcile.py carries them through to the final merged
-                # question dict. bool(...) rather than a bare .get() because
-                # the regex-only fallback path (when every AI attempt fails)
-                # never sets "has_code" at all - the column is NOT NULL, so
-                # this needs a real False, not None, for that path.
-                bool(question.get("has_code", False)),
-                question.get("code_language"),
-                question.get("code_snippet"),
             ],
         ).fetchone()
 

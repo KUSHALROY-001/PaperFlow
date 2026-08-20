@@ -180,9 +180,6 @@ export async function startAttempt({
         text: question.text,
         options: question.options,
         questionType: question.questionType,
-        hasCode: question.hasCode,
-        codeLanguage: question.codeLanguage,
-        codeSnippet: question.codeSnippet,
       })),
       workspaceId,
       { shareToken: metadata?.shareToken },
@@ -435,9 +432,6 @@ export async function getAttempt({
       // progress.
       subtopic: row.subtopic,
       passage: row.passage,
-      hasCode: row.has_code,
-      codeLanguage: row.code_language,
-      codeSnippet: row.code_snippet,
       selectedOptionIndexes: row.selected_option_indexes || [],
       // Correct answers, explanations, and per-question correctness are
       // ONLY included once the attempt is submitted - resuming an

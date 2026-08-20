@@ -352,7 +352,7 @@ export const api = {
   },
 
   // --- Question Bank ---
-  // params: { search, topic, subtopic, hasCode, hasDiagram, status,
+  // params: { search, topic, subtopic, hasDiagram, status,
   // questionType, clusterId, cursor, limit } - all optional, filtered out
   // below rather than sent as literal "undefined" query-string values.
   searchQuestionBank(params = {}) {

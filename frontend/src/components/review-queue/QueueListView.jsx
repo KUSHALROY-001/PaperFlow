@@ -74,7 +74,7 @@ export default function QueueListView({
                   </span>
                 </div>
                 <p className="text-xs text-foreground line-clamp-2">
-                  {question.hasCode ? question.codeSnippet : question.text}
+                  {question.text}
                 </p>
               </div>
             </label>

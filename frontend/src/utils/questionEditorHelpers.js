@@ -58,14 +58,6 @@ export function toEditorQuestion(question) {
     // treats that the same as "extracted" (nothing to distinguish yet).
     placement: question.placement || "below_text",
     source: question.source,
-    // Same story as diagramUrl above, for the code-formatting fields -
-    // findQuestionById is a plain `SELECT *`, so has_code/code_language
-    // are already on the raw row; this is the only place that would
-    // otherwise silently drop them before QuestionForm.jsx's preview ever
-    // sees them.
-    hasCode: question.has_code || false,
-    codeLanguage: question.code_language || null,
-    codeSnippet: question.code_snippet || null,
   };
 }
 

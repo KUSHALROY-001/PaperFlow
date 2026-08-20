@@ -233,20 +233,15 @@ export function useQuestionEditor() {
         mockTestId,
         questionNo: Number(question.questionNo),
         topic: question.topic,
+        subtopic: question.subtopic || null,
+        passage: question.passage || null,
+        explanation: question.explanation || null,
         questionText: question.text,
         options: question.options,
         correctOptionIndexes: question.correctOptionIndexes,
         questionType: question.questionType,
         status: "approved",
       };
-
-      // Only sent for a code question - saveQuestion is also the path for
-      // ordinary (non-code) questions, and there's nothing to send for
-      // those since hasCode/codeSnippet aren't editable independent of
-      // extraction for them.
-      if (question.hasCode) {
-        payload.codeSnippet = question.codeSnippet;
-      }
 
       if (question.persisted) {
         return api.updateQuestion(question.id, payload);

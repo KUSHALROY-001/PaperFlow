@@ -355,10 +355,7 @@ export async function listPlayableQuestions(mockTestId, topics) {
       options,
       "correctOptionIndex",
       "questionType",
-      explanation,
-      "hasCode",
-      "codeLanguage",
-      "codeSnippet"
+      explanation
     FROM playable_mock_test_questions
     WHERE mock_test_id = $1
       AND ($2::text[] IS NULL OR topic = ANY($2::text[]))
