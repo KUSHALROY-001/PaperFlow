@@ -267,10 +267,11 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
               question_type,
               correct_option_indexes,
               metadata,
+              options,
               marks_per_correct,
               negative_marks_per_wrong
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
             """,
             [
@@ -283,6 +284,7 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
                 question_type,
                 correct_option_indexes,
                 json.dumps(question.get("metadata", {})),
+                json.dumps(question["options"]),
                 question.get("marks_per_correct"),
                 question.get("negative_marks_per_wrong"),
             ],
@@ -311,18 +313,6 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
                 content_row["id"],
             ],
         ).fetchone()
-
-        for index, option in enumerate(question["options"]):
-            connection.execute(
-                """
-                INSERT INTO question_options (question_id, option_index, option_text)
-                VALUES (%s, %s, %s)
-                """,
-                # content_row["id"], not question_row["id"] - options are
-                # keyed by content (migration 030), not by slot, since
-                # they're part of the shared content itself.
-                [content_row["id"], index, option],
-            )
 
         # _diagram_crop_bytes is an in-memory-only carrier attached by
         # ai/provider.py#_attach_diagram_crops - never a real question

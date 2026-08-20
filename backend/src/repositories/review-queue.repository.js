@@ -130,17 +130,6 @@ export async function listNeedsReview(
     `
     SELECT
       q.*,
-      COALESCE(
-        jsonb_agg(
-          jsonb_build_object(
-            'id', qo.id,
-            'optionIndex', qo.option_index,
-            'optionText', qo.option_text
-          )
-          ORDER BY qo.option_index
-        ) FILTER (WHERE qo.id IS NOT NULL),
-        '[]'::jsonb
-      ) AS options,
       mt.id AS mock_test_id_ref,
       mt.name AS mock_test_name,
       c.id AS cluster_id,
@@ -148,10 +137,8 @@ export async function listNeedsReview(
     FROM questions q
     JOIN mock_tests mt ON mt.id = q.mock_test_id
     JOIN clusters c ON c.id = mt.cluster_id
-    LEFT JOIN question_options qo ON qo.question_id = q.content_id
     WHERE ${whereSql}
       ${cursorSql}
-    GROUP BY q.id, mt.id, c.id
     ORDER BY ${sortMode.valueExpr} ${sortMode.direction}, q.id ASC
     LIMIT $${limitParamIndex}
     `,

@@ -16,8 +16,12 @@ export const topicCategories = [
   "General",
 ];
 
+function normalizeOptionText(option) {
+  return typeof option === "string" ? option : option?.optionText || "";
+}
+
 export function toEditorQuestion(question) {
-  const options = question.options?.map((option) => option.optionText) || [];
+  const options = question.options?.map(normalizeOptionText) || [];
   return {
     id: question.id,
     persisted: true,

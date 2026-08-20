@@ -50,8 +50,12 @@ export const statusConfig = {
   },
 };
 
+export function normalizeOptionText(option) {
+  return typeof option === "string" ? option : option?.optionText || "";
+}
+
 export function mapQuestion(question) {
-  const options = question.options?.map((option) => option.optionText) || [];
+  const options = question.options?.map(normalizeOptionText) || [];
   const correctIndex = question.correct_option_indexes?.[0] ?? 0;
   const metadata = question.metadata || {};
   const aiIssues = Array.isArray(metadata.aiIssues) ? metadata.aiIssues : [];
@@ -91,13 +95,9 @@ export function mapQuestion(question) {
   };
 }
 
-// Attempt-review "options" (from GET /attempts/:id, backend
-// listQuestionsWithAnswersForAttempt) come as [{ optionIndex, optionText }]
-// objects, not plain strings - unlike mapQuestion's `options` above which
-// is already flattened. Resolve by matching optionIndex rather than trusting
-// array position, since jsonb_agg ordering isn't a index-into-array guarantee.
 export function getOptionText(options, index) {
   if (!Array.isArray(options)) return "";
+  if (typeof options[index] === "string") return options[index];
   const match = options.find((option) => option?.optionIndex === index);
   return match?.optionText ?? "";
 }

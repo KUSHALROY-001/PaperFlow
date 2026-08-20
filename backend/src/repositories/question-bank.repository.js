@@ -150,20 +150,7 @@ export async function searchQuestions(
             AND similarity(q3.question_text, q.question_text) > 0.45
         )
       END AS "isPossibleDuplicate",
-      COALESCE(
-        (
-          SELECT jsonb_agg(
-            jsonb_build_object(
-              'optionIndex', qo.option_index,
-              'optionText', qo.option_text
-            )
-            ORDER BY qo.option_index
-          )
-          FROM question_options qo
-          WHERE qo.question_id = q.content_id
-        ),
-        '[]'::jsonb
-      ) AS options
+      q.options
     FROM questions q
     JOIN mock_tests mt ON mt.id = q.mock_test_id
     JOIN clusters c ON c.id = mt.cluster_id
@@ -216,15 +203,7 @@ export async function findQuestionWithOptionsById(
   const question = questionResult.rows[0];
   if (!question) return null;
 
-  // question_options.question_id references question_contents(id)
-  // (migration 030) - question.content_id, not questionId (the slot id
-  // from the URL), is the right key here.
-  const optionsResult = await client.query(
-    `SELECT option_index, option_text FROM question_options WHERE question_id = $1 ORDER BY option_index ASC`,
-    [question.content_id],
-  );
-
-  return { ...question, options: optionsResult.rows };
+  return question;
 }
 
 // Inserts a new SLOT in the target mock test pointing at the SOURCE

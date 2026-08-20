@@ -18,6 +18,9 @@ function normalizeQuestion(question) {
     text: question.question_text,
     questionNo: question.question_no,
     correctOptionIndexes: question.correct_option_indexes,
+    options: (question.options || []).map((option) =>
+      typeof option === "string" ? option : option.optionText || "",
+    ),
   };
 }
 
@@ -84,7 +87,7 @@ function optionsHtml(question) {
           // parent .option div, so only the option's actual content -
           // never this function's own formatting - is what gets
           // preserved.
-          return `<div class="option"><span class="option-letter">${String.fromCharCode(65 + index)}.</span><span class="option-text">${renderTextWithMath(option.optionText)}</span></div>`;
+          return `<div class="option"><span class="option-letter">${String.fromCharCode(65 + index)}.</span><span class="option-text">${renderTextWithMath(option)}</span></div>`;
         })
         .join("")}
     </div>

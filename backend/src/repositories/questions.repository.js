@@ -23,23 +23,6 @@ export async function findQuestionById(questionId, workspaceId) {
   return result.rows[0] || null;
 }
 
-// contentId, not a slot's id - question_options.question_id references
-// question_contents(id) as of migration 028 (see that migration's step 4
-// comment for why the column itself wasn't renamed).
-export async function listOptionsForQuestion(contentId) {
-  const result = await pool.query(
-    `
-    SELECT id, option_index AS "optionIndex", option_text AS "optionText"
-    FROM question_options
-    WHERE question_id = $1
-    ORDER BY option_index ASC
-    `,
-    [contentId],
-  );
-
-  return result.rows;
-}
-
 // How many slots (in this workspace or any other - content sharing is
 // workspace-scoped already via question_contents.workspace_id, so this
 // never needs an extra workspace filter) currently point at this content
@@ -74,12 +57,12 @@ export async function cloneContent(client, contentId) {
     INSERT INTO question_contents (
       workspace_id, topic, subtopic, passage, question_text, explanation,
       question_type, correct_option_indexes, marks_per_correct,
-      negative_marks_per_wrong, metadata
+      negative_marks_per_wrong, metadata, options
     )
     SELECT
       workspace_id, topic, subtopic, passage, question_text, explanation,
       question_type, correct_option_indexes, marks_per_correct,
-      negative_marks_per_wrong, metadata
+      negative_marks_per_wrong, metadata, options
     FROM question_contents
     WHERE id = $1
     RETURNING id
@@ -87,34 +70,6 @@ export async function cloneContent(client, contentId) {
     [contentId],
   );
   return result.rows[0].id;
-}
-
-export async function cloneOptions(client, fromContentId, toContentId) {
-  await client.query(
-    `
-    INSERT INTO question_options (question_id, option_index, option_text)
-    SELECT $2, option_index, option_text
-    FROM question_options
-    WHERE question_id = $1
-    `,
-    [fromContentId, toContentId],
-  );
-}
-
-export async function insertQuestionOption(
-  client,
-  { contentId, optionIndex, optionText },
-) {
-  await client.query(
-    "INSERT INTO question_options (question_id, option_index, option_text) VALUES ($1, $2, $3)",
-    [contentId, optionIndex, optionText],
-  );
-}
-
-export async function deleteOptionsForContent(client, contentId) {
-  await client.query("DELETE FROM question_options WHERE question_id = $1", [
-    contentId,
-  ]);
 }
 
 // Creates BOTH rows a brand-new (not copied, not forked) question needs -
@@ -137,6 +92,7 @@ export async function createQuestion(
     explanation,
     questionType,
     correctOptionIndexes,
+    options,
     marksPerCorrect,
     negativeMarksPerWrong,
     sourcePage,
@@ -150,9 +106,9 @@ export async function createQuestion(
     INSERT INTO question_contents (
       workspace_id, topic, subtopic, passage, question_text, explanation,
       question_type, correct_option_indexes, marks_per_correct,
-      negative_marks_per_wrong, metadata
+      negative_marks_per_wrong, metadata, options
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8::int[], $9, $10, $11)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8::int[], $9, $10, $11, $12::jsonb)
     RETURNING id
     `,
     [
@@ -167,6 +123,7 @@ export async function createQuestion(
       marksPerCorrect,
       negativeMarksPerWrong,
       metadata,
+      JSON.stringify(options),
     ],
   );
   const contentId = contentResult.rows[0].id;
@@ -214,6 +171,7 @@ export const CONTENT_FIELDS = [
   "explanation",
   "questionType",
   "correctOptionIndexes",
+  "options",
   "marksPerCorrect",
   "negativeMarksPerWrong",
   "metadata",
@@ -237,6 +195,7 @@ export async function updateContent(client, contentId, fields) {
     explanation,
     questionType,
     correctOptionIndexes,
+    options,
     marksPerCorrectProvided,
     marksPerCorrect,
     negativeMarksPerWrongProvided,
@@ -257,7 +216,8 @@ export async function updateContent(client, contentId, fields) {
       correct_option_indexes = COALESCE($12::int[], correct_option_indexes),
       marks_per_correct = CASE WHEN $13::boolean THEN $14 ELSE marks_per_correct END,
       negative_marks_per_wrong = CASE WHEN $15::boolean THEN $16 ELSE negative_marks_per_wrong END,
-      metadata = COALESCE($17, metadata)
+      metadata = COALESCE($17, metadata),
+      options = COALESCE($18::jsonb, options)
     WHERE id = $1
     RETURNING id
     `,
@@ -279,6 +239,7 @@ export async function updateContent(client, contentId, fields) {
       negativeMarksPerWrongProvided,
       negativeMarksPerWrong,
       metadata,
+      options === undefined ? null : JSON.stringify(options),
     ],
   );
 

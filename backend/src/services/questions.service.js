@@ -37,6 +37,9 @@ export async function createQuestion(workspaceId, body) {
   const questionNo = Number(body.questionNo);
   const questionText = requiredString(body.questionText, "questionText");
   const rawOptions = requiredArray(body.options, "options");
+  const options = rawOptions.map((option, index) =>
+    requiredString(option, `options[${index}]`),
+  );
   const correctOptionIndexes = requiredArray(
     body.correctOptionIndexes,
     "correctOptionIndexes",
@@ -50,7 +53,7 @@ export async function createQuestion(workspaceId, body) {
   validateAnswerShape({
     questionType,
     correctOptionIndexes,
-    optionCount: rawOptions.length,
+    optionCount: options.length,
   });
 
   const mockTest = await questionsRepo.findMockTestForWorkspace(
@@ -78,6 +81,7 @@ export async function createQuestion(workspaceId, body) {
       explanation: optionalString(body.explanation),
       questionType,
       correctOptionIndexes,
+      options,
       marksPerCorrect: optionalNumber(body.marksPerCorrect, null),
       negativeMarksPerWrong: optionalNumber(body.negativeMarksPerWrong, null),
       sourcePage: optionalNumber(body.sourcePage, null),
@@ -85,19 +89,6 @@ export async function createQuestion(workspaceId, body) {
       status: body.status || "needs_review",
       metadata: body.metadata || {},
     });
-
-    // question.content_id comes back through the `questions` view's own
-    // column (migration 028) - options are keyed by content, not slot,
-    // so this is the id every insertQuestionOption call below needs, not
-    // question.id (the slot).
-    for (let index = 0; index < rawOptions.length; index += 1) {
-      const optionText = requiredString(rawOptions[index], `options[${index}]`);
-      await questionsRepo.insertQuestionOption(client, {
-        contentId: question.content_id,
-        optionIndex: index,
-        optionText,
-      });
-    }
 
     await client.query("COMMIT");
     return question;
@@ -119,11 +110,7 @@ export async function getQuestion(questionId, workspaceId) {
     throw httpError(404, "Question not found");
   }
 
-  const options = await questionsRepo.listOptionsForQuestion(
-    question.content_id,
-  );
-
-  return { ...question, options };
+  return question;
 }
 
 // Fork-on-edit (migration 028): a question's content_id can be shared
@@ -150,7 +137,12 @@ export async function updateQuestion(questionId, workspaceId, body) {
     throw httpError(404, "Question not found");
   }
 
-  const rawOptions = body.options;
+  const options =
+    body.options === undefined
+      ? undefined
+      : requiredArray(body.options, "options").map((option, index) =>
+          requiredString(option, `options[${index}]`),
+        );
   const correctOptionIndexes = body.correctOptionIndexes?.map(Number);
   const questionType =
     body.questionType === undefined
@@ -163,15 +155,22 @@ export async function updateQuestion(questionId, workspaceId, body) {
     throw httpError(400, "correctOptionIndexes must not be empty");
   }
 
+  const effectiveQuestionType = questionType || existing.question_type;
+  const effectiveCorrectOptionIndexes =
+    correctOptionIndexes || existing.correct_option_indexes || [];
+  const effectiveOptionCount =
+    options?.length ?? (Array.isArray(existing.options) ? existing.options.length : 0);
+
   if (
-    questionType === "single" &&
-    correctOptionIndexes &&
-    correctOptionIndexes.length !== 1
+    body.questionType !== undefined ||
+    correctOptionIndexes ||
+    options !== undefined
   ) {
-    throw httpError(
-      400,
-      "single questions must have exactly one correct option",
-    );
+    validateAnswerShape({
+      questionType: effectiveQuestionType,
+      correctOptionIndexes: effectiveCorrectOptionIndexes,
+      optionCount: effectiveOptionCount,
+    });
   }
 
   const contentFieldTouched =
@@ -185,7 +184,7 @@ export async function updateQuestion(questionId, workspaceId, body) {
     body.marksPerCorrect !== undefined ||
     body.negativeMarksPerWrong !== undefined ||
     body.metadata !== undefined ||
-    Array.isArray(rawOptions);
+    options !== undefined;
 
   const client = await pool.connect();
 
@@ -200,18 +199,11 @@ export async function updateQuestion(questionId, workspaceId, body) {
         existing.content_id,
       );
       if (sharedCount > 1) {
-        // Shared - fork. Clone the content row AND its current options
-        // (so the new row starts as an exact copy of what this slot was
-        // already showing), then the update/option-replacement below
-        // applies on top of the clone, never the shared original.
+        // Shared - fork. Clone the content row so the edit lands on an
+        // exclusive copy, never the shared original.
         targetContentId = await questionsRepo.cloneContent(
           client,
           existing.content_id,
-        );
-        await questionsRepo.cloneOptions(
-          client,
-          existing.content_id,
-          targetContentId,
         );
       }
     }
@@ -232,28 +224,13 @@ export async function updateQuestion(questionId, workspaceId, body) {
         explanation: optionalString(body.explanation),
         questionType: questionType || null,
         correctOptionIndexes: correctOptionIndexes || null,
+        options,
         marksPerCorrectProvided: body.marksPerCorrect !== undefined,
         marksPerCorrect: optionalNumber(body.marksPerCorrect, null),
         negativeMarksPerWrongProvided: body.negativeMarksPerWrong !== undefined,
         negativeMarksPerWrong: optionalNumber(body.negativeMarksPerWrong, null),
         metadata: body.metadata || null,
       });
-
-      if (Array.isArray(rawOptions)) {
-        await questionsRepo.deleteOptionsForContent(client, targetContentId);
-
-        for (let index = 0; index < rawOptions.length; index += 1) {
-          const optionText = requiredString(
-            rawOptions[index],
-            `options[${index}]`,
-          );
-          await questionsRepo.insertQuestionOption(client, {
-            contentId: targetContentId,
-            optionIndex: index,
-            optionText,
-          });
-        }
-      }
     }
 
     const updated = await questionsRepo.updateSlot(

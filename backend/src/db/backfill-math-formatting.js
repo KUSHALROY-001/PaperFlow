@@ -181,24 +181,25 @@ async function loadQuestions(client, limit) {
   return result.rows;
 }
 
-// question_options.question_id references question_contents(id)
-// (migration 030), not a question's own (slot) id - callers must pass
-// contentIds, not questionIds, despite the historical function name.
-async function loadOptionsByQuestionId(client, contentIds) {
+async function loadOptionsByContentId(client, contentIds) {
   if (contentIds.length === 0) return new Map();
   const result = await client.query(
-    `SELECT id, question_id, option_index, option_text
-     FROM question_options
-     WHERE question_id = ANY($1::uuid[])
-     ORDER BY question_id, option_index`,
+    `SELECT id, options
+     FROM question_contents
+     WHERE id = ANY($1::uuid[])`,
     [contentIds],
   );
-  const byQuestion = new Map();
+  const byContent = new Map();
   for (const row of result.rows) {
-    if (!byQuestion.has(row.question_id)) byQuestion.set(row.question_id, []);
-    byQuestion.get(row.question_id).push(row);
+    byContent.set(
+      row.id,
+      (row.options || []).map((optionText, optionIndex) => ({
+        option_index: optionIndex,
+        option_text: optionText,
+      })),
+    );
   }
-  return byQuestion;
+  return byContent;
 }
 
 async function run() {
@@ -225,7 +226,7 @@ async function run() {
     // is failing/hanging - check DATABASE_URL / db:check first.
     console.log(`Fetched ${questions.length} question(s) to scan.\n`);
 
-    const optionsByQuestion = await loadOptionsByQuestionId(
+    const optionsByContent = await loadOptionsByContentId(
       client,
       questions.map((q) => q.content_id),
     );
@@ -233,7 +234,7 @@ async function run() {
     if (apply) await client.query("BEGIN");
 
     for (const question of questions) {
-      const options = optionsByQuestion.get(question.content_id) || [];
+      const options = optionsByContent.get(question.content_id) || [];
 
       const nextText = wrapBareLatex(question.question_text);
       const nextExplanation = wrapBareLatex(question.explanation);
@@ -295,10 +296,14 @@ async function run() {
           `UPDATE question_slots SET status = 'needs_review' WHERE id = $1`,
           [question.id],
         );
-        for (const { option, nextText: next } of optionChanges) {
+        if (optionChanges.length > 0) {
+          const nextOptions = [...options.map((option) => option.option_text)];
+          for (const { option, nextText: next } of optionChanges) {
+            nextOptions[option.option_index] = next;
+          }
           await client.query(
-            `UPDATE question_options SET option_text = $1 WHERE id = $2`,
-            [next, option.id],
+            `UPDATE question_contents SET options = $1::jsonb WHERE id = $2`,
+            [JSON.stringify(nextOptions), question.content_id],
           );
         }
       }

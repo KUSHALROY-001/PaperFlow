@@ -24,12 +24,9 @@
  * when it can't be trusted to use a consistent number of spaces/tabs for
  * it.
  *
- * Trade-off worth knowing: if the extracted indentation is already
- * WRONG (a line that should be nested one level deeper but came out
- * flush-left), this preserves that mistake rather than fixing it. That's
- * intentional - preserving imperfect input beats what the old
- * brace-counting approach could do in the other direction, which was
- * actively invent a worse, cascading mistake the source never had.
+ * When the whole snippet is flush-left, there is no relative indentation
+ * to rescale. In that one case, a small brace-aware fallback handles
+ * common C/Java/JS-style snippets pasted from exams.
  */
 export function autoIndentCode(codeStr, indentSize = 4) {
   if (!codeStr) return codeStr;
@@ -58,6 +55,78 @@ export function autoIndentCode(codeStr, indentSize = 4) {
       else break;
     }
     return col;
+  }
+
+  function countBracesOutsideText(line, state) {
+    let opens = 0;
+    let closes = 0;
+    let quote = null;
+    let escaped = false;
+
+    for (let i = 0; i < line.length; i += 1) {
+      const ch = line[i];
+      const next = line[i + 1];
+
+      if (state.inBlockComment) {
+        if (ch === "*" && next === "/") {
+          state.inBlockComment = false;
+          i += 1;
+        }
+        continue;
+      }
+
+      if (quote) {
+        if (escaped) {
+          escaped = false;
+        } else if (ch === "\\") {
+          escaped = true;
+        } else if (ch === quote) {
+          quote = null;
+        }
+        continue;
+      }
+
+      if (ch === "/" && next === "/") break;
+      if (ch === "/" && next === "*") {
+        state.inBlockComment = true;
+        i += 1;
+        continue;
+      }
+      if (ch === '"' || ch === "'" || ch === "`") {
+        quote = ch;
+        continue;
+      }
+      if (ch === "{") opens += 1;
+      if (ch === "}") closes += 1;
+    }
+
+    return { opens, closes };
+  }
+
+  function autoIndentBraceCode() {
+    const braceState = { inBlockComment: false };
+    let depth = 0;
+    return lines
+      .map((rawLine) => {
+        const trimmed = rawLine.trim();
+        if (!trimmed) return "";
+
+        if (trimmed.startsWith("}")) {
+          depth = Math.max(0, depth - 1);
+        }
+
+        const rendered = indentUnit.repeat(depth) + trimmed;
+        const { opens, closes } = countBracesOutsideText(trimmed, braceState);
+        const leadingClose = trimmed.startsWith("}") ? 1 : 0;
+        depth = Math.max(0, depth + opens - Math.max(0, closes - leadingClose));
+        return rendered;
+      })
+      .join("\n");
+  }
+
+  const hasExistingIndent = lines.some((line) => leadingColumns(line) > 0);
+  if (!hasExistingIndent && /[{}]/.test(codeStr)) {
+    return autoIndentBraceCode();
   }
 
   // Column widths of the indent levels currently "open", shallowest

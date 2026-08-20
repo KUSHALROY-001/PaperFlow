@@ -25,12 +25,12 @@ function QuestionSide({ question, onKeep, disabled, side }) {
         />
         {question.options?.length > 0 && (
           <ul className="mt-3 space-y-1.5">
-            {question.options.map((option) => (
+            {question.options.map((option, index) => (
               <li
-                key={option.optionIndex}
+                key={typeof option === "string" ? index : option.optionIndex}
                 className="text-xs text-muted-foreground pl-3 border-l-2 border-border"
               >
-                {option.optionText}
+                {typeof option === "string" ? option : option.optionText}
               </li>
             ))}
           </ul>

@@ -162,20 +162,24 @@ export default function QuestionReviewList({ questions }) {
                           (nothing is marked wrong if they skipped the
                           question entirely). */}
                         <div className="mt-2 space-y-1.5">
-                          {q.options.map((option) => {
+                          {q.options.map((option, optionIndex) => {
+                            const normalizedOption =
+                              typeof option === "string"
+                                ? { optionIndex, optionText: option }
+                                : option;
                             const isCorrect = q.correctOptionIndexes?.includes(
-                              option.optionIndex,
+                              normalizedOption.optionIndex,
                             );
                             const isYourWrongPick =
                               !skipped &&
                               !correct &&
                               q.selectedOptionIndexes.includes(
-                                option.optionIndex,
+                                normalizedOption.optionIndex,
                               );
 
                             return (
                               <div
-                                key={option.optionIndex}
+                                key={normalizedOption.optionIndex}
                                 className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-2 text-xs ${
                                   isCorrect
                                     ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600"
@@ -185,7 +189,7 @@ export default function QuestionReviewList({ questions }) {
                                 }`}
                               >
                                 <span className="flex-1 whitespace-pre-wrap">
-                                  <MathText text={option.optionText} />
+                                  <MathText text={normalizedOption.optionText} />
                                 </span>
                                 {isCorrect && (
                                   <span className="inline-flex items-center gap-1 font-bold shrink-0">

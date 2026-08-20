@@ -6,17 +6,6 @@ import { pool } from "../db/pool.js";
 // pair. Most-similar first - the pairs a reviewer will find least
 // ambiguous to act on.
 //
-// Both questions' options are pulled via the same jsonb_agg-per-question
-// pattern attempts.repository.js#listQuestionsWithAnswersForAttempt uses
-// - options live in their own question_options table, not a column on
-// questions - so DuplicatePairCard.jsx's two <QuestionContent> renders
-// have everything they need (including has_code/code_language/
-// code_snippet) without a second request per side.
-//
-// question_options.question_id references question_contents(id), not a
-// slot's own id (migration 030) - both options subqueries below key off
-// qa.content_id/qb.content_id, not qa.id/qb.id, via the `questions`
-// compatibility view's own content_id column.
 const PENDING_SELECT = `
   SELECT
     dp.id,
@@ -29,17 +18,7 @@ const PENDING_SELECT = `
     qa.passage AS question_a_passage,
     qa.question_text AS question_a_text,
     qa.explanation AS question_a_explanation,
-    COALESCE(
-      (
-        SELECT jsonb_agg(
-          jsonb_build_object('optionIndex', qo.option_index, 'optionText', qo.option_text)
-          ORDER BY qo.option_index
-        )
-        FROM question_options qo
-        WHERE qo.question_id = qa.content_id
-      ),
-      '[]'::jsonb
-    ) AS question_a_options,
+    qa.options AS question_a_options,
     mta.id AS mock_test_a_id,
     mta.name AS mock_test_a_name,
     qb.id AS question_b_id,
@@ -48,17 +27,7 @@ const PENDING_SELECT = `
     qb.passage AS question_b_passage,
     qb.question_text AS question_b_text,
     qb.explanation AS question_b_explanation,
-    COALESCE(
-      (
-        SELECT jsonb_agg(
-          jsonb_build_object('optionIndex', qo.option_index, 'optionText', qo.option_text)
-          ORDER BY qo.option_index
-        )
-        FROM question_options qo
-        WHERE qo.question_id = qb.content_id
-      ),
-      '[]'::jsonb
-    ) AS question_b_options,
+    qb.options AS question_b_options,
     mtb.id AS mock_test_b_id,
     mtb.name AS mock_test_b_name
   FROM question_duplicate_pairs dp

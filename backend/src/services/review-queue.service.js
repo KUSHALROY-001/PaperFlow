@@ -59,7 +59,9 @@ function parseFilters(query) {
 // consumer of this particular row shape (unlike mock-tests.service.js's
 // listQuestions, which the frontend's own mapQuestion already handles).
 function serializeQueueItem(row) {
-  const options = (row.options || []).map((option) => option.optionText);
+  const options = (row.options || []).map((option) =>
+    typeof option === "string" ? option : option.optionText,
+  );
   const metadata = row.metadata || {};
   const aiIssues = Array.isArray(metadata.aiIssues) ? metadata.aiIssues : [];
 
