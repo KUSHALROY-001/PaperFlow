@@ -1,7 +1,6 @@
 import { pool } from "../db/pool.js";
 import { httpError } from "../lib/http-error.js";
 import * as duplicatesRepo from "../repositories/duplicates.repository.js";
-import * as questionsRepo from "../repositories/questions.repository.js";
 
 function serializeSide(row, prefix) {
   return {
@@ -39,20 +38,21 @@ export async function countPendingDuplicates(workspaceId) {
   return duplicatesRepo.countPendingDuplicates(workspaceId);
 }
 
-// action: 'merge' keeps keepQuestionId and rejects the OTHER side of the
-// pair; 'dismiss' resolves the pair without touching either question (a
-// reviewer's call that these are similar-but-not-actually-duplicate
-// questions - e.g. shared boilerplate phrasing).
+// action: 'merge' repoints the losing slot's content onto keepQuestionId's
+// (migration 030's actual storage dedup - both mock tests' questions now
+// share one question_contents row); 'dismiss' resolves the pair without
+// touching either question (a reviewer's call that these are
+// similar-but-not-actually-duplicate questions - e.g. shared boilerplate
+// phrasing).
 //
-// The non-kept question is soft-deleted (status = 'rejected'), not hard
-// deleted - it's still sitting inside a real mock test with a
-// question_no, and hard-deleting would leave a gap. Renumbering the mock
-// test after removal is explicitly out of scope here (that's
-// mock-tests.service.js territory, and risks reordering an
-// already-in-progress attempt's questions if that test is live) - a
-// rejected question just stops appearing in future attempts and reviews,
-// same as any other question a reviewer rejects through the normal
-// review flow.
+// Neither side's status changes on merge - the losing slot stays exactly
+// as visible/reviewable as it was before (still a real question in its
+// own mock test, still counted, still playable if approved), it just now
+// displays the SAME text/options/answer as the side it was merged into.
+// If the loser had previously been rejected by an older flow (before this
+// migration, 'merge' used to reject the loser - see migration 030's step
+// 6 backfill for that one-time cleanup), it stays rejected; this action
+// only ever establishes sharing, never changes review status either way.
 export async function resolveDuplicate(
   workspaceId,
   pairId,
@@ -95,9 +95,37 @@ export async function resolveDuplicate(
   try {
     await client.query("BEGIN");
 
-    await questionsRepo.updateQuestion(client, rejectQuestionId, workspaceId, {
-      status: "rejected",
-    });
+    const winnerContentId = await duplicatesRepo.getSlotContentId(
+      client,
+      keepQuestionId,
+      workspaceId,
+    );
+    if (!winnerContentId) {
+      throw httpError(404, "Question to keep not found");
+    }
+    const loserContentId = await duplicatesRepo.getSlotContentId(
+      client,
+      rejectQuestionId,
+      workspaceId,
+    );
+    if (!loserContentId) {
+      throw httpError(404, "Question to merge not found");
+    }
+
+    if (loserContentId !== winnerContentId) {
+      await duplicatesRepo.repointSlotContent(
+        client,
+        rejectQuestionId,
+        winnerContentId,
+        workspaceId,
+      );
+      // Safe no-op if some other slot still points at loserContentId
+      // (e.g. it had already been shared with a third mock test before
+      // this merge) - the NOT EXISTS guard inside only deletes it when
+      // this repoint really was the last reference.
+      await duplicatesRepo.deleteOrphanedContent(client, loserContentId);
+    }
+
     const resolved = await duplicatesRepo.resolveDuplicatePair(
       client,
       pairId,
@@ -115,6 +143,10 @@ export async function resolveDuplicate(
       pairId: resolved.id,
       status: resolved.status,
       keptQuestionId: keepQuestionId,
+      // Field name kept as-is for frontend compatibility (DuplicatePairCard.jsx
+      // already reads rejectedQuestionId to know which side to visually
+      // collapse) - the losing slot isn't actually rejected anymore, just
+      // merged into the winner's content.
       rejectedQuestionId: rejectQuestionId,
     };
   } catch (error) {

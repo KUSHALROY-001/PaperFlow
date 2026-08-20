@@ -171,7 +171,7 @@ function truncate(value, max = 80) {
 
 async function loadQuestions(client, limit) {
   const query = `
-    SELECT id, question_no, mock_test_id, status, question_text, explanation
+    SELECT id, content_id, question_no, mock_test_id, status, question_text, explanation
     FROM questions
     ORDER BY mock_test_id, question_no
     ${limit ? "LIMIT $1" : ""}
@@ -181,14 +181,17 @@ async function loadQuestions(client, limit) {
   return result.rows;
 }
 
-async function loadOptionsByQuestionId(client, questionIds) {
-  if (questionIds.length === 0) return new Map();
+// question_options.question_id references question_contents(id)
+// (migration 030), not a question's own (slot) id - callers must pass
+// contentIds, not questionIds, despite the historical function name.
+async function loadOptionsByQuestionId(client, contentIds) {
+  if (contentIds.length === 0) return new Map();
   const result = await client.query(
     `SELECT id, question_id, option_index, option_text
      FROM question_options
      WHERE question_id = ANY($1::uuid[])
      ORDER BY question_id, option_index`,
-    [questionIds],
+    [contentIds],
   );
   const byQuestion = new Map();
   for (const row of result.rows) {
@@ -224,13 +227,13 @@ async function run() {
 
     const optionsByQuestion = await loadOptionsByQuestionId(
       client,
-      questions.map((q) => q.id),
+      questions.map((q) => q.content_id),
     );
 
     if (apply) await client.query("BEGIN");
 
     for (const question of questions) {
-      const options = optionsByQuestion.get(question.id) || [];
+      const options = optionsByQuestion.get(question.content_id) || [];
 
       const nextText = wrapBareLatex(question.question_text);
       const nextExplanation = wrapBareLatex(question.explanation);
@@ -272,11 +275,25 @@ async function run() {
       }
 
       if (apply) {
+        // text/explanation live on question_contents (migration 030) -
+        // status is a slot field, so it's a separate UPDATE. Deliberately
+        // NOT fork-on-edit here (unlike questions.service.js's
+        // interactive editor) - this is a one-time, manually-reviewed,
+        // dry-run-by-default cleanup pass, and if this content_id is
+        // shared, fixing its LaTeX delimiters really is correct for
+        // every mock test sharing it (it's the same underlying text,
+        // this doesn't change its meaning) - unlike a genuine content
+        // edit, there's no case here where two mock tests sharing this
+        // question WANT different formatting for the same math.
         await client.query(
-          `UPDATE questions
-           SET question_text = $1, explanation = $2, status = 'needs_review'
+          `UPDATE question_contents
+           SET question_text = $1, explanation = $2
            WHERE id = $3`,
-          [nextText, nextExplanation, question.id],
+          [nextText, nextExplanation, question.content_id],
+        );
+        await client.query(
+          `UPDATE question_slots SET status = 'needs_review' WHERE id = $1`,
+          [question.id],
         );
         for (const { option, nextText: next } of optionChanges) {
           await client.query(

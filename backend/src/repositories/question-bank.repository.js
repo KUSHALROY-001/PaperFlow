@@ -168,7 +168,7 @@ export async function searchQuestions(
             ORDER BY qo.option_index
           )
           FROM question_options qo
-          WHERE qo.question_id = q.id
+          WHERE qo.question_id = q.content_id
         ),
         '[]'::jsonb
       ) AS options
@@ -224,101 +224,89 @@ export async function findQuestionWithOptionsById(
   const question = questionResult.rows[0];
   if (!question) return null;
 
+  // question_options.question_id references question_contents(id)
+  // (migration 030) - question.content_id, not questionId (the slot id
+  // from the URL), is the right key here.
   const optionsResult = await client.query(
     `SELECT option_index, option_text FROM question_options WHERE question_id = $1 ORDER BY option_index ASC`,
-    [questionId],
+    [question.content_id],
   );
 
   return { ...question, options: optionsResult.rows };
 }
 
-// Inserts the copied question + its options in the target mock test.
+// Inserts a new SLOT in the target mock test pointing at the SOURCE
+// question's EXISTING content_id - migration 030's whole point. No new
+// question_contents row, no new question_options rows: the copy and the
+// original are now two slots genuinely sharing one piece of storage, not
+// two independent copies of the same text. (Editing either one later
+// forks it back apart automatically - see questions.service.js
+// #updateQuestion - so this sharing never silently corrupts either mock
+// test's content.)
+//
 // status is ALWAYS 'needs_review' regardless of the source question's own
 // status - a copy is landing in a different mock test's context (maybe a
 // different template, different marking scheme, different reviewer) and
 // should get its own fresh review pass rather than silently inheriting
-// "approved" from a context that no longer applies.
+// "approved" from a context that no longer applies. This is a SLOT-level
+// field, so it's independent per copy even though the content is shared -
+// exactly the split migration 030 was built for.
 //
-// marks_per_correct/negative_marks_per_wrong are deliberately NOT copied
-// (left NULL) even if the source question had a per-question override -
-// see Phase 4 of the templates work: that override exists to apply a
-// SOURCE mock test's/template's section marking, which has no particular
-// relationship to whatever template (if any) the TARGET mock test was
-// built from. Leaving these NULL means the copy falls back to the target
-// mock test's own default marks, the same as any other question that's
-// never had a section-specific override - the correct default, not a
-// carried-over one that may not even apply anymore.
+// marks_per_correct/negative_marks_per_wrong are deliberately left out of
+// this INSERT (question_slots has no such columns post-030 - they live on
+// question_contents now, and are shared along with everything else the
+// content row carries). Previously this function set them NULL on the
+// copy on purpose (see the old comment this replaces) so a copy fell back
+// to the target mock test's own default marks rather than inheriting a
+// source-mock-test-specific override; under sharing, that override now
+// genuinely IS shared, same as topic/subtopic/passage/text/options - a
+// deliberate consequence of "same content_id" meaning the same content in
+// every sense, not a partial share. If a specific copy needs its own
+// marking override, editing it will fork the content first, same as any
+// other content edit.
 export async function insertCopiedQuestion(
   client,
   { workspaceId, targetMockTestId, questionNo, source },
 ) {
   const result = await client.query(
     `
-    INSERT INTO questions (
+    INSERT INTO question_slots (
       workspace_id,
       mock_test_id,
       question_no,
-      topic,
-      subtopic,
-      passage,
-      question_text,
-      explanation,
-      question_type,
-      correct_option_indexes,
       source_page,
       confidence,
       status,
-      metadata,
-      has_code,
-      code_language,
-      code_snippet,
+      content_id,
       source_question_id
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::int[], $11, $12, 'needs_review', $13, $14, $15, $16, $17)
-    RETURNING *
+    VALUES ($1, $2, $3, $4, $5, 'needs_review', $6, $7)
+    RETURNING id
     `,
     [
       workspaceId,
       targetMockTestId,
       questionNo,
-      source.topic,
-      source.subtopic,
-      source.passage,
-      source.question_text,
-      source.explanation,
-      source.question_type,
-      source.correct_option_indexes,
       // source_page intentionally NOT carried over - it refers to a page
       // number in the SOURCE mock test's own PDF, meaningless (and
       // actively misleading, if shown as "Page 4" next to a document that
       // isn't that PDF at all) in the target mock test's context.
       null,
       source.confidence,
-      source.metadata || {},
-      source.has_code,
-      source.code_language,
-      source.code_snippet,
+      source.content_id,
       source.id,
     ],
   );
 
-  const newQuestion = result.rows[0];
-
-  if (source.options.length > 0) {
-    const values = [];
-    const params = [];
-    source.options.forEach((option, index) => {
-      params.push(newQuestion.id, option.option_index, option.option_text);
-      const base = index * 3;
-      values.push(`($${base + 1}, $${base + 2}, $${base + 3})`);
-    });
-    await client.query(
-      `INSERT INTO question_options (question_id, option_index, option_text) VALUES ${values.join(", ")}`,
-      params,
-    );
-  }
-
-  return newQuestion;
+  // Re-read through the compatibility view so the caller gets back the
+  // exact same shape every other question-returning function in this
+  // codebase promises - topic/subtopic/passage/text/options/has_code/etc.
+  // all resolve correctly through the shared content_id, no separate
+  // options fetch needed here.
+  const created = await client.query(`SELECT * FROM questions WHERE id = $1`, [
+    result.rows[0].id,
+  ]);
+  return created.rows[0];
 }
 
 // Locks the target mock test's row for the duration of the transaction so

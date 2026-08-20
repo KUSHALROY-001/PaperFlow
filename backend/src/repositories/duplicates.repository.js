@@ -12,6 +12,11 @@ import { pool } from "../db/pool.js";
 // questions - so DuplicatePairCard.jsx's two <QuestionContent> renders
 // have everything they need (including has_code/code_language/
 // code_snippet) without a second request per side.
+//
+// question_options.question_id references question_contents(id), not a
+// slot's own id (migration 030) - both options subqueries below key off
+// qa.content_id/qb.content_id, not qa.id/qb.id, via the `questions`
+// compatibility view's own content_id column.
 const PENDING_SELECT = `
   SELECT
     dp.id,
@@ -34,7 +39,7 @@ const PENDING_SELECT = `
           ORDER BY qo.option_index
         )
         FROM question_options qo
-        WHERE qo.question_id = qa.id
+        WHERE qo.question_id = qa.content_id
       ),
       '[]'::jsonb
     ) AS question_a_options,
@@ -56,7 +61,7 @@ const PENDING_SELECT = `
           ORDER BY qo.option_index
         )
         FROM question_options qo
-        WHERE qo.question_id = qb.id
+        WHERE qo.question_id = qb.content_id
       ),
       '[]'::jsonb
     ) AS question_b_options,
@@ -116,9 +121,10 @@ export async function findPendingPairById(pairId, workspaceId) {
 
 // Called inside the caller's own transaction (see
 // duplicates.service.js#resolveDuplicate, which also - for a 'confirmed'
-// resolution - rejects the non-kept question in the SAME transaction) so
-// a pair never ends up marked resolved while the question it was about
-// stays untouched, or vice versa, if either write fails.
+// resolution - repoints the losing slot onto the winner's content in the
+// SAME transaction, see repointSlotContent below) so a pair never ends up
+// marked resolved while the question it was about stays untouched, or
+// vice versa, if either write fails.
 export async function resolveDuplicatePair(
   client,
   pairId,
@@ -140,4 +146,57 @@ export async function resolveDuplicatePair(
   );
 
   return result.rows[0] || null;
+}
+
+// The actual storage dedup a 'merge' resolution performs (migration 030):
+// repoints the losing slot's content_id onto the winning slot's, so both
+// mock tests' questions now share one question_contents row instead of
+// two independent ones.
+export async function repointSlotContent(
+  client,
+  loserSlotId,
+  winnerContentId,
+  workspaceId,
+) {
+  await client.query(
+    `
+    UPDATE question_slots
+    SET content_id = $2
+    WHERE id = $1
+      AND workspace_id = $3
+    `,
+    [loserSlotId, winnerContentId, workspaceId],
+  );
+}
+
+export async function getSlotContentId(client, slotId, workspaceId) {
+  const result = await client.query(
+    `SELECT content_id FROM question_slots WHERE id = $1 AND workspace_id = $2`,
+    [slotId, workspaceId],
+  );
+  return result.rows[0]?.content_id || null;
+}
+
+// Reclaims a content row a merge just made unreachable - unlike a
+// rejected question (027's own conservative "leave it, a human can clean
+// it up" stance, since a student may have already answered that exact
+// slot), a content row has no exam_answers pointing at it directly
+// (exam_answers.question_id references question_slots, not
+// question_contents - the slot itself, and its answer history, are
+// completely untouched by a merge). So once nothing references it,
+// deleting it is genuine, safe space reclamation, not just a schema
+// tidy-up - the real "only one question would be there" the merge
+// feature exists for. The NOT EXISTS guard makes this a safe no-op if
+// the content somehow still has another slot pointing at it.
+export async function deleteOrphanedContent(client, contentId) {
+  await client.query(
+    `
+    DELETE FROM question_contents
+    WHERE id = $1
+      AND NOT EXISTS (
+        SELECT 1 FROM question_slots WHERE content_id = $1
+      )
+    `,
+    [contentId],
+  );
 }

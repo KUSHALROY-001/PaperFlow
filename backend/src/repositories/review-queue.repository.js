@@ -46,10 +46,7 @@ function buildFilters(
   { clusterId, mockTestId, maxConfidence, hasAiIssues },
   startParamIndex,
 ) {
-  const clauses = [
-    "q.workspace_id = $1",
-    "q.status = 'needs_review'",
-  ];
+  const clauses = ["q.workspace_id = $1", "q.status = 'needs_review'"];
   const params = [workspaceId];
   let i = startParamIndex;
 
@@ -151,7 +148,7 @@ export async function listNeedsReview(
     FROM questions q
     JOIN mock_tests mt ON mt.id = q.mock_test_id
     JOIN clusters c ON c.id = mt.cluster_id
-    LEFT JOIN question_options qo ON qo.question_id = q.id
+    LEFT JOIN question_options qo ON qo.question_id = q.content_id
     WHERE ${whereSql}
       ${cursorSql}
     GROUP BY q.id, mt.id, c.id

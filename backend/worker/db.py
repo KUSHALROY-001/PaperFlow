@@ -193,13 +193,42 @@ def update_job(connection, job_id, *, status=None, stage=None, progress=None, su
 
 
 def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_path=None):
+    # questions is a read-only compatibility view as of migration 030 -
+    # both the SELECT and DELETE below now target question_slots (the
+    # physical table) directly. content_id is captured alongside id so
+    # the content rows those slots pointed at can be reclaimed right
+    # after, if nothing else still references them - without this, every
+    # re-process of a mock test (this function's very reason for
+    # existing) would leave the OLD extraction's content rows behind as
+    # dead weight forever, which is exactly the redundancy this migration
+    # was built to eliminate.
     existing = connection.execute(
-        "SELECT id FROM questions WHERE mock_test_id = %s",
+        "SELECT id, content_id FROM question_slots WHERE mock_test_id = %s",
         [mock_test_id],
     ).fetchall()
 
+    existing_content_ids = [row["content_id"] for row in existing]
+
     for row in existing:
-        connection.execute("DELETE FROM questions WHERE id = %s", [row["id"]])
+        connection.execute("DELETE FROM question_slots WHERE id = %s", [row["id"]])
+
+    if existing_content_ids:
+        # NOT EXISTS guard: a content row is only reclaimed if the slot
+        # deletes above were genuinely its last reference - if some OTHER
+        # mock test's slot still shares this content (via a duplicate
+        # merge or a Question Bank copy), it survives untouched, same as
+        # duplicates.repository.js#deleteOrphanedContent's identical
+        # guard for the merge-resolution path.
+        connection.execute(
+            """
+            DELETE FROM question_contents
+            WHERE id = ANY(%s::uuid[])
+              AND NOT EXISTS (
+                SELECT 1 FROM question_slots WHERE content_id = question_contents.id
+              )
+            """,
+            [existing_content_ids],
+        )
 
     inserted_count = 0
     # (storage_path, png_bytes) pairs to actually write to disk - deferred
@@ -226,12 +255,10 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
             "multi" if len(correct_option_indexes) > 1 else "single"
         )
 
-        question_row = connection.execute(
+        content_row = connection.execute(
             """
-            INSERT INTO questions (
+            INSERT INTO question_contents (
               workspace_id,
-              mock_test_id,
-              question_no,
               topic,
               question_text,
               subtopic,
@@ -239,9 +266,6 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
               explanation,
               question_type,
               correct_option_indexes,
-              source_page,
-              confidence,
-              status,
               metadata,
               marks_per_correct,
               negative_marks_per_wrong,
@@ -249,13 +273,11 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
               code_language,
               code_snippet
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'needs_review', %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
             """,
             [
                 workspace_id,
-                mock_test_id,
-                question["question_no"],
                 question.get("topic"),
                 question["text"],
                 question.get("subtopic"),
@@ -263,8 +285,6 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
                 question.get("explanation"),
                 question_type,
                 correct_option_indexes,
-                question.get("source_page"),
-                question.get("confidence", 60),
                 json.dumps(question.get("metadata", {})),
                 # Set only when ai/provider.py#_apply_section_marks matched
                 # this question's topic to a template section carrying its
@@ -290,13 +310,40 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
             ],
         ).fetchone()
 
+        question_row = connection.execute(
+            """
+            INSERT INTO question_slots (
+              workspace_id,
+              mock_test_id,
+              question_no,
+              source_page,
+              confidence,
+              status,
+              content_id
+            )
+            VALUES (%s, %s, %s, %s, %s, 'needs_review', %s)
+            RETURNING id
+            """,
+            [
+                workspace_id,
+                mock_test_id,
+                question["question_no"],
+                question.get("source_page"),
+                question.get("confidence", 60),
+                content_row["id"],
+            ],
+        ).fetchone()
+
         for index, option in enumerate(question["options"]):
             connection.execute(
                 """
                 INSERT INTO question_options (question_id, option_index, option_text)
                 VALUES (%s, %s, %s)
                 """,
-                [question_row["id"], index, option],
+                # content_row["id"], not question_row["id"] - options are
+                # keyed by content (migration 030), not by slot, since
+                # they're part of the shared content itself.
+                [content_row["id"], index, option],
             )
 
         # _diagram_crop_bytes is an in-memory-only carrier attached by

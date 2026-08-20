@@ -297,27 +297,42 @@ export async function getMockTestTopicCounts(mockTestId) {
   return result.rows;
 }
 
+// GROUP BY q.id (previously enough to cover q.* under Postgres' primary-
+// key functional-dependency rule) stopped working once migration 030
+// turned `questions` into a view - a view has no declared primary key,
+// so Postgres can no longer infer the other columns are functionally
+// dependent on id and demands every one of them in GROUP BY instead.
+// Rather than list them all out (fragile - breaks again next time a
+// column is added/removed), this drops the JOIN+GROUP BY entirely in
+// favor of the same correlated-subquery pattern every other
+// options-bearing query in this codebase already uses (attempts.
+// repository.js, duplicates.repository.js, question-bank.repository.js,
+// mock-tests.repository.js's own listPlayableQuestions/searchQuestions
+// queries) - qo.question_id keys off q.content_id (migration 030), same
+// as those.
 export async function listQuestionsWithOptions(mockTestId, workspaceId) {
   const result = await pool.query(
     `
     SELECT
       q.*,
       COALESCE(
-        jsonb_agg(
-          jsonb_build_object(
-            'id', qo.id,
-            'optionIndex', qo.option_index,
-            'optionText', qo.option_text
+        (
+          SELECT jsonb_agg(
+            jsonb_build_object(
+              'id', qo.id,
+              'optionIndex', qo.option_index,
+              'optionText', qo.option_text
+            )
+            ORDER BY qo.option_index
           )
-          ORDER BY qo.option_index
-        ) FILTER (WHERE qo.id IS NOT NULL),
+          FROM question_options qo
+          WHERE qo.question_id = q.content_id
+        ),
         '[]'::jsonb
       ) AS options
     FROM questions q
-    LEFT JOIN question_options qo ON qo.question_id = q.id
     WHERE q.mock_test_id = $1
       AND q.workspace_id = $2
-    GROUP BY q.id
     ORDER BY q.question_no ASC
     `,
     [mockTestId, workspaceId],

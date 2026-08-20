@@ -25,6 +25,13 @@ scoring + insert. threshold=0.55 is a deliberately conservative starting
 point (see the implementation plan) - not a validated number, just a
 reasonable "don't be noisy on day one" guess to revisit once there's a
 real batch of results to look at.
+
+Both queries also exclude pairs whose two slots already share the same
+content_id (migration 030) - once a merge or a Question Bank copy has
+repointed one slot's content onto another's, their question_text is
+trivially identical (100% similarity) and re-flagging that as a "new"
+duplicate on every subsequent run would just be pure noise, not a
+genuine finding a reviewer needs to act on again.
 """
 
 import argparse
@@ -93,6 +100,7 @@ def detect_duplicates_for_mock_test(
         JOIN questions b
           ON a.workspace_id = b.workspace_id
          AND b.mock_test_id <> %(mock_test_id)s
+         AND a.content_id <> b.content_id
          AND a.question_text %% b.question_text
         WHERE a.workspace_id = %(workspace_id)s
           AND a.mock_test_id = %(mock_test_id)s
@@ -123,6 +131,7 @@ def detect_duplicates_for_workspace(
         JOIN questions b
           ON a.workspace_id = b.workspace_id
          AND a.id < b.id
+         AND a.content_id <> b.content_id
          AND a.question_text %% b.question_text
         WHERE a.workspace_id = %(workspace_id)s
           AND similarity(a.question_text, b.question_text) > %(threshold)s

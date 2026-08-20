@@ -34,7 +34,7 @@ function validateAnswerShape({
 
 export async function createQuestion(workspaceId, body) {
   const mockTestId = requiredString(body.mockTestId, "mockTestId");
-  const questsionNo = Number(body.questionNo);
+  const questionNo = Number(body.questionNo);
   const questionText = requiredString(body.questionText, "questionText");
   const rawOptions = requiredArray(body.options, "options");
   const correctOptionIndexes = requiredArray(
@@ -86,10 +86,14 @@ export async function createQuestion(workspaceId, body) {
       metadata: body.metadata || {},
     });
 
+    // question.content_id comes back through the `questions` view's own
+    // column (migration 028) - options are keyed by content, not slot,
+    // so this is the id every insertQuestionOption call below needs, not
+    // question.id (the slot).
     for (let index = 0; index < rawOptions.length; index += 1) {
       const optionText = requiredString(rawOptions[index], `options[${index}]`);
       await questionsRepo.insertQuestionOption(client, {
-        questionId: question.id,
+        contentId: question.content_id,
         optionIndex: index,
         optionText,
       });
@@ -115,11 +119,27 @@ export async function getQuestion(questionId, workspaceId) {
     throw httpError(404, "Question not found");
   }
 
-  const options = await questionsRepo.listOptionsForQuestion(question.id);
+  const options = await questionsRepo.listOptionsForQuestion(
+    question.content_id,
+  );
 
   return { ...question, options };
 }
 
+// Fork-on-edit (migration 028): a question's content_id can be shared
+// with slots in OTHER mock tests (via duplicates.service.js's merge
+// action, or question-bank.service.js's copy action). Editing shared
+// content in place would silently change what every OTHER mock test
+// sharing it shows its own students - possibly one that's already
+// published and live. So: if this slot's content_id currently has more
+// than one slot pointing at it AND the edit actually touches a content
+// field (questions.repository.js's CONTENT_FIELDS list, or options),
+// clone the content row first and repoint ONLY this slot at the clone
+// before writing anything - the edit lands on a now-exclusive copy, and
+// every other mock test sharing the original keeps seeing it unchanged.
+// A slot-only edit (status/questionNo/sourcePage/confidence) - or an
+// edit to already-exclusive content - never forks; it's a plain update,
+// which for exclusive content is exactly as cheap as it always was.
 export async function updateQuestion(questionId, workspaceId, body) {
   const existing = await questionsRepo.findQuestionById(
     questionId,
@@ -154,17 +174,51 @@ export async function updateQuestion(questionId, workspaceId, body) {
     );
   }
 
+  const contentFieldTouched =
+    body.topic !== undefined ||
+    body.subtopic !== undefined ||
+    body.passage !== undefined ||
+    body.questionText !== undefined ||
+    body.explanation !== undefined ||
+    body.questionType !== undefined ||
+    body.correctOptionIndexes !== undefined ||
+    body.marksPerCorrect !== undefined ||
+    body.negativeMarksPerWrong !== undefined ||
+    body.metadata !== undefined ||
+    body.codeSnippet !== undefined ||
+    Array.isArray(rawOptions);
+
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
 
-    const updated = await questionsRepo.updateQuestion(
-      client,
-      existing.id,
-      workspaceId,
-      {
-        questionNo: optionalNumber(body.questionNo, null),
+    let targetContentId = existing.content_id;
+
+    if (contentFieldTouched) {
+      const sharedCount = await questionsRepo.countSlotsForContent(
+        client,
+        existing.content_id,
+      );
+      if (sharedCount > 1) {
+        // Shared - fork. Clone the content row AND its current options
+        // (so the new row starts as an exact copy of what this slot was
+        // already showing), then the update/option-replacement below
+        // applies on top of the clone, never the shared original.
+        targetContentId = await questionsRepo.cloneContent(
+          client,
+          existing.content_id,
+        );
+        await questionsRepo.cloneOptions(
+          client,
+          existing.content_id,
+          targetContentId,
+        );
+      }
+    }
+
+    if (contentFieldTouched) {
+      await questionsRepo.updateContent(client, targetContentId, {
         topicProvided: body.topic !== undefined,
         topic: optionalString(body.topic),
         subtopicProvided: body.subtopic !== undefined,
@@ -183,35 +237,62 @@ export async function updateQuestion(questionId, workspaceId, body) {
         marksPerCorrect: optionalNumber(body.marksPerCorrect, null),
         negativeMarksPerWrongProvided: body.negativeMarksPerWrong !== undefined,
         negativeMarksPerWrong: optionalNumber(body.negativeMarksPerWrong, null),
+        metadata: body.metadata || null,
+        codeSnippetProvided: body.codeSnippet !== undefined,
+        codeSnippet: optionalString(body.codeSnippet),
+      });
+
+      if (Array.isArray(rawOptions)) {
+        await questionsRepo.deleteOptionsForContent(client, targetContentId);
+
+        for (let index = 0; index < rawOptions.length; index += 1) {
+          const optionText = requiredString(
+            rawOptions[index],
+            `options[${index}]`,
+          );
+          await questionsRepo.insertQuestionOption(client, {
+            contentId: targetContentId,
+            optionIndex: index,
+            optionText,
+          });
+        }
+      }
+    }
+
+    const updated = await questionsRepo.updateSlot(
+      client,
+      existing.id,
+      workspaceId,
+      {
+        questionNo: optionalNumber(body.questionNo, null),
         sourcePageProvided: body.sourcePage !== undefined,
         sourcePage: optionalNumber(body.sourcePage, null),
         confidenceProvided: body.confidence !== undefined,
         confidence: optionalNumber(body.confidence, null),
         status: body.status || null,
-        metadata: body.metadata || null,
-        codeSnippetProvided: body.codeSnippet !== undefined,
-        codeSnippet: optionalString(body.codeSnippet),
+        // Only actually changes anything when a fork just happened above
+        // (targetContentId !== existing.content_id) - updateSlot's own
+        // COALESCE leaves content_id untouched otherwise.
+        contentIdOverride:
+          targetContentId !== existing.content_id ? targetContentId : null,
       },
     );
 
-    if (Array.isArray(rawOptions)) {
-      await questionsRepo.deleteOptionsForQuestion(client, existing.id);
-
-      for (let index = 0; index < rawOptions.length; index += 1) {
-        const optionText = requiredString(
-          rawOptions[index],
-          `options[${index}]`,
-        );
-        await questionsRepo.insertQuestionOption(client, {
-          questionId: existing.id,
-          optionIndex: index,
-          optionText,
-        });
-      }
+    if (!updated) {
+      throw httpError(404, "Question not found");
     }
 
     await client.query("COMMIT");
-    return updated;
+
+    // Re-read the full row through the same view every other read in
+    // this file uses, rather than hand-merging the slot/content update
+    // results - one source of truth for "what a question row looks
+    // like" (same reasoning as createQuestion's repository counterpart).
+    const finalResult = await pool.query(
+      "SELECT * FROM questions WHERE id = $1",
+      [existing.id],
+    );
+    return finalResult.rows[0];
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
@@ -275,11 +356,14 @@ export async function reorderQuestions(mockTestId, workspaceId, items) {
   try {
     await client.query("BEGIN");
 
+    // question_no lives on question_slots (migration 028) - questions is
+    // a read-only view now, so these writes target the physical table
+    // directly.
     // Pass 1: Set question_no to 10000 + offset to satisfy check constraint (>0) while clearing slots
     for (let index = 0; index < items.length; index += 1) {
       const item = items[index];
       await client.query(
-        "UPDATE questions SET question_no = $1 WHERE id = $2 AND mock_test_id = $3 AND workspace_id = $4",
+        "UPDATE question_slots SET question_no = $1 WHERE id = $2 AND mock_test_id = $3 AND workspace_id = $4",
         [10000 + index + 1, item.id, mockTestId, workspaceId],
       );
     }
@@ -289,7 +373,7 @@ export async function reorderQuestions(mockTestId, workspaceId, items) {
       const item = items[index];
       const finalNo = Number(item.questionNo || index + 1);
       await client.query(
-        "UPDATE questions SET question_no = $1 WHERE id = $2 AND mock_test_id = $3 AND workspace_id = $4",
+        "UPDATE question_slots SET question_no = $1 WHERE id = $2 AND mock_test_id = $3 AND workspace_id = $4",
         [finalNo, item.id, mockTestId, workspaceId],
       );
     }

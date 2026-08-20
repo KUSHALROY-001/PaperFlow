@@ -271,6 +271,10 @@ export async function listQuestionsWithAnswersForAttempt(
 ) {
   const result = await pool.query(
     `
+    -- q.id is the slot id (matches exam_answers.question_id below), but
+    -- question_options.question_id references question_contents(id) as
+    -- of migration 030 - so the options subquery keys off q.content_id,
+    -- not q.id.
     SELECT
       q.id AS question_id,
       q.question_no,
@@ -291,7 +295,7 @@ export async function listQuestionsWithAnswersForAttempt(
             ORDER BY qo.option_index
           )
           FROM question_options qo
-          WHERE qo.question_id = q.id
+          WHERE qo.question_id = q.content_id
         ),
         '[]'::jsonb
       ) AS options,
