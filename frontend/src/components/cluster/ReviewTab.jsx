@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   Check,
@@ -13,6 +13,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { ConfirmDialog } from "../design-system/ConfirmDialog";
 import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
+import QuestionJumpInput from "../shared/QuestionJumpInput";
 import ScrollToTopButton from "../shared/ScrollToTopButton";
 
 const filters = [
@@ -49,6 +50,29 @@ export default function ReviewTab({
     [questions[0]?.id].filter(Boolean),
   );
   const [deleteTarget, setDeleteTarget] = useState(null);
+  // Set by handleJumpToQuestion, consumed by the effect below. Needed
+  // (not a plain scrollIntoView call inline) because jumping to a
+  // question can require two state changes to even render its DOM node
+  // first - clearing an active filter that excludes it, and expanding it
+  // if collapsed - and the scroll has to wait for whichever of those
+  // actually happens.
+  const [pendingScrollTo, setPendingScrollTo] = useState(null);
+
+  // Returns true/false (found or not) - QuestionJumpInput owns showing
+  // the "not found" message itself based on this return value. Searches
+  // the full `questions` list, not filteredQuestions - a question hidden
+  // by the current filter should still be jumpable to, not reported as
+  // "not found".
+  const handleJumpToQuestion = (questionNo) => {
+    const target = questions.find((q) => q.questionNo === questionNo);
+    if (!target) return false;
+    setActiveFilter("all");
+    setExpandedIds((current) =>
+      current.includes(target.id) ? current : [...current, target.id],
+    );
+    setPendingScrollTo(target.questionNo);
+    return true;
+  };
 
   const filteredQuestions = useMemo(() => {
     if (activeFilter === "all") {
@@ -86,27 +110,48 @@ export default function ReviewTab({
     );
   };
 
+  useEffect(() => {
+    if (pendingScrollTo == null) return undefined;
+    const el = document.getElementById(`question-${pendingScrollTo}`);
+    // Not in the DOM yet on this render (filter/expand state just
+    // changed and hasn't repainted) - do nothing and let the next run of
+    // this effect, triggered by activeFilter/filteredQuestions changing,
+    // try again.
+    if (!el) return undefined;
+
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    el.classList.add("ring-2", "ring-orange-500", "ring-offset-2");
+    const timeoutId = window.setTimeout(() => {
+      el.classList.remove("ring-2", "ring-orange-500", "ring-offset-2");
+    }, 1600);
+    setPendingScrollTo(null);
+    return () => window.clearTimeout(timeoutId);
+  }, [pendingScrollTo, activeFilter, filteredQuestions]);
+
   return (
     <div className="space-y-6 font-inter">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap gap-2">
-          {filters.map((filter) => {
-            const active = activeFilter === filter.id;
-            return (
-              <button
-                key={filter.id}
-                type="button"
-                onClick={() => setActiveFilter(filter.id)}
-                className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all ${
-                  active
-                    ? "bg-[#ea580c] text-white shadow-xs"
-                    : "bg-card text-muted-foreground border border-border hover:bg-muted hover:text-foreground"
-                }`}
-              >
-                {filter.label}
-              </button>
-            );
-          })}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap gap-2">
+            {filters.map((filter) => {
+              const active = activeFilter === filter.id;
+              return (
+                <button
+                  key={filter.id}
+                  type="button"
+                  onClick={() => setActiveFilter(filter.id)}
+                  className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                    active
+                      ? "bg-[#ea580c] text-white shadow-xs"
+                      : "bg-card text-muted-foreground border border-border hover:bg-muted hover:text-foreground"
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              );
+            })}
+          </div>
+          <QuestionJumpInput onJump={handleJumpToQuestion} />
         </div>
 
         <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
@@ -154,6 +199,7 @@ export default function ReviewTab({
           return (
             <div
               key={question.id}
+              id={`question-${question.questionNo}`}
               className={`rounded-3xl p-3 sm:p-5 surface-card border transition-all ${
                 isApproved
                   ? "border-emerald-500/30"

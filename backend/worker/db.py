@@ -4,10 +4,7 @@ from contextlib import contextmanager
 import psycopg
 from psycopg.rows import dict_row
 
-from .asset_extractor import (
-    build_diagram_original_storage_path,
-    build_diagram_storage_path,
-)
+from .asset_extractor import build_diagram_storage_path
 from .config import DATABASE_URL
 
 
@@ -213,12 +210,10 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
     # inserting it doesn't require the file to exist yet - only serving it
     # later does.
     #
-    # NOTE: since the manual-crop feature, this list holds TWO entries per
-    # diagram (storage_path and its original_storage_path sibling - see
-    # asset_extractor.py#build_diagram_original_storage_path), so
-    # len(pending_diagram_writes) is a file-write count, not a diagram
-    # count. diagrams_extracted_count below tracks the latter explicitly,
-    # for worker.py's job summary.
+    # One entry per diagram (see migration 022_diagram_single_image.sql,
+    # reversing the manual-crop feature's earlier two-file-per-diagram
+    # design) - len(pending_diagram_writes) is a diagram count again, not
+    # a file-write count.
     pending_diagram_writes = []
     diagrams_extracted_count = 0
 
@@ -312,36 +307,19 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
         crop_bytes = question.get("_diagram_crop_bytes")
         if crop_bytes and pdf_path:
             storage_path = build_diagram_storage_path(pdf_path, question_row["id"])
-            # Immutable "pristine oversized crop" sibling - see its
-            # docstring in asset_extractor.py. Written from the same
-            # crop_bytes as storage_path below (there's only one crop
-            # produced per diagram today), but kept as a genuinely
-            # separate file on disk - not a symlink or DB-only alias -
-            # so a later manual crop can overwrite storage_path without
-            # ever touching this one.
-            original_storage_path = build_diagram_original_storage_path(
-                pdf_path, question_row["id"]
-            )
             connection.execute(
                 """
                 INSERT INTO question_assets
-                    (question_id, asset_type, storage_path, original_storage_path, page_number)
-                VALUES (%s, 'diagram', %s, %s, %s)
+                    (question_id, asset_type, storage_path, page_number)
+                VALUES (%s, 'diagram', %s, %s)
                 """,
                 [
                     question_row["id"],
                     str(storage_path),
-                    str(original_storage_path),
                     question.get("source_page"),
                 ],
             )
-            # has_manual_crop is left at its column default (false) -
-            # correct for every freshly-extracted diagram, since no
-            # manual crop has happened yet.
             pending_diagram_writes.append({"storage_path": storage_path, "png_bytes": crop_bytes})
-            pending_diagram_writes.append(
-                {"storage_path": original_storage_path, "png_bytes": crop_bytes}
-            )
             diagrams_extracted_count += 1
 
         inserted_count += 1

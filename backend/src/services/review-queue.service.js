@@ -1,8 +1,5 @@
 import * as reviewQueueRepo from "../repositories/review-queue.repository.js";
-import {
-  attachDiagramUrls,
-  attachDiagramOriginalUrls,
-} from "./question-assets.service.js";
+import { attachDiagramUrls } from "./question-assets.service.js";
 
 const VALID_SORTS = ["confidence_asc", "question_no_asc", "created_at_desc"];
 
@@ -35,14 +32,17 @@ function parseFilters(query) {
     query.maxConfidence !== undefined && query.maxConfidence !== ""
       ? Number(query.maxConfidence)
       : null;
-  const hasAiIssues = query.hasAiIssues === "true" || query.hasAiIssues === true;
+  const hasAiIssues =
+    query.hasAiIssues === "true" || query.hasAiIssues === true;
   const limit = Math.min(Math.max(Number(query.limit) || 20, 1), 50);
 
   return {
     clusterId: query.clusterId || null,
     mockTestId: query.mockTestId || null,
     maxConfidence:
-      Number.isFinite(maxConfidence) && maxConfidence >= 0 && maxConfidence <= 100
+      Number.isFinite(maxConfidence) &&
+      maxConfidence >= 0 &&
+      maxConfidence <= 100
         ? maxConfidence
         : null,
     hasAiIssues,
@@ -72,7 +72,6 @@ function serializeQueueItem(row) {
     options,
     correctOptionIndexes: row.correct_option_indexes || [],
     diagramUrl: row.diagramUrl || null,
-    diagramOriginalUrl: row.diagramOriginalUrl || null,
     placement: row.placement || "below_text",
     hasCode: row.has_code || false,
     codeLanguage: row.code_language || null,
@@ -96,10 +95,7 @@ export async function getReviewQueue(workspaceId, query) {
     cursor,
   });
 
-  const withDiagrams = await attachDiagramUrls(rows, workspaceId, {
-    idField: "id",
-  });
-  const enriched = await attachDiagramOriginalUrls(withDiagrams, workspaceId, {
+  const enriched = await attachDiagramUrls(rows, workspaceId, {
     idField: "id",
   });
 

@@ -14,7 +14,7 @@ import { startWorkerOnce } from "../lib/worker-runner.js";
 import * as mockTestsRepo from "../repositories/mock-tests.repository.js";
 import {
   attachDiagramUrls,
-  attachDiagramOriginalUrls,
+  attachDiagramSource,
 } from "./question-assets.service.js";
 
 export async function listMockTests(workspaceId) {
@@ -410,9 +410,7 @@ export async function listQuestions(mockTestId, workspaceId) {
   const withDiagrams = await attachDiagramUrls(questions, workspaceId, {
     idField: "id",
   });
-  return attachDiagramOriginalUrls(withDiagrams, workspaceId, {
-    idField: "id",
-  });
+  return attachDiagramSource(withDiagrams, { idField: "id" });
 }
 
 export async function getPlayableMockTest(mockTestId, workspaceId) {

@@ -7,8 +7,8 @@ import { pool } from "../db/pool.js";
 
 export async function findAssetForQuestion(questionId) {
   const result = await pool.query(
-    `SELECT id, question_id, asset_type, storage_path, original_storage_path,
-            has_manual_crop, source, placement, page_number, created_at
+    `SELECT id, question_id, asset_type, storage_path,
+            source, placement, page_number, created_at
      FROM question_assets
      WHERE question_id = $1
      ORDER BY created_at ASC
@@ -19,26 +19,14 @@ export async function findAssetForQuestion(questionId) {
   return result.rows[0] ? mapRow(result.rows[0]) : null;
 }
 
-// Flips has_manual_crop after the controller has already overwritten (crop)
-// or restored (reset) the bytes at storage_path on disk - this call is
-// intentionally just the DB half of that pair, never the file write, so the
-// two stay easy to reason about independently and a failed sharp() call
-// never leaves the flag out of sync with the file.
-export async function setManualCrop(assetId, hasManualCrop) {
-  await pool.query(
-    `UPDATE question_assets SET has_manual_crop = $2 WHERE id = $1`,
-    [assetId, hasManualCrop],
-  );
-}
-
 // Placement is independent of source (an extracted diagram is just as
 // repositionable as a manually uploaded one), so this is never called
 // from the same place as the upload/crop endpoints - it's its own PATCH.
 export async function setPlacement(assetId, placement) {
   const result = await pool.query(
     `UPDATE question_assets SET placement = $2 WHERE id = $1
-     RETURNING id, question_id, asset_type, storage_path, original_storage_path,
-               has_manual_crop, source, placement, page_number, created_at`,
+     RETURNING id, question_id, asset_type, storage_path,
+               source, placement, page_number, created_at`,
     [assetId, placement],
   );
   return result.rows[0] ? mapRow(result.rows[0]) : null;
@@ -64,7 +52,7 @@ export async function deleteAsset(assetId) {
 // constraint - see migration 015's rationale for why not a UNIQUE index.
 export async function replaceAssetForQuestion(
   questionId,
-  { storagePath, originalStoragePath, source, placement, pageNumber = null },
+  { storagePath, source, placement, pageNumber = null },
 ) {
   const client = await pool.connect();
   try {
@@ -74,18 +62,11 @@ export async function replaceAssetForQuestion(
     ]);
     const result = await client.query(
       `INSERT INTO question_assets
-         (question_id, asset_type, storage_path, original_storage_path, source, placement, page_number)
-       VALUES ($1, 'diagram', $2, $3, $4, $5, $6)
-       RETURNING id, question_id, asset_type, storage_path, original_storage_path,
-                 has_manual_crop, source, placement, page_number, created_at`,
-      [
-        questionId,
-        storagePath,
-        originalStoragePath,
-        source,
-        placement,
-        pageNumber,
-      ],
+         (question_id, asset_type, storage_path, source, placement, page_number)
+       VALUES ($1, 'diagram', $2, $3, $4, $5)
+       RETURNING id, question_id, asset_type, storage_path,
+                 source, placement, page_number, created_at`,
+      [questionId, storagePath, source, placement, pageNumber],
     );
     await client.query("COMMIT");
     return mapRow(result.rows[0]);
@@ -108,8 +89,8 @@ export async function findAssetsForQuestions(questionIds) {
 
   const result = await pool.query(
     `SELECT DISTINCT ON (question_id)
-       id, question_id, asset_type, storage_path, original_storage_path,
-       has_manual_crop, source, placement, page_number, created_at
+       id, question_id, asset_type, storage_path,
+       source, placement, page_number, created_at
      FROM question_assets
      WHERE question_id = ANY($1::uuid[])
      ORDER BY question_id, created_at ASC`,
@@ -129,8 +110,8 @@ export async function findAssetsForQuestions(questionIds) {
 export async function findAssetsForMockTest(mockTestId) {
   const result = await pool.query(
     `SELECT DISTINCT ON (qa.question_id)
-       qa.id, qa.question_id, qa.asset_type, qa.storage_path, qa.original_storage_path,
-       qa.has_manual_crop, qa.source, qa.placement, qa.page_number, qa.created_at
+       qa.id, qa.question_id, qa.asset_type, qa.storage_path,
+       qa.source, qa.placement, qa.page_number, qa.created_at
      FROM question_assets qa
      INNER JOIN questions q ON q.id = qa.question_id
      WHERE q.mock_test_id = $1
@@ -151,8 +132,6 @@ function mapRow(row) {
     questionId: row.question_id,
     assetType: row.asset_type,
     storagePath: row.storage_path,
-    originalStoragePath: row.original_storage_path,
-    hasManualCrop: row.has_manual_crop,
     source: row.source,
     placement: row.placement,
     pageNumber: row.page_number,

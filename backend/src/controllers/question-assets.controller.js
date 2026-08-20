@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { copyFile, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { httpError } from "../lib/http-error.js";
@@ -12,11 +12,7 @@ import * as questionAssetsRepo from "../repositories/question-assets.repository.
 import * as questionsRepo from "../repositories/questions.repository.js";
 import * as sharedService from "../services/shared.service.js";
 
-async function streamDiagram(
-  req,
-  res,
-  { questionId, workspaceId, variant = "cropped" },
-) {
+async function streamDiagram(req, res, { questionId, workspaceId }) {
   const token = req.query.access_token;
   if (!token) {
     throw httpError(401, "Missing access_token");
@@ -45,19 +41,8 @@ async function streamDiagram(
     throw httpError(404, "No diagram found for this question");
   }
 
-  const filePath =
-    variant === "original" ? asset.originalStoragePath : asset.storagePath;
-  if (!filePath) {
-    // Only reachable for the original variant: an asset extracted before
-    // migration 014 has no original_storage_path. attachDiagramOriginalUrls
-    // already omits diagramOriginalUrl for exactly these questions, so a
-    // legitimate frontend never requests this - this only fires against a
-    // hand-built URL or a stale page.
-    throw httpError(404, "No original diagram found for this question");
-  }
-
   res.setHeader("Cache-Control", "private, max-age=86400");
-  const stream = fs.createReadStream(filePath);
+  const stream = fs.createReadStream(asset.storagePath);
   stream.on("error", () => {
     if (!res.headersSent) {
       res.status(404).json({ error: "Diagram file not found on disk" });
@@ -80,17 +65,6 @@ export async function serveDiagram(req, res) {
   });
 }
 
-// Same auth shape as serveDiagram above, just against original_storage_path
-// instead of storage_path. Only ever linked to from the editor's
-// DiagramCropModal (see question-assets.service.js#attachDiagramOriginalUrls) -
-// exam-play and shared-attempt views never render this.
-export async function serveDiagramOriginal(req, res) {
-  await streamDiagram(req, res, {
-    questionId: req.params.questionId,
-    variant: "original",
-  });
-}
-
 // Public path - no requireAuth ran, so workspaceId has to come from
 // resolving the share token itself (which also re-validates the share is
 // still active/not expired, same as every other /api/shared/... route).
@@ -104,9 +78,14 @@ export async function serveSharedDiagram(req, res) {
   });
 }
 
-// Pixel-coordinate rect against original_storage_path, as sent by
-// DiagramCropModal (react-easy-crop reports its selection in the source
-// image's own pixel space, not the on-screen scaled preview's).
+// Pixel-coordinate rect against the diagram's current image (as sent by
+// DiagramCropModal - react-image-crop reports its selection in the
+// source image's own pixel space, not the on-screen scaled preview's).
+// "Current image" means whatever storage_path already holds - the
+// previous crop, if there was one, or the original extraction if not
+// (see migration 022_diagram_single_image.sql: there's only ever one
+// stored image per diagram now, so a second crop necessarily starts from
+// the first crop's result, not a separately preserved original).
 function parseCropRect(body = {}) {
   const rect = {};
   for (const field of ["x", "y", "width", "height"]) {
@@ -127,14 +106,12 @@ function parseCropRect(body = {}) {
   return rect;
 }
 
-// Shared by both crop endpoints: confirms the question is in the caller's
-// workspace (same check every other question route makes), then loads the
-// asset row. A row missing original_storage_path means it was extracted
-// before this feature shipped - there's nothing to crop against, so both
-// endpoints refuse rather than silently no-op. The frontend disables "Edit
-// Crop" for this same reason; this is the server-side backstop for a stale
-// page that still has the button enabled.
-async function loadCroppableAsset(questionId, workspaceId) {
+// Shared by every asset-mutating endpoint below: confirms the question is
+// in the caller's workspace (same check every other question route
+// makes), then loads the asset row. Any diagram can be cropped now -
+// there's no longer a separate "no original to crop against" state (that
+// was specific to the two-file design this reverses).
+async function loadAsset(questionId, workspaceId) {
   const question = await questionsRepo.findQuestionById(
     questionId,
     workspaceId,
@@ -147,55 +124,42 @@ async function loadCroppableAsset(questionId, workspaceId) {
   if (!asset) {
     throw httpError(404, "No diagram found for this question");
   }
-  if (!asset.originalStoragePath) {
-    throw httpError(
-      409,
-      "This diagram has no original image to crop - re-extract it from the source PDF first",
-    );
-  }
 
   return asset;
 }
 
 export async function updateDiagramCrop(req, res) {
   const rect = parseCropRect(req.body);
-  const asset = await loadCroppableAsset(
-    req.params.questionId,
-    req.workspaceId,
-  );
+  const asset = await loadAsset(req.params.questionId, req.workspaceId);
 
+  let cropped;
   try {
-    await sharp(asset.originalStoragePath)
+    // Read fully into a buffer BEFORE writing anything back out - sharp
+    // reading FROM and writing TO the exact same path in one pipeline
+    // (.toFile(asset.storagePath) here, when asset.storagePath IS the
+    // source) risks the write truncating the file out from under the
+    // still-in-progress read on some platforms/pipeline shapes. Buffering
+    // first means the read has fully completed before the write ever
+    // opens the file.
+    cropped = await sharp(asset.storagePath)
       .extract({
         left: rect.x,
         top: rect.y,
         width: rect.width,
         height: rect.height,
       })
-      .toFile(asset.storagePath);
+      .toBuffer();
   } catch (error) {
     // sharp throws a generic Error (not one of ours) when the rect falls
     // outside the source image's bounds - the one way this request can be
     // malformed in a way parseCropRect can't catch up front, since it has
-    // no idea how big the original image actually is.
+    // no idea how big the current image actually is.
     throw httpError(400, "Crop rectangle is outside the image bounds");
   }
 
-  await questionAssetsRepo.setManualCrop(asset.id, true);
+  await writeFile(asset.storagePath, cropped);
 
-  res.json({ hasManualCrop: true });
-}
-
-export async function resetDiagramCrop(req, res) {
-  const asset = await loadCroppableAsset(
-    req.params.questionId,
-    req.workspaceId,
-  );
-
-  await copyFile(asset.originalStoragePath, asset.storagePath);
-  await questionAssetsRepo.setManualCrop(asset.id, false);
-
-  res.json({ hasManualCrop: false });
+  res.json({ success: true });
 }
 
 // Part C: manual image insert. Handles both "this question has no diagram
@@ -218,8 +182,8 @@ export async function uploadDiagramImage(req, res) {
 
   // Read before replace, purely so the new row can carry the placement the
   // user already had chosen forward (a replace shouldn't silently reset it
-  // to the default) and so the OLD files can be cleaned up below once the
-  // new ones are safely on disk and the DB row points at them instead.
+  // to the default) and so the OLD file can be cleaned up below once the
+  // new one is safely on disk and the DB row points at it instead.
   const previousAsset = await questionAssetsRepo.findAssetForQuestion(
     req.params.questionId,
   );
@@ -240,40 +204,28 @@ export async function uploadDiagramImage(req, res) {
     req.workspaceId,
     question.mock_test_id,
   );
-  // Fixed, deterministic filenames (not a random UUID like the PDF-upload
+  // Fixed, deterministic filename (not a random UUID like the PDF-upload
   // multer config uses) - a second manual upload for the same question is
   // a REPLACE, and reusing the same path means it overwrites in place
   // instead of leaving the previous manual upload's file behind.
   const storagePath = path.join(targetDir, `${question.id}.png`);
-  const originalStoragePath = path.join(
-    targetDir,
-    `${question.id}.original.png`,
-  );
 
   await writeFile(storagePath, normalizedPng);
-  await writeFile(originalStoragePath, normalizedPng);
 
   await questionAssetsRepo.replaceAssetForQuestion(question.id, {
     storagePath: String(storagePath),
-    originalStoragePath: String(originalStoragePath),
     source: "manual",
     placement: previousAsset?.placement || "below_text",
   });
 
-  // Only the previous asset's files can be orphaned now - a second manual
-  // upload reuses the exact paths above (already overwritten by the
-  // writeFile calls), so there's nothing to delete in that case. An
+  // Only the previous asset's file can be orphaned now - a second manual
+  // upload reuses the exact path above (already overwritten by the
+  // writeFile call), so there's nothing to delete in that case. An
   // extracted asset lived under diagrams/, a different directory entirely,
-  // so its files are genuinely unreferenced once replaceAssetForQuestion's
+  // so its file is genuinely unreferenced once replaceAssetForQuestion's
   // DELETE+INSERT commits.
   if (previousAsset && previousAsset.storagePath !== String(storagePath)) {
     await deleteFileByPath(previousAsset.storagePath);
-  }
-  if (
-    previousAsset?.originalStoragePath &&
-    previousAsset.originalStoragePath !== String(originalStoragePath)
-  ) {
-    await deleteFileByPath(previousAsset.originalStoragePath);
   }
 
   res.status(201).json({ success: true });
@@ -311,9 +263,9 @@ export async function updateDiagramPlacement(req, res) {
 }
 
 // Removes the diagram entirely - the one thing nothing before Part C could
-// do (the crop DELETE only resets to auto-crop; it never had a way to end
-// up with zero diagrams again). Lets an editor undo an accidental upload,
-// or clear a bad extraction before uploading their own replacement.
+// do (the old crop DELETE only reset to auto-crop; it never had a way to
+// end up with zero diagrams again). Lets an editor undo an accidental
+// upload, or clear a bad extraction before uploading their own replacement.
 export async function deleteDiagramImage(req, res) {
   const question = await questionsRepo.findQuestionById(
     req.params.questionId,
@@ -330,9 +282,6 @@ export async function deleteDiagramImage(req, res) {
 
   await questionAssetsRepo.deleteAsset(asset.id);
   await deleteFileByPath(asset.storagePath);
-  if (asset.originalStoragePath) {
-    await deleteFileByPath(asset.originalStoragePath);
-  }
 
   res.status(204).send();
 }

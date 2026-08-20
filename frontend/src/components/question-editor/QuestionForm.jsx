@@ -276,21 +276,15 @@ export default function QuestionForm({
           {selected.diagramUrl && (
             <button
               type="button"
-              disabled={isViewer || !selected.diagramOriginalUrl}
-              onClick={() =>
-                !isViewer &&
-                selected.diagramOriginalUrl &&
-                setIsCropModalOpen(true)
-              }
+              disabled={isViewer}
+              onClick={() => !isViewer && setIsCropModalOpen(true)}
               title={
                 isViewer
                   ? "Editor role is required to edit the crop"
-                  : !selected.diagramOriginalUrl
-                    ? "This diagram has no original image saved - re-extract from the original PDF to get one"
-                    : undefined
+                  : undefined
               }
               className={`flex items-center gap-1.5 text-xs font-bold transition-all ${
-                isViewer || !selected.diagramOriginalUrl
+                isViewer
                   ? "text-muted-foreground/40 cursor-not-allowed opacity-50"
                   : "text-orange-500 hover:underline"
               }`}
@@ -336,8 +330,7 @@ export default function QuestionForm({
           key={selected.id}
           questionId={selected.id}
           mockTestId={mockTestId}
-          diagramOriginalUrl={selected.diagramOriginalUrl}
-          hasManualCrop={selected.hasManualCrop}
+          diagramUrl={selected.diagramUrl}
           onClose={() => setIsCropModalOpen(false)}
         />
       )}

@@ -33,36 +33,16 @@ def build_diagram_storage_path(pdf_path, question_id):
     the same base layout as .../ocr/{name}.searchable.pdf already uses one
     directory over.
 
-    This is the "currently served" path (question_assets.storage_path) -
-    see build_diagram_original_storage_path below for its immutable
-    sibling.
+    This is the ONLY file written per diagram (see migration
+    022_diagram_single_image.sql, reversing migration 014's separate
+    "immutable original" sibling file) - question_assets.storage_path,
+    both the file currently served AND the one any future crop is derived
+    from.
     """
     source_path = Path(pdf_path)
     diagrams_dir = source_path.parent / "diagrams"
     diagrams_dir.mkdir(parents=True, exist_ok=True)
     return diagrams_dir / f"{question_id}.png"
-
-
-def build_diagram_original_storage_path(pdf_path, question_id):
-    """
-    Sibling of build_diagram_storage_path, same diagrams/ directory, same
-    question_id, distinct filename (`.original.png` suffix) so the two
-    never collide on disk - question_assets.original_storage_path.
-
-    At extraction time this holds byte-identical content to
-    build_diagram_storage_path's file (both are written from the same
-    crop_diagram() output - there is currently only one crop produced
-    per diagram, sized via padding_pct to already be the intentionally
-    oversized "room to crop further" version). They diverge only once a
-    manual crop is saved: storage_path gets overwritten with the
-    user's tighter crop, while this path is never touched again, so a
-    later re-crop (or a "reset to auto-crop") always has the original,
-    full-quality, non-lossy-recropped image to start from again.
-    """
-    source_path = Path(pdf_path)
-    diagrams_dir = source_path.parent / "diagrams"
-    diagrams_dir.mkdir(parents=True, exist_ok=True)
-    return diagrams_dir / f"{question_id}.original.png"
 
 
 def normalized_bbox_to_pixels(bbox_normalized, pixel_width, pixel_height):

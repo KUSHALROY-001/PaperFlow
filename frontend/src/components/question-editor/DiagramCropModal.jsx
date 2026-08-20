@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import ReactCrop, { centerCrop, makeAspectCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { useQueryClient } from "@tanstack/react-query";
-import { Crop, Loader2, RotateCcw, X } from "lucide-react";
+import { Crop, Loader2, X } from "lucide-react";
 import { api, resolveAssetUrl } from "@/lib/api";
 
 const ASPECT_PRESETS = [
@@ -20,15 +20,21 @@ const ASPECT_PRESETS = [
 // selected. react-image-crop's crop box has real per-edge/per-corner
 // drag handles - "Free" here now means a genuinely arbitrary rectangle,
 // not just "start at the image's own aspect ratio".
+//
+// Crops against diagramUrl - the SAME image the rest of the app renders,
+// not a separate pristine original (see migration
+// 022_diagram_single_image.sql: there's only ever one stored image per
+// diagram now). A second crop therefore starts from the first crop's
+// result, not a fresh original - there is no "reset to auto-crop" option
+// anymore, since nothing is kept to reset to.
 export default function DiagramCropModal({
   questionId,
   mockTestId,
-  diagramOriginalUrl,
-  hasManualCrop,
+  diagramUrl,
   onClose,
 }) {
   const queryClient = useQueryClient();
-  const imageUrl = resolveAssetUrl(diagramOriginalUrl);
+  const imageUrl = resolveAssetUrl(diagramUrl);
   const imgRef = useRef(null);
 
   const [aspectPreset, setAspectPreset] = useState(undefined);
@@ -36,8 +42,8 @@ export default function DiagramCropModal({
   // window resizes/zoom levels without any manual displayed-vs-natural
   // scale-factor bookkeeping. Only converted to natural-image pixel
   // coordinates once, in handleSave, which is the one place that actually
-  // needs pixel space (the backend crops against original_storage_path's
-  // real dimensions).
+  // needs pixel space (the backend crops against storage_path's real
+  // dimensions).
   const [crop, setCrop] = useState({
     unit: "%",
     x: 0,
@@ -48,10 +54,9 @@ export default function DiagramCropModal({
   const [completedCrop, setCompletedCrop] = useState(null);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
   const [error, setError] = useState("");
 
-  const busy = isSaving || isResetting;
+  const busy = isSaving;
 
   function onImageLoad() {
     setImageLoaded(true);
@@ -101,7 +106,7 @@ export default function DiagramCropModal({
       // completedCrop is a percent crop against the rendered image -
       // multiplying by naturalWidth/naturalHeight (not img.width/height,
       // which is the on-screen rendered size) is what puts it in the
-      // same pixel space as original_storage_path on the backend.
+      // same pixel space as the image on the backend.
       await api.updateDiagramCrop(questionId, {
         x: Math.round((completedCrop.x / 100) * img.naturalWidth),
         y: Math.round((completedCrop.y / 100) * img.naturalHeight),
@@ -120,22 +125,6 @@ export default function DiagramCropModal({
       setError(err.message || "Could not save crop");
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const handleReset = async () => {
-    setError("");
-    setIsResetting(true);
-    try {
-      await api.resetDiagramCrop(questionId);
-      await queryClient.invalidateQueries({
-        queryKey: ["questions", mockTestId],
-      });
-      onClose();
-    } catch (err) {
-      setError(err.message || "Could not reset crop");
-    } finally {
-      setIsResetting(false);
     }
   };
 
@@ -220,43 +209,24 @@ export default function DiagramCropModal({
           )}
         </div>
 
-        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border p-5 sm:p-6">
-          {hasManualCrop ? (
-            <button
-              type="button"
-              onClick={handleReset}
-              disabled={busy}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all disabled:opacity-50"
-            >
-              {isResetting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <RotateCcw className="w-4 h-4" />
-              )}
-              Reset to auto-crop
-            </button>
-          ) : (
-            <span />
-          )}
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={handleClose}
-              disabled={busy}
-              className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-muted-foreground hover:bg-muted transition-all disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={busy || !completedCrop}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-[#ea580c] hover:bg-[#c2410c] text-white shadow-xs transition-all disabled:opacity-50"
-            >
-              {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
-              Save Crop
-            </button>
-          </div>
+        <div className="flex shrink-0 items-center justify-end gap-3 border-t border-border p-5 sm:p-6">
+          <button
+            type="button"
+            onClick={handleClose}
+            disabled={busy}
+            className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-muted-foreground hover:bg-muted transition-all disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={busy || !completedCrop}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-[#ea580c] hover:bg-[#c2410c] text-white shadow-xs transition-all disabled:opacity-50"
+          >
+            {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
+            Save Crop
+          </button>
         </div>
       </div>
     </div>

@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Copy, Download, Edit2, Loader2 } from "lucide-react";
 import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
+import QuestionJumpInput from "../shared/QuestionJumpInput";
 import { api } from "@/lib/api";
 import ScrollToTopButton from "../shared/ScrollToTopButton";
 
@@ -13,6 +14,42 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
   const [copied, setCopied] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [pdfError, setPdfError] = useState("");
+  // Set by handleJumpToQuestion, consumed by the effect below. A plain
+  // rAF/setTimeout after setActiveView("Visual") would race React's
+  // render - this component may need to switch OFF the JSON/Metadata
+  // view before the target question's DOM node even exists, so the
+  // scroll has to be driven by a real effect dependency (activeView),
+  // not a timing guess.
+  const [pendingScrollTo, setPendingScrollTo] = useState(null);
+
+  // Returns true/false (found or not) - QuestionJumpInput owns showing
+  // the "not found" message itself based on this return value.
+  const handleJumpToQuestion = (questionNo) => {
+    const target = questions.find((q) => q.questionNo === questionNo);
+    if (!target) return false;
+    setActiveView("Visual");
+    setPendingScrollTo(target.questionNo);
+    return true;
+  };
+
+  useEffect(() => {
+    if (pendingScrollTo == null) return undefined;
+    const el = document.getElementById(`question-${pendingScrollTo}`);
+    // Not found yet on this render (e.g. we just switched activeView to
+    // "Visual" this same tick and the Visual list hasn't painted) - do
+    // nothing and let the next run of this effect (triggered by
+    // activeView changing) try again. pendingScrollTo stays set until it
+    // actually succeeds.
+    if (!el) return undefined;
+
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    el.classList.add("ring-2", "ring-orange-500", "ring-offset-2");
+    const timeoutId = window.setTimeout(() => {
+      el.classList.remove("ring-2", "ring-orange-500", "ring-offset-2");
+    }, 1600);
+    setPendingScrollTo(null);
+    return () => window.clearTimeout(timeoutId);
+  }, [pendingScrollTo, activeView]);
 
   const exportPayload = useMemo(
     () => ({
@@ -105,6 +142,7 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
         </div>
 
         <div className="flex flex-wrap items-start gap-3">
+          <QuestionJumpInput onJump={handleJumpToQuestion} />
           <button
             type="button"
             onClick={handleCopy}
@@ -143,7 +181,8 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
           {questions.map((question) => (
             <div
               key={question.id}
-              className="rounded-3xl p-2.5 sm:p-5 surface-card border border-border"
+              id={`question-${question.questionNo}`}
+              className="rounded-3xl p-2.5 sm:p-5 surface-card border border-border transition-all"
             >
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 flex-wrap min-w-0">

@@ -270,20 +270,17 @@ export const api = {
     });
   },
   // rect: { x, y, width, height } in pixel coordinates against the
-  // question's diagramOriginalUrl image (see DiagramCropModal) - the
-  // backend crops question_assets.original_storage_path down to this rect
-  // and overwrites storage_path with the result.
+  // question's current diagramUrl image (see DiagramCropModal). The
+  // backend crops question_assets.storage_path down to this rect and
+  // overwrites it in place - there's only one stored image per diagram
+  // (migration 022_diagram_single_image.sql), so a second crop starts
+  // from the first crop's result, not a separately preserved original.
+  // There is deliberately no "reset to original" call anymore - nothing
+  // is kept to reset to.
   updateDiagramCrop(questionId, rect) {
     return apiRequest(`/api/questions/${questionId}/diagram-crop`, {
       method: "PUT",
       body: JSON.stringify(rect),
-    });
-  },
-  // Discards the manual crop and restores storage_path back to the
-  // original extraction (padding_pct=0.25) crop.
-  resetDiagramCrop(questionId) {
-    return apiRequest(`/api/questions/${questionId}/diagram-crop`, {
-      method: "DELETE",
     });
   },
   // Part C: manual image insert. Works whether the question currently has
@@ -707,8 +704,11 @@ export const api = {
     });
   },
   unsubscribePublisher(slug) {
-    return apiRequest(`/api/catalog/subscriptions/${encodeURIComponent(slug)}`, {
-      method: "DELETE",
-    });
+    return apiRequest(
+      `/api/catalog/subscriptions/${encodeURIComponent(slug)}`,
+      {
+        method: "DELETE",
+      },
+    );
   },
 };

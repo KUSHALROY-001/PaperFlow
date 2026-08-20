@@ -119,13 +119,6 @@ export function createApp() {
     "/api/questions/:questionId/diagram",
     asyncHandler(questionAssetsController.serveDiagram),
   );
-  // Same reasoning as the route above, just for the oversized pre-crop
-  // original that DiagramCropModal edits against - a plain <img src> for
-  // this one too, so it needs the same signed-token exception.
-  app.get(
-    "/api/questions/:questionId/diagram-original",
-    asyncHandler(questionAssetsController.serveDiagramOriginal),
-  );
   app.use("/api/questions", requireAuth, questionsRouter);
   app.use("/api/review-queue", requireAuth, reviewQueueRouter);
   app.use("/api/question-bank", requireAuth, questionBankRouter);

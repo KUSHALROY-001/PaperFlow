@@ -63,11 +63,6 @@ questionsRouter.put(
   requireRole("editor"),
   asyncHandler(questionAssetsController.updateDiagramCrop),
 );
-questionsRouter.delete(
-  "/:questionId/diagram-crop",
-  requireRole("editor"),
-  asyncHandler(questionAssetsController.resetDiagramCrop),
-);
 
 // Part C (manual image insert). POST .../diagram here is a different
 // route than the public GET .../diagram in app.js - same path, different

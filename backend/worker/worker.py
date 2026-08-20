@@ -235,10 +235,6 @@ def process_job(job):
                     "ai": ai_summary,
                     "questionsParsed": len(questions),
                     "questionsInserted": inserted,
-                    # NOT len(pending_diagram_writes) - that list holds two
-                    # file writes per diagram since the manual-crop feature
-                    # (storage_path + its original_storage_path sibling).
-                    # See db.py#replace_questions.
                     "diagramsExtracted": diagrams_extracted,
                 },
             )
