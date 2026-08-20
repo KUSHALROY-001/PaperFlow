@@ -72,6 +72,8 @@ export function QuestionDiagram({ diagramUrl, className = "" }) {
 // component has no visibility into what comes after it.
 export default function QuestionContent({
   text,
+  passage,
+  explanation,
   hasCode = false,
   codeLanguage,
   codeSnippet,
@@ -99,9 +101,45 @@ export default function QuestionContent({
     () => (leadInText ? splitIntoTextBlocks(leadInText) : null),
     [leadInText],
   );
+  // Same splitIntoTextBlocks + MathText treatment as the question text
+  // itself - a passage/explanation is just as likely to embed a
+  // comprehension table or a formula as the question body is.
+  const passageBlocks = useMemo(
+    () => (passage ? splitIntoTextBlocks(passage) : null),
+    [passage],
+  );
+  const explanationBlocks = useMemo(
+    () => (explanation ? splitIntoTextBlocks(explanation) : null),
+    [explanation],
+  );
 
   return (
     <div className="space-y-3">
+      {passageBlocks && (
+        <div className="rounded-xl border border-border bg-muted/40 px-3.5 py-3 sm:px-4 sm:py-3.5">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+            Passage
+          </div>
+          <div className="space-y-2">
+            {passageBlocks.map((block, index) =>
+              block.type === "table" ? (
+                <QuestionTable
+                  key={index}
+                  header={block.header}
+                  rows={block.rows}
+                />
+              ) : (
+                <p
+                  key={index}
+                  className="whitespace-pre-wrap text-sm text-muted-foreground"
+                >
+                  <MathText text={block.content} />
+                </p>
+              ),
+            )}
+          </div>
+        </div>
+      )}
       {showAboveText && <QuestionDiagram diagramUrl={diagramUrl} />}
       {hasCode ? (
         <>
@@ -156,6 +194,31 @@ export default function QuestionContent({
         )
       )}
       {showBelowText && <QuestionDiagram diagramUrl={diagramUrl} />}
+      {explanationBlocks && (
+        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-3.5 py-3 sm:px-4 sm:py-3.5">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1.5">
+            Explanation
+          </div>
+          <div className="space-y-2">
+            {explanationBlocks.map((block, index) =>
+              block.type === "table" ? (
+                <QuestionTable
+                  key={index}
+                  header={block.header}
+                  rows={block.rows}
+                />
+              ) : (
+                <p
+                  key={index}
+                  className="whitespace-pre-wrap text-sm text-foreground"
+                >
+                  <MathText text={block.content} />
+                </p>
+              ),
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

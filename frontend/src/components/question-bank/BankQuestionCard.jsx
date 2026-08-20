@@ -57,6 +57,11 @@ export default function BankQuestionCard({
                   {question.topic}
                 </span>
               )}
+              {question.subtopic && (
+                <span className="text-[11px] font-semibold text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full">
+                  {question.subtopic}
+                </span>
+              )}
               {/* Phase 2: how many OTHER mock tests already have a copy of
                   this exact question - only shown when it's actually been
                   used elsewhere, not as a permanent "0" badge on every
@@ -138,6 +143,8 @@ export default function BankQuestionCard({
 
       <QuestionContent
         text={question.text}
+        passage={question.passage}
+        explanation={question.explanation}
         hasCode={question.hasCode}
         codeLanguage={question.codeLanguage}
         diagramUrl={question.diagramUrl}

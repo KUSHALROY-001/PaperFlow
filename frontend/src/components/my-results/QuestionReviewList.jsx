@@ -101,11 +101,18 @@ export default function QuestionReviewList({ questions }) {
                     }`}
                   >
                     {/* On mobile only: Topic badge on top of card */}
-                    {q.topic && (
-                      <div className="sm:hidden mb-2">
-                        <span className="text-xs bg-orange-500/15 text-orange-500 border border-orange-500/20 px-2 py-0.5 rounded-lg font-bold inline-block">
-                          {q.topic}
-                        </span>
+                    {(q.topic || q.subtopic) && (
+                      <div className="sm:hidden mb-2 flex flex-wrap gap-1.5">
+                        {q.topic && (
+                          <span className="text-xs bg-orange-500/15 text-orange-500 border border-orange-500/20 px-2 py-0.5 rounded-lg font-bold inline-block">
+                            {q.topic}
+                          </span>
+                        )}
+                        {q.subtopic && (
+                          <span className="text-xs bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 px-2 py-0.5 rounded-lg font-bold inline-block">
+                            {q.subtopic}
+                          </span>
+                        )}
                       </div>
                     )}
 
@@ -127,13 +134,20 @@ export default function QuestionReviewList({ questions }) {
                           QuestionContent's code block/diagram full-width
                           instead of squeezed into a flex row beside it. */}
                         {q.topic && (
-                          <span className="hidden sm:inline-block text-xs bg-orange-500/15 text-orange-500 border border-orange-500/20 px-2 py-0.5 rounded-lg font-bold shrink-0 mb-1.5">
+                          <span className="hidden sm:inline-block text-xs bg-orange-500/15 text-orange-500 border border-orange-500/20 px-2 py-0.5 rounded-lg font-bold shrink-0 mb-1.5 mr-1.5">
                             {q.topic}
+                          </span>
+                        )}
+                        {q.subtopic && (
+                          <span className="hidden sm:inline-block text-xs bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 px-2 py-0.5 rounded-lg font-bold shrink-0 mb-1.5">
+                            {q.subtopic}
                           </span>
                         )}
 
                         <QuestionContent
                           text={q.text}
+                          passage={q.passage}
+                          explanation={q.explanation}
                           hasCode={q.hasCode}
                           codeLanguage={q.codeLanguage}
                           diagramUrl={q.diagramUrl}

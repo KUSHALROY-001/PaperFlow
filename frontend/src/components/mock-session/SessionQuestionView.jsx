@@ -39,6 +39,11 @@ export default function SessionQuestionView({
                 {q.topic}
               </span>
             )}
+            {q.subtopic && (
+              <span className="text-xs text-sky-600 dark:text-sky-400 bg-sky-500/10 border border-sky-500/20 px-3 py-1 rounded-full font-semibold">
+                {q.subtopic}
+              </span>
+            )}
           </div>
           <button
             type="button"
@@ -57,6 +62,7 @@ export default function SessionQuestionView({
         <div className="mb-8">
           <QuestionContent
             text={q.text}
+            passage={q.passage}
             hasCode={q.hasCode}
             codeLanguage={q.codeLanguage}
             codeSnippet={q.codeSnippet}

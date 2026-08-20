@@ -63,9 +63,12 @@ export function mapQuestion(question) {
     id: question.id,
     questionNo: question.question_no,
     topic: question.topic || "Untitled",
+    subtopic: question.subtopic || null,
+    passage: question.passage || null,
     confidence: question.confidence || 100,
     status: normalizedStatus,
     text: question.question_text,
+    explanation: question.explanation || null,
     sourceLine: question.source_page
       ? `Page ${question.source_page}`
       : "Manual entry",

@@ -334,6 +334,8 @@ export async function listPlayableQuestions(mockTestId, topics) {
       mock_test_id,
       "questionNo",
       topic,
+      subtopic,
+      passage,
       text,
       options,
       "correctOptionIndex",

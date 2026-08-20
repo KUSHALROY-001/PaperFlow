@@ -263,8 +263,15 @@ export default function QuestionForm({
         <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">
           Live Preview
         </div>
+        {selected.subtopic && (
+          <div className="mb-2 inline-flex items-center rounded-full bg-sky-500/10 border border-sky-500/20 px-3 py-1 text-xs font-semibold text-sky-600 dark:text-sky-400">
+            {selected.subtopic}
+          </div>
+        )}
         <QuestionContent
           text={selected.text}
+          passage={selected.passage}
+          explanation={selected.explanation}
           hasCode={selected.hasCode}
           codeLanguage={selected.codeLanguage}
           codeSnippet={selected.codeSnippet}
@@ -276,15 +283,21 @@ export default function QuestionForm({
           {selected.diagramUrl && (
             <button
               type="button"
-              disabled={isViewer}
-              onClick={() => !isViewer && setIsCropModalOpen(true)}
+              disabled={isViewer || !selected.diagramOriginalUrl}
+              onClick={() =>
+                !isViewer &&
+                selected.diagramOriginalUrl &&
+                setIsCropModalOpen(true)
+              }
               title={
                 isViewer
                   ? "Editor role is required to edit the crop"
-                  : undefined
+                  : !selected.diagramOriginalUrl
+                    ? "This diagram has no original image saved - re-extract from the original PDF to get one"
+                    : undefined
               }
               className={`flex items-center gap-1.5 text-xs font-bold transition-all ${
-                isViewer
+                isViewer || !selected.diagramOriginalUrl
                   ? "text-muted-foreground/40 cursor-not-allowed opacity-50"
                   : "text-orange-500 hover:underline"
               }`}
@@ -330,7 +343,8 @@ export default function QuestionForm({
           key={selected.id}
           questionId={selected.id}
           mockTestId={mockTestId}
-          diagramUrl={selected.diagramUrl}
+          diagramOriginalUrl={selected.diagramOriginalUrl}
+          hasManualCrop={selected.hasManualCrop}
           onClose={() => setIsCropModalOpen(false)}
         />
       )}

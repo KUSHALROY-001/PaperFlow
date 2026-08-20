@@ -192,6 +192,11 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
                   <span className="rounded-full bg-muted border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
                     {question.topic}
                   </span>
+                  {question.subtopic && (
+                    <span className="rounded-full bg-sky-500/10 border border-sky-500/20 px-3 py-1 text-xs font-semibold text-sky-600 dark:text-sky-400">
+                      {question.subtopic}
+                    </span>
+                  )}
                 </div>
                 <Link
                   to={`/cluster/${metadata.clusterId}/mock/${metadata.mockTestId}/editor?qId=${question.id}`}
@@ -204,6 +209,8 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
 
               <QuestionContent
                 text={question.text}
+                passage={question.passage}
+                explanation={question.explanation}
                 hasCode={question.hasCode}
                 codeLanguage={question.codeLanguage}
                 codeSnippet={question.codeSnippet}

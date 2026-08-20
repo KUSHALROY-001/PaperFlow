@@ -91,26 +91,27 @@ export async function searchQuestions(
     `
     SELECT
       q.id,
-      q.mock_test_id,
-      q.question_no,
+      q.mock_test_id AS "mockTestId",
+      q.question_no AS "questionNo",
       q.topic,
       q.subtopic,
-      q.question_text,
+      q.passage,
+      q.question_text AS "text",
       q.explanation,
-      q.question_type,
-      q.correct_option_indexes,
-      q.marks_per_correct,
-      q.negative_marks_per_wrong,
-      q.has_code,
-      q.code_language,
-      q.code_snippet,
+      q.question_type AS "questionType",
+      q.correct_option_indexes AS "correctOptionIndexes",
+      q.marks_per_correct AS "marksPerCorrect",
+      q.negative_marks_per_wrong AS "negativeMarksPerWrong",
+      q.has_code AS "hasCode",
+      q.code_language AS "codeLanguage",
+      q.code_snippet AS "codeSnippet",
       q.status,
       q.confidence,
-      q.created_at,
-      q.source_question_id,
-      c.id AS cluster_id,
-      c.name AS cluster_name,
-      mt.name AS mock_test_name,
+      q.created_at AS "createdAt",
+      q.source_question_id AS "sourceQuestionId",
+      c.id AS "clusterId",
+      c.name AS "clusterName",
+      mt.name AS "mockTestName",
       -- Phase 2: "used in N other tests" - a direct lookup on the
       -- source_question_id FK (questions_source_question_id_idx from
       -- migration 020 makes this an index scan, not a table scan,
@@ -122,13 +123,13 @@ export async function searchQuestions(
         SELECT count(DISTINCT q2.mock_test_id)
         FROM questions q2
         WHERE q2.source_question_id = q.id
-      ) AS used_in_count,
+      ) AS "usedInCount",
       -- Phase 2: provenance the other direction - if THIS question is
       -- itself a copy, show what it was copied from ("Copied from Q12 in
       -- JECA Physics 2024"). Left-joined below; NULL on both when this
       -- question was never copied (the common case).
-      sq.question_no AS source_question_no,
-      smt.name AS source_mock_test_name,
+      sq.question_no AS "sourceQuestionNo",
+      smt.name AS "sourceMockTestName",
       -- Phase 2: basic duplicate flag. Scoped to the SAME topic only (a
       -- workspace-wide text comparison would flag generic exam
       -- boilerplate - "Which of the following is true?" - across
@@ -156,7 +157,7 @@ export async function searchQuestions(
             AND q3.id != q.id
             AND similarity(q3.question_text, q.question_text) > 0.45
         )
-      END AS is_possible_duplicate,
+      END AS "isPossibleDuplicate",
       COALESCE(
         (
           SELECT jsonb_agg(

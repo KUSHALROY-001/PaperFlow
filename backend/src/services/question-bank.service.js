@@ -17,7 +17,7 @@ const QUESTION_TYPE_VALUES = ["single", "multi"];
 // use base64 opacity for, not because created_at/id are sensitive.
 function encodeCursor(row) {
   return Buffer.from(
-    JSON.stringify({ createdAt: row.created_at, id: row.id }),
+    JSON.stringify({ createdAt: row.createdAt, id: row.id }),
   ).toString("base64");
 }
 

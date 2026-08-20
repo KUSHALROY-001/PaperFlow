@@ -7,7 +7,10 @@ function serializeSide(row, prefix) {
   return {
     questionId: row[`${prefix}_id`],
     questionNo: row[`${prefix}_no`],
+    subtopic: row[`${prefix}_subtopic`],
+    passage: row[`${prefix}_passage`],
     text: row[`${prefix}_text`],
+    explanation: row[`${prefix}_explanation`],
     hasCode: row[`${prefix}_has_code`],
     codeLanguage: row[`${prefix}_code_language`],
     codeSnippet: row[`${prefix}_code_snippet`],

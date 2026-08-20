@@ -12,9 +12,16 @@ function QuestionSide({ question, onKeep, disabled, side }) {
       >
         {question.mockTestName} · Q{question.questionNo}
       </Link>
+      {question.subtopic && (
+        <span className="mb-3 inline-flex w-fit items-center rounded-full bg-sky-500/10 border border-sky-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-sky-600 dark:text-sky-400">
+          {question.subtopic}
+        </span>
+      )}
       <div className="flex-1">
         <QuestionContent
           text={question.text}
+          passage={question.passage}
+          explanation={question.explanation}
           hasCode={question.hasCode}
           codeLanguage={question.codeLanguage}
           codeSnippet={question.codeSnippet}

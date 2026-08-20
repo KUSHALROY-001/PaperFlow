@@ -119,8 +119,24 @@ export default function SessionResultsView({
                       <XCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
                     )}
                     <div>
+                      {(rq.topic || rq.subtopic) && (
+                        <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
+                          {rq.topic && (
+                            <span className="text-[11px] font-semibold text-muted-foreground bg-muted border border-border px-2 py-0.5 rounded-full">
+                              {rq.topic}
+                            </span>
+                          )}
+                          {rq.subtopic && (
+                            <span className="text-[11px] font-semibold text-sky-600 dark:text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded-full">
+                              {rq.subtopic}
+                            </span>
+                          )}
+                        </div>
+                      )}
                       <QuestionContent
                         text={rq.text}
+                        passage={rq.passage}
+                        explanation={rq.explanation}
                         hasCode={rq.hasCode}
                         codeLanguage={rq.codeLanguage}
                         codeSnippet={rq.codeSnippet}

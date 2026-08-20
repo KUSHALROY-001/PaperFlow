@@ -275,6 +275,8 @@ export async function listQuestionsWithAnswersForAttempt(
       q.id AS question_id,
       q.question_no,
       q.topic,
+      q.subtopic,
+      q.passage,
       q.question_text,
       q.explanation,
       q.question_type,

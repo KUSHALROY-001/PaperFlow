@@ -175,6 +175,8 @@ export async function startAttempt({
         questionId: question.questionId,
         questionNo: question.questionNo,
         topic: question.topic,
+        subtopic: question.subtopic,
+        passage: question.passage,
         text: question.text,
         options: question.options,
         questionType: question.questionType,
@@ -427,10 +429,12 @@ export async function getAttempt({
       questionType: row.question_type,
       options: row.options,
       // Unlike correctOptionIndexes/explanation/isCorrect/marksAwarded
-      // below, these two are never gated on isSubmitted - they describe
+      // below, these are never gated on isSubmitted - they describe
       // how to DISPLAY the question body, not the answer key, so there's
       // nothing to leak by including them while an attempt is still in
       // progress.
+      subtopic: row.subtopic,
+      passage: row.passage,
       hasCode: row.has_code,
       codeLanguage: row.code_language,
       codeSnippet: row.code_snippet,
