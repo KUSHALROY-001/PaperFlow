@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, Check, Search, X } from "lucide-react";
 import { api } from "@/lib/api";
+import { SkeletonRowList } from "@/components/ui/skeleton-row";
 
 const fieldClass =
   "w-full px-3 py-2 text-sm rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30";
@@ -112,9 +113,7 @@ export default function AddToTestModal({
 
         <div className="max-h-64 overflow-y-auto space-y-1.5 mb-4">
           {isLoading && (
-            <p className="text-xs text-muted-foreground py-4 text-center">
-              Loading mock tests...
-            </p>
+            <SkeletonRowList count={4} className="border-0 rounded-none bg-transparent space-y-1.5" />
           )}
           {!isLoading && filtered.length === 0 && (
             <p className="text-xs text-muted-foreground py-4 text-center">

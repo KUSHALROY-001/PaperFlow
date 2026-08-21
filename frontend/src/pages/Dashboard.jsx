@@ -11,6 +11,7 @@ export default function Dashboard() {
   const {
     showModal,
     setShowModal,
+    isLoading,
     error,
     displayClusters,
     activeJobs,
@@ -44,17 +45,17 @@ export default function Dashboard() {
         </div>
       )}
 
-      <StatCardGrid statCards={statCards} />
+      <StatCardGrid statCards={statCards} isLoading={isLoading} />
 
       <BannerCard onCreateCluster={() => setShowModal(true)} />
 
       {/* Main 2-Column Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <RecentClustersList clusters={displayClusters} />
+        <RecentClustersList clusters={displayClusters} isLoading={isLoading} />
 
         {/* Right Column: Active Jobs & Quick Actions */}
         <div className="space-y-6">
-          <ActiveJobsPanel activeJobs={activeJobs} />
+          <ActiveJobsPanel activeJobs={activeJobs} isLoading={isLoading} />
           <QuickActionsPanel onNewCluster={() => setShowModal(true)} />
         </div>
       </div>

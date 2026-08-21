@@ -1,3 +1,5 @@
+import { Skeleton } from "@/components/ui/skeleton";
+
 // Extracted from pages/Dashboard.jsx — no behavior changes.
 
 function SparklineWave({ color = "#ea580c" }) {
@@ -14,7 +16,30 @@ function SparklineWave({ color = "#ea580c" }) {
   );
 }
 
-export default function StatCardGrid({ statCards }) {
+export default function StatCardGrid({ statCards, isLoading }) {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div
+            key={index}
+            className="surface-card rounded-2xl p-4 sm:p-5 border border-border flex flex-col justify-between"
+          >
+            <Skeleton className="w-9 h-9 rounded-xl" />
+            <div className="mt-4 flex items-end justify-between">
+              <div className="space-y-1.5">
+                <Skeleton className="h-7 w-12" />
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-2.5 w-24" />
+              </div>
+              <Skeleton className="w-16 h-8 rounded" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {statCards.map((card) => (

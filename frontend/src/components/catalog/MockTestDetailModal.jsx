@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useSubscriptions } from "@/lib/useSubscriptions";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function MockTestDetailModal({
   mockTestId,
@@ -101,8 +102,32 @@ export default function MockTestDetailModal({
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-24">
-            <div className="w-8 h-8 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" />
+          <div className="p-5 space-y-5">
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+            <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-border bg-card">
+              <div className="flex items-center gap-3 flex-1">
+                <Skeleton className="w-10 h-10 rounded-xl shrink-0" />
+                <div className="space-y-1.5 flex-1">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+              </div>
+              <Skeleton className="h-9 w-24 rounded-xl shrink-0" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl border border-border bg-card p-3.5 space-y-2">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-6 w-12" />
+              </div>
+              <div className="rounded-xl border border-border bg-card p-3.5 space-y-2">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-6 w-16" />
+              </div>
+            </div>
+            <Skeleton className="h-12 w-full rounded-xl" />
           </div>
         ) : error || !mockTest ? (
           <div className="px-5 py-10 text-center text-sm text-red-500">

@@ -1,12 +1,15 @@
-import { Users, Loader2 } from "lucide-react";
+import { Users } from "lucide-react";
 import SubmissionCard from "./SubmissionCard";
 import ScrollToTopButton from "../shared/ScrollToTopButton";
+import { SkeletonCard } from "@/components/ui/skeleton-card";
 
 export default function SubmissionsTab({ submissions, isLoading }) {
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
-        <Loader2 className="w-4 h-4 animate-spin" /> Loading submissions…
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <SkeletonCard key={index} showIcon={false} lines={2} />
+        ))}
       </div>
     );
   }

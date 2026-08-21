@@ -5,6 +5,7 @@ import { Search, Clock, FileText, UserCheck } from "lucide-react";
 import { api } from "@/lib/api";
 import { useSubscriptions } from "@/lib/useSubscriptions";
 import MockTestDetailModal from "../catalog/MockTestDetailModal";
+import { SkeletonCard } from "@/components/ui/skeleton-card";
 
 // Shared by PublicCatalog.jsx (institute mode AND global mode) and
 // PublicMockTests.jsx's "Public Mock Tests" tab - the exact same
@@ -154,8 +155,10 @@ export default function CatalogBrowser({
       )}
 
       {listingQuery.isLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="w-8 h-8 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <SkeletonCard key={index} showIcon={false} lines={2} />
+          ))}
         </div>
       ) : mockTests.length === 0 ? (
         <div className="text-center py-20">

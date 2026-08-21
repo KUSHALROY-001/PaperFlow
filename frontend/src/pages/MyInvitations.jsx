@@ -5,6 +5,7 @@ import { CheckCircle, Clock, Mail, Users } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 import { formatTimeAgo } from "@/lib/date";
+import { SkeletonRowList } from "@/components/ui/skeleton-row";
 
 const roleLabels = {
   admin: "Admin",
@@ -60,9 +61,7 @@ export default function MyInvitations() {
         </p>
       </div>
 
-      {isLoading && (
-        <p className="text-xs text-muted-foreground">Loading invitations...</p>
-      )}
+      {isLoading && <SkeletonRowList count={3} showAvatar />}
 
       {error && (
         <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs font-medium text-red-500">

@@ -6,6 +6,9 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 import MockTestDetailModal from "./MockTestDetailModal";
 
+import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonRowList } from "@/components/ui/skeleton-row";
+
 const PUBLIC_ORIGIN = window.location.origin;
 
 export default function CatalogSettingsPanel() {
@@ -78,8 +81,18 @@ export default function CatalogSettingsPanel() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-24">
-        <div className="w-8 h-8 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" />
+      <div className="space-y-6 max-w-4xl flex flex-col mx-auto">
+        <div className="surface-card rounded-2xl p-5 border border-border space-y-3">
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-10 w-full rounded-xl" />
+        </div>
+        <div className="surface-card rounded-2xl border border-border overflow-hidden">
+          <div className="px-5 py-4 border-b border-border space-y-2">
+            <Skeleton className="h-4 w-36" />
+            <Skeleton className="h-3 w-64" />
+          </div>
+          <SkeletonRowList count={4} className="border-0 rounded-none bg-transparent" />
+        </div>
       </div>
     );
   }

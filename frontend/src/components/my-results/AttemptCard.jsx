@@ -12,6 +12,7 @@ import { scorePercent, formatDateTime } from "@/hooks/useMyResults";
 import TopicBreakdownGrid from "./TopicBreakdownGrid";
 import QuestionReviewList from "./QuestionReviewList";
 import { ConfirmDialog } from "@/components/design-system/ConfirmDialog";
+import { SkeletonRowList } from "@/components/ui/skeleton-row";
 
 export default function AttemptCard({ attempt, onDeleteAttempt }) {
   const [expanded, setExpanded] = useState(false);
@@ -173,9 +174,7 @@ export default function AttemptCard({ attempt, onDeleteAttempt }) {
           )}
 
           {isSubmitted && loadingReview && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin" /> Loading review…
-            </div>
+            <SkeletonRowList count={3} className="bg-card border-border" />
           )}
 
           {isSubmitted && reviewError && (

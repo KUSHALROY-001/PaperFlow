@@ -1,7 +1,33 @@
-import { Loader2, AlertTriangle, Copy } from "lucide-react";
+import { AlertTriangle, Copy } from "lucide-react";
 import { useDuplicates } from "@/hooks/useDuplicates";
 import DuplicatePairCard from "../components/duplicates/DuplicatePairCard";
 import DuplicatesIntroCard from "../components/duplicates/DuplicatesIntroCard";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Mirrors DuplicatePairCard's real two-sides-side-by-side layout - a
+// generic centered spinner gave no sense of what's actually loading here
+// (a comparison, not a list), so the skeleton mimics that shape directly.
+function DuplicatePairCardSkeleton() {
+  return (
+    <div className="flex flex-col sm:flex-row gap-3">
+      {[0, 1].map((side) => (
+        <div
+          key={side}
+          className="flex-1 min-w-0 surface-card rounded-2xl border border-border p-4 sm:p-5"
+        >
+          <Skeleton className="h-3 w-40 mb-3" />
+          <Skeleton className="h-5 w-24 rounded-full mb-3" />
+          <div className="space-y-2">
+            <Skeleton className="h-3.5 w-full" />
+            <Skeleton className="h-3.5 w-5/6" />
+            <Skeleton className="h-3.5 w-2/3" />
+          </div>
+          <Skeleton className="h-9 w-full rounded-xl mt-4" />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function Duplicates() {
   const { pairs, loading, loadError, resolvingId, resolveError, resolve } =
@@ -9,9 +35,10 @@ export default function Duplicates() {
 
   if (loading) {
     return (
-      <div className="p-6 max-w-full mx-auto flex items-center justify-center gap-2 text-muted-foreground">
-        <Loader2 className="w-5 h-5 animate-spin" /> Loading duplicate
-        questions…
+      <div className="p-2 sm:p-6 max-w-full mx-auto space-y-5">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <DuplicatePairCardSkeleton key={index} />
+        ))}
       </div>
     );
   }

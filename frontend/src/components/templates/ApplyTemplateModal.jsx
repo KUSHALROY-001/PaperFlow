@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CheckCircle } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ApplyTemplateModal({ template, onClose, onApplied }) {
   const { isViewer } = useAuth();
@@ -75,9 +76,7 @@ export default function ApplyTemplateModal({ template, onClose, onApplied }) {
           Cluster
         </label>
         {clustersLoading ? (
-          <p className="text-xs text-muted-foreground mb-4">
-            Loading clusters...
-          </p>
+          <Skeleton className="h-9 w-full rounded-xl mb-4" />
         ) : clusters.length === 0 ? (
           <p className="text-xs text-amber-500 mb-4">
             You need a cluster first — create one from the Clusters page.

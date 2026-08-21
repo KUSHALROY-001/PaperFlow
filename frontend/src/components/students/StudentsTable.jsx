@@ -1,4 +1,5 @@
 import StudentRow from "./StudentRow";
+import { SkeletonRowList } from "@/components/ui/skeleton-row";
 
 export default function StudentsTable({
   students,
@@ -8,6 +9,19 @@ export default function StudentsTable({
   onAddToCohort,
   onRemoveFromCohort,
 }) {
+  if (isLoading) {
+    return (
+      <div className="surface-card rounded-2xl border border-border">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-border flex items-center justify-between sm:justify-start rounded-t-2xl">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-foreground">Roster</span>
+          </div>
+        </div>
+        <SkeletonRowList count={5} showAvatar className="border-0 rounded-none bg-transparent" />
+      </div>
+    );
+  }
+
   return (
     <div className="surface-card rounded-2xl border border-border">
       <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-border flex items-center justify-between sm:justify-start rounded-t-2xl">
@@ -18,12 +32,7 @@ export default function StudentsTable({
           </span>
         </div>
       </div>
-      {isLoading && (
-        <div className="px-6 py-6 text-xs text-muted-foreground">
-          Loading students...
-        </div>
-      )}
-      {!isLoading && students.length === 0 && (
+      {students.length === 0 && (
         <div className="px-6 py-10 text-center">
           <p className="text-sm font-bold text-foreground mb-1">
             No students yet

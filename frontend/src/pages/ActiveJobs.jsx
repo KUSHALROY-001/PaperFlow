@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CheckCircle, Clock, Zap } from "lucide-react";
 import { api } from "@/lib/api";
 import { formatClockTime } from "@/lib/date";
+import { SkeletonCard } from "@/components/ui/skeleton-card";
+import { SkeletonRowList } from "@/components/ui/skeleton-row";
 
 function jobPercent(job) {
   if (job.status === "completed") return 100;
@@ -49,8 +51,9 @@ export default function ActiveJobs() {
           </h2>
         </div>
         {isLoading ? (
-          <div className="surface-card rounded-2xl p-8 border border-border text-sm text-muted-foreground">
-            Loading jobs...
+          <div className="space-y-4">
+            <SkeletonCard showIcon={true} lines={2} />
+            <SkeletonCard showIcon={true} lines={2} />
           </div>
         ) : running.length === 0 ? (
           <div className="surface-card rounded-2xl p-12 border border-border text-center">
@@ -117,7 +120,9 @@ export default function ActiveJobs() {
         <h2 className="text-lg font-extrabold text-foreground tracking-tight mb-4">
           Recently Completed
         </h2>
-        {completed.length === 0 ? (
+        {isLoading ? (
+          <SkeletonRowList count={3} showAvatar />
+        ) : completed.length === 0 ? (
           <div className="surface-card rounded-2xl p-8 border border-border text-sm text-muted-foreground">
             No completed processing jobs yet.
           </div>

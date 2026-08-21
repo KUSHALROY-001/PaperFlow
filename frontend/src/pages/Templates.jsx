@@ -10,6 +10,7 @@ import TemplatePreviewModal from "../components/templates/TemplatePreviewModal";
 import ApplyTemplateModal from "../components/templates/ApplyTemplateModal";
 import CreateTemplateModal from "../components/templates/CreateTemplateModal";
 import { ConfirmDialog } from "../components/design-system/ConfirmDialog";
+import { SkeletonCard } from "@/components/ui/skeleton-card";
 
 export default function Templates() {
   const navigate = useNavigate();
@@ -52,11 +53,6 @@ export default function Templates() {
             Pre-built formats for popular exams — apply to any cluster
             instantly.
           </p>
-          {isLoading && (
-            <p className="text-xs text-muted-foreground mt-1">
-              Loading templates...
-            </p>
-          )}
           {error && (
             <p className="text-xs text-red-500 mt-1">{error.message}</p>
           )}
@@ -149,18 +145,26 @@ export default function Templates() {
         )}
 
       {/* All templates grid */}
-      <div className="grid md:grid-cols-2 gap-4">
-        {filtered.map((t) => (
-          <TemplateCard
-            key={t.id}
-            template={t}
-            onPreview={setPreview}
-            onApply={setApplyTarget}
-            onEdit={setEditTarget}
-            onDelete={setDeleteTarget}
-          />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="grid md:grid-cols-2 gap-4">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <SkeletonCard key={index} showIcon={true} lines={3} />
+          ))}
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 gap-4">
+          {filtered.map((t) => (
+            <TemplateCard
+              key={t.id}
+              template={t}
+              onPreview={setPreview}
+              onApply={setApplyTarget}
+              onEdit={setEditTarget}
+              onDelete={setDeleteTarget}
+            />
+          ))}
+        </div>
+      )}
 
       {preview && (
         <TemplatePreviewModal

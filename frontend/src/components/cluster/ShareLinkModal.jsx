@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { X, Share2, Copy, Check, Loader2, Trash2, Link2 } from "lucide-react";
 import { formatDate } from "@/lib/date";
 import { useShareLink, buildShareUrl } from "@/hooks/useShareLink";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ShareLinkModal({ isOpen, onClose, mockTestId }) {
   const {
@@ -77,8 +78,13 @@ export default function ShareLinkModal({ isOpen, onClose, mockTestId }) {
         )}
 
         {loading && (
-          <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
-            <Loader2 className="w-4 h-4 animate-spin" /> Loading…
+          <div className="rounded-xl border border-border bg-card p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-9 flex-1 rounded-lg" />
+              <Skeleton className="w-9 h-9 shrink-0 rounded-lg" />
+              <Skeleton className="w-9 h-9 shrink-0 rounded-lg" />
+            </div>
+            <Skeleton className="h-3 w-32" />
           </div>
         )}
 

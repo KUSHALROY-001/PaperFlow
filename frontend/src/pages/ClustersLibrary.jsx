@@ -16,8 +16,55 @@ import CreateClusterModal from "../components/CreateClusterModal";
 import CardActionMenu from "../components/design-system/CardActionMenu";
 import RenameModal from "../components/design-system/RenameModal";
 import { ConfirmDialog } from "../components/design-system/ConfirmDialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 import { formatTimeAgo } from "@/lib/date";
+
+// Mirrors the real cluster card's exact silhouette below (icon box top
+// left, badge pill top right, title line, description line, footer row
+// with a date and an "Open" pill) rather than a generic block - per the
+// implementation plan's core point, a skeleton should mimic the real
+// content structure it's standing in for, not just occupy its space.
+function ClusterCardSkeleton() {
+  return (
+    <div className="surface-card rounded-2xl p-5 border border-border flex flex-col justify-between">
+      <div>
+        <div className="flex items-start justify-between mb-3">
+          <Skeleton className="w-10 h-10 rounded-xl" />
+          <Skeleton className="h-6 w-24 rounded-full" />
+        </div>
+        <Skeleton className="h-4 w-3/4 mb-2" />
+        <Skeleton className="h-3 w-full mb-1" />
+        <Skeleton className="h-3 w-2/3 mb-3" />
+      </div>
+      <div className="flex items-center justify-between pt-3 border-t border-border/60 mt-2">
+        <Skeleton className="h-3 w-20" />
+        <Skeleton className="h-7 w-16 rounded-lg" />
+      </div>
+    </div>
+  );
+}
+
+// Matches the real list-view row's grid-cols-[2fr_1fr_1fr_auto] layout
+// exactly, rather than reusing ClusterCardSkeleton's card shape stacked
+// vertically - a card silhouette in the list view would look mismatched
+// against the compact rows it's replacing.
+function ClusterRowSkeleton() {
+  return (
+    <div className="grid min-w-160 grid-cols-[2fr_1fr_1fr_auto] gap-4 items-center px-5 py-4 border-b border-border/50 last:border-0">
+      <div className="flex items-center gap-3 min-w-0">
+        <Skeleton className="w-8 h-8 rounded-lg shrink-0" />
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <Skeleton className="h-3.5 w-1/2" />
+          <Skeleton className="h-3 w-3/4" />
+        </div>
+      </div>
+      <Skeleton className="h-3.5 w-8" />
+      <Skeleton className="h-3.5 w-16" />
+      <Skeleton className="h-7 w-16 rounded-lg justify-self-end" />
+    </div>
+  );
+}
 
 export default function ClustersLibrary() {
   const navigate = useNavigate();
@@ -82,13 +129,12 @@ export default function ClustersLibrary() {
           <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
             Clusters Library
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            {clusters.length} cluster{clusters.length !== 1 ? "s" : ""} /{" "}
-            {totalMockTests} mock test{totalMockTests !== 1 ? "s" : ""}
-          </p>
-          {isLoading && (
-            <p className="text-xs text-muted-foreground mt-1">
-              Loading clusters...
+          {isLoading ? (
+            <Skeleton className="h-4 w-40 mt-1.5" />
+          ) : (
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              {clusters.length} cluster{clusters.length !== 1 ? "s" : ""} /{" "}
+              {totalMockTests} mock test{totalMockTests !== 1 ? "s" : ""}
             </p>
           )}
         </div>
@@ -146,6 +192,24 @@ export default function ClustersLibrary() {
       {error && (
         <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-xs font-medium text-red-500">
           {error.message}
+        </div>
+      )}
+
+      {isLoading && (
+        <div
+          className={
+            view === "grid"
+              ? "grid md:grid-cols-2 lg:grid-cols-3 gap-4"
+              : "surface-card rounded-2xl overflow-x-auto border border-border"
+          }
+        >
+          {Array.from({ length: 6 }).map((_, index) =>
+            view === "grid" ? (
+              <ClusterCardSkeleton key={index} />
+            ) : (
+              <ClusterRowSkeleton key={index} />
+            ),
+          )}
         </div>
       )}
 
@@ -224,7 +288,7 @@ export default function ClustersLibrary() {
 
       {view === "list" && filtered.length > 0 && (
         <div className="surface-card rounded-2xl overflow-x-auto border border-border">
-          <div className="grid min-w-[40rem] grid-cols-[2fr_1fr_1fr_auto] gap-4 px-5 py-3 bg-muted/40 border-b border-border text-xs font-bold text-muted-foreground uppercase tracking-wide">
+          <div className="grid min-w-160 grid-cols-[2fr_1fr_1fr_auto] gap-4 px-5 py-3 bg-muted/40 border-b border-border text-xs font-bold text-muted-foreground uppercase tracking-wide">
             <span>Cluster</span>
             <span>Mock Tests</span>
             <span>Created</span>
@@ -237,7 +301,7 @@ export default function ClustersLibrary() {
               <div
                 key={cluster.id}
                 onClick={() => navigate(`/cluster/${cluster.id}`)}
-                className="grid min-w-[40rem] grid-cols-[2fr_1fr_1fr_auto] gap-4 items-center px-5 py-4 border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors last:border-0 group"
+                className="grid min-w-160 grid-cols-[2fr_1fr_1fr_auto] gap-4 items-center px-5 py-4 border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors last:border-0 group"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 bg-orange-500/15 text-orange-500 rounded-lg flex items-center justify-center shrink-0">

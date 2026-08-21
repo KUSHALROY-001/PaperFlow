@@ -6,6 +6,31 @@ import BankFilters from "../components/question-bank/BankFilters";
 import BankQuestionCard from "../components/question-bank/BankQuestionCard";
 import AddToTestModal from "../components/question-bank/AddToTestModal";
 import QuestionBankIntroCard from "../components/question-bank/QuestionBankIntroCard";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Mirrors BankQuestionCard's real header row (checkbox, Q# label, status
+// badge, topic badge) plus a few question-text-shaped lines - matching
+// the actual card's silhouette rather than a generic block, same
+// approach as ClustersLibrary.jsx's ClusterCardSkeleton.
+function BankQuestionCardSkeleton() {
+  return (
+    <div className="surface-card rounded-2xl border border-border p-4 sm:p-5">
+      <div className="flex items-start gap-3 mb-3">
+        <Skeleton className="mt-1 w-4 h-4 rounded shrink-0" />
+        <div className="flex items-center gap-2 flex-wrap">
+          <Skeleton className="h-3.5 w-8" />
+          <Skeleton className="h-5 w-20 rounded-full" />
+          <Skeleton className="h-5 w-16 rounded-full" />
+        </div>
+      </div>
+      <div className="space-y-2 pl-7">
+        <Skeleton className="h-3.5 w-full" />
+        <Skeleton className="h-3.5 w-5/6" />
+        <Skeleton className="h-3.5 w-2/3" />
+      </div>
+    </div>
+  );
+}
 
 export default function QuestionBank() {
   const { isViewer } = useAuth();
@@ -89,8 +114,10 @@ export default function QuestionBank() {
       )}
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="w-8 h-8 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" />
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <BankQuestionCardSkeleton key={index} />
+          ))}
         </div>
       ) : questions.length === 0 ? (
         <EmptyState

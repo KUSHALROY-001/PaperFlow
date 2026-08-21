@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle, Layers, ListTodo, Loader2 } from "lucide-react";
+import { AlertCircle, Layers, ListTodo } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 import { useReviewQueue } from "@/hooks/useReviewQueue";
@@ -10,6 +10,24 @@ import QueueQuestionCard from "../components/review-queue/QueueQuestionCard";
 import QueueListView from "../components/review-queue/QueueListView";
 import QueueEmptyState from "../components/review-queue/QueueEmptyState";
 import ReviewQueueIntroCard from "../components/review-queue/ReviewQueueIntroCard";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Mirrors QueueListView's real row shape (checkbox, question-text
+// preview line, confidence badge) - shown regardless of viewMode since
+// the queue's shape isn't known until data actually arrives, and this is
+// a reasonable stand-in either way.
+function QueueRowSkeleton() {
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-border px-3 py-2.5">
+      <Skeleton className="mt-0.5 h-4 w-4 rounded shrink-0" />
+      <div className="flex-1 min-w-0 space-y-1.5">
+        <Skeleton className="h-3.5 w-full" />
+        <Skeleton className="h-3.5 w-2/3" />
+      </div>
+      <Skeleton className="h-5 w-14 rounded-full shrink-0" />
+    </div>
+  );
+}
 
 const SORT_OPTIONS = [
   { value: "confidence_asc", label: "Lowest confidence first" },
@@ -311,8 +329,10 @@ export default function ReviewQueue() {
       )}
 
       {isLoading ? (
-        <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
-          <Loader2 className="w-4 h-4 animate-spin" /> Loading queue...
+        <div className="space-y-1.5">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <QueueRowSkeleton key={index} />
+          ))}
         </div>
       ) : isQueueEmpty || (viewMode === "focus" && isAtEnd) ? (
         <QueueEmptyState hasFilters={hasActiveFilters} />

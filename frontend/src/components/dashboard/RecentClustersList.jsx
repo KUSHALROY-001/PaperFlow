@@ -3,12 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Clock, FolderOpen, Plus } from "lucide-react";
 import { formatTimeAgo } from "@/lib/date";
+import { Skeleton } from "@/components/ui/skeleton";
 import CardActionMenu from "../design-system/CardActionMenu";
 import RenameModal from "../design-system/RenameModal";
 import { ConfirmDialog } from "../design-system/ConfirmDialog";
 import { api } from "@/lib/api";
 
-export default function RecentClustersList({ clusters }) {
+export default function RecentClustersList({ clusters, isLoading }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -48,7 +49,33 @@ export default function RecentClustersList({ clusters }) {
       </div>
 
       <div className="space-y-3">
-        {clusters.length === 0 ? (
+        {isLoading ? (
+          Array.from({ length: 3 }).map((_, index) => (
+            <div
+              key={index}
+              className="surface-card rounded-2xl p-4 sm:p-5 border border-border space-y-4"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3 min-w-0 flex-1">
+                  <Skeleton className="w-10 h-10 rounded-xl shrink-0" />
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <Skeleton className="h-4 w-1/2" />
+                    <Skeleton className="h-3 w-3/4" />
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-6 w-16 rounded-lg" />
+                <Skeleton className="h-6 w-16 rounded-lg" />
+                <Skeleton className="h-6 w-16 rounded-lg" />
+              </div>
+              <div className="flex items-center justify-between border-t border-border/60 pt-3">
+                <Skeleton className="h-3 w-32" />
+                <Skeleton className="h-7 w-16 rounded-lg" />
+              </div>
+            </div>
+          ))
+        ) : clusters.length === 0 ? (
           <div className="surface-card rounded-2xl border border-border p-8 text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-500">
               <FolderOpen className="h-7 w-7" />
@@ -120,7 +147,7 @@ export default function RecentClustersList({ clusters }) {
                   <Clock className="w-3.5 h-3.5" />
                   <span>{formatTimeAgo(cluster.updated_at)}</span>
                   <span>•</span>
-                  <span className="min-w-0 truncate sm:max-w-[150px]">
+                  <span className="min-w-0 truncate sm:max-w-37.5">
                     Latest: {cluster.latest_mock_test_name || "PYQ"}
                   </span>
                 </div>
