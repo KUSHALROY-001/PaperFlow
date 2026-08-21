@@ -33,14 +33,6 @@ export async function updateProfile(req, res) {
   res.json({ profile });
 }
 
-export async function updatePreferences(req, res) {
-  const preferences = await authService.updatePreferences(
-    req.user.id,
-    req.body,
-  );
-  res.json({ preferences });
-}
-
 export async function changePassword(req, res) {
   await authService.changePassword(req.user.id, req.body);
   res.status(204).send();

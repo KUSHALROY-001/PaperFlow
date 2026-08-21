@@ -69,7 +69,21 @@ export async function apiRequest(path, options = {}) {
   }
 
   const text = await response.text();
-  const data = text ? JSON.parse(text) : null;
+  let data;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    // The backend's error-handler.js always returns JSON (see app.js's
+    // catch-all 404 handler + errorHandler), so a non-JSON body here means
+    // something in front of it (a proxy, a dev-server crash page, etc.)
+    // returned HTML/plain text instead - showing that raw body or a raw
+    // SyntaxError to the user is exactly the kind of leak this guards.
+    throw new Error(
+      response.ok
+        ? "Received an unexpected response from the server. Please try again."
+        : `Request failed (${response.status}). Please try again.`,
+    );
+  }
 
   if (!response.ok) {
     throw new Error(data?.error?.message || "Request failed");
@@ -106,7 +120,13 @@ export const api = {
 
     if (!response.ok) {
       const text = await response.text();
-      const data = text ? JSON.parse(text) : null;
+      let data = null;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch {
+        // Same reasoning as apiRequest above - a non-JSON error body
+        // shouldn't surface as a raw parse error.
+      }
       throw new Error(data?.error?.message || "Could not generate PDF");
     }
 
@@ -570,18 +590,12 @@ export const api = {
     );
   },
 
-  // --- Settings (profile, preferences, password, account) ---
+  // --- Settings (profile, password, account) ---
   getProfile() {
     return apiRequest("/api/auth/profile");
   },
   updateProfile(payload) {
     return apiRequest("/api/auth/profile", {
-      method: "PATCH",
-      body: JSON.stringify(payload),
-    });
-  },
-  updatePreferences(payload) {
-    return apiRequest("/api/auth/preferences", {
       method: "PATCH",
       body: JSON.stringify(payload),
     });

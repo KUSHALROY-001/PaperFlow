@@ -22,8 +22,7 @@ const TYPE_OPTIONS = [
 // toggle-style filters are (plain on/off buttons elsewhere) rather than
 // introducing a new control pattern just for these two.
 function TriStateToggle({ icon: Icon, label, value, onChange }) {
-  const stateLabel =
-    value === true ? "Yes" : value === false ? "No" : "Any";
+  const stateLabel = value === true ? "Yes" : value === false ? "No" : "Any";
 
   const handleClick = () => {
     if (value === undefined) onChange(true);

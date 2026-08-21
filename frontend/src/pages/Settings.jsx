@@ -2,7 +2,6 @@ import { useSettings } from "@/hooks/useSettings";
 import SettingsHeader from "../components/settings/SettingsHeader";
 import ProfileSection from "../components/settings/ProfileSection";
 import PasswordSection from "../components/settings/PasswordSection";
-import PreferencesSection from "../components/settings/PreferencesSection";
 import DangerZoneCard from "../components/settings/DangerZoneCard";
 import DeleteAccountModal from "../components/settings/DeleteAccountModal";
 
@@ -10,6 +9,7 @@ export default function Settings() {
   const {
     isLoading,
     profileLoadError,
+    email,
     profileForm,
     setProfileForm,
     profileError,
@@ -24,10 +24,6 @@ export default function Settings() {
     passwordError,
     isSavingPassword,
     handleSavePassword,
-    prefs,
-    setPrefs,
-    isSavingPrefs,
-    handleSavePrefs,
     saved,
     showDeleteModal,
     setShowDeleteModal,
@@ -47,6 +43,7 @@ export default function Settings() {
       />
 
       <ProfileSection
+        email={email}
         profileForm={profileForm}
         setProfileForm={setProfileForm}
         profileError={profileError}
@@ -65,14 +62,6 @@ export default function Settings() {
         passwordError={passwordError}
         isSavingPassword={isSavingPassword}
         handleSavePassword={handleSavePassword}
-        saved={saved}
-      />
-
-      <PreferencesSection
-        prefs={prefs}
-        setPrefs={setPrefs}
-        isSavingPrefs={isSavingPrefs}
-        handleSavePrefs={handleSavePrefs}
         saved={saved}
       />
 

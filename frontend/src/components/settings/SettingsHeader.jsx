@@ -5,7 +5,7 @@ export default function SettingsHeader({ isLoading, profileLoadError }) {
         Settings
       </h1>
       <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-        Manage your account and preferences
+        Manage your account and profile settings
       </p>
       {isLoading && (
         <p className="text-xs text-muted-foreground mt-1">

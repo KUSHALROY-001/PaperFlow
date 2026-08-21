@@ -11,12 +11,23 @@ export async function createCluster(workspaceId, userId, body) {
   const name = requiredString(body.name, "name");
   const description = optionalString(body.description);
 
-  return clustersRepo.createCluster({
-    workspaceId,
-    createdBy: userId,
-    name,
-    description,
-  });
+  try {
+    return await clustersRepo.createCluster({
+      workspaceId,
+      createdBy: userId,
+      name,
+      description,
+    });
+  } catch (error) {
+    // 23505 = unique_violation, from the (workspace_id, name) constraint
+    // (001_initial_schema.sql) - surfaced as a normal 409 rather than a
+    // raw Postgres error, same reasoning as auth.service.js's
+    // duplicate-email handling on signup.
+    if (error.code === "23505") {
+      throw httpError(409, `A cluster named "${name}" already exists`);
+    }
+    throw error;
+  }
 }
 
 export async function getCluster(clusterId, workspaceId) {
@@ -35,11 +46,19 @@ export async function updateCluster(clusterId, workspaceId, body) {
   const descriptionProvided = body.description !== undefined;
   const description = optionalString(body.description);
 
-  const cluster = await clustersRepo.updateCluster(clusterId, workspaceId, {
-    name,
-    descriptionProvided,
-    description,
-  });
+  let cluster;
+  try {
+    cluster = await clustersRepo.updateCluster(clusterId, workspaceId, {
+      name,
+      descriptionProvided,
+      description,
+    });
+  } catch (error) {
+    if (error.code === "23505") {
+      throw httpError(409, `A cluster named "${name}" already exists`);
+    }
+    throw error;
+  }
 
   if (!cluster) {
     throw httpError(404, "Cluster not found");
@@ -95,15 +114,28 @@ export async function createMockTestInCluster(
     throw httpError(404, "Cluster not found");
   }
 
-  return clustersRepo.createMockTestInCluster({
-    workspaceId,
-    clusterId,
-    createdBy: userId,
-    name,
-    description,
-    examYear,
-    durationMinutes,
-    marksPerCorrect,
-    negativeMarksPerWrong,
-  });
+  try {
+    return await clustersRepo.createMockTestInCluster({
+      workspaceId,
+      clusterId,
+      createdBy: userId,
+      name,
+      description,
+      examYear,
+      durationMinutes,
+      marksPerCorrect,
+      negativeMarksPerWrong,
+    });
+  } catch (error) {
+    // 23505 = unique_violation, from the (cluster_id, name) constraint -
+    // same duplicate-name handling extraction-templates.service.js already
+    // does for its own mock-test-creation path.
+    if (error.code === "23505") {
+      throw httpError(
+        409,
+        `A mock test named "${name}" already exists in this cluster`,
+      );
+    }
+    throw error;
+  }
 }

@@ -1,11 +1,15 @@
 import argparse
 import json
 import time
+import traceback
 from pathlib import Path
 
 from .config import MAX_JOBS_PER_RUN, OCR_ENABLED, POLL_INTERVAL_SECONDS
 from .ai import enhance_questions_with_ai
-from .duplicate_detector import detect_duplicates_for_mock_test
+from .duplicate_detector import (
+    auto_merge_exact_duplicates_for_mock_test,
+    detect_duplicates_for_mock_test,
+)
 from .db import (
     JobCancelled,
     claim_next_job,
@@ -41,6 +45,29 @@ def local_path_from_job(job):
         raise RuntimeError("uploaded_files.metadata.localPath is missing")
 
     return Path(local_path)
+
+
+# Every RuntimeError this codebase raises itself (grep for "raise RuntimeError"
+# across worker/) is already a deliberately-worded, actionable message - a
+# missing API key, missing Tesseract install, unsupported AI_PROVIDER, etc.
+# FileNotFoundError similarly only ever comes from pdf_extract.py's own
+# "Uploaded PDF not found: ..." raise. Anything else reaching this top-level
+# handler is an exception we didn't specifically anticipate (a library
+# internal, a KeyError/AttributeError from an unexpected response shape, a
+# dropped DB connection, ...) whose message was never written with an end
+# user in mind - that's what error_message on the job ultimately becomes
+# (see ProcessingTab.jsx, which renders it verbatim in a banner to whoever
+# uploaded the file), so it needs a friendly stand-in instead.
+_SELF_DESCRIBING_ERROR_TYPES = (RuntimeError, FileNotFoundError)
+
+
+def friendly_job_error_message(error):
+    if isinstance(error, _SELF_DESCRIBING_ERROR_TYPES):
+        return str(error) or error.__class__.__name__
+    return (
+        "Processing failed unexpectedly. Try re-uploading the file, or "
+        "contact support if this keeps happening."
+    )
 
 
 def process_job(job):
@@ -255,15 +282,37 @@ def process_job(job):
             # a disk error shouldn't fail a job that otherwise succeeded.
             print(f"Failed to write diagram asset {pending_write['storage_path']}: {error}")
 
-    # Also deliberately outside the "Saving questions" transaction and
-    # only reached once that committed - scans this job's newly-inserted
-    # questions against the rest of the workspace's question bank (see
-    # duplicate_detector.py; migrations/020_duplicate_detection.sql) so a
-    # reused topic bank gets flagged incrementally, one job at a time,
-    # instead of needing a full workspace rescan on every extraction.
-    # Best-effort like the diagram writes just above: a detection failure
-    # (e.g. the pg_trgm extension missing on some environment) shouldn't
-    # fail a job whose actual questions were extracted and saved fine.
+    # Also deliberately outside the "Saving questions" transaction and only
+    # reached once that committed - first auto-merges any EXACT duplicate
+    # this job's questions form with the rest of the workspace's question
+    # bank (identical text, options, correct answers, and question type -
+    # no judgment call, so no reviewer needed), THEN runs the existing
+    # fuzzy scan for near-duplicates that genuinely do need a human's
+    # opinion. Auto-merge runs first so an exact match never even reaches
+    # the pending review queue: once merged, both slots share one
+    # content_id, and detect_duplicates_for_mock_test's own
+    # `a.content_id <> b.content_id` filter (see duplicate_detector.py)
+    # then correctly skips it. Two separate try/except blocks, not one -
+    # a failure in either shouldn't prevent the other from still running,
+    # same "best-effort" stance the diagram writes above already take.
+    try:
+        with get_connection() as connection:
+            auto_merged = auto_merge_exact_duplicates_for_mock_test(
+                connection, job["workspace_id"], job["mock_test_id"]
+            )
+        if auto_merged:
+            print(f"Auto-merged {auto_merged} exact duplicate question pair(s)")
+    except Exception as error:
+        print(f"Exact-duplicate auto-merge failed for job {job['id']}: {error}")
+
+    # Scans this job's newly-inserted questions against the rest of the
+    # workspace's question bank (see duplicate_detector.py;
+    # migrations/020_duplicate_detection.sql) so a reused topic bank gets
+    # flagged incrementally, one job at a time, instead of needing a full
+    # workspace rescan on every extraction. Best-effort like the diagram
+    # writes just above: a detection failure (e.g. the pg_trgm extension
+    # missing on some environment) shouldn't fail a job whose actual
+    # questions were extracted and saved fine.
     try:
         with get_connection() as connection:
             new_pairs = detect_duplicates_for_mock_test(
@@ -316,11 +365,14 @@ def process_next_job():
                 status="failed",
                 stage="Failed",
                 progress=100,
-                error=str(error) or error.__class__.__name__,
+                error=friendly_job_error_message(error),
             )
             mark_mock_test_after_processing(connection, job["mock_test_id"], 0)
             connection.commit()
+        # Full traceback goes to the worker's own logs only - error_message
+        # above (what the UI shows) is deliberately the sanitized version.
         print(f"Failed job {job['id']}: {error}")
+        traceback.print_exc()
 
         if isinstance(error, (KeyboardInterrupt, SystemExit)):
             raise

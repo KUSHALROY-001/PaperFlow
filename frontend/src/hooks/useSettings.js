@@ -26,9 +26,14 @@ export function useSettings() {
   });
   const profile = data?.profile;
 
+  // Email is intentionally not part of this editable form or the save
+  // payload below - it's the account's login identity, and editing it here
+  // had no re-authentication/verification step at all (unlike password
+  // change and account deletion, both of which require the current
+  // password). ProfileSection reads the email straight from `profile` and
+  // renders it as read-only.
   const [profileForm, setProfileForm] = useState({
     name: "",
-    email: "",
     accountType: "student",
   });
   const [profileError, setProfileError] = useState("");
@@ -44,14 +49,6 @@ export function useSettings() {
   const [passwordError, setPasswordError] = useState("");
   const [isSavingPassword, setIsSavingPassword] = useState(false);
 
-  const [prefs, setPrefs] = useState({
-    defaultOutputFormat: "Mock Test",
-    ocrLanguage: "English",
-    autoApprove: false,
-    emailNotifications: true,
-  });
-  const [isSavingPrefs, setIsSavingPrefs] = useState(false);
-
   const [saved, setSaved] = useState(null);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -59,18 +56,14 @@ export function useSettings() {
   const [deleteError, setDeleteError] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Populate the forms once the real profile loads - can't default useState
+  // Populate the form once the real profile loads - can't default useState
   // to server data that hasn't arrived yet.
   useEffect(() => {
     if (!profile) return;
     setProfileForm({
       name: profile.name,
-      email: profile.email,
       accountType: profile.accountType,
     });
-    if (profile.preferences) {
-      setPrefs((current) => ({ ...current, ...profile.preferences }));
-    }
   }, [profile]);
 
   const flashSaved = (section) => {
@@ -126,20 +119,6 @@ export function useSettings() {
     }
   };
 
-  const handleSavePrefs = async () => {
-    setIsSavingPrefs(true);
-
-    try {
-      await api.updatePreferences(prefs);
-      await queryClient.invalidateQueries({ queryKey: ["profile"] });
-      flashSaved("prefs");
-    } catch (error) {
-      setProfileError(error.message || "Could not save preferences");
-    } finally {
-      setIsSavingPrefs(false);
-    }
-  };
-
   const handleDeleteAccount = async (e) => {
     e.preventDefault();
     setDeleteError("");
@@ -157,6 +136,7 @@ export function useSettings() {
   return {
     isLoading,
     profileLoadError,
+    email: profile?.email || "",
     profileForm,
     setProfileForm,
     profileError,
@@ -171,10 +151,6 @@ export function useSettings() {
     passwordError,
     isSavingPassword,
     handleSavePassword,
-    prefs,
-    setPrefs,
-    isSavingPrefs,
-    handleSavePrefs,
     saved,
     showDeleteModal,
     setShowDeleteModal,

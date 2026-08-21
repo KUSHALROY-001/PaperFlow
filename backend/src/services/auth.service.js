@@ -43,8 +43,6 @@ export async function listWorkspacesForUser(userId) {
 // --- Settings page --------------------------------------------------------
 
 const ACCOUNT_TYPES = ["student", "educator", "coaching_center"];
-const OUTPUT_FORMATS = ["Mock Test", "Question Bank", "Study Notes Extraction"];
-const OCR_LANGUAGES = ["English", "Hindi", "Bengali"];
 
 export async function getProfile(userId) {
   const profile = await authRepo.findProfileById(userId);
@@ -56,69 +54,30 @@ export async function getProfile(userId) {
   return profile;
 }
 
+// Email is deliberately NOT accepted here - it's the account's login
+// identity, and editing it had no re-authentication/verification step at
+// all (unlike changePassword/deleteAccount below, both of which require the
+// current password). If email changes are needed later, add them back
+// behind the same password-confirmation pattern rather than accepting a
+// bare new value on this endpoint.
 export async function updateProfile(userId, body) {
   const name =
     body.name === undefined ? undefined : requiredString(body.name, "name");
-  const email =
-    body.email === undefined
-      ? undefined
-      : requiredString(body.email, "email").toLowerCase();
   const accountType =
     body.accountType === undefined
       ? undefined
       : requiredEnum(body.accountType, ACCOUNT_TYPES, "accountType");
 
-  try {
-    const profile = await authRepo.updateProfile(userId, {
-      name,
-      email,
-      accountType,
-    });
+  const profile = await authRepo.updateProfile(userId, {
+    name,
+    accountType,
+  });
 
-    if (!profile) {
-      throw httpError(404, "Account not found");
-    }
-
-    return profile;
-  } catch (error) {
-    if (error.code === "23505") {
-      throw httpError(409, "That email is already in use by another account");
-    }
-    throw error;
-  }
-}
-
-// Preferences are stored, but nothing downstream reads them yet - the
-// upload flow doesn't auto-apply defaultOutputFormat/ocrLanguage, and
-// autoApprove/emailNotifications aren't consumed by the worker or by any
-// email provider (there isn't one - see team.service.js#createInvitation
-// for the same caveat). This endpoint is honest about persisting the
-// values; wiring them into actual behavior is separate, later work.
-export async function updatePreferences(userId, body) {
-  const patch = {};
-
-  if (body.defaultOutputFormat !== undefined) {
-    patch.defaultOutputFormat = requiredEnum(
-      body.defaultOutputFormat,
-      OUTPUT_FORMATS,
-      "defaultOutputFormat",
-    );
-  }
-  if (body.ocrLanguage !== undefined) {
-    patch.ocrLanguage = requiredEnum(
-      body.ocrLanguage,
-      OCR_LANGUAGES,
-      "ocrLanguage",
-    );
-  }
-  if (body.autoApprove !== undefined) {
-    patch.autoApprove = Boolean(body.autoApprove);
-  }
-  if (body.emailNotifications !== undefined) {
-    patch.emailNotifications = Boolean(body.emailNotifications);
+  if (!profile) {
+    throw httpError(404, "Account not found");
   }
 
-  return authRepo.mergePreferences(userId, patch);
+  return profile;
 }
 
 export async function changePassword(userId, body) {

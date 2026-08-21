@@ -65,7 +65,6 @@ const PROFILE_COLUMNS = `
   name,
   email,
   account_type AS "accountType",
-  preferences,
   created_at AS "createdAt"
 `;
 
@@ -77,38 +76,20 @@ export async function findProfileById(userId) {
   return result.rows[0] || null;
 }
 
-export async function updateProfile(userId, { name, email, accountType }) {
+export async function updateProfile(userId, { name, accountType }) {
   const result = await pool.query(
     `
     UPDATE users
     SET
       name = COALESCE($2, name),
-      email = COALESCE($3, email),
-      account_type = COALESCE($4, account_type)
+      account_type = COALESCE($3, account_type)
     WHERE id = $1
     RETURNING ${PROFILE_COLUMNS}
     `,
-    [userId, name ?? null, email ?? null, accountType ?? null],
+    [userId, name ?? null, accountType ?? null],
   );
 
   return result.rows[0] || null;
-}
-
-// Merges rather than replaces (jsonb || jsonb) so saving one preferences
-// section (e.g. just emailNotifications) never wipes out fields the
-// frontend didn't send in that request.
-export async function mergePreferences(userId, patch) {
-  const result = await pool.query(
-    `
-    UPDATE users
-    SET preferences = preferences || $2::jsonb
-    WHERE id = $1
-    RETURNING preferences
-    `,
-    [userId, JSON.stringify(patch)],
-  );
-
-  return result.rows[0]?.preferences || null;
 }
 
 export async function findPasswordHashById(userId) {

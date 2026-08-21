@@ -60,19 +60,35 @@ export async function updateMockTest(mockTestId, workspaceId, body) {
   const isCatalogListedProvided = body.isCatalogListed !== undefined;
   const isCatalogListed = Boolean(body.isCatalogListed);
 
-  const mockTest = await mockTestsRepo.updateMockTest(mockTestId, workspaceId, {
-    name,
-    descriptionProvided,
-    description,
-    examYearProvided,
-    examYear,
-    durationMinutes: optionalNumber(body.durationMinutes, null),
-    marksPerCorrect: optionalNumber(body.marksPerCorrect, null),
-    negativeMarksPerWrong: optionalNumber(body.negativeMarksPerWrong, null),
-    status,
-    isCatalogListedProvided,
-    isCatalogListed,
-  });
+  let mockTest;
+  try {
+    mockTest = await mockTestsRepo.updateMockTest(mockTestId, workspaceId, {
+      name,
+      descriptionProvided,
+      description,
+      examYearProvided,
+      examYear,
+      durationMinutes: optionalNumber(body.durationMinutes, null),
+      marksPerCorrect: optionalNumber(body.marksPerCorrect, null),
+      negativeMarksPerWrong: optionalNumber(body.negativeMarksPerWrong, null),
+      status,
+      isCatalogListedProvided,
+      isCatalogListed,
+    });
+  } catch (error) {
+    // 23505 = unique_violation, from the (cluster_id, name) constraint -
+    // hit when renaming a mock test to a name another one in the same
+    // cluster already has.
+    if (error.code === "23505") {
+      throw httpError(
+        409,
+        name
+          ? `A mock test named "${name}" already exists in this cluster`
+          : "A mock test with this name already exists in this cluster",
+      );
+    }
+    throw error;
+  }
 
   if (!mockTest) {
     throw httpError(404, "Mock test not found");

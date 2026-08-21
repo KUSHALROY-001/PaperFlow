@@ -2,6 +2,7 @@ import { User, Save } from "lucide-react";
 import { accountTypeOptions, accountTypeLabel } from "@/hooks/useSettings";
 
 export default function ProfileSection({
+  email,
   profileForm,
   setProfileForm,
   profileError,
@@ -31,7 +32,7 @@ export default function ProfileSection({
               {profileForm.name}
             </p>
             <p className="text-xs sm:text-sm text-muted-foreground truncate">
-              {profileForm.email}
+              {email}
             </p>
             <span className="text-xs bg-orange-500/15 text-orange-500 border border-orange-500/20 px-2.5 py-0.5 rounded-lg font-bold mt-1 inline-block">
               {accountTypeLabel(profileForm.accountType)}
@@ -60,15 +61,15 @@ export default function ProfileSection({
               Email
             </label>
             <input
-              required
+              disabled
               type="email"
-              autoComplete="email"
-              value={profileForm.email}
-              onChange={(e) =>
-                setProfileForm((p) => ({ ...p, email: e.target.value }))
-              }
-              className="w-full px-4 py-2.5 rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 text-xs sm:text-sm"
+              value={email}
+              className="w-full px-4 py-2.5 rounded-xl border border-border bg-muted text-muted-foreground cursor-not-allowed text-xs sm:text-sm"
             />
+            <p className="text-xs text-muted-foreground mt-1.5">
+              Your email is your login and can't be changed here. Contact
+              support if you need it updated.
+            </p>
           </div>
         </div>
 

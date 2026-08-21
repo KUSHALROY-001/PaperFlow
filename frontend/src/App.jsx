@@ -34,7 +34,6 @@ import Duplicates from "./pages/Duplicates";
 import PublicMockTests from "./pages/PublicMockTests";
 import PublicCatalog from "./pages/PublicCatalog";
 import SharedMock from "./pages/SharedMock";
-import Billing from "./pages/Billing";
 import MyResults from "./pages/MyResults";
 import AuthPage from "./pages/AuthPage";
 import MyInvitations from "./pages/MyInvitations";
@@ -127,7 +126,6 @@ const AuthenticatedApp = () => {
         <Route path="/students/:email" element={<StudentDetail />} />
         <Route path="/invitations" element={<MyInvitations />} />
         <Route path="/question-bank" element={<QuestionBank />} />
-        <Route path="/billing" element={<Billing />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/my-results" element={<MyResults />} />
       </Route>

@@ -19,11 +19,6 @@ authRouter.patch(
   asyncHandler(authController.updateProfile),
 );
 authRouter.patch(
-  "/preferences",
-  requireAuth,
-  asyncHandler(authController.updatePreferences),
-);
-authRouter.patch(
   "/password",
   requireAuth,
   asyncHandler(authController.changePassword),
