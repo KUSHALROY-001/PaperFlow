@@ -150,7 +150,7 @@ export default function QuestionEditor() {
   }
 
   return (
-    <div className="-m-2 sm:-m-6 min-h-[calc(100vh-4rem)] bg-background flex flex-col lg:flex-row font-inter">
+    <div className="min-h-screen bg-background flex flex-col lg:flex-row font-inter">
       <EditorSidebar
         clusterId={clusterId}
         mockTestId={mockTestId}

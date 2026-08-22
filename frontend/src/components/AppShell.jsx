@@ -59,37 +59,45 @@ export default function AppShell() {
     setShowModal(true);
   };
 
+  const isEditorRoute = location.pathname.includes("/editor");
+
   return (
     <div className="min-h-screen bg-background font-sans">
       {/* Sidebar */}
-      <aside className="hidden lg:flex w-55 bg-card border-r border-border flex-col fixed h-full z-40">
-        <Sidebar
+      {!isEditorRoute && (
+        <aside className="hidden lg:flex w-55 bg-card border-r border-border flex-col fixed h-full z-40">
+          <Sidebar
+            location={location}
+            onNavigate={() => {}}
+            onCreateCluster={openClusterModal}
+            badges={navBadges}
+          />
+        </aside>
+      )}
+
+      {!isEditorRoute && (
+        <MobileNavDrawer
+          isOpen={mobileNavOpen}
+          onClose={() => setMobileNavOpen(false)}
           location={location}
-          onNavigate={() => {}}
           onCreateCluster={openClusterModal}
           badges={navBadges}
         />
-      </aside>
-
-      <MobileNavDrawer
-        isOpen={mobileNavOpen}
-        onClose={() => setMobileNavOpen(false)}
-        location={location}
-        onCreateCluster={openClusterModal}
-        badges={navBadges}
-      />
+      )}
 
       {/* Main content */}
-      <div className="min-h-screen flex flex-col lg:ml-55">
-        <TopBar
-          location={location}
-          onOpenMobileNav={() => setMobileNavOpen(true)}
-          pendingInviteCount={pendingInviteCount}
-        />
+      <div className={`min-h-screen flex flex-col ${isEditorRoute ? "" : "lg:ml-55"}`}>
+        {!isEditorRoute && (
+          <TopBar
+            location={location}
+            onOpenMobileNav={() => setMobileNavOpen(true)}
+            pendingInviteCount={pendingInviteCount}
+          />
+        )}
 
-        <GuestWorkspaceBanner />
+        {!isEditorRoute && <GuestWorkspaceBanner />}
 
-        <main className="flex-1 p-2 sm:p-6 min-w-0">
+        <main className={`flex-1 min-w-0 ${isEditorRoute ? "p-0" : "p-2 sm:p-6"}`}>
           <Outlet />
         </main>
       </div>

@@ -30,10 +30,35 @@ export function renderQuestionTextHtml(text) {
   const normalized = String(text ?? "").replace(/\\n/g, "\n");
 
   return splitIntoTextBlocks(normalized)
-    .map((block) =>
-      block.type === "table"
-        ? tableBlockHtml(block)
-        : `<p class="question-text">${renderTextWithMath(block.content)}</p>`,
-    )
+    .map((block) => {
+      if (block.type === "table") return tableBlockHtml(block);
+
+      const linesHtml = [];
+      let proseLines = [];
+      const flushProse = () => {
+        if (proseLines.length === 0) return;
+        linesHtml.push(
+          `<p class="question-text">${renderTextWithMath(proseLines.join("\n")) || "&nbsp;"}</p>`,
+        );
+        proseLines = [];
+      };
+
+      block.content.split("\n").forEach((line) => {
+          const heading = line.match(/^((?:(?:\*\*|~~|\*|<u>)*))(#{1,3})\s+/);
+          if (heading) {
+            flushProse();
+            const level = heading[2].length;
+            const content = `${heading[1]}${line.slice(heading[0].length)}`;
+            linesHtml.push(
+              `<h${level} class="rich-heading rich-heading-${level}">${renderTextWithMath(content)}</h${level}>`,
+            );
+            return;
+          }
+
+          proseLines.push(line);
+        });
+      flushProse();
+      return linesHtml.join("");
+    })
     .join("");
 }

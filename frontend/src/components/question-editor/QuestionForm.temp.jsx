@@ -1,25 +1,15 @@
 import { useRef, useState } from "react";
-import {
-  Code2,
-  Crop,
-  Eye,
-  FileCode,
-  Plus,
-  Sparkles,
-  Trash2,
-} from "lucide-react";
+import { Code2, Crop, Plus, Sparkles, Trash2 } from "lucide-react";
 import QuestionContent, {
   QuestionDiagram,
   QuestionExplanation,
 } from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
-import FormattedTextEditor from "../shared/FormattedTextEditor";
 import { wrapBareLatex } from "@/utils/questionEditorHelpers";
 import { autoIndentMarkdown } from "@/utils/codeIndenter";
 import DiagramCropModal from "./DiagramCropModal";
 import DiagramUploadControl from "./DiagramUploadControl";
 import RichTextToolbar from "./RichTextToolbar";
-
 export default function QuestionForm({
   selected,
   mockTestId,
@@ -35,11 +25,8 @@ export default function QuestionForm({
 }) {
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const [diagramError, setDiagramError] = useState("");
-  const [textEditorMode, setTextEditorMode] = useState("raw");
-  const [explanationEditorMode, setExplanationEditorMode] = useState("raw");
   const questionTextRef = useRef(null);
   const explanationRef = useRef(null);
-
   const handleCleanUpMath = () => {
     updateSelected("text", wrapBareLatex(selected.text));
     updateSelected(
@@ -47,7 +34,6 @@ export default function QuestionForm({
       selected.options.map((option) => wrapBareLatex(option)),
     );
   };
-
   const handleIndentCode = () => {
     const current = selected.text || "";
     if (!current.trim()) {
@@ -59,14 +45,12 @@ export default function QuestionForm({
     const indented = autoIndentMarkdown(current);
     updateSelected("text", indented);
   };
-
   const handleIndentExplanationCode = () => {
     const current = selected.explanation || "";
     if (!current.trim()) return;
     const indented = autoIndentMarkdown(current);
     updateSelected("explanation", indented);
   };
-
   const handleKeyDownTextarea = (e, field) => {
     if (isViewer) return;
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
@@ -107,7 +91,6 @@ export default function QuestionForm({
       const start = target.selectionStart;
       const end = target.selectionEnd;
       const val = target.value;
-
       if (start === end) {
         const next = val.substring(0, start) + "    " + val.substring(end);
         updateSelected(field, next);
@@ -133,7 +116,6 @@ export default function QuestionForm({
       }
     }
   };
-
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-6 w-full min-w-0">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
@@ -178,7 +160,6 @@ export default function QuestionForm({
                   )}
                   <option value="custom">✍️ Custom Topic...</option>
                 </select>
-
                 {(!extractedTopics.includes(selected.topic) ||
                   isCustomTopic) && (
                   <input
@@ -196,43 +177,10 @@ export default function QuestionForm({
                 )}
               </div>
             </div>
-
-            {/* Header row with Title, Mode Toggler, Indent, and Clean up math */}
             <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <label className="block text-xs sm:text-sm font-bold text-foreground">
-                  Question Text
-                </label>
-
-                {/* Raw vs Formatted Toggler */}
-                <div className="inline-flex items-center p-0.5 rounded-lg border border-border bg-muted/50 text-[11px] font-bold">
-                  <button
-                    type="button"
-                    onClick={() => setTextEditorMode("raw")}
-                    className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 ${
-                      textEditorMode === "raw"
-                        ? "bg-orange-500 text-white shadow-xs"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                    title="Edit raw text & markdown"
-                  >
-                    <FileCode className="w-3 h-3" /> Raw
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTextEditorMode("formatted")}
-                    className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 ${
-                      textEditorMode === "formatted"
-                        ? "bg-orange-500 text-white shadow-xs"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                    title="View & edit formatted math, tables, and code blocks"
-                  >
-                    <Eye className="w-3 h-3" /> Formatted
-                  </button>
-                </div>
-              </div>
-
+              <label className="block text-xs sm:text-sm font-bold text-foreground">
+                Question Text
+              </label>
               <div className="flex items-center gap-3">
                 <button
                   type="button"
@@ -251,7 +199,7 @@ export default function QuestionForm({
                   type="button"
                   disabled={isViewer}
                   onClick={() => !isViewer && handleCleanUpMath()}
-                  title="Wrap bare pasted LaTeX in math delimiters so it renders correctly"
+                  title="Wrap bare pasted LaTeX (e.g. \frac{1}{2} with no $ signs around it) in math delimiters so it renders correctly - check the Live Preview on the right after"
                   className={`flex items-center gap-1 text-[11px] font-bold transition-all shrink-0 ${
                     isViewer
                       ? "text-muted-foreground/40 cursor-not-allowed opacity-50"
@@ -262,75 +210,32 @@ export default function QuestionForm({
                 </button>
               </div>
             </div>
-
-            {textEditorMode === "formatted" ? (
-              <FormattedTextEditor
-                value={selected.text}
-                onChange={(val) => updateSelected("text", val)}
+            <div className="mb-2">
+              <RichTextToolbar
+                textareaRef={questionTextRef}
                 disabled={isViewer}
-                placeholder="Type your question text..."
+                onChange={(value) => updateSelected("text", value)}
               />
-            ) : (
-              <>
-                <div className="mb-2">
-                  <RichTextToolbar
-                    textareaRef={questionTextRef}
-                    disabled={isViewer}
-                    onChange={(value) => updateSelected("text", value)}
-                  />
-                </div>
-                <textarea
-                  ref={questionTextRef}
-                  disabled={isViewer}
-                  value={selected.text}
-                  onChange={(e) =>
-                    !isViewer && updateSelected("text", e.target.value)
-                  }
-                  onKeyDown={(e) => handleKeyDownTextarea(e, "text")}
-                  className={`w-full min-h-24 px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all text-xs sm:text-sm resize-vertical ${
-                    isViewer ? "cursor-not-allowed opacity-60" : ""
-                  }`}
-                />
-              </>
-            )}
+            </div>
+            <textarea
+              ref={questionTextRef}
+              disabled={isViewer}
+              value={selected.text}
+              onChange={(e) =>
+                !isViewer && updateSelected("text", e.target.value)
+              }
+              onKeyDown={(e) => handleKeyDownTextarea(e, "text")}
+              className={`w-full min-h-24 px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all text-xs sm:text-sm resize-vertical ${
+                isViewer ? "cursor-not-allowed opacity-60" : ""
+              }`}
+            />
           </div>
-
           {/* Explanation (Optional) */}
           <div className="surface-card rounded-2xl p-3 sm:p-6 border border-border">
             <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <label className="block text-xs sm:text-sm font-bold text-foreground">
-                  Explanation (Optional)
-                </label>
-                {/* Raw vs Formatted Toggler for Explanation */}
-                <div className="inline-flex items-center p-0.5 rounded-lg border border-border bg-muted/50 text-[11px] font-bold">
-                  <button
-                    type="button"
-                    onClick={() => setExplanationEditorMode("raw")}
-                    className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 ${
-                      explanationEditorMode === "raw"
-                        ? "bg-orange-500 text-white shadow-xs"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                    title="Edit raw text & markdown"
-                  >
-                    <FileCode className="w-3 h-3" /> Raw
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setExplanationEditorMode("formatted")}
-                    className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 ${
-                      explanationEditorMode === "formatted"
-                        ? "bg-orange-500 text-white shadow-xs"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                    title="View & edit formatted math, tables, and code blocks"
-                  >
-                    <Eye className="w-3 h-3" /> Formatted
-                  </button>
-                </div>
-              </div>
-
+              <label className="block text-xs sm:text-sm font-bold text-foreground">
+                Explanation (Optional)
+              </label>
               <button
                 type="button"
                 disabled={isViewer}
@@ -345,40 +250,27 @@ export default function QuestionForm({
                 <Code2 className="w-3 h-3" /> Indent code
               </button>
             </div>
-
-            {explanationEditorMode === "formatted" ? (
-              <FormattedTextEditor
-                value={selected.explanation || ""}
-                onChange={(val) => updateSelected("explanation", val)}
+            <div className="mb-2">
+              <RichTextToolbar
+                textareaRef={explanationRef}
                 disabled={isViewer}
-                placeholder="Add explanation for the correct answer..."
+                onChange={(value) => updateSelected("explanation", value)}
               />
-            ) : (
-              <>
-                <div className="mb-2">
-                  <RichTextToolbar
-                    textareaRef={explanationRef}
-                    disabled={isViewer}
-                    onChange={(value) => updateSelected("explanation", value)}
-                  />
-                </div>
-                <textarea
-                  ref={explanationRef}
-                  disabled={isViewer}
-                  value={selected.explanation || ""}
-                  onChange={(e) =>
-                    !isViewer && updateSelected("explanation", e.target.value)
-                  }
-                  onKeyDown={(e) => handleKeyDownTextarea(e, "explanation")}
-                  placeholder="Add explanation for the correct answer..."
-                  className={`w-full min-h-20 px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all text-xs sm:text-sm resize-vertical ${
-                    isViewer ? "cursor-not-allowed opacity-60" : ""
-                  }`}
-                />
-              </>
-            )}
+            </div>
+            <textarea
+              ref={explanationRef}
+              disabled={isViewer}
+              value={selected.explanation || ""}
+              onChange={(e) =>
+                !isViewer && updateSelected("explanation", e.target.value)
+              }
+              onKeyDown={(e) => handleKeyDownTextarea(e, "explanation")}
+              placeholder="Add explanation for the correct answer..."
+              className={`w-full min-h-20 px-4 py-3 rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all text-xs sm:text-sm resize-vertical ${
+                isViewer ? "cursor-not-allowed opacity-60" : ""
+              }`}
+            />
           </div>
-
           {/* Answer Options */}
           <div className="surface-card rounded-2xl p-3 sm:p-6 border border-border">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
@@ -482,7 +374,6 @@ export default function QuestionForm({
             </button>
           </div>
         </div>
-
         {/* Right Column: Live Preview & Diagram Settings */}
         <div className="space-y-6 lg:sticky lg:top-20">
           <div className="surface-card rounded-2xl p-3 sm:p-6 border border-border bg-muted/30 shadow-sm">

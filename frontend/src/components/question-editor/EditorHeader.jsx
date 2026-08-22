@@ -13,7 +13,7 @@ export default function EditorHeader({
   returnTo,
 }) {
   return (
-    <header className="min-h-14 bg-card/80 backdrop-blur-md border-b border-border flex flex-col gap-3 sm:flex-row sm:items-center px-4 sm:px-6 py-3 sticky top-16 z-20">
+    <header className="min-h-14 bg-card/80 backdrop-blur-md border-b border-border flex flex-col gap-3 sm:flex-row sm:items-center px-4 sm:px-6 py-3 sticky top-0 z-20">
       <div className="flex-1 flex items-center gap-3 min-w-0">
         {returnTo && (
           <Link

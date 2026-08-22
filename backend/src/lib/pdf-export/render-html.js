@@ -211,6 +211,14 @@ export function renderMockTestHtml({ mockTest, questions, baseUrl }) {
     margin: 0 0 10px;
     white-space: pre-wrap;
   }
+  .rich-heading {
+    color: #1a1a1a;
+    margin: 0 0 8px;
+    line-height: 1.25;
+  }
+  .rich-heading-1 { font-size: 16pt; }
+  .rich-heading-2 { font-size: 14pt; }
+  .rich-heading-3 { font-size: 12pt; }
   .q-table {
     width: 100%;
     border-collapse: collapse;

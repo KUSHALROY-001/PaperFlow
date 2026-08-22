@@ -107,6 +107,22 @@ function wrapPlainSegment(segment) {
       continue;
     }
 
+    // A blank-line whitespace token never starts a math run - emit it
+    // as-is and advance, same as the "word" branch above. Without this,
+    // whenever tokens[i] IS a blank-line token, the run-growing loop
+    // below never executes even once (its own guard is already false at
+    // end === i), leaving i unchanged forever - an infinite loop that
+    // would hang this entire backfill script on the first question whose
+    // text has a paragraph break (a passage followed by its question, an
+    // explanation on its own paragraph, etc. - the normal case, not an
+    // edge case). See frontend/src/utils/questionEditorHelpers.js's
+    // identical fix for the full trace of how this froze the editor UI.
+    if (kinds[i] === "space" && /\n\s*\n/.test(tokens[i])) {
+      output += tokens[i];
+      i++;
+      continue;
+    }
+
     let end = i;
     while (
       end < tokens.length &&
