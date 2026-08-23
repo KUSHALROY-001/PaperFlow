@@ -301,6 +301,153 @@ def generate_questions_from_notes(pages, provider):
     }
 
 
+# "Generate from existing tests" feature (see mock-tests.service.js
+# #generateFromExisting). Deliberately never shown the source tests'
+# actual questions - only their aggregate shape (topic/subtopic/question-
+# type/count, via processing_jobs.input_config.topicDistribution) - so
+# every question here is written from the model's own subject-matter
+# knowledge, scoped to match that shape. This is the whole reason token
+# cost here scales with the OUTPUT question count only, never with how
+# many or how large the source tests were.
+METADATA_GENERATION_SYSTEM_PROMPT = """
+You are writing a brand-new multiple-choice exam question set for a student
+to practice with. You have NOT been given any source questions to copy,
+adapt, or reference - you are writing entirely original questions from your
+own subject-matter knowledge, scoped to the topic and format described in
+each request. Never invent a topic name; always use exactly the topic given.
+Return only valid JSON. Do not include markdown.
+Write exactly 4 options for a single-correct question, or 4-5 options with
+2 or more marked correct for a multi-correct question type (follow whichever
+question_type is specified in the request).
+Use zero-based option indexes.
+Every question needs a real, useful "explanation" field: a few sentences
+explaining why the correct option is right - never leave it null or empty.
+Every question was authored by you, not verified against an existing exam,
+so set confidence to 60, needs_review to true, and issues to
+["AI-generated - not sourced from an existing exam paper"].
+If a question or option needs a mathematical expression (a fraction,
+exponent, root, or similar), write it as LaTeX wrapped in $...$ for inline
+math or $$...$$ for a standalone equation - never write a bare LaTeX
+command outside $ delimiters. Skip this entirely for questions with no math
+in them. If a question needs a table (a comparison table, a matching-type
+List-I/List-II table, or similar), represent it as a GitHub-Flavored-
+Markdown table embedded in "text": every row wrapped in leading/trailing
+`|`, header row followed by a `---|---` separator row.
+Expected shape:
+{
+  "questions": [
+    {
+      "question_no": 1,
+      "topic": "<exactly the topic given in the request>",
+      "subtopic": "<exactly the subtopic given in the request, or null if none was given>",
+      "text": "Question text",
+      "explanation": "Why the correct answer is correct.",
+      "options": ["A option", "B option", "C option", "D option"],
+      "correct_option_indexes": [0],
+      "confidence": 60,
+      "needs_review": true,
+      "issues": ["AI-generated - not sourced from an existing exam paper"]
+    }
+  ]
+}
+""".strip()
+
+
+def build_metadata_generation_prompt(group, count, difficulty_hint):
+    subtopic_line = (
+        f' (specifically the subtopic "{group["subtopic"]}")'
+        if group.get("subtopic")
+        else ""
+    )
+    question_type = group.get("questionType") or "single"
+    type_line = (
+        "Every question must have exactly ONE correct option."
+        if question_type == "single"
+        else "Every question must have TWO OR MORE correct options (a multi-correct question type)."
+    )
+    difficulty_line = (
+        ""
+        if not difficulty_hint or difficulty_hint == "Variable"
+        else f"\nTarget difficulty level for these questions: {difficulty_hint}."
+    )
+    return f"""
+Write exactly {count} original multiple-choice questions on the topic
+"{group["topic"]}"{subtopic_line}.
+{type_line}{difficulty_line}
+""".strip()
+
+
+# topic_distribution is a list of {topic, subtopic, questionType, count,
+# marksPerCorrect, negativeMarksPerWrong} dicts - see
+# mock-tests.repository.js#getTopicDistributionForMockTests and
+# mock-tests.service.js#scaleDistributionToTarget for how it's built and
+# scaled to sum to exactly the user's requested total.
+#
+# One request per topic/subtopic/type group, batched at
+# AI_NOTES_QUESTIONS_PER_CHUNK per call within a group (same chunk-size
+# knob generate_questions_from_notes already uses for the same reason -
+# asking for too many questions in one response risks truncation) rather
+# than one call for the whole distribution - this also means a failure on
+# one group's batch doesn't lose every other group's questions, only that
+# one batch's.
+def generate_questions_from_metadata(topic_distribution, difficulty_hint, provider):
+    if not topic_distribution:
+        return [], {"attempted": False, "questionsGenerated": 0, "errors": []}
+
+    all_questions = []
+    errors = []
+
+    for group in topic_distribution:
+        remaining = group["count"]
+        while remaining > 0:
+            batch_size = min(remaining, AI_NOTES_QUESTIONS_PER_CHUNK)
+            try:
+                response_text = provider.generate_json(
+                    METADATA_GENERATION_SYSTEM_PROMPT,
+                    build_metadata_generation_prompt(
+                        group, batch_size, difficulty_hint
+                    ),
+                )
+                payload = extract_json_payload(response_text)
+                batch_questions = normalize_ai_questions(
+                    payload,
+                    source=f"{provider.name}_generated_from_metadata_v1",
+                )
+                for question in batch_questions:
+                    # Force topic/subtopic/marks to the requested group's
+                    # values rather than trusting the model's own
+                    # classification - the prompt asks for this too, but
+                    # this is the deterministic guarantee, same pattern
+                    # _apply_section_marks above already uses for
+                    # template-driven marking overrides.
+                    question["topic"] = group["topic"]
+                    question["subtopic"] = group.get("subtopic")
+                    question["marks_per_correct"] = group.get("marksPerCorrect")
+                    question["negative_marks_per_wrong"] = group.get(
+                        "negativeMarksPerWrong"
+                    )
+                    question["metadata"]["generatedFromExistingTests"] = True
+                all_questions.extend(batch_questions)
+            except Exception as error:
+                errors.append(
+                    {
+                        "topic": group["topic"],
+                        "subtopic": group.get("subtopic"),
+                        "message": str(error),
+                    }
+                )
+            remaining -= batch_size
+
+    for index, question in enumerate(all_questions, start=1):
+        question["question_no"] = index
+
+    return all_questions, {
+        "attempted": True,
+        "questionsGenerated": len(all_questions),
+        "errors": errors,
+    }
+
+
 def _attach_diagram_crops(ai_questions, page_images):
     """
     For each question the model flagged has_diagram=True with a usable

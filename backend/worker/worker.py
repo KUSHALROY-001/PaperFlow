@@ -5,7 +5,7 @@ import traceback
 from pathlib import Path
 
 from .config import MAX_JOBS_PER_RUN, OCR_ENABLED, POLL_INTERVAL_SECONDS
-from .ai import enhance_questions_with_ai
+from .ai import enhance_questions_with_ai, generate_questions_from_metadata, get_provider
 from .duplicate_detector import (
     auto_merge_exact_duplicates_for_mock_test,
     detect_duplicates_for_mock_test,
@@ -71,6 +71,15 @@ def friendly_job_error_message(error):
 
 
 def process_job(job):
+    # "Generate from existing tests" has no PDF at all - branches into its
+    # own function immediately, before anything below that assumes
+    # local_path_from_job(job) will succeed (it won't - uploaded_file_id
+    # is NULL for this job type, see migration 034's header for why that's
+    # safe and what it required fixing in db.py#claim_next_job).
+    document_type = (job.get("input_config") or {}).get("documentType", "questions")
+    if document_type == "generate_from_existing":
+        return process_generation_job(job)
+
     with get_connection() as connection:
         update_job(
             connection,
@@ -313,6 +322,149 @@ def process_job(job):
     # writes just above: a detection failure (e.g. the pg_trgm extension
     # missing on some environment) shouldn't fail a job whose actual
     # questions were extracted and saved fine.
+    try:
+        with get_connection() as connection:
+            new_pairs = detect_duplicates_for_mock_test(
+                connection, job["workspace_id"], job["mock_test_id"]
+            )
+        if new_pairs:
+            print(f"Found {new_pairs} new duplicate question pair(s)")
+    except Exception as error:
+        print(f"Duplicate detection failed for job {job['id']}: {error}")
+
+    return len(questions)
+
+
+# "Generate from existing tests" - process_job's counterpart with no PDF,
+# no OCR, no regex parsing, no diagram extraction. topicDistribution,
+# targetQuestionCount, and difficultyHint all come precomputed from
+# processing_jobs.input_config (see mock-tests.service.js
+# #generateFromExisting / #scaleDistributionToTarget) - this function's
+# only job is to turn that into questions and save them, reusing the same
+# "Saving questions" transaction shape and the same post-save best-effort
+# duplicate detection process_job already runs for every extraction job.
+def process_generation_job(job):
+    input_config = job.get("input_config") or {}
+    topic_distribution = input_config.get("topicDistribution") or []
+    difficulty_hint = input_config.get("difficultyHint")
+
+    with get_connection() as connection:
+        update_job(
+            connection,
+            job["id"],
+            status="running",
+            stage="Generating questions",
+            progress=20,
+        )
+        connection.commit()
+
+    check_not_cancelled(job["id"])
+
+    provider = get_provider()
+    if not provider:
+        # Same shape as enhance_questions_with_ai's own "AI disabled" path,
+        # except that path can still fall back to whatever regex-parsed
+        # questions it already had - this job type has none. Nothing to
+        # save at all without a provider, so this is a real, actionable
+        # failure, not a degraded-but-still-useful result.
+        raise RuntimeError(
+            "AI_PROVIDER is disabled - generating a mock test from existing "
+            "tests requires an AI provider to be configured"
+        )
+
+    def report_generation_progress(stage_message):
+        # Same reasoning as report_ai_progress in process_job: the one
+        # checkpoint inside the (by far) slowest part of this job, so a
+        # cancelled job stops between topic-group batches instead of
+        # finishing every remaining one first.
+        with get_connection() as connection:
+            update_job(
+                connection, job["id"], status="running", stage=stage_message, progress=60
+            )
+            connection.commit()
+        check_not_cancelled(job["id"])
+
+    report_generation_progress("Generating questions")
+    questions, ai_summary = generate_questions_from_metadata(
+        topic_distribution, difficulty_hint, provider
+    )
+
+    with get_connection() as connection:
+        with connection.transaction():
+            # Same lock-and-recheck-cancellation pattern as process_job's
+            # own "Saving questions" block - see that block's comment for
+            # why this is the one check that can't settle for "checked
+            # recently".
+            row = connection.execute(
+                "SELECT status FROM processing_jobs WHERE id = %s FOR UPDATE",
+                [job["id"]],
+            ).fetchone()
+            if row is None or row["status"] == "cancelled":
+                raise JobCancelled(job["id"])
+
+            update_job(
+                connection,
+                job["id"],
+                status="running",
+                stage="Saving questions",
+                progress=80,
+                summary={"ai": ai_summary, "questionsParsed": len(questions)},
+            )
+            # pdf_path=None - replace_questions already treats a missing
+            # pdf_path as "no diagrams possible for this job" (see its own
+            # `if crop_bytes and pdf_path:` guard), which is exactly
+            # correct here: a generated question never has has_diagram
+            # set, since METADATA_GENERATION_SYSTEM_PROMPT never asks for
+            # one and normalize_ai_questions defaults it to False.
+            inserted, pending_diagram_writes, diagrams_extracted = replace_questions(
+                connection,
+                workspace_id=job["workspace_id"],
+                mock_test_id=job["mock_test_id"],
+                questions=questions,
+                pdf_path=None,
+            )
+            mark_mock_test_after_processing(connection, job["mock_test_id"], inserted)
+            update_job(
+                connection,
+                job["id"],
+                status="completed",
+                stage="Completed",
+                progress=100,
+                summary={
+                    "ai": ai_summary,
+                    "questionsParsed": len(questions),
+                    "questionsInserted": inserted,
+                    "diagramsExtracted": diagrams_extracted,
+                },
+            )
+
+    # pending_diagram_writes will always be empty for this job type (see
+    # the pdf_path=None note above) - this loop is a no-op in practice,
+    # kept only so this function's shape stays a genuine mirror of
+    # process_job's, rather than a special case someone has to remember
+    # is missing a step process_job has.
+    for pending_write in pending_diagram_writes:
+        try:
+            pending_write["storage_path"].write_bytes(pending_write["png_bytes"])
+        except Exception as error:
+            print(f"Failed to write diagram asset {pending_write['storage_path']}: {error}")
+
+    # Same best-effort duplicate handling process_job runs after every
+    # extraction job - see that function's own comments for the full
+    # reasoning. Running it here too means a generated question that
+    # happens to closely match something already in the workspace's
+    # question bank still gets flagged for review, even though the
+    # generation step itself was never shown that existing question.
+    try:
+        with get_connection() as connection:
+            auto_merged = auto_merge_exact_duplicates_for_mock_test(
+                connection, job["workspace_id"], job["mock_test_id"]
+            )
+        if auto_merged:
+            print(f"Auto-merged {auto_merged} exact duplicate question pair(s)")
+    except Exception as error:
+        print(f"Exact-duplicate auto-merge failed for job {job['id']}: {error}")
+
     try:
         with get_connection() as connection:
             new_pairs = detect_duplicates_for_mock_test(

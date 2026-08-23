@@ -79,6 +79,18 @@ export function useMockTestWorkspace() {
   const jobSummary = latestJob?.output_summary || {};
   const ocrSummary = jobSummary.ocr || {};
   const aiSummary = jobSummary.ai || {};
+  const isGenerated =
+    latestJob?.input_config?.documentType === "generate_from_existing";
+
+  // Only fetched for a test that was actually generated - most mock
+  // tests were uploaded/created normally and this would just come back
+  // empty, so there's no reason to fire it on every workspace page load.
+  const { data: generationSourcesData } = useQuery({
+    queryKey: ["generation-sources", mockTestId],
+    queryFn: () => api.getGenerationSources(mockTestId),
+    enabled: Boolean(mockTestId) && isGenerated,
+  });
+  const generationSources = generationSourcesData?.sources || [];
   const questions = useMemo(
     () => (questionsData?.questions || []).map(mapQuestion),
     [questionsData],
@@ -275,6 +287,8 @@ export function useMockTestWorkspace() {
     mocktest,
     isLoading,
     latestJob,
+    isGenerated,
+    generationSources,
     questions,
     submissions,
     isLoadingSubmissions,

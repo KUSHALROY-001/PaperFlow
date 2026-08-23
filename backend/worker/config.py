@@ -1,6 +1,7 @@
 from pathlib import Path
 from dotenv import load_dotenv
 import os
+import tempfile
 
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
@@ -37,3 +38,46 @@ TESSERACT_CMD = os.environ.get("TESSERACT_CMD", "").strip()
 
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL is required")
+
+
+def _resolve_db_ca_cert_path():
+    """Mirrors src/db/pool.js's SSL resolution so the Node backend and this
+    worker verify the same CA the same way. When DATABASE_URL points to
+    localhost/127.0.0.1, SSL is disabled since local Postgres typically has
+    no SSL enabled.
+    """
+    if "localhost" in DATABASE_URL or "127.0.0.1" in DATABASE_URL:
+        return None
+
+    inline_cert = os.environ.get("DB_CA_CERT", "").strip()
+    if inline_cert:
+        # See pool.js's identical normalization for why: stray \r from
+        # Windows-edited .env files corrupts PEM parsing in a way that's
+        # easy to miss by eye but breaks cert verification.
+        normalized_cert = inline_cert.replace("\r\n", "\n")
+        # libpq's sslrootcert takes a file path, not raw PEM content, so
+        # write it out once at process startup.
+        fd, tmp_path = tempfile.mkstemp(prefix="paperflow-db-ca-", suffix=".pem")
+        with os.fdopen(fd, "w") as handle:
+            handle.write(normalized_cert)
+        return tmp_path
+
+    configured_path = os.environ.get("DB_CA_CERT_PATH", "").strip()
+    resolved = (BACKEND_ROOT / (configured_path or "certs/ca.pem")).resolve()
+
+    if resolved.exists():
+        return str(resolved)
+
+    if configured_path:
+        # Explicitly configured but missing - fail loudly rather than
+        # silently falling back to an unverified connection.
+        raise RuntimeError(
+            f'DB_CA_CERT_PATH is set to "{resolved}" but that file does not exist'
+        )
+
+    return None
+
+
+# None when no CA is configured (e.g. local Postgres without SSL) - db.py
+# only adds sslmode=verify-full when this is set.
+DB_CA_CERT_PATH = _resolve_db_ca_cert_path()

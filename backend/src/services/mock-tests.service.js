@@ -49,6 +49,20 @@ export async function getMockTestSummary(mockTestId, workspaceId) {
   return { ...mockTest, topics };
 }
 
+// Was written by generateFromExisting (mock_test_generation_sources -
+// migration 034) but never read back anywhere until now - a mock test
+// generated from other tests' metadata had no way to show "Generated
+// from: X, Y, Z" on its own page, which is the entire reason that table
+// exists (pure provenance/display data, see the migration's own header
+// comment). getMockTestOrFail first so a mockTestId from another
+// workspace 404s here the same way every other mock-test-scoped route
+// already does, rather than leaking an empty array for a test that was
+// never this workspace's to begin with.
+export async function getGenerationSources(mockTestId, workspaceId) {
+  await getMockTestOrFail(mockTestId, workspaceId);
+  return mockTestsRepo.listGenerationSources(mockTestId);
+}
+
 export async function updateMockTest(mockTestId, workspaceId, body) {
   const name =
     body.name === undefined ? undefined : requiredString(body.name, "name");
@@ -261,6 +275,153 @@ async function queueProcessingJob({
   } finally {
     client.release();
   }
+}
+
+// Scales a raw topic/subtopic/type breakdown (whatever total question
+// count the selected source tests happen to add up to) down or up to sum
+// to EXACTLY targetCount. Naive proportional rounding (Math.round on each
+// group independently) doesn't guarantee the rounded values sum back to
+// the target - the largest-remainder method does: take each group's
+// floor, then hand out the few leftover slots to the groups with the
+// largest fractional remainder, largest first. If targetCount is smaller
+// than the number of distinct topic/subtopic/type groups, some groups
+// legitimately end up with 0 and are dropped - there's no other sane way
+// to fit more groups than the target has room for.
+function scaleDistributionToTarget(rows, targetCount) {
+  const totalQuestions = rows.reduce((sum, row) => sum + row.question_count, 0);
+  const scaled = rows.map((row) => {
+    const exact = (row.question_count / totalQuestions) * targetCount;
+    const floor = Math.floor(exact);
+    return { ...row, count: floor, remainder: exact - floor };
+  });
+
+  const assigned = scaled.reduce((sum, row) => sum + row.count, 0);
+  let remaining = targetCount - assigned;
+
+  const byRemainderDesc = [...scaled].sort((a, b) => b.remainder - a.remainder);
+  for (let i = 0; i < byRemainderDesc.length && remaining > 0; i += 1) {
+    byRemainderDesc[i].count += 1;
+    remaining -= 1;
+  }
+
+  return scaled
+    .filter((row) => row.count > 0)
+    .map((row) => ({
+      topic: row.topic,
+      subtopic: row.subtopic,
+      questionType: row.question_type,
+      count: row.count,
+      marksPerCorrect: row.typical_marks_per_correct,
+      negativeMarksPerWrong: row.typical_negative_marks_per_wrong,
+    }));
+}
+
+const MIN_GENERATED_QUESTIONS = 5;
+const MAX_GENERATED_QUESTIONS = 200;
+const DIFFICULTY_HINTS = ["Easy", "Medium", "Hard", "Variable"];
+
+// "Generate from existing tests": no PDF, no OCR, no text extraction - the
+// AI is given only the STATISTICAL SHAPE of the selected source tests
+// (topic/subtopic/question-type distribution, marking scheme - see
+// getTopicDistributionForMockTests), never the source questions' actual
+// text. That's a deliberate choice, not a shortcut: it keeps token cost
+// proportional to the OUTPUT question count only regardless of how many
+// or how large the source tests are, and it means the AI structurally
+// can't reproduce a source question, since it never sees one.
+//
+// Reuses queueProcessingJob (the private helper just above) exactly the
+// way uploadDocument below does - same processing_jobs row shape, same
+// worker-kick, same "processing" status flip. uploadedFileId is null
+// here (processing_jobs.uploaded_file_id has always been nullable - see
+// migration 034's header for the one real gap this exposed, in
+// worker/db.py's job-claiming query, fixed alongside this feature).
+export async function generateFromExisting({
+  mockTest,
+  workspaceId,
+  userId,
+  sourceMockTestIds,
+  targetQuestionCount,
+  difficultyHint,
+}) {
+  if (!Array.isArray(sourceMockTestIds) || sourceMockTestIds.length === 0) {
+    throw httpError(400, "Select at least one source mock test");
+  }
+  const uniqueSourceIds = [...new Set(sourceMockTestIds)];
+
+  const count = Math.round(Number(targetQuestionCount));
+  if (
+    !Number.isFinite(count) ||
+    count < MIN_GENERATED_QUESTIONS ||
+    count > MAX_GENERATED_QUESTIONS
+  ) {
+    throw httpError(
+      400,
+      `targetQuestionCount must be between ${MIN_GENERATED_QUESTIONS} and ${MAX_GENERATED_QUESTIONS}`,
+    );
+  }
+
+  const normalizedDifficultyHint = difficultyHint || "Variable";
+  if (!DIFFICULTY_HINTS.includes(normalizedDifficultyHint)) {
+    throw httpError(
+      400,
+      `difficultyHint must be one of: ${DIFFICULTY_HINTS.join(", ")}`,
+    );
+  }
+
+  // Every id must actually belong to this workspace - findMockTestsByIds
+  // silently drops any id that doesn't match, so a returned-row-count
+  // mismatch against what was requested is how a stray/foreign id gets
+  // caught, rather than silently generating from fewer sources than the
+  // caller thought they'd selected.
+  const sources = await mockTestsRepo.findMockTestsByIds(
+    uniqueSourceIds,
+    workspaceId,
+  );
+  if (sources.length !== uniqueSourceIds.length) {
+    throw httpError(
+      400,
+      "One or more selected mock tests weren't found in this workspace",
+    );
+  }
+
+  const distributionRows =
+    await mockTestsRepo.getTopicDistributionForMockTests(uniqueSourceIds);
+  if (distributionRows.length === 0) {
+    throw httpError(
+      400,
+      "The selected mock tests have no questions to base a generation on",
+    );
+  }
+
+  const topicDistribution = scaleDistributionToTarget(distributionRows, count);
+
+  await mockTestsRepo.insertGenerationSources(
+    pool,
+    mockTest.id,
+    uniqueSourceIds,
+  );
+
+  const {
+    processingJob,
+    mockTest: updatedMockTest,
+    worker,
+  } = await queueProcessingJob({
+    mockTest,
+    workspaceId,
+    uploadedFileId: null,
+    requestedBy: userId,
+    originalFilename: null,
+    storageKey: null,
+    documentType: "generate_from_existing",
+    extraInputConfig: {
+      sourceMockTestIds: uniqueSourceIds,
+      targetQuestionCount: count,
+      difficultyHint: normalizedDifficultyHint,
+      topicDistribution,
+    },
+  });
+
+  return { processingJob, mockTest: updatedMockTest, worker };
 }
 
 export async function uploadDocument({

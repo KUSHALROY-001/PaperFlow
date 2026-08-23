@@ -68,6 +68,10 @@ mockTestsRouter.get(
   "/:mockTestId/summary",
   asyncHandler(mockTestsController.getSummary),
 );
+mockTestsRouter.get(
+  "/:mockTestId/generation-sources",
+  asyncHandler(mockTestsController.getGenerationSources),
+);
 mockTestsRouter.patch(
   "/:mockTestId",
   requireRole("editor"),
@@ -90,6 +94,12 @@ mockTestsRouter.post(
   loadMockTest,
   upload.single("document"),
   asyncHandler(mockTestsController.upload),
+);
+mockTestsRouter.post(
+  "/:mockTestId/generate-from-existing",
+  requireRole("editor"),
+  loadMockTest,
+  asyncHandler(mockTestsController.generateFromExisting),
 );
 mockTestsRouter.post(
   "/:mockTestId/reprocess",

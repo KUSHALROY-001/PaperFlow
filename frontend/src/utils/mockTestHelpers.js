@@ -178,38 +178,75 @@ const PROCESSING_STEP_DEFS = [
   },
 ];
 
+// "Generate from existing tests" has no PDF, no OCR, no page-by-page
+// parsing - process_generation_job (worker.py) only ever reports 3
+// distinct progress checkpoints (20/60/80, then 100 on completion), so
+// this list mirrors those exactly rather than reusing PROCESSING_STEP_DEFS'
+// PDF-shaped steps, which would show "PDF uploaded"/"OCR searchable PDF"
+// for a job that was never given a PDF at all.
+const GENERATION_STEP_DEFS = [
+  {
+    label: "Sources selected",
+    description: "Topic breakdown computed from the selected mock test(s)",
+    icon: ListChecks,
+    threshold: 0,
+  },
+  {
+    label: "Generating questions",
+    description: "AI is writing new questions matching that topic shape",
+    icon: Sparkles,
+    threshold: 20,
+  },
+  {
+    label: "Saving questions",
+    description: "Validating and saving the generated question set",
+    icon: ClipboardCheck,
+    threshold: 80,
+  },
+  {
+    label: "Ready for export",
+    description: "Finalizing questions for review and export",
+    icon: Download,
+    threshold: 100,
+  },
+];
+
 export function buildProcessingSteps(mocktest, latestJob) {
+  const isGenerated =
+    latestJob?.input_config?.documentType === "generate_from_existing";
+  const stepDefs = isGenerated ? GENERATION_STEP_DEFS : PROCESSING_STEP_DEFS;
+
   const isProcessing = mocktest?.status === "processing";
   const hasQuestions = Number(mocktest?.total_questions || 0) > 0;
   const progress = Number(latestJob?.progress_percent || 0);
   const isFailed = latestJob?.status === "failed";
 
   if (isFailed) {
-    return PROCESSING_STEP_DEFS.map((step) => ({ ...step, status: "pending" }));
+    return stepDefs.map((step) => ({ ...step, status: "pending" }));
   }
 
   if (hasQuestions || latestJob?.status === "completed") {
-    return PROCESSING_STEP_DEFS.map((step) => ({
+    return stepDefs.map((step) => ({
       ...step,
       status: "complete",
     }));
   }
 
   if (!latestJob) {
-    return PROCESSING_STEP_DEFS.map((step) => ({ ...step, status: "pending" }));
+    return stepDefs.map((step) => ({ ...step, status: "pending" }));
   }
 
   // The single furthest step whose threshold we've reached - the LAST
   // match wins on purpose, so a tied group (three steps at threshold 68)
   // collapses to its final member instead of its first.
   let activeIndex = 0;
-  PROCESSING_STEP_DEFS.forEach((step, index) => {
+  stepDefs.forEach((step, index) => {
     if (progress >= step.threshold) {
       activeIndex = index;
     }
   });
 
-  return PROCESSING_STEP_DEFS.map((step, index) => {
+  return stepDefs.map((step, index) => {
     let status;
     if (index < activeIndex) status = "complete";
     else if (index === activeIndex)

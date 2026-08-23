@@ -1,7 +1,12 @@
 import { FileText, Sparkles, Zap } from "lucide-react";
 import ProcessingTimeline from "./ProcessingTimeline";
 
-export default function ProcessingTab({ steps, documentPreview, job }) {
+export default function ProcessingTab({
+  steps,
+  documentPreview,
+  job,
+  isGenerated = false,
+}) {
   const progress = Number(job?.progress_percent || 0);
   const statusLabel = job?.status ? job.status.replace("_", " ") : "idle";
   const isProcessing =
@@ -67,7 +72,11 @@ export default function ProcessingTab({ steps, documentPreview, job }) {
 
         <div className="mt-2.5 flex items-center justify-between text-xs font-semibold text-muted-foreground">
           <span>
-            {isProcessing ? "Extracting & processing PDF..." : "Status"}
+            {isProcessing
+              ? isGenerated
+                ? "Generating questions with AI..."
+                : "Extracting & processing PDF..."
+              : "Status"}
           </span>
           <span className="font-bold text-foreground font-mono">
             {progress}%
@@ -88,18 +97,26 @@ export default function ProcessingTab({ steps, documentPreview, job }) {
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-500/15 text-orange-500">
-                <FileText className="h-5 w-5" />
+                {isGenerated ? (
+                  <Sparkles className="h-5 w-5" />
+                ) : (
+                  <FileText className="h-5 w-5" />
+                )}
               </div>
               <div className="min-w-0">
-                <h3 className="font-bold text-foreground">Document Preview</h3>
+                <h3 className="font-bold text-foreground">
+                  {isGenerated ? "Generation Progress" : "Document Preview"}
+                </h3>
                 <p className="text-xs text-muted-foreground">
-                  Live OCR cleanup snapshot
+                  {isGenerated
+                    ? "Live AI generation snapshot"
+                    : "Live OCR cleanup snapshot"}
                 </p>
               </div>
             </div>
             <div className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-500">
               <Sparkles className="h-3.5 w-3.5" />
-              Improving quality
+              {isGenerated ? "AI-generated" : "Improving quality"}
             </div>
           </div>
 

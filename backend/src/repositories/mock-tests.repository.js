@@ -337,3 +337,90 @@ export async function listPlayableQuestions(mockTestId, topics) {
 
   return result.rows;
 }
+
+// "Generate from existing tests" feature. Validates every id belongs to
+// this workspace as part of the same query that fetches them - a stray
+// id from another workspace is silently dropped from the result rather
+// than surfacing as its own error, so the caller (mock-tests.service.js)
+// checks the returned row count against the requested id count to catch
+// that case with a real error message instead.
+export async function findMockTestsByIds(mockTestIds, workspaceId) {
+  const result = await pool.query(
+    `
+    SELECT id, name
+    FROM mock_tests
+    WHERE id = ANY($1::uuid[])
+      AND workspace_id = $2
+    `,
+    [mockTestIds, workspaceId],
+  );
+
+  return result.rows;
+}
+
+// The statistical shape the generation prompt is built from - topic,
+// subtopic, question type, and the marking scheme that's most common for
+// that combination. Deliberately NOT selecting question_text/options/
+// explanation here: this whole feature exists to avoid feeding the AI
+// (and paying tokens for) the source questions themselves, only their
+// aggregate shape. mode() WITHIN GROUP picks the most common marks value
+// per group rather than an average - marks_per_correct is almost always
+// one of a few round numbers (1, 2, 4), and an average across a mixed
+// group could land on a value no real question ever actually used (e.g.
+// 2.5), which mode() never can.
+export async function getTopicDistributionForMockTests(mockTestIds) {
+  const result = await pool.query(
+    `
+    SELECT
+      qc.topic,
+      qc.subtopic,
+      qc.question_type,
+      count(*)::int AS question_count,
+      mode() WITHIN GROUP (ORDER BY qc.marks_per_correct) AS typical_marks_per_correct,
+      mode() WITHIN GROUP (ORDER BY qc.negative_marks_per_wrong) AS typical_negative_marks_per_wrong
+    FROM question_contents qc
+    JOIN questions q ON q.content_id = qc.id
+    WHERE q.mock_test_id = ANY($1::uuid[])
+      AND q.status <> 'rejected'
+    GROUP BY qc.topic, qc.subtopic, qc.question_type
+    ORDER BY question_count DESC
+    `,
+    [mockTestIds],
+  );
+
+  return result.rows;
+}
+
+export async function insertGenerationSources(
+  client,
+  mockTestId,
+  sourceMockTestIds,
+) {
+  if (sourceMockTestIds.length === 0) return;
+
+  const values = sourceMockTestIds
+    .map((_, index) => `($1, $${index + 2})`)
+    .join(", ");
+
+  await client.query(
+    `INSERT INTO mock_test_generation_sources (mock_test_id, source_mock_test_id)
+     VALUES ${values}
+     ON CONFLICT DO NOTHING`,
+    [mockTestId, ...sourceMockTestIds],
+  );
+}
+
+export async function listGenerationSources(mockTestId) {
+  const result = await pool.query(
+    `
+    SELECT mt.id, mt.name
+    FROM mock_test_generation_sources mtgs
+    JOIN mock_tests mt ON mt.id = mtgs.source_mock_test_id
+    WHERE mtgs.mock_test_id = $1
+    ORDER BY mt.name ASC
+    `,
+    [mockTestId],
+  );
+
+  return result.rows;
+}

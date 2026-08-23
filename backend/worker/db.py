@@ -5,12 +5,24 @@ import psycopg
 from psycopg.rows import dict_row
 
 from .asset_extractor import build_diagram_storage_path
-from .config import DATABASE_URL
+from .config import DATABASE_URL, DB_CA_CERT_PATH
 
 
 @contextmanager
 def get_connection():
-    with psycopg.connect(DATABASE_URL, row_factory=dict_row) as connection:
+    # verify-full (not the libpq default of "prefer") means this actually
+    # checks the server cert against DB_CA_CERT_PATH, matching what
+    # src/db/pool.js does for the Node backend - without this, the
+    # connection is encrypted but not authenticated, which is enough for a
+    # network MITM to succeed against.
+    connect_kwargs = {}
+    if DB_CA_CERT_PATH:
+        connect_kwargs["sslmode"] = "verify-full"
+        connect_kwargs["sslrootcert"] = DB_CA_CERT_PATH
+
+    with psycopg.connect(
+        DATABASE_URL, row_factory=dict_row, **connect_kwargs
+    ) as connection:
         yield connection
 
 
@@ -72,11 +84,11 @@ def claim_next_job(connection):
               uf.storage_key,
               uf.metadata AS uploaded_file_metadata
             FROM processing_jobs pj
-            JOIN uploaded_files uf ON uf.id = pj.uploaded_file_id
+            LEFT JOIN uploaded_files uf ON uf.id = pj.uploaded_file_id
             WHERE pj.status = 'queued'
                OR (pj.status = 'running' AND pj.updated_at < now() - (%s)::interval)
             ORDER BY pj.created_at ASC
-            FOR UPDATE SKIP LOCKED
+            FOR UPDATE OF pj SKIP LOCKED
             LIMIT 1
             """,
             [STALE_JOB_THRESHOLD],

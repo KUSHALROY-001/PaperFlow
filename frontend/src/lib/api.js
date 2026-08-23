@@ -202,6 +202,26 @@ export const api = {
       body: formData,
     });
   },
+  // "Generate from existing tests" - no file, plain JSON. The AI is only
+  // ever shown the selected source tests' topic/subtopic/question-type
+  // shape (computed server-side), never their actual question text - see
+  // mock-tests.service.js#generateFromExisting.
+  generateMockTestFromExisting(
+    mockTestId,
+    { sourceMockTestIds, targetQuestionCount, difficultyHint },
+  ) {
+    return apiRequest(`/api/mock-tests/${mockTestId}/generate-from-existing`, {
+      method: "POST",
+      body: JSON.stringify({
+        sourceMockTestIds,
+        targetQuestionCount,
+        difficultyHint,
+      }),
+    });
+  },
+  getGenerationSources(mockTestId) {
+    return apiRequest(`/api/mock-tests/${mockTestId}/generation-sources`);
+  },
   getMockTest(mockTestId) {
     return apiRequest(`/api/mock-tests/${mockTestId}`);
   },

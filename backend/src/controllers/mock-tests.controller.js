@@ -22,6 +22,14 @@ export async function getSummary(req, res) {
   res.json({ mockTest });
 }
 
+export async function getGenerationSources(req, res) {
+  const sources = await mockTestsService.getGenerationSources(
+    req.params.mockTestId,
+    req.workspaceId,
+  );
+  res.json({ sources });
+}
+
 export async function update(req, res) {
   const mockTest = await mockTestsService.updateMockTest(
     req.params.mockTestId,
@@ -54,6 +62,22 @@ export async function upload(req, res) {
     file: req.file,
     // multer parses non-file multipart fields into req.body alongside req.file
     documentType: req.body.documentType,
+  });
+  res.status(201).json(result);
+}
+
+// "Generate from existing tests" - no file upload, no multer, ordinary
+// JSON body (see routes file - this route sits in the same requireAuth-
+// wrapped router as everything else, unlike /upload which has its own
+// multer middleware in front of it).
+export async function generateFromExisting(req, res) {
+  const result = await mockTestsService.generateFromExisting({
+    mockTest: req.mockTest,
+    workspaceId: req.workspaceId,
+    userId: req.user.id,
+    sourceMockTestIds: req.body.sourceMockTestIds,
+    targetQuestionCount: req.body.targetQuestionCount,
+    difficultyHint: req.body.difficultyHint,
   });
   res.status(201).json(result);
 }

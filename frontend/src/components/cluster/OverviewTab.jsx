@@ -81,9 +81,15 @@ export default function OverviewTab({
       .join("&");
     navigate(`/session/${mocktest.id}?${query}`);
   };
+  const isGenerated =
+    latestJob?.input_config?.documentType === "generate_from_existing";
   const currentStage =
     latestJob?.current_stage ||
-    (isReady ? "Questions available" : "Waiting for PDF upload");
+    (isReady
+      ? "Questions available"
+      : isGenerated
+        ? "Waiting for generation to start"
+        : "Waiting for PDF upload");
   const progress = Number(latestJob?.progress_percent || 0);
 
   const phase1FillLevel = isReady
@@ -111,7 +117,11 @@ export default function OverviewTab({
           <h3 className="font-bold text-foreground mb-4">Pipeline Status</h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <PhaseWaterCard
-              phaseTitle="Phase 1: Upload & AI Extraction"
+              phaseTitle={
+                isGenerated
+                  ? "Phase 1: AI Generation"
+                  : "Phase 1: Upload & AI Extraction"
+              }
               status={
                 isProcessing ? "Running" : isReady ? "Completed" : "Not Started"
               }
