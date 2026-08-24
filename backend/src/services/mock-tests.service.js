@@ -279,40 +279,87 @@ async function queueProcessingJob({
 
 // Scales a raw topic/subtopic/type breakdown (whatever total question
 // count the selected source tests happen to add up to) down or up to sum
-// to EXACTLY targetCount. Naive proportional rounding (Math.round on each
-// group independently) doesn't guarantee the rounded values sum back to
-// the target - the largest-remainder method does: take each group's
-// floor, then hand out the few leftover slots to the groups with the
-// largest fractional remainder, largest first. If targetCount is smaller
-// than the number of distinct topic/subtopic/type groups, some groups
-// legitimately end up with 0 and are dropped - there's no other sane way
-// to fit more groups than the target has room for.
-function scaleDistributionToTarget(rows, targetCount) {
-  const totalQuestions = rows.reduce((sum, row) => sum + row.question_count, 0);
-  const scaled = rows.map((row) => {
-    const exact = (row.question_count / totalQuestions) * targetCount;
-    const floor = Math.floor(exact);
-    return { ...row, count: floor, remainder: exact - floor };
-  });
+// to EXACTLY targetCount, while rotating which groups get picked across
+// repeat generations from the same source pool instead of always landing
+// on the same deterministic subset.
+//
+// The old version used pure largest-remainder rounding with no memory of
+// past runs - fine for picking HOW a single call's target should be
+// proportioned across groups, but with no randomness or history, it's
+// fully deterministic: the same source + the same targetCount always
+// produces the exact same scaled counts, tie-broken by array order, which
+// never changes between calls either. Generate 50% from a 100-topic
+// source four times and you'd get the identical ~50 topics every single
+// time - confirmed as a real, reported bug, not a hypothetical.
+//
+// Replaced with a greedy, single-question-at-a-time allocator: repeatedly
+// pick whichever eligible group has been used LEAST across (a) prior
+// generations from this exact same source pool (usageRows, from
+// findMockTestsGeneratedFromSameSourceSet + a second
+// getTopicDistributionForMockTests call on those - see
+// generateFromExisting below) and (b) this call so far. Ties break by the
+// group's own source question_count (bigger/more-central topics
+// preferred, keeping some of the original "respect topic weight" intent)
+// and finally by topic/subtopic/type text for full determinism (no
+// JS-engine-dependent ordering left to chance).
+//
+// Deliberately has NO hard per-group cap at that group's own source
+// question_count - the old version supported requesting MORE than the
+// source's total (e.g. targetCount=200 from a 100-question source scales
+// every group up ~2x), and a hard cap here would silently break that. A
+// group with a small source count just keeps participating in the same
+// least-used-first rotation as everything else once its "first lap" is
+// done, same as any other group.
+function scaleDistributionToTarget(rows, targetCount, usageRows = []) {
+  const keyFor = (row) =>
+    `${row.topic}\u0000${row.subtopic || ""}\u0000${row.question_type}`;
 
-  const assigned = scaled.reduce((sum, row) => sum + row.count, 0);
-  let remaining = targetCount - assigned;
-
-  const byRemainderDesc = [...scaled].sort((a, b) => b.remainder - a.remainder);
-  for (let i = 0; i < byRemainderDesc.length && remaining > 0; i += 1) {
-    byRemainderDesc[i].count += 1;
-    remaining -= 1;
+  const usageByKey = new Map();
+  for (const row of usageRows) {
+    usageByKey.set(keyFor(row), row.question_count);
   }
 
-  return scaled
-    .filter((row) => row.count > 0)
-    .map((row) => ({
-      topic: row.topic,
-      subtopic: row.subtopic,
-      questionType: row.question_type,
-      count: row.count,
-      marksPerCorrect: row.typical_marks_per_correct,
-      negativeMarksPerWrong: row.typical_negative_marks_per_wrong,
+  const pool = rows.map((row) => ({
+    topic: row.topic,
+    subtopic: row.subtopic,
+    question_type: row.question_type,
+    question_count: row.question_count,
+    marksPerCorrect: row.typical_marks_per_correct,
+    negativeMarksPerWrong: row.typical_negative_marks_per_wrong,
+    key: keyFor(row),
+    priorUsage: usageByKey.get(keyFor(row)) || 0,
+    pickedThisCall: 0,
+  }));
+
+  for (let remaining = targetCount; remaining > 0; remaining -= 1) {
+    let winner = pool[0];
+    for (let i = 1; i < pool.length; i += 1) {
+      const candidate = pool[i];
+      const candidateUsage = candidate.priorUsage + candidate.pickedThisCall;
+      const winnerUsage = winner.priorUsage + winner.pickedThisCall;
+      if (
+        candidateUsage < winnerUsage ||
+        (candidateUsage === winnerUsage &&
+          candidate.question_count > winner.question_count) ||
+        (candidateUsage === winnerUsage &&
+          candidate.question_count === winner.question_count &&
+          candidate.key < winner.key)
+      ) {
+        winner = candidate;
+      }
+    }
+    winner.pickedThisCall += 1;
+  }
+
+  return pool
+    .filter((group) => group.pickedThisCall > 0)
+    .map((group) => ({
+      topic: group.topic,
+      subtopic: group.subtopic,
+      questionType: group.question_type,
+      count: group.pickedThisCall,
+      marksPerCorrect: group.marksPerCorrect,
+      negativeMarksPerWrong: group.negativeMarksPerWrong,
     }));
 }
 
@@ -393,7 +440,28 @@ export async function generateFromExisting({
     );
   }
 
-  const topicDistribution = scaleDistributionToTarget(distributionRows, count);
+  // Prior generations from this EXACT same source pool (see
+  // findMockTestsGeneratedFromSameSourceSet) feed scaleDistributionToTarget
+  // which topic/subtopic/type groups already got covered, so a repeat
+  // generation rotates toward under-used groups instead of landing on the
+  // same deterministic subset every time - a fresh/first-ever source pool
+  // just gets an empty usage list, which scaleDistributionToTarget treats
+  // as every group starting equally unused (its old, still-correct
+  // behavior for a first run).
+  const priorGeneratedIds =
+    await mockTestsRepo.findMockTestsGeneratedFromSameSourceSet(
+      uniqueSourceIds,
+    );
+  const usageRows =
+    priorGeneratedIds.length > 0
+      ? await mockTestsRepo.getTopicDistributionForMockTests(priorGeneratedIds)
+      : [];
+
+  const topicDistribution = scaleDistributionToTarget(
+    distributionRows,
+    count,
+    usageRows,
+  );
 
   await mockTestsRepo.insertGenerationSources(
     pool,

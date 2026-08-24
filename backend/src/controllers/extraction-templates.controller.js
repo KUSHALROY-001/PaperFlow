@@ -3,15 +3,17 @@ import * as templatesService from "../services/extraction-templates.service.js";
 export async function list(req, res) {
   const { templates, categories } = await templatesService.listTemplates(
     req.workspaceId,
+    req.user.id,
     req.query,
   );
   res.json({ templates, categories });
 }
 
 export async function getOne(req, res) {
-  const template = await templatesService.getTemplateOrFail(
+  const template = await templatesService.getTemplateWithMyRating(
     req.params.templateId,
     req.workspaceId,
+    req.user.id,
   );
   res.json({ template });
 }
@@ -47,4 +49,23 @@ export async function apply(req, res) {
     req.body,
   );
   res.status(201).json(result);
+}
+
+export async function rate(req, res) {
+  const template = await templatesService.rateTemplate(
+    req.params.templateId,
+    req.workspaceId,
+    req.user.id,
+    req.body,
+  );
+  res.json({ template });
+}
+
+export async function unrate(req, res) {
+  const template = await templatesService.removeTemplateRating(
+    req.params.templateId,
+    req.workspaceId,
+    req.user.id,
+  );
+  res.json({ template });
 }

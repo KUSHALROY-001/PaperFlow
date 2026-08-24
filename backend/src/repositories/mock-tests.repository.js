@@ -410,6 +410,45 @@ export async function insertGenerationSources(
   );
 }
 
+// Finds every mock test previously generated from EXACTLY this same set of
+// source mock tests (order-independent - same set, not a superset/subset
+// match) - lets generateFromExisting see which topic/subtopic/type groups
+// earlier generations from this exact source pool already covered, so a
+// repeat generation can prefer whichever groups haven't been touched yet
+// instead of scaleDistributionToTarget's old fully-deterministic tie-break
+// picking the identical subset every single time (see that function).
+//
+// Deliberately keyed on the EXACT source set via array equality, not "any
+// generation ever done in this workspace" - swapping even one source test
+// starts a fresh rotation, matching the intuitive mental model ("I've
+// covered topics X, Y from THIS pool") rather than one giant workspace-wide
+// counter that would conflate generations drawn from unrelated pools.
+//
+// Deliberately does NOT write or maintain any new tracking table - "usage"
+// is derived live from real generated mock tests' own topic distributions
+// (getTopicDistributionForMockTests, called by the service layer on
+// whatever ids this returns), so it can never drift out of sync the way a
+// separate counter incremented alongside generation could.
+export async function findMockTestsGeneratedFromSameSourceSet(
+  sourceMockTestIds,
+) {
+  if (sourceMockTestIds.length === 0) return [];
+
+  const sortedSourceIds = [...sourceMockTestIds].sort();
+
+  const result = await pool.query(
+    `
+    SELECT mock_test_id
+    FROM mock_test_generation_sources
+    GROUP BY mock_test_id
+    HAVING array_agg(source_mock_test_id ORDER BY source_mock_test_id) = $1::uuid[]
+    `,
+    [sortedSourceIds],
+  );
+
+  return result.rows.map((row) => row.mock_test_id);
+}
+
 export async function listGenerationSources(mockTestId) {
   const result = await pool.query(
     `

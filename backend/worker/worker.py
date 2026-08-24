@@ -4,8 +4,18 @@ import time
 import traceback
 from pathlib import Path
 
-from .config import MAX_JOBS_PER_RUN, OCR_ENABLED, POLL_INTERVAL_SECONDS
-from .ai import enhance_questions_with_ai, generate_questions_from_metadata, get_provider
+from .config import (
+    AI_DUPLICATE_REGEN_THRESHOLD,
+    MAX_JOBS_PER_RUN,
+    OCR_ENABLED,
+    POLL_INTERVAL_SECONDS,
+)
+from .ai import (
+    enhance_questions_with_ai,
+    generate_questions_from_metadata,
+    get_provider,
+    regenerate_flagged_duplicates,
+)
 from .duplicate_detector import (
     auto_merge_exact_duplicates_for_mock_test,
     detect_duplicates_for_mock_test,
@@ -13,10 +23,13 @@ from .duplicate_detector import (
 from .db import (
     JobCancelled,
     claim_next_job,
+    find_flagged_duplicate_slots,
     get_connection,
     is_job_cancelled,
     mark_mock_test_after_processing,
     replace_questions,
+    replace_slot_content,
+    resolve_regenerated_duplicate_pair,
     update_job,
 )
 from .pdf_extract import extract_pdf_pages
@@ -474,6 +487,55 @@ def process_generation_job(job):
             print(f"Found {new_pairs} new duplicate question pair(s)")
     except Exception as error:
         print(f"Duplicate detection failed for job {job['id']}: {error}")
+
+    # One bounded regeneration pass for whatever the fuzzy detector above
+    # JUST flagged as a near-duplicate of something already in the
+    # workspace, at or above AI_DUPLICATE_REGEN_THRESHOLD - see
+    # db.py#find_flagged_duplicate_slots and
+    # ai/provider.py#regenerate_flagged_duplicates. Deliberately only ONE
+    # pass, not a loop that keeps re-checking and re-regenerating until
+    # clean: a topic narrow enough that the model converges on the same
+    # canonical example twice could in principle do it a third time too,
+    # and this codebase's whole reason for existing right now is to spend
+    # LESS of a rate-limited quota per generation, not chase a
+    # not-strictly-guaranteed zero-duplication outcome. Whatever's still
+    # flagged after this one pass is left exactly where it already was -
+    # sitting in the review queue for a human, same as any other
+    # near-duplicate this pipeline has ever surfaced.
+    try:
+        with get_connection() as connection:
+            flagged = find_flagged_duplicate_slots(
+                connection,
+                job["workspace_id"],
+                job["mock_test_id"],
+                AI_DUPLICATE_REGEN_THRESHOLD,
+            )
+        if flagged:
+            replacements, regen_summary = regenerate_flagged_duplicates(
+                flagged, difficulty_hint, provider
+            )
+            with get_connection() as connection:
+                with connection.transaction():
+                    for item in flagged:
+                        replacement = replacements.get(item["slot_id"])
+                        if not replacement:
+                            continue
+                        replaced = replace_slot_content(
+                            connection,
+                            job["workspace_id"],
+                            item["slot_id"],
+                            replacement,
+                        )
+                        if replaced:
+                            resolve_regenerated_duplicate_pair(
+                                connection, item["pair_id"]
+                            )
+            print(
+                f"Regenerated {regen_summary['questionsRegenerated']}/"
+                f"{len(flagged)} flagged near-duplicate question(s)"
+            )
+    except Exception as error:
+        print(f"Duplicate regeneration failed for job {job['id']}: {error}")
 
     return len(questions)
 

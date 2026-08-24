@@ -76,6 +76,16 @@ export function mapTemplate(row) {
     // the literal text "NaN" on screen instead of "—". `== null` catches
     // both null and undefined.
     rating: row.rating == null ? null : Number(row.rating),
+    // ratingCount/myRating are new (see
+    // migrations/036_extraction_template_ratings.sql) - ratingCount is
+    // how many real submitted ratings back the average above (0 for the
+    // seeded platform templates until someone actually rates one; a bare
+    // average with no count is close to meaningless for trust). myRating
+    // is this specific user's own rating for this template, if they've
+    // given one - null otherwise, which the rating widget reads to decide
+    // whether it's showing "rate this" or "you rated this".
+    ratingCount: row.ratingCount ?? 0,
+    myRating: row.myRating ?? null,
     tags: Array.isArray(row.tags) ? row.tags : [],
     color: row.color,
     popular: row.isPopular,
@@ -101,3 +111,73 @@ export function mapTemplate(row) {
     negativeMarksPerWrong: row.negativeMarksPerWrong,
   };
 }
+
+export const DIFFICULTY_OPTIONS = ["Easy", "Medium", "Hard", "Variable"];
+export const COLOR_OPTIONS = Object.keys(colorMap);
+
+export const fieldClass =
+  "w-full px-3 py-2 text-sm rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30";
+export const labelClass =
+  "block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5";
+
+let sectionKeySeed = 0;
+
+export function makeEmptySection() {
+  sectionKeySeed += 1;
+  return {
+    key: `new-${sectionKeySeed}`,
+    name: "",
+    topicsText: "",
+    questionCount: "",
+    marksPerCorrect: "",
+    negativeMarksPerWrong: "",
+  };
+}
+
+export function buildSectionPayload(section) {
+  const name = section.name.trim();
+  if (!name) return null;
+
+  const payload = {
+    name,
+    topics: section.topicsText
+      .split(",")
+      .map((topic) => topic.trim())
+      .filter(Boolean),
+  };
+
+  if (section.questionCount !== "") {
+    payload.questionCount = Number(section.questionCount);
+  }
+  if (section.marksPerCorrect !== "") {
+    payload.marksPerCorrect = Number(section.marksPerCorrect);
+  }
+  if (section.negativeMarksPerWrong !== "") {
+    payload.negativeMarksPerWrong = Number(section.negativeMarksPerWrong);
+  }
+
+  return payload;
+}
+
+export function sectionRowFromTemplateSection(section, index) {
+  sectionKeySeed += 1;
+  return {
+    key: `existing-${index}-${sectionKeySeed}`,
+    name: section?.name || "",
+    topicsText: Array.isArray(section?.topics) ? section.topics.join(", ") : "",
+    questionCount:
+      section?.questionCount === undefined || section?.questionCount === null
+        ? ""
+        : String(section.questionCount),
+    marksPerCorrect:
+      section?.marksPerCorrect === undefined || section?.marksPerCorrect === null
+        ? ""
+        : String(section.marksPerCorrect),
+    negativeMarksPerWrong:
+      section?.negativeMarksPerWrong === undefined ||
+      section?.negativeMarksPerWrong === null
+        ? ""
+        : String(section.negativeMarksPerWrong),
+  };
+}
+

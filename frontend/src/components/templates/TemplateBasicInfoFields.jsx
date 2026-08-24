@@ -1,0 +1,78 @@
+import {
+  CATEGORY_OPTIONS,
+  DIFFICULTY_OPTIONS,
+  fieldClass,
+  labelClass,
+} from "@/utils/templateHelpers";
+
+export default function TemplateBasicInfoFields({
+  name,
+  setName,
+  description,
+  setDescription,
+  category,
+  setCategory,
+  difficulty,
+  setDifficulty,
+  isViewer,
+}) {
+  return (
+    <>
+      <div>
+        <label className={labelClass}>Name</label>
+        <input
+          disabled={isViewer}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="e.g. My College's Mid-Sem Physics Format"
+          className={fieldClass}
+        />
+      </div>
+
+      <div>
+        <label className={labelClass}>Description</label>
+        <textarea
+          disabled={isViewer}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={2}
+          placeholder="What kind of exam is this format for?"
+          className={`${fieldClass} resize-none`}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className={labelClass}>Category</label>
+          <select
+            disabled={isViewer}
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className={fieldClass}
+          >
+            {CATEGORY_OPTIONS.filter((c) => c.value).map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className={labelClass}>Difficulty</label>
+          <select
+            disabled={isViewer}
+            value={difficulty}
+            onChange={(e) => setDifficulty(e.target.value)}
+            className={fieldClass}
+          >
+            {DIFFICULTY_OPTIONS.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+    </>
+  );
+}

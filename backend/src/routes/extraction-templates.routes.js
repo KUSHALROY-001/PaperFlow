@@ -31,3 +31,16 @@ extractionTemplatesRouter.post(
   requireRole("editor"),
   asyncHandler(templatesController.apply),
 );
+
+// No requireRole here, deliberately - unlike create/update/delete/apply,
+// rating a template doesn't modify workspace content, it records one
+// user's personal opinion. Any workspace member who can see/browse a
+// template (list/getOne, also ungated) can rate it, viewers included.
+extractionTemplatesRouter.put(
+  "/:templateId/rating",
+  asyncHandler(templatesController.rate),
+);
+extractionTemplatesRouter.delete(
+  "/:templateId/rating",
+  asyncHandler(templatesController.unrate),
+);

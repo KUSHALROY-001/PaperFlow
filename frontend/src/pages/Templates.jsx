@@ -34,6 +34,8 @@ export default function Templates() {
     setDeleteTarget,
     actionError,
     handleDeleteTemplate,
+    handleRateTemplate,
+    handleRemoveRating,
     isLoading,
     error,
     templates,
@@ -174,6 +176,8 @@ export default function Templates() {
             setApplyTarget(preview);
             setPreview(null);
           }}
+          onRate={(rating) => handleRateTemplate(preview.id, rating)}
+          onRemoveRating={() => handleRemoveRating(preview.id)}
         />
       )}
 

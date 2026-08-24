@@ -32,6 +32,19 @@ AI_NOTES_MAX_QUESTIONS = int(os.environ.get("AI_NOTES_MAX_QUESTIONS", "40"))
 # ceiling is much higher. See gemini_provider.py's rate limiter - this is
 # enforced proactively (before a call, not just retried after a 429).
 AI_MAX_REQUESTS_PER_MINUTE = int(os.environ.get("AI_MAX_REQUESTS_PER_MINUTE", "15"))
+# A generated question flagged as a near-duplicate of something already in
+# the workspace (similarity_score from question_duplicate_pairs) at or
+# above this gets ONE automatic regeneration attempt rather than just
+# sitting in the review queue - see
+# worker.py#regenerate_flagged_duplicates_for_mock_test. Deliberately
+# higher than detect_duplicates_for_mock_test's own 0.55 detection
+# threshold: a pair between 0.55 and this cutoff is genuinely ambiguous
+# ("similar phrasing, might be a coincidence") and worth a human's actual
+# judgment; a pair at or above this is close enough that spending an extra
+# AI request to just rewrite it is almost always the right call.
+AI_DUPLICATE_REGEN_THRESHOLD = float(
+    os.environ.get("AI_DUPLICATE_REGEN_THRESHOLD", "0.70")
+)
 OCR_ENABLED = os.environ.get("OCR_ENABLED", "true").strip().lower() not in (
     "0",
     "false",

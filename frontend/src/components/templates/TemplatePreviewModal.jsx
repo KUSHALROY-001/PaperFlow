@@ -1,8 +1,15 @@
-import { BookOpen, ChevronRight, Download, X } from "lucide-react";
+import { BookOpen, ChevronRight, Download, Star, X } from "lucide-react";
 import { iconBgMap } from "@/utils/templateHelpers";
+import StarRatingInput from "./StarRatingInput";
 
 // Promoted from inline JSX inside pages/Templates.jsx — no behavior changes.
-export default function TemplatePreviewModal({ template, onClose, onApply }) {
+export default function TemplatePreviewModal({
+  template,
+  onClose,
+  onApply,
+  onRate,
+  onRemoveRating,
+}) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
@@ -37,6 +44,33 @@ export default function TemplatePreviewModal({ template, onClose, onApply }) {
                 {template.description}
               </p>
             )}
+          </div>
+
+          <div className="bg-muted/60 border border-border rounded-xl p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="flex items-center gap-1.5 text-xs sm:text-sm">
+              <Star className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
+              {template.rating != null ? (
+                <span className="font-bold text-foreground">
+                  {template.rating}{" "}
+                  <span className="font-normal text-muted-foreground">
+                    ({template.ratingCount}{" "}
+                    {template.ratingCount === 1 ? "rating" : "ratings"})
+                  </span>
+                </span>
+              ) : (
+                <span className="text-muted-foreground">No ratings yet</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                {template.myRating != null ? "Your rating" : "Rate this"}
+              </span>
+              <StarRatingInput
+                value={template.myRating}
+                onRate={onRate}
+                onRemove={onRemoveRating}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-3">

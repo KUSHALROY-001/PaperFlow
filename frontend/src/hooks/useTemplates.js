@@ -60,6 +60,39 @@ export function useTemplates() {
     }
   };
 
+  // Both rating handlers update `preview` from the response directly (not
+  // just invalidating the list query) so the modal - which reads from
+  // `preview`, not from `templates` - reflects the new rating immediately
+  // rather than waiting on a refetch. The list/card views pick it up
+  // naturally once the invalidated query refetches.
+  const handleRateTemplate = async (templateId, rating) => {
+    try {
+      setActionError("");
+      const { template } = await api.rateExtractionTemplate(templateId, rating);
+      const mapped = mapTemplate(template);
+      setPreview((current) => (current?.id === templateId ? mapped : current));
+      await queryClient.invalidateQueries({
+        queryKey: ["extraction-templates"],
+      });
+    } catch (rateError) {
+      setActionError(rateError.message || "Could not submit rating");
+    }
+  };
+
+  const handleRemoveRating = async (templateId) => {
+    try {
+      setActionError("");
+      const { template } = await api.deleteExtractionTemplateRating(templateId);
+      const mapped = mapTemplate(template);
+      setPreview((current) => (current?.id === templateId ? mapped : current));
+      await queryClient.invalidateQueries({
+        queryKey: ["extraction-templates"],
+      });
+    } catch (removeError) {
+      setActionError(removeError.message || "Could not remove rating");
+    }
+  };
+
   return {
     search,
     setSearch,
@@ -77,6 +110,8 @@ export function useTemplates() {
     setDeleteTarget,
     actionError,
     handleDeleteTemplate,
+    handleRateTemplate,
+    handleRemoveRating,
     isLoading,
     error,
     templates,

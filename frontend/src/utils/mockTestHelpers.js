@@ -255,3 +255,47 @@ export function buildProcessingSteps(mocktest, latestJob) {
     return { ...step, status };
   });
 }
+
+export function buildDocumentPreview({
+  latestJob,
+  isGenerated,
+  aiSummary = {},
+  ocrSummary = {},
+  questionsCount = 0,
+}) {
+  if (isGenerated) {
+    return [
+      latestJob?.current_stage || "Preparing generation...",
+      `Requested ${latestJob?.input_config?.targetQuestionCount ?? "?"} question(s), difficulty: ${latestJob?.input_config?.difficultyHint || "Variable"}.`,
+      aiSummary.attempted
+        ? `AI: ${aiSummary.questionsGenerated ?? 0} question(s) generated.`
+        : "AI generation summary will appear here.",
+      aiSummary.errors?.length
+        ? `${aiSummary.errors.length} topic group(s) failed to generate and were skipped.`
+        : null,
+      `${questionsCount} question(s) currently saved.`,
+    ].filter(Boolean);
+  }
+
+  return [
+    latestJob?.current_stage || "Waiting for a PDF upload.",
+    ocrSummary.error
+      ? `OCR: ${ocrSummary.error}`
+      : ocrSummary.converted
+        ? `OCR converted ${ocrSummary.pagesOcrd || 0} page(s) into a searchable PDF.`
+        : "OCR summary will appear here when scanned pages are detected.",
+    aiSummary.enabled
+      ? `AI: ${aiSummary.questionsFromAi || 0} question(s) returned by ${aiSummary.provider}.`
+      : "AI processing summary will appear here.",
+    // Only present when the mock test came from a template with at
+    // least one section carrying its own marksPerCorrect/
+    // negativeMarksPerWrong (see ai/provider.py#_apply_section_marks)
+    // - omitted from the array entirely otherwise, same as the
+    // templateMatch line would be if we surfaced that here too.
+    aiSummary.sectionMarksApplied?.questionsMatched
+      ? `Applied section-specific marking to ${aiSummary.sectionMarksApplied.questionsMatched} question(s).`
+      : null,
+    `${questionsCount} question(s) currently saved.`,
+  ].filter(Boolean);
+}
+

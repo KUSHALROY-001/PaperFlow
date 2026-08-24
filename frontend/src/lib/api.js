@@ -390,6 +390,17 @@ export const api = {
       body: JSON.stringify(payload),
     });
   },
+  rateExtractionTemplate(templateId, rating) {
+    return apiRequest(`/api/extraction-templates/${templateId}/rating`, {
+      method: "PUT",
+      body: JSON.stringify({ rating }),
+    });
+  },
+  deleteExtractionTemplateRating(templateId) {
+    return apiRequest(`/api/extraction-templates/${templateId}/rating`, {
+      method: "DELETE",
+    });
+  },
 
   // --- Question Bank ---
   // params: { search, topic, subtopic, hasDiagram, status,

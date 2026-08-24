@@ -53,6 +53,11 @@ export default function TemplateCard({
               <span className="text-xs font-bold text-foreground">
                 {template.rating ?? "—"}
               </span>
+              {template.ratingCount > 0 && (
+                <span className="text-[10px] text-muted-foreground">
+                  ({template.ratingCount})
+                </span>
+              )}
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-2 leading-relaxed">

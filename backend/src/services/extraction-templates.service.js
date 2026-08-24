@@ -213,7 +213,7 @@ function handleDuplicateTemplate(error) {
 // ---------------------------------------------------------------------------
 // Reads
 // ---------------------------------------------------------------------------
-export async function listTemplates(workspaceId, query) {
+export async function listTemplates(workspaceId, userId, query) {
   const category = query.category
     ? requiredEnum(query.category, CATEGORIES, "category")
     : undefined;
@@ -224,7 +224,18 @@ export async function listTemplates(workspaceId, query) {
     templatesRepo.listTemplateCategories(workspaceId),
   ]);
 
-  return { templates, categories };
+  const myRatings = await templatesRepo.findRatingsForUser(
+    userId,
+    templates.map((t) => t.id),
+  );
+
+  return {
+    templates: templates.map((t) => ({
+      ...t,
+      myRating: myRatings[t.id] ?? null,
+    })),
+    categories,
+  };
 }
 
 export async function getTemplateOrFail(templateId, workspaceId, client) {
@@ -239,6 +250,18 @@ export async function getTemplateOrFail(templateId, workspaceId, client) {
   }
 
   return template;
+}
+
+// Same shape as getTemplateOrFail, plus the requesting user's own rating -
+// kept as a separate function rather than changing getTemplateOrFail's
+// return shape everywhere, since several callers (applyTemplate in
+// particular) only need the template itself and have no reason to also
+// look up a rating.
+export async function getTemplateWithMyRating(templateId, workspaceId, userId) {
+  const template = await getTemplateOrFail(templateId, workspaceId);
+  const myRating = await templatesRepo.findRatingForUser(templateId, userId);
+
+  return { ...template, myRating };
 }
 
 // ---------------------------------------------------------------------------
@@ -404,6 +427,55 @@ export async function deleteTemplate(templateId, workspaceId) {
   if (!deleted) {
     throw httpError(404, "Template not found");
   }
+}
+
+// ---------------------------------------------------------------------------
+// Rate
+// A rating requires the template to be accessible (getTemplateOrFail) but
+// NOT owned - unlike edit/delete, any workspace a global or shared template
+// is visible to can rate it. Unlike ratingValue() above (0-5, nullable,
+// used only by the still-technically-reachable-but-unused manual `rating`
+// field on create/update), a user-submitted rating is a required whole
+// star count, 1-5 - there's no such thing as a user submitting "no
+// rating" or "0 stars" here; removing a rating is its own action
+// (removeTemplateRating) rather than a value this endpoint accepts.
+// ---------------------------------------------------------------------------
+function starRating(value) {
+  const rating = Number(value);
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    throw httpError(400, "rating must be a whole number from 1 to 5");
+  }
+  return rating;
+}
+
+export async function rateTemplate(templateId, workspaceId, userId, body) {
+  const rating = starRating(body.rating);
+
+  // Confirms the template is actually visible to this workspace before
+  // recording anything - without this, a user could rate a template ID
+  // they merely guessed, including another workspace's private custom
+  // template they were never meant to see.
+  await getTemplateOrFail(templateId, workspaceId);
+
+  await templatesRepo.upsertRating(pool, { templateId, userId, rating });
+
+  // Re-fetch rather than compute the new aggregate here - the trigger in
+  // 036_extraction_template_ratings.sql already recomputed
+  // rating/rating_count as part of the upsert above, so this read is the
+  // one guaranteed to reflect it correctly instead of this function
+  // duplicating that arithmetic and risking it drifting from what the
+  // trigger actually does.
+  const template = await getTemplateOrFail(templateId, workspaceId);
+  return { ...template, myRating: rating };
+}
+
+export async function removeTemplateRating(templateId, workspaceId, userId) {
+  await getTemplateOrFail(templateId, workspaceId);
+
+  await templatesRepo.deleteRating(templateId, userId);
+
+  const template = await getTemplateOrFail(templateId, workspaceId);
+  return { ...template, myRating: null };
 }
 
 // ---------------------------------------------------------------------------

@@ -26,6 +26,7 @@ const TEMPLATE_COLUMNS = `
   t.is_active AS "isActive",
   t.usage_count AS "usageCount",
   t.rating,
+  t.rating_count AS "ratingCount",
   t.settings,
   t.workspace_id IS NULL AS "systemTemplate",
   t.created_at AS "createdAt",
@@ -328,4 +329,67 @@ export async function logTemplateApplication(
   );
 
   return result.rows[0];
+}
+
+// --- Ratings ----------------------------------------------------------
+// extraction_templates.rating/rating_count are kept in sync by a DB
+// trigger (036_extraction_template_ratings.sql) - neither function here
+// touches those columns directly, only this table.
+
+// Upsert: submitting a rating again for the same (template, user) pair
+// updates the existing row rather than creating a second one (UNIQUE
+// (template_id, user_id) is what makes ON CONFLICT well-defined here).
+export async function upsertRating(client, { templateId, userId, rating }) {
+  const result = await client.query(
+    `
+    INSERT INTO extraction_template_ratings (template_id, user_id, rating)
+    VALUES ($1, $2, $3)
+    ON CONFLICT (template_id, user_id)
+    DO UPDATE SET rating = EXCLUDED.rating
+    RETURNING rating
+    `,
+    [templateId, userId, rating],
+  );
+
+  return result.rows[0];
+}
+
+export async function deleteRating(templateId, userId) {
+  const result = await pool.query(
+    "DELETE FROM extraction_template_ratings WHERE template_id = $1 AND user_id = $2 RETURNING id",
+    [templateId, userId],
+  );
+
+  return result.rowCount > 0;
+}
+
+export async function findRatingForUser(templateId, userId) {
+  const result = await pool.query(
+    "SELECT rating FROM extraction_template_ratings WHERE template_id = $1 AND user_id = $2",
+    [templateId, userId],
+  );
+
+  return result.rows[0]?.rating ?? null;
+}
+
+// Batch form, used by listTemplates so "did I already rate this" for an
+// entire page of templates is one query, not N - returns a plain
+// { [templateId]: rating } map rather than rows, so the service layer can
+// merge it into the already-mapped template list with a simple lookup.
+export async function findRatingsForUser(userId, templateIds) {
+  if (templateIds.length === 0) return {};
+
+  const result = await pool.query(
+    `
+    SELECT template_id AS "templateId", rating
+    FROM extraction_template_ratings
+    WHERE user_id = $1
+      AND template_id = ANY($2::uuid[])
+    `,
+    [userId, templateIds],
+  );
+
+  return Object.fromEntries(
+    result.rows.map((row) => [row.templateId, row.rating]),
+  );
 }
