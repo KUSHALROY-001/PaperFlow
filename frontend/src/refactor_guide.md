@@ -32,17 +32,20 @@ src/
 ```
 
 ### Pillar 1: Custom Hook (`hooks/use<PageName>.js`)
+
 - Houses all `useState`, `useQuery`, `useEffect`, `useCallback`, and custom logic.
 - Houses all submit handlers (`handleSave`, `handleDelete`, `handleToggle`).
 - Returns a clean object containing state variables and functions.
 - Keeps raw state management out of the main visual page file.
 
 ### Pillar 2: Destructured Subcomponents (`components/<pagename>/`)
+
 - Each component represents **one logical visual block** from the original file (e.g., `Header`, `FormCard`, `Table`, `Modal`).
 - Receives state and handlers via explicit, well-named props.
 - Contains the exact JSX markup copied directly from the original file.
 
 ### Pillar 3: Container Page (`pages/<PageName>.jsx`)
+
 - Lightweight (~30–60 lines of code).
 - Retains any page-level static/mock data if requested by the user.
 - Calls `use<PageName>()` hook.
@@ -55,27 +58,33 @@ src/
 Follow these 6 steps sequentially whenever decomposing a large component:
 
 ### Step 1: Deep Code Inspection
+
 - Read the entire original file line-by-line.
 - List all state variables (`useState`), server queries (`useQuery`), side effects (`useEffect`), forms, inline subcomponents, and modal dialogs.
 - Identify exact JSX boundaries for each section.
 
 ### Step 2: 1-to-1 Component Mapping Plan
+
 - Map every visual section of the monolithic file to a dedicated subcomponent file.
 - Verify that **NO new visual features** are added and **NO existing features** are omitted.
 
 ### Step 3: Create Custom Hook (`use<PageName>.js`)
+
 - Extract all state initialization, state setters, query hooks, and event handlers into `hooks/use<PageName>.js`.
 
 ### Step 4: Extract Subcomponents (`components/<pagename>/`)
+
 - Copy the exact JSX blocks from the original file into standalone functional component files in `components/<pagename>/`.
 - Preserve all imports (`lucide-react` icons, sub-helpers, UI components).
 - Ensure prop signatures strictly pass required state values and handlers.
 
 ### Step 5: Assemble Main Page (`pages/<PageName>.jsx`)
+
 - Replace the monolithic file contents with imports for the custom hook and destructured subcomponents.
 - Keep any inline mock data intact if requested by the user for future backend integration.
 
 ### Step 6: Automated Build Verification
+
 - Execute `npm run build` or the project build check command.
 - Confirm **0 syntax errors, 0 missing prop errors, and 0 broken import paths**.
 
@@ -83,12 +92,12 @@ Follow these 6 steps sequentially whenever decomposing a large component:
 
 ## 🚫 Common AI Anti-Patterns to Avoid
 
-| Anti-Pattern | Why It Fails | Correct Approach |
-| :--- | :--- | :--- |
-| **"Feature Hallucination"** | Adding new stat cards, tab filters, or modern gradients not in the original code. | Refactor 1-to-1. Only change code structure, NEVER change the UI unless explicitly requested. |
-| **"Class Name Drift"** | Modifying `p-5 sm:p-6` to `p-4`, or changing font sizes / colors. | Copy JSX markup verbatim to guarantee zero CSS regression. |
-| **"Over-Abstraction"** | Creating a subcomponent file for a 3-line standard `<h1>` header or a single generic `<button>`. | Group meaningful visual cards, forms, tables, grids, and modals into subcomponents. |
-| **"Deleting Mock Data"** | Removing mock JSON arrays from the page file when the user needs them for future API integration. | Retain mock arrays where requested by the user until backend endpoints are ready. |
+| Anti-Pattern                | Why It Fails                                                                                      | Correct Approach                                                                              |
+| :-------------------------- | :------------------------------------------------------------------------------------------------ | :-------------------------------------------------------------------------------------------- |
+| **"Feature Hallucination"** | Adding new stat cards, tab filters, or modern gradients not in the original code.                 | Refactor 1-to-1. Only change code structure, NEVER change the UI unless explicitly requested. |
+| **"Class Name Drift"**      | Modifying `p-5 sm:p-6` to `p-4`, or changing font sizes / colors.                                 | Copy JSX markup verbatim to guarantee zero CSS regression.                                    |
+| **"Over-Abstraction"**      | Creating a subcomponent file for a 3-line standard `<h1>` header or a single generic `<button>`.  | Group meaningful visual cards, forms, tables, grids, and modals into subcomponents.           |
+| **"Deleting Mock Data"**    | Removing mock JSON arrays from the page file when the user needs them for future API integration. | Retain mock arrays where requested by the user until backend endpoints are ready.             |
 
 ---
 

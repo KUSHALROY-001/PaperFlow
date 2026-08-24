@@ -1,12 +1,16 @@
 import base64
+import collections
 import json
+import re
+import threading
 import time
 from urllib import request
-from urllib.error import URLError
+from urllib.error import HTTPError, URLError
 
 import fitz
 
 from ..config import (
+    AI_MAX_REQUESTS_PER_MINUTE,
     AI_MODEL,
     AI_PDF_PAGES_PER_CHUNK,
     AI_PDF_RENDER_SCALE,
@@ -23,6 +27,171 @@ QUESTION_GENERATION_CONFIG = {
     # from smaller/less strictly-instruction-following models.
     "responseSchema": GEMINI_QUESTION_RESPONSE_SCHEMA,
 }
+
+
+class GeminiDailyQuotaExceededError(RuntimeError):
+    """
+    Raised instead of a generic exception when Gemini's error response
+    identifies the failure as the per-DAY quota (e.g. free tier's 500
+    requests/day), not the per-minute one. Callers that loop over many
+    batches (generate_questions_from_notes, generate_questions_from_metadata)
+    catch this specifically to stop looping immediately rather than
+    burning through every remaining batch's retry-with-backoff cycle only
+    to hit the exact same wall each time - a per-day cap can't clear
+    itself in the middle of a job the way a per-minute one can.
+    """
+
+
+# Shared across every GeminiProvider instance in this process, deliberately
+# NOT an instance attribute - worker.py#process_job/process_generation_job
+# calls get_provider() fresh for every single job (a new GeminiProvider()
+# object each time), but Gemini enforces its per-minute quota against the
+# API KEY, not against any particular Python object. Instance-level state
+# would silently reset every job, meaning back-to-back jobs could each
+# think they were starting from zero and burst well past the real
+# 60-second ceiling right at the seam between them. Module-level state
+# persists for as long as this worker process keeps running (`python -m
+# worker.worker`, not `--once`), which is the only thing that actually
+# matches how Gemini counts requests.
+_recent_call_times = collections.deque()
+_rate_limit_lock = threading.Lock()
+
+
+def _wait_for_rate_limit_capacity():
+    """
+    Proactive pacing: blocks until making another call would keep this
+    process at or under AI_MAX_REQUESTS_PER_MINUTE calls in the trailing 60
+    seconds, sleeping first if we're already at capacity. This is what
+    actually prevents 429s under a tight quota like the Gemini free tier's
+    15 RPM - the retry-on-429 handling in _call_with_retry below is a
+    safety net for when this still isn't enough (clock drift, another
+    process sharing the same key), not the primary defense.
+    """
+    with _rate_limit_lock:
+        while True:
+            now = time.monotonic()
+            window_start = now - 60
+            while _recent_call_times and _recent_call_times[0] < window_start:
+                _recent_call_times.popleft()
+
+            if len(_recent_call_times) < AI_MAX_REQUESTS_PER_MINUTE:
+                _recent_call_times.append(now)
+                return
+
+            sleep_for = _recent_call_times[0] + 60 - now
+            if sleep_for > 0:
+                # Released while sleeping would let concurrent callers pile
+                # up past capacity - this worker is single-threaded per
+                # process today (one job at a time, see worker.py's main
+                # loop), so this only ever costs a wait, never a deadlock.
+                time.sleep(sleep_for)
+            # Loop back around to re-trim and re-check rather than assuming
+            # capacity freed up - a generous sleep_for rounding error
+            # shouldn't be able to let this through early.
+
+
+_DAILY_QUOTA_MARKERS = ("perday", "requestsperday")
+
+
+def _parse_gemini_http_error(http_error):
+    """
+    Reads a 429 response body to tell a per-minute rate limit apart from a
+    per-day quota exhaustion, and to pull out Gemini's own suggested
+    retryDelay when it gives one (far more accurate than a blind guess,
+    since Gemini knows exactly when its own window resets).
+
+    Gemini's 429 body looks like:
+      {"error": {"code": 429, "status": "RESOURCE_EXHAUSTED", "details": [
+        {"@type": ".../QuotaFailure", "violations": [{"quotaId":
+          "GenerateRequestsPerDayPerProjectPerModel-FreeTier", ...}]},
+        {"@type": ".../RetryInfo", "retryDelay": "23s"}
+      ]}}
+    quotaId distinguishes PerDay from PerMinute; retryDelay is a
+    "<number>s" string. Either can be absent (a non-JSON body, or a 429
+    from something other than Gemini's own quota enforcement, e.g. an
+    upstream proxy) - this degrades to "unknown, per-minute-shaped,
+    no known retry delay" rather than raising, since a parse failure here
+    shouldn't crash the actual retry flow that called it.
+    """
+    is_daily = False
+    retry_delay_seconds = None
+    message = f"HTTP {http_error.code}: {http_error.reason}"
+
+    try:
+        body = json.loads(http_error.read().decode("utf-8"))
+        error = body.get("error", {})
+        message = error.get("message") or message
+        for detail in error.get("details", []):
+            quota_id = (detail.get("violations", [{}])[0].get("quotaId", "") or "").lower()
+            if any(marker in quota_id.replace("_", "") for marker in _DAILY_QUOTA_MARKERS):
+                is_daily = True
+            raw_delay = detail.get("retryDelay")
+            if raw_delay:
+                match = re.match(r"([\d.]+)s?", raw_delay)
+                if match:
+                    retry_delay_seconds = float(match.group(1))
+    except Exception:
+        # Body already consumed by .read() above even on a parse failure -
+        # nothing further to recover, fall through with the defaults set
+        # before the try block.
+        pass
+
+    return is_daily, retry_delay_seconds, message
+
+
+def _call_with_retry(make_request):
+    """
+    Wraps a single Gemini HTTP call (make_request: a zero-arg callable that
+    performs the actual request.urlopen and returns the parsed response)
+    with proactive pacing and retry for both quota errors and plain
+    transient network failures.
+
+    - Daily quota (RESOURCE_EXHAUSTED, PerDay in the quotaId): raised
+      immediately as GeminiDailyQuotaExceededError, no retry - the quota
+      can't come back mid-job, so retrying is pure wasted time.
+    - Per-minute quota: retried up to 3 attempts total, sleeping for
+      Gemini's own retryDelay when given, else a flat 20s (a bit over a
+      third of the 60s window - enough for a freshly-exhausted minute to
+      clear without just re-guessing the whole 60s blindly).
+    - A non-429 HTTPError (5xx - Gemini's own server hiccupping, not
+      rejecting the request) or a URLError (DNS failure, connection
+      reset, or an SSL handshake that never completed - confirmed in a
+      real job as "<urlopen error _ssl.c:1018: The handshake operation
+      timed out>", which silently dropped a whole 8-question batch before
+      this branch existed) is retried with the same exponential backoff
+      (4s, 8s) generate_json_from_pdf_images already uses for identical
+      failures - these are connection-level problems, not Gemini
+      rejecting the request, so there's no useful "retry delay" to read
+      from a response that was never received.
+    - A non-429, non-5xx HTTPError (e.g. 400 Bad Request, 401
+      Unauthorized) is NOT retried - retrying an authentication failure or
+      a malformed request would just fail identically every time.
+    """
+    max_attempts = 3
+    for attempt in range(max_attempts):
+        _wait_for_rate_limit_capacity()
+        try:
+            return make_request()
+        except HTTPError as e:
+            if e.code != 429:
+                if e.code < 500 or attempt == max_attempts - 1:
+                    raise
+                time.sleep(4 * (2**attempt))
+                continue
+            is_daily, retry_delay_seconds, message = _parse_gemini_http_error(e)
+            if is_daily:
+                raise GeminiDailyQuotaExceededError(message) from e
+            if attempt == max_attempts - 1:
+                raise RuntimeError(f"Gemini rate limit: {message}") from e
+            time.sleep(retry_delay_seconds if retry_delay_seconds is not None else 20)
+        except URLError as e:
+            if attempt == max_attempts - 1:
+                raise
+            time.sleep(4 * (2**attempt))
+    # Unreachable (the loop above always either returns or raises), but
+    # keeps this function's control flow explicit rather than implicitly
+    # falling off the end.
+    raise RuntimeError("Gemini request failed after retries")
 
 
 def _group_pages_into_chunks(page_numbers, chunk_size):
@@ -69,77 +238,83 @@ class GeminiProvider:
         self.model = AI_MODEL or "gemini-flash-latest"
 
     def generate_json(self, system_prompt, user_prompt):
-        payload = {
-            "contents": [
-                {
-                    "role": "user",
-                    "parts": [
-                        {"text": f"{system_prompt}\n\n{user_prompt}"},
-                    ],
-                }
-            ],
-            "generationConfig": QUESTION_GENERATION_CONFIG,
-        }
+        def make_request():
+            payload = {
+                "contents": [
+                    {
+                        "role": "user",
+                        "parts": [
+                            {"text": f"{system_prompt}\n\n{user_prompt}"},
+                        ],
+                    }
+                ],
+                "generationConfig": QUESTION_GENERATION_CONFIG,
+            }
 
-        req = request.Request(
-            f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent",
-            data=json.dumps(payload).encode("utf-8"),
-            headers={
-                "x-goog-api-key": GEMINI_API_KEY,
-                "Content-Type": "application/json",
-            },
-            method="POST",
-        )
+            req = request.Request(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent",
+                data=json.dumps(payload).encode("utf-8"),
+                headers={
+                    "x-goog-api-key": GEMINI_API_KEY,
+                    "Content-Type": "application/json",
+                },
+                method="POST",
+            )
 
-        with request.urlopen(req, timeout=AI_TIMEOUT_SECONDS) as response:
-            data = json.loads(response.read().decode("utf-8"))
+            with request.urlopen(req, timeout=AI_TIMEOUT_SECONDS) as response:
+                data = json.loads(response.read().decode("utf-8"))
 
-        parts = (
-            data.get("candidates", [{}])[0]
-            .get("content", {})
-            .get("parts", [])
-        )
-        return "\n".join(part.get("text", "") for part in parts).strip()
+            parts = (
+                data.get("candidates", [{}])[0]
+                .get("content", {})
+                .get("parts", [])
+            )
+            return "\n".join(part.get("text", "") for part in parts).strip()
+
+        return _call_with_retry(make_request)
 
     def generate_json_from_pdf(self, system_prompt, user_prompt, pdf_path):
-        pdf_bytes = pdf_path.read_bytes()
-        payload = {
-            "contents": [
-                {
-                    "role": "user",
-                    "parts": [
-                        {"text": f"{system_prompt}\n\n{user_prompt}"},
-                        {
-                            "inline_data": {
-                                "mime_type": "application/pdf",
-                                "data": base64.b64encode(pdf_bytes).decode("ascii"),
-                            }
-                        },
-                    ],
-                }
-            ],
-            "generationConfig": QUESTION_GENERATION_CONFIG,
-        }
+        def make_request():
+            pdf_bytes = pdf_path.read_bytes()
+            payload = {
+                "contents": [
+                    {
+                        "role": "user",
+                        "parts": [
+                            {"text": f"{system_prompt}\n\n{user_prompt}"},
+                            {
+                                "inline_data": {
+                                    "mime_type": "application/pdf",
+                                    "data": base64.b64encode(pdf_bytes).decode("ascii"),
+                                }
+                            },
+                        ],
+                    }
+                ],
+                "generationConfig": QUESTION_GENERATION_CONFIG,
+            }
 
-        req = request.Request(
-            f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent",
-            data=json.dumps(payload).encode("utf-8"),
-            headers={
-                "x-goog-api-key": GEMINI_API_KEY,
-                "Content-Type": "application/json",
-            },
-            method="POST",
-        )
+            req = request.Request(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent",
+                data=json.dumps(payload).encode("utf-8"),
+                headers={
+                    "x-goog-api-key": GEMINI_API_KEY,
+                    "Content-Type": "application/json",
+                },
+                method="POST",
+            )
 
-        with request.urlopen(req, timeout=AI_TIMEOUT_SECONDS) as response:
-            data = json.loads(response.read().decode("utf-8"))
+            with request.urlopen(req, timeout=AI_TIMEOUT_SECONDS) as response:
+                data = json.loads(response.read().decode("utf-8"))
 
-        parts = (
-            data.get("candidates", [{}])[0]
-            .get("content", {})
-            .get("parts", [])
-        )
-        return "\n".join(part.get("text", "") for part in parts).strip()
+            parts = (
+                data.get("candidates", [{}])[0]
+                .get("content", {})
+                .get("parts", [])
+            )
+            return "\n".join(part.get("text", "") for part in parts).strip()
+
+        return _call_with_retry(make_request)
 
     def generate_json_from_pdf_images(self, system_prompt, user_prompt, pdf_path, page_numbers=None, on_progress=None):
         # Returns one result dict PER CHUNK, always - success or failure -
@@ -171,6 +346,7 @@ class GeminiProvider:
         # scanned document (where every page needs vision anyway) doesn't
         # have to change how it calls this.
         results = []
+        daily_quota_message = None
 
         with fitz.open(pdf_path) as document:
             if page_numbers is None:
@@ -184,6 +360,32 @@ class GeminiProvider:
             for chunk_number, chunk_pages in enumerate(page_chunks, start=1):
                 start_page = chunk_pages[0]
                 end_page = chunk_pages[-1]
+
+                # Once one chunk hits the DAILY quota (as opposed to the
+                # per-minute one - see _parse_gemini_http_error), every
+                # remaining chunk would fail identically: the day's quota
+                # doesn't reset mid-job the way a per-minute window does,
+                # so there's no reason to spend the next N chunks each
+                # doing their own 3-attempt retry cycle only to hit the
+                # same wall N times over. Still appends one result per
+                # remaining chunk with a clear "skipped" error rather than
+                # just stopping short - see the "one result dict PER
+                # CHUNK, always" contract in the comment above this
+                # method, which exists specifically so a caller's
+                # enumerate() never has to guess which physical pages a
+                # gap corresponds to.
+                if daily_quota_message:
+                    results.append(
+                        {
+                            "chunk_number": chunk_number,
+                            "start_page": start_page,
+                            "end_page": end_page,
+                            "response_text": None,
+                            "error": f"Skipped - {daily_quota_message}",
+                            "page_images": {},
+                        }
+                    )
+                    continue
 
                 response_text = None
                 error = None
@@ -208,8 +410,17 @@ class GeminiProvider:
                 # One retry with no real backoff wasn't enough insurance
                 # against it recurring across a real job's dozen-plus
                 # sequential chunk calls.
+                #
+                # A 429 gets its own branch below rather than falling into
+                # the generic Exception catch-all: Gemini's own retryDelay
+                # (when given) is a far better sleep duration than blindly
+                # guessing 4s/8s, and a daily-quota 429 shouldn't be
+                # retried with backoff at all (see the daily_quota_message
+                # check at the top of this loop).
                 max_attempts = 3
                 for attempt in range(max_attempts):
+                    _wait_for_rate_limit_capacity()
+                    custom_sleep_seconds = None
                     try:
                         page_parts = []
                         attempt_page_images = {}
@@ -247,6 +458,19 @@ class GeminiProvider:
                             page_images = attempt_page_images
                             break
                         error = "AI response was empty"
+                    except HTTPError as e:
+                        if e.code != 429:
+                            error = f"[http {e.code}] {e.reason}"
+                        else:
+                            is_daily, retry_delay_seconds, message = _parse_gemini_http_error(e)
+                            if is_daily:
+                                error = f"Gemini daily quota exhausted: {message}"
+                                daily_quota_message = error
+                                break
+                            error = f"[rate limit] {message}"
+                            custom_sleep_seconds = (
+                                retry_delay_seconds if retry_delay_seconds is not None else 20
+                            )
                     except URLError as e:
                         # urlopen() catches OSError internally (including
                         # ConnectionAbortedError/ConnectionResetError/
@@ -264,6 +488,11 @@ class GeminiProvider:
                         # try/except, which this code path doesn't have.
                         # The real underlying exception survives as
                         # e.reason, so unwrap it there instead.
+                        #
+                        # HTTPError is a URLError SUBCLASS, so it's caught
+                        # above by the more specific except HTTPError
+                        # clause first - this branch only ever sees a
+                        # genuine non-HTTP network failure.
                         if isinstance(e.reason, (ConnectionResetError, ConnectionAbortedError, BrokenPipeError)):
                             error = f"[network] connection aborted during upload: {e.reason}"
                         else:
@@ -281,12 +510,18 @@ class GeminiProvider:
 
                     # Only sleep before an actual retry (not after the
                     # last attempt, and not at all if this attempt
-                    # succeeded). Exponential, not flat - gives a
-                    # rate-limit-adjacent cause more room to clear, and a
-                    # one-off network blip more than one shot at not
-                    # recurring.
+                    # succeeded, and not at all if we just hit a daily
+                    # quota - that break above skips this entirely).
+                    # custom_sleep_seconds (set by the 429 branch above)
+                    # takes priority over the default exponential backoff
+                    # when present - Gemini's own retryDelay is a better
+                    # answer than a blind guess.
                     if error and attempt < max_attempts - 1:
-                        time.sleep(4 * (2**attempt))
+                        time.sleep(
+                            custom_sleep_seconds
+                            if custom_sleep_seconds is not None
+                            else 4 * (2**attempt)
+                        )
                     # Falls through to the next attempt only if this one
                     # failed or came back empty - a genuinely successful
                     # response breaks out above and skips further retries.

@@ -26,6 +26,12 @@ AI_GENERATE_FROM_NOTES = os.environ.get("AI_GENERATE_FROM_NOTES", "true").strip(
 )
 AI_NOTES_QUESTIONS_PER_CHUNK = int(os.environ.get("AI_NOTES_QUESTIONS_PER_CHUNK", "8"))
 AI_NOTES_MAX_QUESTIONS = int(os.environ.get("AI_NOTES_MAX_QUESTIONS", "40"))
+# Gemini's free tier is 15 requests/minute, 500/day (as of writing) - this
+# defaults to the free-tier RPM ceiling so a fresh setup is safe out of the
+# box, but is meant to be raised via env var on a paid tier where the real
+# ceiling is much higher. See gemini_provider.py's rate limiter - this is
+# enforced proactively (before a call, not just retried after a 429).
+AI_MAX_REQUESTS_PER_MINUTE = int(os.environ.get("AI_MAX_REQUESTS_PER_MINUTE", "15"))
 OCR_ENABLED = os.environ.get("OCR_ENABLED", "true").strip().lower() not in (
     "0",
     "false",

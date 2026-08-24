@@ -39,16 +39,20 @@ function applyInlineStyle(textarea, openingMarker, closingMarker, updateValue) {
     hasMatchingWrapper &&
     value[start - 2] !== "*" &&
     value[end + 1] !== "*";
-  const isWrapped = openingMarker === "*"
-    ? isItalicOnly || isItalicInsideBoldAndItalic
-    : hasMatchingWrapper;
+  const isWrapped =
+    openingMarker === "*"
+      ? isItalicOnly || isItalicInsideBoldAndItalic
+      : hasMatchingWrapper;
 
   if (isWrapped) {
     const next = `${value.slice(0, start - openingMarker.length)}${selected}${value.slice(end + closingMarker.length)}`;
     updateValue(next);
     requestAnimationFrame(() => {
       textarea.focus();
-      textarea.setSelectionRange(start - openingMarker.length, end - openingMarker.length);
+      textarea.setSelectionRange(
+        start - openingMarker.length,
+        end - openingMarker.length,
+      );
     });
     return;
   }
@@ -117,20 +121,35 @@ export default function RichTextToolbar({ textareaRef, disabled, onChange }) {
 
   const runInlineStyle = (openingMarker, closingMarker = openingMarker) => {
     if (disabled) return;
-    applyInlineStyle(textareaRef.current, openingMarker, closingMarker, onChange);
+    applyInlineStyle(
+      textareaRef.current,
+      openingMarker,
+      closingMarker,
+      onChange,
+    );
   };
 
   const selectBlockStyle = (nextStyle) => {
     if (disabled) return;
-    const currentLine = textareaRef.current?.value
-      .slice(
-        textareaRef.current.value.lastIndexOf("\n", textareaRef.current.selectionStart - 1) + 1,
-        textareaRef.current.value.indexOf("\n", textareaRef.current.selectionEnd) === -1
+    const currentLine =
+      textareaRef.current?.value.slice(
+        textareaRef.current.value.lastIndexOf(
+          "\n",
+          textareaRef.current.selectionStart - 1,
+        ) + 1,
+        textareaRef.current.value.indexOf(
+          "\n",
+          textareaRef.current.selectionEnd,
+        ) === -1
           ? textareaRef.current.value.length
-          : textareaRef.current.value.indexOf("\n", textareaRef.current.selectionEnd),
+          : textareaRef.current.value.indexOf(
+              "\n",
+              textareaRef.current.selectionEnd,
+            ),
       ) || "";
     const currentHeading = lineStyleParts(currentLine).heading;
-    const requestedHeading = nextStyle === "text" ? null : Number(nextStyle.at(-1));
+    const requestedHeading =
+      nextStyle === "text" ? null : Number(nextStyle.at(-1));
     setStyle(currentHeading === requestedHeading ? "text" : nextStyle);
     setIsStyleMenuOpen(false);
     applyBlockStyle(textareaRef.current, nextStyle, onChange);

@@ -93,9 +93,9 @@ function findItalicClosingMarker(text, start) {
 }
 
 function findNextStyleStart(text, start) {
-  const positions = INLINE_MARKERS
-    .map(({ opening }) => text.indexOf(opening, start))
-    .filter((position) => position !== -1);
+  const positions = INLINE_MARKERS.map(({ opening }) =>
+    text.indexOf(opening, start),
+  ).filter((position) => position !== -1);
   return positions.length ? Math.min(...positions) : -1;
 }
 
@@ -108,24 +108,34 @@ function renderInlineNodes(text, keyPrefix) {
   let nodeIndex = 0;
 
   while (cursor < source.length) {
-    const marker = INLINE_MARKERS.find(({ opening }) => source.startsWith(opening, cursor));
+    const marker = INLINE_MARKERS.find(({ opening }) =>
+      source.startsWith(opening, cursor),
+    );
 
     if (!marker) {
       const nextStyleStart = findNextStyleStart(source, cursor + 1);
       const plainEnd = nextStyleStart === -1 ? source.length : nextStyleStart;
-      nodes.push(...renderMathNodes(source.slice(cursor, plainEnd), `${keyPrefix}-plain-${nodeIndex}`));
+      nodes.push(
+        ...renderMathNodes(
+          source.slice(cursor, plainEnd),
+          `${keyPrefix}-plain-${nodeIndex}`,
+        ),
+      );
       nodeIndex += 1;
       cursor = plainEnd;
       continue;
     }
 
     const contentStart = cursor + marker.opening.length;
-    const closeAt = marker.opening === "*"
-      ? findItalicClosingMarker(source, contentStart)
-      : source.indexOf(marker.closing, contentStart);
+    const closeAt =
+      marker.opening === "*"
+        ? findItalicClosingMarker(source, contentStart)
+        : source.indexOf(marker.closing, contentStart);
 
     if (closeAt === -1) {
-      nodes.push(...renderMathNodes(marker.opening, `${keyPrefix}-literal-${nodeIndex}`));
+      nodes.push(
+        ...renderMathNodes(marker.opening, `${keyPrefix}-literal-${nodeIndex}`),
+      );
       nodeIndex += 1;
       cursor = contentStart;
       continue;

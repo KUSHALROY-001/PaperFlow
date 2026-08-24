@@ -73,6 +73,28 @@ def _question_item_schema(*, nullable_as_union):
                 "set this to null - do not omit the key."
             ),
         },
+        # Only meaningful for generate_questions_from_metadata's multi-group
+        # batched requests (see provider.py#build_metadata_generation_prompt)
+        # - a single request there can ask for several DIFFERENT topic/
+        # subtopic/marks combinations at once (to cut down request count
+        # against Gemini's free-tier RPD cap), so this is how the response
+        # says which of the numbered "Group N:" blocks in the prompt each
+        # question was written for. The caller then force-assigns that
+        # group's own trusted topic/subtopic/marks - this field only ever
+        # has to identify WHICH group, never what that group's values are,
+        # same "don't trust the model's own classification" stance already
+        # used for topic/subtopic elsewhere in this schema. Left null/absent
+        # by every other caller (PDF extraction, single-group generation),
+        # which never mention it in their prompts.
+        "topic_group_index": {
+            **optional("integer"),
+            "description": (
+                "Only used when the prompt lists multiple numbered "
+                "'Group N:' blocks - set this to that N for every question. "
+                "Leave null when the prompt describes just one, unnumbered "
+                "request."
+            ),
+        },
     }
 
     schema = {
@@ -320,6 +342,11 @@ def normalize_ai_questions(payload, *, source="ai"):
                 "metadata": metadata,
                 "has_diagram": has_diagram,
                 "diagram_bbox": diagram_bbox,
+                "topic_group_index": parse_nonnegative_int(
+                    item.get("topic_group_index")
+                    if item.get("topic_group_index") is not None
+                    else item.get("topicGroupIndex")
+                ),
             }
         )
 
@@ -331,6 +358,28 @@ def clean_optional_text(value):
         return None
     value = str(value).strip()
     return value or None
+
+
+def parse_positive_int(value):
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        return None
+    return value if value > 0 else None
+
+
+def parse_nonnegative_int(value):
+    # Same as parse_positive_int but allows 0 - topic_group_index is a
+    # 0-based array position (build_metadata_generation_prompt's "Group N:"
+    # labels are 1-based for the prompt text, but the schema/response uses
+    # the group's plain 0-based position in the request), so a group index
+    # of 0 (the batch's first group) is a completely valid, common value,
+    # not a "missing" sentinel the way it would be for source_page.
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        return None
+    return value if value >= 0 else None
 
 
 def parse_positive_int(value):

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowLeftRight, Check, Loader2, X } from "lucide-react";
 import QuestionContent, { QuestionExplanation } from "../shared/QuestionContent";
+import MathText from "../shared/MathText";
 
 function QuestionSide({ question, onKeep, disabled, side }) {
   return (
@@ -25,14 +26,19 @@ function QuestionSide({ question, onKeep, disabled, side }) {
         />
         {question.options?.length > 0 && (
           <ul className="mt-3 space-y-1.5">
-            {question.options.map((option, index) => (
-              <li
-                key={typeof option === "string" ? index : option.optionIndex}
-                className="text-xs text-muted-foreground pl-3 border-l-2 border-border"
-              >
-                {typeof option === "string" ? option : option.optionText}
-              </li>
-            ))}
+            {question.options.map((option, index) => {
+              const optionText =
+                typeof option === "string" ? option : option.optionText;
+
+              return (
+                <li
+                  key={typeof option === "string" ? index : option.optionIndex}
+                  className="text-xs text-muted-foreground pl-3 border-l-2 border-border whitespace-pre-wrap"
+                >
+                  <MathText text={optionText} />
+                </li>
+              );
+            })}
           </ul>
         )}
         <QuestionExplanation explanation={question.explanation} />

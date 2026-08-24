@@ -1,89 +1,456 @@
-import { useRef } from "react";
-import { buildHighlightNodes } from "@/utils/textHighlight";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
+import { useEditor, EditorContent } from "@tiptap/react";
+import { Node as TiptapNode } from "@tiptap/core";
+import { TextSelection } from "@tiptap/pm/state";
+import StarterKit from "@tiptap/starter-kit";
+import { TableKit } from "@tiptap/extension-table";
+import {
+  Bold,
+  ChevronDown,
+  Italic,
+  Strikethrough,
+  Underline,
+} from "lucide-react";
+import { MathNode } from "./MathNode";
+import { markdownToDoc, docToMarkdown } from "@/utils/richTextDoc";
+
+// The document shape mirrors richTextDoc.js: a sequence of paragraph and
+// heading blocks, so the formatted editor can apply headings to a line.
+const FormattedDocument = TiptapNode.create({
+  name: "doc",
+  topNode: true,
+  content: "block+",
+});
+
+const sizingClassName =
+  "min-h-12 px-4 py-3 text-xs sm:text-sm leading-relaxed rounded-xl border border-border bg-card text-foreground focus-within:ring-2 focus-within:ring-orange-500/30 transition-all";
 
 // The "Formatted" alternative to a plain <textarea> for Question Text /
-// Explanation: a real, fully-native <textarea> handles ALL typing,
-// cursor movement, and selection exactly like Raw mode does (same
-// value/onChange contract, committing on every keystroke) - it's just
-// made transparent and stacked on top of a styled preview layer drawn
-// behind it (buildHighlightNodes in textHighlight.js), so bold/italic/
-// underline/strikethrough/code/math-delimiters stay visibly styled the
-// ENTIRE time the user is typing, not just before/after.
+// Explanation. Built on TipTap/ProseMirror rather than a hand-rolled
+// contentEditable or textarea-plus-overlay - both earlier approaches hit
+// real, confirmed failure modes (see FormattedTextEditor.jsx's git
+// history / the PR discussion this came out of): a block-based
+// click-to-edit design that reverted to raw markup the moment you
+// started typing, and an invisible-textarea-plus-styled-overlay version
+// that could desync the visible cursor from where characters actually
+// landed once the content got dense enough. Both were attempts to solve
+// "stay visually rendered while typing" without taking on a real
+// editor's document-model/reconciliation machinery - ProseMirror IS
+// that machinery, battle-tested in production across many editors, which
+// is the actual reason to depend on it here rather than a smaller
+// hand-rolled fix: cursor/selection tracking through arbitrary typing is
+// precisely the hard problem it exists to solve correctly.
 //
-// This replaced an earlier version that swapped a block between a
-// rendered (read-only) form and a raw-text textarea on click - which
-// technically worked, but meant the text visibly reverted to raw
-// markup the moment you started editing it, which is exactly the
-// problem this component exists to solve. The fix is architectural, not
-// a tweak: never substitute rendered output for source text at all.
-// buildHighlightNodes only ever wraps substrings of the EXACT SAME text
-// in styled <span>s - it never shortens "**bold**" to "bold" or
-// replaces "$x$" with a rendered equation, because doing so would make
-// the overlay's text a different length than the textarea's, which
-// would desync the two layers and make the visible cursor position
-// land in the wrong place relative to what's drawn behind it. That
-// same rule is why $...$ math shows as styled monospace source here,
-// not an actual rendered formula - true inline-rendered math while
-// typing needs a real editor framework (contentEditable reconciliation
-// byte-for-byte is a well-known hard problem), which is a bigger,
-// separate piece of work than this.
+// Bold/italic/underline/strikethrough are ordinary ProseMirror marks -
+// typed and edited completely natively, no custom logic needed. Math
+// ($...$/$$...$$) is the one thing that can't be "typed into" while
+// staying rendered (KaTeX output doesn't map back to its LaTeX source
+// character-by-character) - see MathNode.jsx for how that's handled:
+// rendered as a real atomic node, edited via an explicit click-to-open
+// popover, never inline-typeable.
 //
-// Because both layers render identical characters with identical font/
-// line-height/padding (the shared `${sizingClassName}` below - change
-// one, change the other), they stay pixel-aligned automatically. The
-// only synchronization actually needed is scroll position, handled by
-// mirroring the textarea's scrollTop/scrollLeft onto the overlay.
-export default function FormattedTextEditor({
-  value,
-  onChange,
-  disabled,
-  placeholder,
-}) {
-  const overlayRef = useRef(null);
+// Round-trip conversion to/from this app's raw markdown format lives in
+// richTextDoc.js, verified there against 23 cases via a real ProseMirror
+// schema (richTextDoc.selftest.mjs) - that's the part of this that could
+// be checked without a browser. What could NOT be verified in this
+// environment (no browser/DOM available while building this): actual
+// click/typing/cursor behavior in a live browser, the math popover's
+// interaction feel, and cross-browser rendering. That needs real
+// interactive testing, not just this file compiling.
+//
+// Code fences and GFM tables are plain, unstyled text in this editor for
+// now (not corrupted, just not specially rendered) - see richTextDoc.js.
+function FormattedTextEditor(
+  { value, onChange, disabled, placeholder, showToolbar = true },
+  ref,
+) {
+  // TipTap owns selection state outside React. Re-rendering on its
+  // transactions lets the toolbar accurately show active marks without
+  // making the document content React-controlled on every keystroke.
+  const [, refreshToolbar] = useReducer((count) => count + 1, 0);
+  const [isStyleMenuOpen, setIsStyleMenuOpen] = useState(false);
+  const styleMenuRef = useRef(null);
+  const lastEmittedValueRef = useRef(value);
 
-  const syncScroll = (e) => {
-    if (!overlayRef.current) return;
-    overlayRef.current.scrollTop = e.target.scrollTop;
-    overlayRef.current.scrollLeft = e.target.scrollLeft;
+  useEffect(() => {
+    const closeMenu = (event) => {
+      if (!styleMenuRef.current?.contains(event.target)) {
+        setIsStyleMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", closeMenu);
+    return () => document.removeEventListener("mousedown", closeMenu);
+  }, []);
+
+  const editor = useEditor({
+    extensions: [
+      FormattedDocument,
+      StarterKit.configure({
+        document: false,
+        blockquote: false,
+        bulletList: false,
+        code: false,
+        codeBlock: {
+          enableTabIndentation: true,
+          tabSize: 4,
+          HTMLAttributes: {
+            class:
+              "my-3 overflow-x-auto rounded-xl border border-border bg-muted/60 p-3 font-mono text-xs sm:text-sm leading-relaxed",
+          },
+        },
+        horizontalRule: false,
+        link: false,
+        listItem: false,
+        listKeymap: false,
+        orderedList: false,
+        trailingNode: false,
+      }),
+      TableKit.configure({
+        table: {
+          renderWrapper: true,
+          HTMLAttributes: {
+            class: "my-3 w-full border-collapse text-xs sm:text-sm",
+          },
+        },
+        tableHeader: {
+          HTMLAttributes: {
+            class:
+              "border-b border-border bg-muted px-3 py-2 text-left font-bold text-foreground",
+          },
+        },
+        tableCell: {
+          HTMLAttributes: {
+            class:
+              "border-b border-border/60 px-3 py-2 align-top text-foreground",
+          },
+        },
+      }),
+      MathNode,
+    ],
+    content: markdownToDoc(value),
+    editable: !disabled,
+    editorProps: {
+      attributes: {
+        class: `${sizingClassName} focus:outline-none whitespace-pre-wrap break-words`,
+      },
+    },
+    onUpdate: ({ editor: currentEditor }) => {
+      // A brand-new math node is deliberately empty until MathLive
+      // receives the first keystroke. Serializing it as `$$` here would
+      // feed that value back through markdownToDoc() and replace the
+      // node with literal dollar signs before its node view can mount.
+      // Keep the transient node local; the first MathLive input will
+      // serialize normally, and abandoning it deletes the node.
+      let containsEmptyMath = false;
+      currentEditor.state.doc.descendants((node) => {
+        if (node.type.name === "math" && !node.attrs.latex.trim()) {
+          containsEmptyMath = true;
+          return false;
+        }
+        return !containsEmptyMath;
+      });
+      if (containsEmptyMath) return;
+
+      const nextValue = docToMarkdown(currentEditor.getJSON());
+      lastEmittedValueRef.current = nextValue;
+      onChange(nextValue);
+    },
+    onSelectionUpdate: () => refreshToolbar(),
+    onTransaction: () => refreshToolbar(),
+  });
+
+  const runWithSelectionPreserved = useCallback(
+    (command) => {
+      if (!editor || disabled) return false;
+
+      const { from, to } = editor.state.selection;
+      const hasTextRange = from !== to;
+      const didRun = command(editor.chain().focus()).run();
+
+      // Toolbar clicks must not make people select the same words again
+      // before applying another mark or a heading. Mark/block commands do
+      // not change document positions, so restoring this exact range is
+      // safe and also covers option-menu commands invoked through the ref.
+      if (didRun && hasTextRange) {
+        editor.commands.setTextSelection({ from, to });
+        // Parent state receives the serialized markdown on every update.
+        // Restore once more after that controlled update settles; otherwise
+        // some browsers collapse the highlight after the first toolbar click.
+        requestAnimationFrame(() => {
+          if (!editor.isDestroyed) {
+            editor.commands.setTextSelection({ from, to });
+          }
+        });
+      }
+
+      return didRun;
+    },
+    [disabled, editor],
+  );
+
+  const applyTextStyle = useCallback(
+    (level) => {
+      if (!editor || disabled) return;
+
+      const { selection } = editor.state;
+      const { $from, $to } = selection;
+      const isSinglePartialBlockSelection =
+        selection.from !== selection.to &&
+        $from.parent === $to.parent &&
+        $from.parent.isTextblock &&
+        (selection.from > $from.start() || selection.to < $to.end());
+
+      if (isSinglePartialBlockSelection) {
+        const targetIsCurrentHeading =
+          level && editor.isActive("heading", { level });
+        const targetType = targetIsCurrentHeading
+          ? editor.schema.nodes.paragraph
+          : level
+            ? editor.schema.nodes.heading
+            : editor.schema.nodes.paragraph;
+        const selectedContent = $from.parent.content.cut(
+          $from.parentOffset,
+          $to.parentOffset,
+        );
+        const beforeContent = $from.parent.content.cut(0, $from.parentOffset);
+        const afterContent = $from.parent.content.cut($to.parentOffset);
+        const originalType = $from.parent.type;
+        const originalAttrs = $from.parent.attrs;
+        const blocks = [];
+
+        if (beforeContent.size) {
+          blocks.push(originalType.create(originalAttrs, beforeContent));
+        }
+        blocks.push(
+          targetType.create(
+            level && !targetIsCurrentHeading ? { level } : null,
+            selectedContent,
+          ),
+        );
+        if (afterContent.size) {
+          blocks.push(originalType.create(originalAttrs, afterContent));
+        }
+
+        const blockStart = $from.before();
+        const selectionStart =
+          blockStart + (beforeContent.size ? blocks[0].nodeSize : 0) + 1;
+        const transaction = editor.state.tr.replaceWith(
+          blockStart,
+          $from.after(),
+          blocks,
+        );
+        transaction.setSelection(
+          TextSelection.create(
+            transaction.doc,
+            selectionStart,
+            selectionStart + selectedContent.size,
+          ),
+        );
+        editor.view.dispatch(transaction.scrollIntoView());
+        return;
+      }
+
+      if (!level || editor.isActive("heading", { level })) {
+        runWithSelectionPreserved((chain) => chain.setParagraph());
+      } else {
+        runWithSelectionPreserved((chain) => chain.setHeading({ level }));
+      }
+    },
+    [disabled, editor, runWithSelectionPreserved],
+  );
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      insertMath() {
+        if (!editor || !editor.isEditable) return;
+
+        // Keep the new empty formula selected so MathNodeView opens its
+        // MathLive field immediately. The editor can then accept input
+        // straight away instead of leaving a blank inert placeholder.
+        const position = editor.state.selection.from;
+        editor
+          .chain()
+          .focus()
+          .insertContent({
+            type: "math",
+            attrs: { latex: "", displayMode: false },
+          })
+          .setNodeSelection(position)
+          .run();
+      },
+      toggleBold() {
+        runWithSelectionPreserved((chain) => chain.toggleBold());
+      },
+      toggleItalic() {
+        runWithSelectionPreserved((chain) => chain.toggleItalic());
+      },
+      toggleUnderline() {
+        runWithSelectionPreserved((chain) => chain.toggleUnderline());
+      },
+      toggleStrike() {
+        runWithSelectionPreserved((chain) => chain.toggleStrike());
+      },
+      setTextStyle(level) {
+        applyTextStyle(level);
+      },
+    }),
+    [applyTextStyle, editor, runWithSelectionPreserved],
+  );
+
+  // Only sync a value that came from outside this editor (switching
+  // questions, applying Indent code, or cleanup). Re-parsing our own
+  // emitted markdown can produce an equivalent but structurally
+  // different document for code-fence text; setContent() then recreates
+  // the editor and drops the caret at the final line on every keystroke.
+  useEffect(() => {
+    if (!editor) return;
+    if (value === lastEmittedValueRef.current) return;
+
+    const nextDocument = markdownToDoc(value);
+    if (JSON.stringify(editor.getJSON()) !== JSON.stringify(nextDocument)) {
+      editor.commands.setContent(nextDocument, { emitUpdate: false });
+    }
+    lastEmittedValueRef.current = value;
+  }, [value, editor]);
+
+  useEffect(() => {
+    editor?.setEditable(!disabled);
+  }, [disabled, editor]);
+
+  if (!editor) return null;
+
+  const runCommand = (command) => {
+    runWithSelectionPreserved(command);
   };
 
-  const sizingClassName =
-    "w-full min-h-24 px-4 py-3 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words font-sans";
+  const toolButtonClassName = (isActive) =>
+    `flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
+      disabled
+        ? "cursor-not-allowed text-muted-foreground/40"
+        : isActive
+          ? "bg-orange-500 text-white shadow-sm"
+          : "text-foreground hover:bg-muted"
+    }`;
+
+  const textStyle = [1, 2, 3].find((level) =>
+    editor.isActive("heading", { level }),
+  );
+
+  const setTextStyle = (level) => {
+    applyTextStyle(level);
+    setIsStyleMenuOpen(false);
+  };
 
   return (
     <div className="relative">
-      <div
-        ref={overlayRef}
-        aria-hidden="true"
-        className={`${sizingClassName} absolute inset-0 overflow-auto rounded-xl border border-border pointer-events-none text-foreground`}
-      >
-        {value ? (
-          buildHighlightNodes(value)
-        ) : (
-          <span className="text-muted-foreground">{placeholder}</span>
+      {showToolbar && (
+        <div className="mb-2 flex flex-wrap items-center gap-1 rounded-xl border border-border bg-muted/40 p-1.5">
+          <button
+            type="button"
+            disabled={disabled}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => runCommand((chain) => chain.toggleBold())}
+            title="Bold (Ctrl+B)"
+            className={toolButtonClassName(editor.isActive("bold"))}
+          >
+            <Bold className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            disabled={disabled}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => runCommand((chain) => chain.toggleItalic())}
+            title="Italic (Ctrl+I)"
+            className={toolButtonClassName(editor.isActive("italic"))}
+          >
+            <Italic className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            disabled={disabled}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => runCommand((chain) => chain.toggleUnderline())}
+            title="Underline"
+            className={toolButtonClassName(editor.isActive("underline"))}
+          >
+            <Underline className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            disabled={disabled}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => runCommand((chain) => chain.toggleStrike())}
+            title="Strikethrough"
+            className={toolButtonClassName(editor.isActive("strike"))}
+          >
+            <Strikethrough className="h-4 w-4" />
+          </button>
+          <div
+            ref={styleMenuRef}
+            className="relative ml-1 border-l border-border pl-1"
+          >
+            <button
+              type="button"
+              disabled={disabled}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => setIsStyleMenuOpen((open) => !open)}
+              title="Text style"
+              className={`flex h-8 items-center gap-1 rounded-lg px-2 text-xs font-bold transition-colors ${
+                disabled
+                  ? "cursor-not-allowed text-muted-foreground/40"
+                  : "text-foreground hover:bg-muted"
+              }`}
+            >
+              {textStyle ? `Heading ${textStyle}` : "Text"}
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
+            {isStyleMenuOpen && !disabled && (
+              <div className="absolute left-0 top-10 z-20 min-w-40 overflow-hidden rounded-xl border border-border bg-card p-1 shadow-xl">
+                {[
+                  { label: "Text", level: null },
+                  { label: "Heading 1", level: 1 },
+                  { label: "Heading 2", level: 2 },
+                  { label: "Heading 3", level: 3 },
+                ].map((item) => (
+                  <button
+                    type="button"
+                    key={item.label}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => setTextStyle(item.level)}
+                    className={`block w-full rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-muted ${
+                      textStyle === item.level
+                        ? "bg-muted font-bold text-foreground"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      <div className="relative">
+        <EditorContent editor={editor} />
+        {!value && (
+          <div className="pointer-events-none absolute left-4 top-3 text-xs sm:text-sm text-muted-foreground">
+            {placeholder}
+          </div>
         )}
-        {/* A trailing newline in the value collapses to nothing visually
-            unless something follows it - without this the overlay's
-            scroll height can fall a line short of the (identical-text)
-            textarea's, which would clip the last line during scroll. */}
-        {value?.endsWith("\n") && <br />}
       </div>
-      <textarea
-        disabled={disabled}
-        value={value}
-        onChange={(e) => !disabled && onChange(e.target.value)}
-        onScroll={syncScroll}
-        placeholder={placeholder}
-        className={`${sizingClassName} relative resize-vertical rounded-xl border border-border bg-transparent caret-foreground text-transparent focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all ${
-          disabled ? "cursor-not-allowed opacity-60" : ""
-        }`}
-        style={{
-          // Selection highlight would otherwise be invisible too (it's
-          // drawn on the transparent-text layer) - give it a visible
-          // tint without needing the text itself to render.
-          WebkitTextFillColor: "transparent",
-        }}
-      />
     </div>
   );
 }
+
+export default forwardRef(FormattedTextEditor);
