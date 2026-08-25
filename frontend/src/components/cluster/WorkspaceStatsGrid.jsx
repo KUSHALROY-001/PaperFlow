@@ -12,7 +12,7 @@ export default function WorkspaceStatsGrid({
       value: totalQuestions,
       icon: Zap,
       cardBg:
-        "bg-purple-500/10 dark:bg-purple-500/15 border border-purple-500/20",
+        "hover:bg-purple-500/10 hover:dark:bg-purple-500/15 border border-purple-500/20",
       iconBg: "bg-purple-500/20 text-purple-600 dark:text-purple-400",
       valColor: "text-foreground",
     },
@@ -21,7 +21,7 @@ export default function WorkspaceStatsGrid({
       value: approvedCount,
       icon: CheckCircle,
       cardBg:
-        "bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20",
+        "hover:bg-emerald-500/10 hover:dark:bg-emerald-500/15 border border-emerald-500/20",
       iconBg: "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400",
       valColor: "text-foreground",
     },
@@ -30,7 +30,7 @@ export default function WorkspaceStatsGrid({
       value: lowConfidence,
       icon: AlertCircle,
       cardBg:
-        "bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20",
+        "hover:bg-amber-500/10 hover:dark:bg-amber-500/15 border border-amber-500/20",
       iconBg: "bg-amber-500/20 text-amber-600 dark:text-amber-400",
       valColor: "text-foreground",
     },
@@ -39,7 +39,7 @@ export default function WorkspaceStatsGrid({
       value: topicsFound,
       icon: FileText,
       cardBg:
-        "bg-blue-500/10 dark:bg-blue-500/15 border border-blue-500/20",
+        "hover:bg-blue-500/10 hover:dark:bg-blue-500/15 border border-blue-500/20",
       iconBg: "bg-blue-500/20 text-blue-600 dark:text-blue-400",
       valColor: "text-foreground",
     },

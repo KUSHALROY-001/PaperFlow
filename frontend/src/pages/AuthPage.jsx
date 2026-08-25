@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import { PENDING_INVITE_TOKEN_KEY } from "./AcceptInvite";
 import { PENDING_CLAIM_KEY } from "@/hooks/useExamSession";
 
-function MockCraftLogo() {
+function PaperFlowLogo() {
   return (
     <div className="flex items-center gap-2.5">
       <div className="w-8 h-8 rounded-xl bg-orange-500/15 flex items-center justify-center text-[#ea580c] shrink-0">
@@ -22,7 +22,7 @@ function MockCraftLogo() {
         </svg>
       </div>
       <span className="text-xl font-extrabold text-foreground tracking-tight">
-        MockCraft
+        PaperFlow
       </span>
     </div>
   );
@@ -108,7 +108,7 @@ export default function AuthPage({ mode, title, description }) {
     <div className="min-h-screen bg-background px-4 sm:px-6 py-6 sm:py-8 font-sans">
       <div className="mx-auto flex max-w-6xl items-center justify-between">
         <Link to="/">
-          <MockCraftLogo />
+          <PaperFlowLogo />
         </Link>
         <ThemeToggle />
       </div>
@@ -152,7 +152,7 @@ export default function AuthPage({ mode, title, description }) {
                     }))
                   }
                   placeholder="Kushal"
-                  className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/30"
+                  className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/30"
                 />
               </div>
             )}
@@ -172,7 +172,7 @@ export default function AuthPage({ mode, title, description }) {
                   }))
                 }
                 placeholder="you@example.com"
-                className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/30"
+                className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/30"
               />
             </div>
             <div>
@@ -191,7 +191,7 @@ export default function AuthPage({ mode, title, description }) {
                     }))
                   }
                   placeholder="At least 8 characters"
-                  className="w-full rounded-2xl border border-border bg-card pl-4 pr-12 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/30"
+                  className="w-full rounded-md border border-border bg-card pl-4 pr-12 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/30"
                 />
                 <button
                   type="button"
@@ -218,7 +218,7 @@ export default function AuthPage({ mode, title, description }) {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-3.5 text-sm font-semibold text-white transition-all bg-[#ea580c] hover:bg-[#c2410c] disabled:opacity-60 shadow-sm"
+              className="inline-flex w-full items-center border border-border justify-center gap-2 rounded-3xl px-6 py-3.5 text-sm font-semibold text-foreground transition-all hover:bg-green-500/80 dark:hover:bg-emerald-500 dark:border-white/25 disabled:opacity-60 shadow-sm"
             >
               {isSubmitting ? "Please wait..." : ctaLabel}{" "}
               <ArrowRight className="h-4 w-4" />

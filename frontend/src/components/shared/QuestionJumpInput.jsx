@@ -22,7 +22,7 @@ export default function QuestionJumpInput({ onJump }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex items-center gap-2">
-      <div className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5">
+      <div className="flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5">
         <span className="text-xs font-bold text-muted-foreground shrink-0">
           Q
         </span>
@@ -46,9 +46,7 @@ export default function QuestionJumpInput({ onJump }) {
         </button>
       </div>
       {error && (
-        <span className="text-xs font-bold text-red-500 shrink-0">
-          {error}
-        </span>
+        <span className="text-xs font-bold text-red-500 shrink-0">{error}</span>
       )}
     </form>
   );

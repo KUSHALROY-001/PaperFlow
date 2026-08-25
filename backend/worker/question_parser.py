@@ -35,6 +35,21 @@ TOPIC_RE = re.compile(r"(?im)^topic\s*[:\-]\s*(.+)$")
 MAX_PLAUSIBLE_OPTIONS = 6
 MAX_PLAUSIBLE_OPTION_LENGTH = 220
 
+# QUESTION_START_RE deliberately matches ANY 1-4 digit line-start number
+# (no "Q"/"Question" prefix required - real exam PDFs often number plainly,
+# e.g. "17." with nothing else), which means it also matches numbers that
+# were never question numbers at all: an answer-key ID column, a roll
+# number example, a stray year in a footer. On a real JEE Advanced PDF this
+# produced two "questions" numbered 2027 and 2039 out of an otherwise
+# normal 1-51 range - each apparently followed by enough A)/B)/C)/D)-shaped
+# text to also pass the option-count/length checks below, so those alone
+# didn't catch it. Since _missing_question_numbers() (ai/provider.py) later
+# does `range(1, max(known_numbers) + 1)`, a single number this implausible
+# balloons "missing" to ~2000 fake gaps. A real exam is never in the
+# thousands of questions, so anything past this is treated as noise rather
+# than a genuine question number.
+MAX_PLAUSIBLE_QUESTION_NO = 999
+
 
 def _collapse_horizontal_whitespace(text):
     # `re.sub(r"[ \t]+", " ", text)` applied to the whole blob (the
@@ -207,6 +222,11 @@ def parse_questions(pages):
     seen_numbers = set()
 
     for fallback_index, (question_no, block) in enumerate(split_question_blocks(text), start=1):
+        if question_no > MAX_PLAUSIBLE_QUESTION_NO:
+            # Not a real question number (see MAX_PLAUSIBLE_QUESTION_NO
+            # above) - skip the block entirely rather than renumbering it
+            # into the sequence, since it isn't actually a missed question.
+            continue
         if question_no in seen_numbers:
             question_no = max(seen_numbers) + 1
         seen_numbers.add(question_no)

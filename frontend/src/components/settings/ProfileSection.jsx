@@ -16,7 +16,7 @@ export default function ProfileSection({
       className="surface-card rounded-2xl p-5 sm:p-6 border border-border"
     >
       <div className="flex items-center gap-3 mb-5">
-        <div className="w-10 h-10 bg-orange-500/15 text-orange-500 rounded-xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-orange-500/15 text-orange-500 rounded-full flex items-center justify-center">
           <User className="w-5 h-5" />
         </div>
         <h2 className="text-lg font-bold text-foreground">Profile</h2>
@@ -24,7 +24,7 @@ export default function ProfileSection({
 
       <div className="space-y-4">
         <div className="flex items-center gap-4 mb-5">
-          <div className="w-16 h-16 bg-[#ea580c] rounded-2xl flex items-center justify-center shadow-xs shrink-0">
+          <div className="w-16 h-16 bg-[#ea580c] rounded-full flex items-center justify-center shadow-xs shrink-0">
             <User className="w-8 h-8 text-white" />
           </div>
           <div className="min-w-0">
@@ -53,7 +53,7 @@ export default function ProfileSection({
               onChange={(e) =>
                 setProfileForm((p) => ({ ...p, name: e.target.value }))
               }
-              className="w-full px-4 py-2.5 rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 text-xs sm:text-sm"
+              className="w-full px-4 py-2.5 rounded-md border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 text-xs sm:text-sm"
             />
           </div>
           <div>
@@ -64,7 +64,7 @@ export default function ProfileSection({
               disabled
               type="email"
               value={email}
-              className="w-full px-4 py-2.5 rounded-xl border border-border bg-muted text-muted-foreground cursor-not-allowed text-xs sm:text-sm"
+              className="w-full px-4 py-2.5 rounded-md border border-border bg-muted text-muted-foreground cursor-not-allowed text-xs sm:text-sm"
             />
             <p className="text-xs text-muted-foreground mt-1.5">
               Your email is your login and can't be changed here. Contact
@@ -82,7 +82,7 @@ export default function ProfileSection({
             onChange={(e) =>
               setProfileForm((p) => ({ ...p, accountType: e.target.value }))
             }
-            className="w-full px-4 py-2.5 rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 text-xs sm:text-sm"
+            className="w-full px-4 py-2.5 rounded-md border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 text-xs sm:text-sm"
           >
             {accountTypeOptions.map((o) => (
               <option key={o.value} value={o.value}>
@@ -101,7 +101,7 @@ export default function ProfileSection({
         <button
           type="submit"
           disabled={isSavingProfile}
-          className={`flex items-center gap-2 px-5 py-2.5 font-bold rounded-xl transition-all text-xs sm:text-sm disabled:opacity-60 ${saved === "profile" ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30" : "bg-orange-500/10 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30 hover:bg-orange-500/20"}`}
+          className={`flex items-center gap-2 px-5 py-2.5 font-bold rounded-full transition-all text-xs sm:text-sm disabled:opacity-60 ${saved === "profile" ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30" : "bg-orange-500/10 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30 hover:bg-orange-500/20"}`}
         >
           <Save className="w-4 h-4" />{" "}
           {isSavingProfile

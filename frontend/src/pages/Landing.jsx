@@ -14,10 +14,12 @@ import {
   GraduationCap,
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
+import ThemeToggle from "@/components/ThemeToggle";
 import HeroAnimation from "@/components/HeroAnimation";
+
 import HowItWorksSection from "@/components/howItWorks/HowItWorksSection";
 
-function MockCraftLogo() {
+function PaperFlowLogo() {
   return (
     <div className="flex items-center gap-2.5">
       <div className="w-8 h-8 rounded-xl bg-orange-500/15 flex items-center justify-center text-[#ea580c] shrink-0">
@@ -32,7 +34,7 @@ function MockCraftLogo() {
         </svg>
       </div>
       <span className="text-xl font-extrabold text-foreground tracking-tight">
-        MockCraft
+        PaperFlow
       </span>
     </div>
   );
@@ -126,7 +128,7 @@ export default function Landing() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-md border-b border-border">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link to="/">
-            <MockCraftLogo />
+            <PaperFlowLogo />
           </Link>
           <div className="hidden md:flex items-center gap-8">
             <a
@@ -150,25 +152,26 @@ export default function Landing() {
             {isAuthenticated && (
               <Link
                 to="/dashboard"
-                className="text-sm font-semibold px-3 py-2 rounded-xl bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 dark:text-orange-400 transition-colors"
+                className="text-sm font-semibold px-3.5 py-1.5 border border-border rounded-md text-foreground hover:text-orange-500 hover:border-orange-500/30 transition-all"
               >
                 Dashboard
               </Link>
             )}
           </div>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             {isAuthenticated ? (
               <button
                 type="button"
                 onClick={logout}
-                className="text-sm font-semibold px-4 py-2 bg-[#ea580c] hover:bg-[#c2410c] text-white rounded-xl shadow-sm transition-all"
+                className="text-sm font-semibold px-4 py-2 border border-border bg-card text-foreground hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 rounded-md shadow-xs transition-all"
               >
                 Logout
               </button>
             ) : (
               <Link
                 to="/login"
-                className="text-sm font-semibold text-foreground hover:text-orange-500 transition-colors px-3 py-2"
+                className="text-sm font-semibold px-4 py-2 border border-border bg-card hover:bg-emerald-500/10 text-foreground hover:text-emerald-500 hover:border-emerald-500/30 rounded-3xl shadow-sm transition-all"
               >
                 Login
               </Link>
@@ -178,7 +181,7 @@ export default function Landing() {
       </nav>
 
       {/* Hero */}
-      <section className="pt-24 pb-16 sm:pb-20 lg:pb-24 px-4 sm:px-6 bg-gradient-to-br from-orange-500/5 via-transparent to-transparent overflow-hidden">
+      <section className="pt-24 pb-16 sm:pb-20 lg:pb-24 px-4 sm:px-6 bg-linear-to-br from-orange-500/5 via-transparent to-transparent overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* ── LEFT: text content ── */}
@@ -192,7 +195,7 @@ export default function Landing() {
 
               <h1 className="text-4xl sm:text-5xl xl:text-6xl font-extrabold text-foreground tracking-tight leading-[1.1] mb-6">
                 Turn messy PDFs into{" "}
-                <span className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 bg-clip-text text-transparent">
+                <span className="bg-linear-to-r from-orange-500 via-amber-500 to-orange-600 bg-clip-text text-transparent">
                   structured mock tests
                 </span>
               </h1>
@@ -247,7 +250,7 @@ export default function Landing() {
                     "radial-gradient(ellipse 70% 60% at 60% 50%, rgba(234,88,12,0.12), transparent 70%)",
                 }}
               />
-              <div className="w-full max-w-[480px] relative z-10">
+              <div className="w-full max-w-120 relative z-10">
                 <HeroAnimation />
               </div>
             </div>
@@ -400,7 +403,7 @@ export default function Landing() {
       {!isAuthenticated && (
         <section className="py-16 sm:py-20 lg:py-24 px-4 sm:px-6 bg-card border-t border-border">
           <div className="max-w-2xl mx-auto text-center">
-            <div className="surface-card rounded-3xl p-6 sm:p-12 border border-orange-500/20 bg-gradient-to-r from-orange-500/5 via-orange-500/10 to-transparent">
+            <div className="surface-card rounded-3xl p-6 sm:p-12 border border-orange-500/20 bg-linear-to-r from-orange-500/5 via-orange-500/10 to-transparent">
               <div className="w-12 h-12 rounded-2xl bg-orange-500/15 text-orange-500 flex items-center justify-center mx-auto mb-6">
                 <Sparkles className="w-6 h-6" />
               </div>
@@ -427,7 +430,7 @@ export default function Landing() {
       <footer className="py-8 px-6 border-t border-border bg-card">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <Link to="/">
-            <MockCraftLogo />
+            <PaperFlowLogo />
           </Link>
           <p className="text-xs sm:text-sm text-muted-foreground">
             Turn scanned PDFs into structured mock tests.

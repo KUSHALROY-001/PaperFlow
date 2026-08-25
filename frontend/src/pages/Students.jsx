@@ -47,14 +47,14 @@ export default function Students() {
             Everyone who has taken one of your mock tests via a shared link.
           </p>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-500 text-xs font-bold shrink-0">
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-500 text-xs font-bold shrink-0">
           <GraduationCap className="w-4 h-4" />
           {students.length} {students.length === 1 ? "student" : "students"}
         </div>
       </div>
 
       {(error || cohortError) && (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs font-medium text-red-500 flex items-center justify-between gap-3">
+        <div className="rounded-full border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs font-medium text-red-500 flex items-center justify-between gap-3">
           <span>{error?.message || cohortError}</span>
           {cohortError && (
             <button onClick={clearCohortError} className="font-bold shrink-0">

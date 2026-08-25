@@ -34,15 +34,13 @@ export default function WeakTopicsPanel({ weakTopics, isLoading }) {
     <div className="surface-card rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 sm:p-5">
       <div className="flex items-center gap-2 mb-3">
         <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
-        <h2 className="text-sm font-bold text-foreground">
-          Weak Topics
-        </h2>
+        <h2 className="text-sm font-bold text-foreground">Weak Topics</h2>
       </div>
       <div className="space-y-2.5">
         {weakTopics.map((wt) => (
           <div
             key={wt.topic}
-            className="flex items-center justify-between gap-3 rounded-xl bg-card border border-border px-3.5 py-2.5"
+            className="flex items-center justify-between gap-3 rounded-md bg-card border border-border px-3.5 py-2.5"
           >
             <div className="min-w-0">
               <div className="text-xs sm:text-sm font-bold text-foreground truncate">
@@ -58,7 +56,7 @@ export default function WeakTopicsPanel({ weakTopics, isLoading }) {
               <button
                 onClick={() => handleCopy(wt.topic, wt.practiceLink)}
                 title={`Copy a practice link for ${wt.practiceLink.mockTestName}, filtered to ${wt.topic}`}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border border-orange-500/30 text-orange-500 hover:bg-orange-500/10 transition-all shrink-0"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border border-orange-500/30 text-orange-500 hover:bg-orange-500/10 transition-all shrink-0"
               >
                 {copiedTopic === wt.topic ? (
                   <>

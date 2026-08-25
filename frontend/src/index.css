@@ -1,5 +1,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* MathText (components/shared/MathText.jsx) renders KaTeX markup via
    renderToString/dangerouslySetInnerHTML - this stylesheet is what makes
    that markup actually look like typeset math instead of raw MathML/spans. */
@@ -367,6 +370,3 @@
 .animate-slide-right {
   animation: slide-in-from-left 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
-
-
-

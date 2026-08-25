@@ -19,7 +19,7 @@ export default function QuickActionsPanel({ onNewCluster }) {
             isViewer ? "cursor-not-allowed opacity-50" : "hover:bg-muted/60"
           }`}
         >
-          <div className="w-11 h-11 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center group-hover:scale-105 transition-transform">
+          <div className="w-11 h-11 rounded-full bg-orange-500/10 text-orange-500 flex items-center justify-center group-hover:scale-105 transition-transform">
             <Plus className="w-5 h-5" />
           </div>
           <span className="text-[11px] font-semibold text-muted-foreground group-hover:text-foreground">
@@ -31,7 +31,7 @@ export default function QuickActionsPanel({ onNewCluster }) {
           to="/templates"
           className="group flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-muted/60 transition-colors"
         >
-          <div className="w-11 h-11 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center group-hover:scale-105 transition-transform">
+          <div className="w-11 h-11 rounded-md bg-blue-500/10 text-blue-500 flex items-center justify-center group-hover:scale-105 transition-transform">
             <FileText className="w-5 h-5" />
           </div>
           <span className="text-[11px] font-semibold text-muted-foreground group-hover:text-foreground">

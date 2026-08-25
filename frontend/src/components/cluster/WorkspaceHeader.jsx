@@ -76,7 +76,7 @@ export default function WorkspaceHeader({
         <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto">
           <Link
             to={`/session/${mocktest.id}`}
-            className="flex flex-1 items-center justify-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-semibold rounded-xl hover:bg-emerald-500/20 transition-all text-xs sm:text-sm sm:flex-none"
+            className="flex flex-1 items-center justify-center gap-2 px-4 py-2 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-semibold rounded-md hover:bg-emerald-500/20 transition-all text-xs sm:text-sm sm:flex-none"
           >
             <Play className="w-4 h-4 text-emerald-500" /> Start Test
           </Link>
@@ -87,9 +87,7 @@ export default function WorkspaceHeader({
                 questionsCount === 0 ||
                 mocktest.status === "processing"
               }
-              onClick={() =>
-                !isViewer && questionsCount > 0 && onPublish()
-              }
+              onClick={() => !isViewer && questionsCount > 0 && onPublish()}
               title={
                 isViewer
                   ? "Editor role is required to publish"
@@ -99,12 +97,12 @@ export default function WorkspaceHeader({
                       ? "Wait for extraction to finish before publishing"
                       : "Publish this mock test"
               }
-              className={`flex flex-1 items-center justify-center gap-2 px-4 py-2 border font-semibold rounded-xl transition-all text-xs sm:text-sm sm:flex-none ${
+              className={`flex flex-1 items-center justify-center gap-2 px-4 py-2 border font-semibold rounded-md transition-all text-xs sm:text-sm sm:flex-none ${
                 isViewer ||
                 questionsCount === 0 ||
                 mocktest.status === "processing"
                   ? "border-border bg-muted text-muted-foreground/40 cursor-not-allowed opacity-50"
-                  : "bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20"
+                  : "border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20"
               }`}
             >
               <Globe className="w-4 h-4" /> Publish
@@ -112,14 +110,14 @@ export default function WorkspaceHeader({
           )}
           <button
             onClick={onShare}
-            className="flex flex-1 items-center justify-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/30 text-orange-600 dark:text-orange-400 font-semibold rounded-xl hover:bg-orange-500/20 transition-all text-xs sm:text-sm sm:flex-none"
+            className="flex flex-1 items-center justify-center gap-2 px-4 py-2 border border-orange-500/30 text-orange-600 dark:text-orange-400 font-semibold rounded-md hover:bg-orange-500/20 transition-all text-xs sm:text-sm sm:flex-none"
           >
             <Share2 className="w-4 h-4 text-orange-500" /> Share
           </button>
           <button
             disabled={isViewer}
             onClick={() => !isViewer && onReprocessOrCancel()}
-            className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
+            className={`w-9 h-9 rounded-3xl border flex items-center justify-center transition-all ${
               isViewer
                 ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-50"
                 : isProcessing
@@ -143,7 +141,7 @@ export default function WorkspaceHeader({
           <button
             disabled={isViewer}
             onClick={() => !isViewer && onDelete()}
-            className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
+            className={`w-9 h-9 rounded-3xl border flex items-center justify-center transition-all ${
               isViewer
                 ? "border-red-500/10 text-red-500/30 cursor-not-allowed opacity-50"
                 : "border-red-500/20 text-muted-foreground hover:text-red-500 hover:border-red-500/40"

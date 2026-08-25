@@ -13,7 +13,9 @@ export default function Sidebar({
   const navigate = useNavigate();
 
   const [isInviteCardDismissed, setIsInviteCardDismissed] = useState(() => {
-    return localStorage.getItem("paperflow_dismiss_invite_team_card") === "true";
+    return (
+      localStorage.getItem("paperflow_dismiss_invite_team_card") === "true"
+    );
   });
 
   const handleDismissInviteCard = () => {
@@ -145,7 +147,7 @@ export default function Sidebar({
       <div className="p-4 border-t border-border">
         <button
           onClick={onCreateCluster}
-          className="w-full flex items-center justify-center gap-2 py-3 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-xl shadow-sm transition-all text-sm"
+          className="w-full flex items-center justify-center gap-2 py-3 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-md shadow-sm transition-all text-sm"
         >
           <Plus className="w-4 h-4" /> New Cluster
         </button>

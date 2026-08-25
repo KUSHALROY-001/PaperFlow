@@ -38,7 +38,7 @@ function BannerIllustration() {
 
 export default function BannerCard({ onCreateCluster }) {
   return (
-    <div className="surface-card rounded-2xl p-5 sm:p-6 border border-orange-500/20 bg-gradient-to-r from-orange-500/5 via-orange-500/10 to-transparent flex items-center justify-between gap-6">
+    <div className="surface-card rounded-2xl p-5 sm:p-6 border border-orange-500/20 bg-linear-to-r from-orange-500/5 via-orange-500/10 to-transparent flex items-center justify-between gap-6">
       <div className="space-y-2 max-w-xl">
         <h3 className="text-base sm:text-lg font-bold text-foreground tracking-tight">
           Cluster = workspace, Mock test = exam paper
@@ -50,7 +50,7 @@ export default function BannerCard({ onCreateCluster }) {
         <div className="pt-1">
           <button
             onClick={onCreateCluster}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-xl text-xs sm:text-sm shadow-sm transition-all"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-3xl text-xs sm:text-sm shadow-sm transition-all"
           >
             <Plus className="w-4 h-4" /> Create Cluster
           </button>

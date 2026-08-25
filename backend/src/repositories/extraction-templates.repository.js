@@ -22,7 +22,6 @@ const TEMPLATE_COLUMNS = `
   t.tags,
   t.sections,
   t.color,
-  t.is_popular AS "isPopular",
   t.is_active AS "isActive",
   t.usage_count AS "usageCount",
   t.rating,
@@ -40,9 +39,29 @@ const templateSelect = `SELECT ${TEMPLATE_COLUMNS} FROM extraction_templates t`;
 // browsing but still individually fetchable via findAccessibleTemplateById
 // (so an owner can re-activate or edit one they've turned off) - the two
 // functions deliberately apply is_active differently.
+//
+// sortBy replaces the old is_popular-first ordering (migration
+// 037_remove_template_is_popular.sql) with a choice between three real,
+// already-accurate signals instead of one manually-set flag: usageCount
+// (how often it's actually been applied), rating (actual submitted
+// ratings, migration 036), or name (plain alphabetical). Workspace-owned
+// templates still sort before global ones regardless of which is chosen -
+// that ordering is about ownership, not popularity, so it isn't tied to
+// the sort option.
+const SORT_CLAUSES = {
+  usage: "t.usage_count DESC, t.name ASC",
+  // rating_count as the tiebreaker (not a secondary sort key users pick
+  // themselves) is what keeps a single 5-star rating from outranking a
+  // template with a slightly lower but far more-voted average - NULLS
+  // LAST so unrated templates sort after every rated one instead of
+  // Postgres's default NULLS FIRST for DESC.
+  rating: "t.rating DESC NULLS LAST, t.rating_count DESC, t.name ASC",
+  name: "t.name ASC",
+};
+
 export async function listAccessibleTemplates(
   workspaceId,
-  { category, search } = {},
+  { category, search, sortBy = "usage" } = {},
 ) {
   const conditions = [
     "(t.workspace_id IS NULL OR t.workspace_id = $1)",
@@ -66,11 +85,13 @@ export async function listAccessibleTemplates(
     )`);
   }
 
+  const orderClause = SORT_CLAUSES[sortBy] || SORT_CLAUSES.usage;
+
   const result = await pool.query(
     `
     ${templateSelect}
     WHERE ${conditions.join(" AND ")}
-    ORDER BY (t.workspace_id IS NOT NULL) DESC, t.is_popular DESC, t.usage_count DESC, t.name ASC
+    ORDER BY (t.workspace_id IS NOT NULL) DESC, ${orderClause}
     `,
     params,
   );
@@ -153,7 +174,6 @@ export async function createTemplate({
   tags,
   sections,
   color,
-  isPopular = false,
   rating = null,
   settings = {},
 }) {
@@ -163,9 +183,9 @@ export async function createTemplate({
       INSERT INTO extraction_templates (
         workspace_id, created_by, slug, name, description, category, difficulty,
         question_count, duration_minutes, marks_per_correct, negative_marks_per_wrong,
-        tags, sections, color, is_popular, rating, settings
+        tags, sections, color, rating, settings
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13::jsonb, $14, $15, $16, $17::jsonb)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13::jsonb, $14, $15, $16::jsonb)
       RETURNING *
     )
     SELECT ${TEMPLATE_COLUMNS} FROM inserted t
@@ -185,7 +205,6 @@ export async function createTemplate({
       JSON.stringify(tags),
       JSON.stringify(sections),
       color,
-      isPopular,
       rating,
       JSON.stringify(settings),
     ],
@@ -212,10 +231,9 @@ export async function updateTemplate(templateId, workspaceId, fields) {
         tags = COALESCE($14::jsonb, tags),
         sections = COALESCE($15::jsonb, sections),
         color = COALESCE($16, color),
-        is_popular = COALESCE($17, is_popular),
-        is_active = COALESCE($18, is_active),
-        rating = CASE WHEN $19::boolean THEN $20 ELSE rating END,
-        settings = COALESCE($21::jsonb, settings)
+        is_active = COALESCE($17, is_active),
+        rating = CASE WHEN $18::boolean THEN $19 ELSE rating END,
+        settings = COALESCE($20::jsonb, settings)
       WHERE id = $1
         AND workspace_id = $2
       RETURNING *
@@ -239,7 +257,6 @@ export async function updateTemplate(templateId, workspaceId, fields) {
       fields.tags ? JSON.stringify(fields.tags) : null,
       fields.sections ? JSON.stringify(fields.sections) : null,
       fields.color ?? null,
-      fields.isPopular ?? null,
       fields.isActive ?? null,
       fields.ratingProvided ?? false,
       fields.rating ?? null,

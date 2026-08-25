@@ -6,7 +6,11 @@ import GlobalHeaderSearch from "./GlobalHeaderSearch";
 import SubscribedPublishersMenu from "./SubscribedPublishersMenu";
 import UserMenu from "./UserMenu";
 
-export default function TopBar({ location, onOpenMobileNav, pendingInviteCount }) {
+export default function TopBar({
+  location,
+  onOpenMobileNav,
+  pendingInviteCount,
+}) {
   return (
     <header className="h-16 bg-card/80 backdrop-blur-md border-b border-border flex items-center px-4 sm:px-6 gap-3 sticky top-0 z-30">
       <button
@@ -37,7 +41,7 @@ export default function TopBar({ location, onOpenMobileNav, pendingInviteCount }
         <WorkspaceSwitcher />
         <Link
           to="/invitations"
-          className="relative w-9 h-9 rounded-xl border border-border bg-card flex items-center justify-center text-muted-foreground hover:text-foreground transition-all"
+          className="relative w-9 h-9 rounded-md border border-border bg-card flex items-center justify-center text-muted-foreground hover:text-foreground transition-all"
         >
           <Bell className="w-4 h-4" />
           {pendingInviteCount > 0 && (

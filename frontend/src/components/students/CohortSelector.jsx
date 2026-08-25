@@ -10,7 +10,7 @@ export default function CohortSelector({
     <div className="flex flex-wrap items-center gap-2">
       <button
         onClick={() => setCohortId(null)}
-        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+        className={`px-3 py-1.5 rounded-md text-xs font-bold border transition-all ${
           cohortId === null
             ? "bg-orange-500/15 border-orange-500/40 text-orange-500"
             : "border-border text-muted-foreground hover:border-orange-500/30"
@@ -22,7 +22,7 @@ export default function CohortSelector({
         <button
           key={cohort.id}
           onClick={() => setCohortId(cohort.id)}
-          className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+          className={`px-3 py-1.5 rounded-md text-xs font-bold border transition-all ${
             cohortId === cohort.id
               ? "bg-orange-500/15 border-orange-500/40 text-orange-500"
               : "border-border text-muted-foreground hover:border-orange-500/30"
@@ -34,7 +34,7 @@ export default function CohortSelector({
       ))}
       <button
         onClick={onNewCohort}
-        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold border border-dashed border-border text-muted-foreground hover:border-orange-500/40 hover:text-orange-500 transition-all"
+        className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold border border-dashed border-border text-muted-foreground hover:border-orange-500/40 hover:text-orange-500 transition-all"
       >
         <Plus className="w-3.5 h-3.5" /> New Cohort
       </button>

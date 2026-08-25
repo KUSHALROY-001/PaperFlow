@@ -18,7 +18,7 @@ export default function PasswordSection({
       className="surface-card rounded-2xl p-5 sm:p-6 border border-border"
     >
       <div className="flex items-center gap-3 mb-5">
-        <div className="w-10 h-10 bg-orange-500/15 text-orange-500 rounded-xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-orange-500/15 text-orange-500 rounded-md flex items-center justify-center">
           <Lock className="w-5 h-5" />
         </div>
         <h2 className="text-lg font-bold text-foreground">Password</h2>
@@ -42,7 +42,7 @@ export default function PasswordSection({
                 }))
               }
               placeholder="Enter current password"
-              className="w-full px-4 py-2.5 pr-12 rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 text-xs sm:text-sm"
+              className="w-full px-4 py-2.5 pr-12 rounded-full border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 text-xs sm:text-sm"
             />
             <button
               type="button"
@@ -75,7 +75,7 @@ export default function PasswordSection({
                 }))
               }
               placeholder="At least 8 characters"
-              className="w-full px-4 py-2.5 pr-12 rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 text-xs sm:text-sm"
+              className="w-full px-4 py-2.5 pr-12 rounded-full border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 text-xs sm:text-sm"
             />
             <button
               type="button"
@@ -106,7 +106,7 @@ export default function PasswordSection({
               }))
             }
             placeholder="Re-enter new password"
-            className="w-full px-4 py-2.5 rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 text-xs sm:text-sm"
+            className="w-full px-4 py-2.5 rounded-full border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 text-xs sm:text-sm"
           />
         </div>
 
@@ -119,7 +119,7 @@ export default function PasswordSection({
         <button
           type="submit"
           disabled={isSavingPassword}
-          className={`flex items-center gap-2 px-5 py-2.5 font-bold rounded-xl transition-all text-xs sm:text-sm disabled:opacity-60 ${saved === "password" ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30" : "bg-orange-500/10 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30 hover:bg-orange-500/20"}`}
+          className={`flex items-center gap-2 px-5 py-2.5 font-bold rounded-md transition-all text-xs sm:text-sm disabled:opacity-60 ${saved === "password" ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30" : "bg-orange-500/10 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30 hover:bg-orange-500/20"}`}
         >
           <Save className="w-4 h-4" />{" "}
           {isSavingPassword

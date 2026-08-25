@@ -91,7 +91,10 @@ export default function CatalogSettingsPanel() {
             <Skeleton className="h-4 w-36" />
             <Skeleton className="h-3 w-64" />
           </div>
-          <SkeletonRowList count={4} className="border-0 rounded-none bg-transparent" />
+          <SkeletonRowList
+            count={4}
+            className="border-0 rounded-none bg-transparent"
+          />
         </div>
       </div>
     );
@@ -118,7 +121,7 @@ export default function CatalogSettingsPanel() {
               href={publicUrl}
               target="_blank"
               rel="noreferrer"
-              className="flex-1 min-w-0 flex items-center gap-2 px-3 py-2 rounded-xl border border-border bg-muted/40 text-sm text-foreground hover:bg-muted transition-colors"
+              className="flex-1 min-w-0 flex items-center gap-2 px-3 py-2 rounded-full border border-border bg-muted/40 text-sm text-foreground hover:bg-muted transition-colors"
             >
               <span className="truncate">{publicUrl}</span>
               <ExternalLink className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
@@ -126,7 +129,7 @@ export default function CatalogSettingsPanel() {
             <button
               type="button"
               onClick={handleCopy}
-              className="shrink-0 h-9 w-9 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+              className="shrink-0 h-9 w-9 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
               title="Copy link"
             >
               {copied ? (
@@ -148,7 +151,7 @@ export default function CatalogSettingsPanel() {
             className="flex items-start gap-2 pt-1"
           >
             <div className="flex-1">
-              <div className="flex items-center rounded-xl border border-border bg-card overflow-hidden focus-within:ring-2 focus-within:ring-orange-500/30">
+              <div className="flex items-center rounded-full border border-border bg-card overflow-hidden focus-within:ring-2 focus-within:ring-orange-500/30">
                 <span className="pl-3 pr-1 text-xs text-muted-foreground shrink-0">
                   /catalog/
                 </span>
@@ -173,7 +176,7 @@ export default function CatalogSettingsPanel() {
             <button
               type="submit"
               disabled={savingSlug || !currentSlug}
-              className="shrink-0 px-4 py-2 bg-[#ea580c] hover:bg-[#c2410c] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl transition-colors"
+              className="shrink-0 px-4 py-2 border border-border bg-transparent hover:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-blue-500 hover:text-white text-sm font-semibold rounded-md transition-colors"
             >
               {settings?.public_slug ? "Update" : "Activate"}
             </button>

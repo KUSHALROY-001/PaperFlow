@@ -49,7 +49,7 @@ export default function StatCardGrid({ statCards, isLoading }) {
         >
           <div className="flex items-start justify-between">
             <div
-              className={`w-9 h-9 rounded-xl ${card.iconBg} flex items-center justify-center shrink-0`}
+              className={`w-9 h-9 rounded-full ${card.iconBg} flex items-center justify-center shrink-0`}
             >
               <card.icon className="w-4 h-4" />
             </div>

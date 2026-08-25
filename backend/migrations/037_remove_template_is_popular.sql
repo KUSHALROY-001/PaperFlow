@@ -1,0 +1,11 @@
+-- Removes the "popular" concept entirely from extraction templates.
+-- is_popular was a manually-set, admin-only flag with no real signal
+-- behind it - unlike usage_count and rating (migration
+-- 036_extraction_template_ratings.sql), which reflect actual usage and
+-- actual user feedback, is_popular only ever meant "someone with DB
+-- access decided to flag this one." Replaced by real sort options on the
+-- template list (usage_count, rating, name - see
+-- extraction-templates.repository.js#listAccessibleTemplates) driven
+-- entirely by data that's already accurate, instead of a manually
+-- curated flag that needed separate upkeep to stay meaningful.
+ALTER TABLE extraction_templates DROP COLUMN IF EXISTS is_popular;

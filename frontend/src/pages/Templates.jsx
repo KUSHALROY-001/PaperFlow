@@ -1,10 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Star } from "lucide-react";
+import { ArrowDownUp, Plus, Search } from "lucide-react";
 import { useTemplates } from "@/hooks/useTemplates";
 import { useAuth } from "@/lib/AuthContext";
-import { CATEGORY_OPTIONS } from "@/utils/templateHelpers";
-import PopularTemplateCard from "../components/templates/PopularTemplateCard";
+import { CATEGORY_OPTIONS, SORT_OPTIONS } from "@/utils/templateHelpers";
 import TemplateCard from "../components/templates/TemplateCard";
 import TemplatePreviewModal from "../components/templates/TemplatePreviewModal";
 import ApplyTemplateModal from "../components/templates/ApplyTemplateModal";
@@ -22,6 +21,8 @@ export default function Templates() {
     setSearch,
     category,
     setCategory,
+    sortBy,
+    setSortBy,
     preview,
     setPreview,
     applyTarget,
@@ -40,7 +41,6 @@ export default function Templates() {
     error,
     templates,
     filtered,
-    categoryLabel,
   } = useTemplates();
 
   return (
@@ -71,7 +71,7 @@ export default function Templates() {
                 ? "Editor role is required to create templates"
                 : undefined
             }
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all order-2 sm:order-1 ${
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-3xl text-xs sm:text-sm font-semibold transition-all order-2 sm:order-1 ${
               isViewer
                 ? "border border-border bg-muted text-muted-foreground/40 cursor-not-allowed opacity-50"
                 : "bg-orange-500/10 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30 hover:bg-orange-500/20"
@@ -98,7 +98,7 @@ export default function Templates() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search templates..."
-            className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all placeholder:text-muted-foreground"
+            className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-3xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all placeholder:text-muted-foreground"
           />
         </div>
         <div className="flex gap-1.5 flex-wrap">
@@ -108,7 +108,7 @@ export default function Templates() {
               <button
                 key={c.label}
                 onClick={() => setCategory(c.value)}
-                className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+                className={`px-3.5 py-2 rounded-md text-xs sm:text-sm font-semibold transition-all ${
                   active
                     ? "bg-orange-500/10 text-orange-500 dark:bg-orange-500/15 dark:text-orange-500 font-bold border border-orange-500/20"
                     : "bg-card border border-border text-muted-foreground hover:border-orange-500/40 hover:text-foreground"
@@ -119,32 +119,26 @@ export default function Templates() {
             );
           })}
         </div>
+        {/* Replaces the old "Popular section" (removed along with
+            migrations/037_remove_template_is_popular.sql) - a real,
+            user-driven sort over already-accurate signals (usage_count,
+            rating) instead of a separate curated shelf above the main
+            grid. */}
+        <div className="relative sm:ml-auto">
+          <ArrowDownUp className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="appearance-none pl-8 pr-8 py-2 text-xs sm:text-sm font-semibold rounded-full border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all cursor-pointer"
+          >
+            {SORT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                Sort: {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
-
-      {/* Popular section */}
-      {categoryLabel === "All" &&
-        !search &&
-        templates.some((t) => t.popular) && (
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-              <span className="text-sm font-bold text-foreground">
-                Most Popular
-              </span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              {templates
-                .filter((t) => t.popular)
-                .map((t) => (
-                  <PopularTemplateCard
-                    key={t.id}
-                    template={t}
-                    onPreview={setPreview}
-                  />
-                ))}
-            </div>
-          </div>
-        )}
 
       {/* All templates grid */}
       {isLoading ? (

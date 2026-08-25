@@ -846,7 +846,7 @@ def _attach_diagram_crops(ai_questions, page_images):
     return stats
 
 
-def _missing_question_numbers(questions_by_no, regex_questions):
+def _missing_question_numbers(questions_by_no, regex_questions, expected_count=None):
     # Best-effort "how many questions should there be" estimate: the
     # highest question_no either extractor has actually detected so far.
     # This can undershoot if BOTH extractors miss the true last question,
@@ -867,7 +867,18 @@ def _missing_question_numbers(questions_by_no, regex_questions):
         # silently abandon extraction on total failure instead of trying
         # the next method).
         return {1}
-    expected_max = max(known_numbers)
+    # expected_count (template_context.expectedQuestionCount, when a
+    # template is applied) extends the search range even when what's been
+    # found so far has NO internal gaps - without this, a gapless-but-short
+    # result (e.g. questions 1-16 found with zero holes, because whatever
+    # chunk covered 17+ came back empty) reads as "nothing missing" and
+    # every fallback pass below gets skipped, permanently truncating the
+    # document at 16 instead of retrying the pages that never got covered.
+    # This one incident is exactly what happened on a real JEE Advanced
+    # extraction: a single vision chunk returned an empty response, the
+    # chunks before it happened to be gapless, and the whole rest of the
+    # document (17-54) was silently never attempted.
+    expected_max = max(known_numbers | ({expected_count} if expected_count else set()))
     return set(range(1, expected_max + 1)) - set(questions_by_no)
 
 
@@ -913,6 +924,7 @@ def _enhance_questions_with_ai_inner(
     # _build_syllabus_guidance for why this is a per-call addendum rather
     # than a mutation of that shared constant.
     system_prompt = SYSTEM_PROMPT + _build_syllabus_guidance(template_context)
+    expected_count = (template_context or {}).get("expectedQuestionCount")
 
     regex_count = len(regex_questions)
     provider = get_provider()
@@ -1023,7 +1035,7 @@ def _enhance_questions_with_ai_inner(
     # above would just be re-extracted worse from their (possibly garbled,
     # possibly diagram-only) text layer, wasting a call to recover nothing
     # new.
-    missing = _missing_question_numbers(questions_by_no, regex_questions)
+    missing = _missing_question_numbers(questions_by_no, regex_questions, expected_count)
     if missing and text_only_pages:
         chunks = list(chunk_pages(text_only_pages))
         total_chunks = len(chunks)
@@ -1053,7 +1065,7 @@ def _enhance_questions_with_ai_inner(
     # needsVision) but whose text-chunk pass above still left gaps, e.g. an
     # oddly-formatted text-layer page. Re-tries those SPECIFIC pages
     # through vision as a second opinion, not the whole document again.
-    missing = _missing_question_numbers(questions_by_no, regex_questions)
+    missing = _missing_question_numbers(questions_by_no, regex_questions, expected_count)
     fallback_vision_pages = sorted({p["page"] for p in text_only_pages}) if not was_scanned else []
     if missing and fallback_vision_pages and pdf_path and hasattr(provider, "generate_json_from_pdf_images"):
         chunk_results = provider.generate_json_from_pdf_images(
@@ -1086,7 +1098,7 @@ def _enhance_questions_with_ai_inner(
             except Exception as error:
                 errors.append({"chunk": f"{pages_label}_parse", "message": str(error)})
 
-    missing = _missing_question_numbers(questions_by_no, regex_questions)
+    missing = _missing_question_numbers(questions_by_no, regex_questions, expected_count)
     if missing and pdf_path and hasattr(provider, "generate_json_from_pdf"):
         try:
             response_text = provider.generate_json_from_pdf(
@@ -1140,7 +1152,9 @@ def _enhance_questions_with_ai_inner(
 
     if not ai_questions:
         final_missing = sorted(
-            _missing_question_numbers({q["question_no"]: q for q in regex_questions}, regex_questions)
+            _missing_question_numbers(
+                {q["question_no"]: q for q in regex_questions}, regex_questions, expected_count
+            )
         )
         return regex_questions, {
             "enabled": True,
@@ -1166,7 +1180,9 @@ def _enhance_questions_with_ai_inner(
     # incomplete extraction is visible in output_summary instead of
     # completing silently as if nothing were missing.
     merged_by_no = {q["question_no"]: q for q in merged_questions}
-    final_missing = sorted(_missing_question_numbers(merged_by_no, regex_questions))
+    final_missing = sorted(
+        _missing_question_numbers(merged_by_no, regex_questions, expected_count)
+    )
 
     return merged_questions, {
         "enabled": True,

@@ -1,7 +1,7 @@
 import { ImageIcon, Search, X } from "lucide-react";
 
 const fieldClass =
-  "px-3 py-2 text-sm rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30";
+  "px-3 py-2 text-sm rounded-3xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30";
 
 const STATUS_OPTIONS = [
   { value: "", label: "Any status" },
@@ -34,7 +34,7 @@ function TriStateToggle({ icon: Icon, label, value, onChange }) {
     <button
       type="button"
       onClick={handleClick}
-      className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl border transition-all ${
+      className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold rounded-md border transition-all ${
         value === undefined
           ? "border-border bg-card text-muted-foreground hover:bg-muted"
           : "border-orange-500/40 bg-orange-500/10 text-orange-600 dark:text-orange-400"
@@ -70,7 +70,7 @@ export default function BankFilters({
   };
 
   return (
-    <div className="surface-card rounded-2xl border border-border p-4 space-y-3">
+    <div className="surface-card rounded-3xl border border-border p-4 space-y-3">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <input

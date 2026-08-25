@@ -8,17 +8,11 @@ import { Star, X } from "lucide-react";
 // remove otherwise).
 //
 // Kept deliberately separate from the read-only average+count display
-// elsewhere (TemplateCard.jsx/PopularTemplateCard.jsx just render
-// `template.rating`/`ratingCount` directly as plain text+icon, no need
-// for this component's hover/click state there) - this one is only for
-// the place a user actually submits a rating, currently
-// TemplatePreviewModal.jsx.
-export default function StarRatingInput({
-  value,
-  onRate,
-  onRemove,
-  disabled,
-}) {
+// elsewhere (TemplateCard.jsx just renders `template.rating`/`ratingCount`
+// directly as plain text+icon, no need for this component's hover/click
+// state there) - this one is only for the place a user actually submits a
+// rating, currently TemplatePreviewModal.jsx.
+export default function StarRatingInput({ value, onRate, onRemove, disabled }) {
   const [hovered, setHovered] = useState(null);
   const displayValue = hovered ?? value ?? 0;
 

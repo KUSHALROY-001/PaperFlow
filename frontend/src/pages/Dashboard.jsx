@@ -33,7 +33,7 @@ export default function Dashboard() {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-xl text-sm shadow-sm transition-all shrink-0"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-md text-sm shadow-sm transition-all shrink-0"
         >
           <Plus className="w-4 h-4" /> New Cluster
         </button>

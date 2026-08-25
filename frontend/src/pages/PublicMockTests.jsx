@@ -20,11 +20,11 @@ export default function PublicMockTests() {
         </p>
       </div>
 
-      <div className="inline-flex rounded-xl border border-border bg-card p-1">
+      <div className="inline-flex rounded-3xl border border-border bg-card p-1">
         <button
           type="button"
           onClick={() => setActiveTab("public")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-3xl text-xs font-semibold transition-colors ${
             isPublicTab
               ? "bg-orange-500 text-white"
               : "text-muted-foreground hover:text-foreground"
@@ -36,7 +36,7 @@ export default function PublicMockTests() {
         <button
           type="button"
           onClick={() => setActiveTab("own")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-3xl text-xs font-semibold transition-colors ${
             !isPublicTab
               ? "bg-orange-500 text-white"
               : "text-muted-foreground hover:text-foreground"

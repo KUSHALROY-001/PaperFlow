@@ -22,7 +22,7 @@ export default function UserMenu() {
     <div className="relative">
       <button
         onClick={() => setShowUserMenu(!showUserMenu)}
-        className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl border border-border bg-card hover:bg-muted transition-all"
+        className="flex items-center gap-2 px-2.5 py-1.5 rounded-3xl border border-border bg-card hover:bg-muted transition-all"
       >
         <div className="w-6 h-6 rounded-full bg-[#ea580c] text-white font-bold text-xs flex items-center justify-center shrink-0">
           {userInitial}

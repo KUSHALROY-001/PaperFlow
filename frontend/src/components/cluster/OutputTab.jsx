@@ -121,7 +121,7 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
   return (
     <div className="space-y-6 font-inter">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="inline-flex max-w-full rounded-2xl bg-muted/60 p-1.5 border border-border">
+        <div className="inline-flex max-w-full rounded-3xl bg-muted/60 p-1.5 border border-border">
           {viewTabs.map((view) => {
             const active = activeView === view;
             return (
@@ -129,7 +129,7 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
                 key={view}
                 type="button"
                 onClick={() => setActiveView(view)}
-                className={`rounded-xl px-3 py-2 text-xs sm:px-4 sm:text-sm font-semibold transition-all ${
+                className={`rounded-3xl px-3 py-2 text-xs sm:px-4 sm:text-sm font-semibold transition-all ${
                   active
                     ? "bg-[#ea580c] text-white shadow-xs"
                     : "text-muted-foreground hover:bg-card hover:text-foreground"
@@ -146,7 +146,7 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
           <button
             type="button"
             onClick={handleCopy}
-            className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition-all hover:bg-muted"
+            className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition-all hover:bg-muted"
           >
             <Copy className="h-4 w-4 text-orange-500" />
             {copied ? "Copied" : "Copy"}
@@ -156,7 +156,7 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
               type="button"
               disabled={isGeneratingPdf}
               onClick={handleDownload}
-              className={`inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition-all ${
+              className={`inline-flex items-center gap-2 rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition-all ${
                 isGeneratingPdf
                   ? "opacity-60 cursor-not-allowed"
                   : "hover:bg-muted"
@@ -221,7 +221,7 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
                   return (
                     <div
                       key={option}
-                      className={`rounded-2xl border px-4 py-3 text-sm font-medium whitespace-pre-wrap ${
+                      className={`rounded-md border px-4 py-3 text-sm font-medium whitespace-pre-wrap ${
                         correct
                           ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
                           : "border-border bg-card text-muted-foreground"

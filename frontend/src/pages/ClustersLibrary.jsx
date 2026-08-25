@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -144,7 +144,7 @@ export default function ClustersLibrary() {
           title={
             isViewer ? "Editor role is required to create clusters" : undefined
           }
-          className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm shadow-sm transition-all sm:w-auto shrink-0 ${
+          className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-3xl text-sm shadow-sm transition-all sm:w-auto shrink-0 ${
             isViewer
               ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50 font-semibold"
               : "bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold"
@@ -162,13 +162,13 @@ export default function ClustersLibrary() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search clusters..."
-            className="w-full pl-9 pr-4 py-2 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-orange-500/30 text-sm text-foreground placeholder:text-muted-foreground"
+            className="w-full pl-9 pr-4 py-2 rounded-md border border-border bg-card focus:outline-none focus:ring-2 focus:ring-orange-500/30 text-sm text-foreground placeholder:text-muted-foreground"
           />
         </div>
-        <div className="flex items-center gap-1 self-end surface-card border border-border rounded-xl p-1 sm:ml-auto sm:self-auto">
+        <div className="flex items-center gap-1 self-end surface-card border border-border rounded-3xl p-1 sm:ml-auto sm:self-auto">
           <button
             onClick={() => setView("grid")}
-            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
               view === "grid"
                 ? "bg-[#ea580c] text-white font-semibold"
                 : "text-muted-foreground hover:text-foreground"
@@ -178,7 +178,7 @@ export default function ClustersLibrary() {
           </button>
           <button
             onClick={() => setView("list")}
-            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
               view === "list"
                 ? "bg-[#ea580c] text-white font-semibold"
                 : "text-muted-foreground hover:text-foreground"
@@ -215,7 +215,7 @@ export default function ClustersLibrary() {
 
       {!isLoading && !error && filtered.length === 0 && (
         <div className="surface-card rounded-2xl p-10 sm:p-12 text-center border border-border">
-          <div className="w-14 h-14 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center mx-auto mb-4">
+          <div className="w-14 h-14 rounded-2xl text-orange-500 flex items-center justify-center mx-auto mb-4">
             <FolderOpen className="w-7 h-7" />
           </div>
           <h3 className="text-lg font-bold text-foreground">
@@ -227,7 +227,7 @@ export default function ClustersLibrary() {
           </p>
           <button
             onClick={() => setShowModal(true)}
-            className="mt-6 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-xl text-sm shadow-sm transition-all"
+            className="mt-6 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-3xl text-sm shadow-sm transition-all"
           >
             <Plus className="w-4 h-4" /> Create Cluster
           </button>
@@ -247,7 +247,7 @@ export default function ClustersLibrary() {
               >
                 <div>
                   <div className="flex items-start justify-between mb-3">
-                    <div className="w-10 h-10 bg-orange-500/15 rounded-xl flex items-center justify-center text-orange-500">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-orange-500">
                       <FolderOpen className="w-5 h-5" />
                     </div>
                     <div className="flex items-center gap-2">
@@ -276,7 +276,7 @@ export default function ClustersLibrary() {
                     <Clock className="w-3 h-3" />{" "}
                     {formatTimeAgo(cluster.created_at)}
                   </span>
-                  <span className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-orange-500 border border-orange-500/30 group-hover:bg-orange-500/10 rounded-lg transition-colors">
+                  <span className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-orange-500 border border-orange-500/30 group-hover:bg-orange-500/10 rounded-3xl transition-colors">
                     Open <ArrowRight className="w-3 h-3" />
                   </span>
                 </div>
@@ -304,7 +304,7 @@ export default function ClustersLibrary() {
                 className="grid min-w-160 grid-cols-[2fr_1fr_1fr_auto] gap-4 items-center px-5 py-4 border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors last:border-0 group"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 bg-orange-500/15 text-orange-500 rounded-lg flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 text-orange-500 rounded-lg flex items-center justify-center shrink-0">
                     <FolderOpen className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
@@ -325,7 +325,7 @@ export default function ClustersLibrary() {
                   {formatTimeAgo(cluster.created_at)}
                 </span>
                 <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-orange-500 border border-orange-500/30 group-hover:bg-orange-500/10 rounded-lg transition-colors">
+                  <span className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-orange-500 border border-orange-500/30 group-hover:bg-orange-500/10 rounded-3xl transition-colors">
                     Open <ArrowRight className="w-3 h-3" />
                   </span>
                   <CardActionMenu

@@ -29,10 +29,10 @@ export default function TeamStatsRow({ members, invites }) {
       {stats.map((s, i) => (
         <div
           key={i}
-          className="surface-card rounded-2xl p-4 border border-border flex items-center gap-3"
+          className="surface-card rounded-xl p-4 border border-border flex items-center gap-3"
         >
           <div
-            className={`w-10 h-10 rounded-xl ${s.color} flex items-center justify-center`}
+            className={`w-10 h-10 rounded-md ${s.color} flex items-center justify-center`}
           >
             <s.icon className="w-5 h-5" />
           </div>

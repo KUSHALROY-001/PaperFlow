@@ -101,7 +101,7 @@ export default function CatalogBrowser({
                 ? "Search mock tests..."
                 : "Search mock tests or institutes..."
             }
-            className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all text-foreground placeholder:text-muted-foreground"
+            className="w-full pl-9 pr-3 py-2.5 text-sm rounded-3xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all text-foreground placeholder:text-muted-foreground"
           />
         </div>
         {examYears.length > 0 && (
@@ -123,7 +123,7 @@ export default function CatalogBrowser({
             value={selectedSubscriber}
             onChange={(e) => setSelectedSubscriber(e.target.value)}
             disabled={subscriptions.length === 0}
-            className={`px-3.5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border bg-card focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`px-3.5 py-2.5 text-xs sm:text-sm font-semibold rounded-md border bg-card focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
               selectedSubscriber
                 ? "border-orange-500 text-orange-500 font-bold"
                 : "border-border text-foreground"

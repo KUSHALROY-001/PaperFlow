@@ -1,13 +1,20 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { CATEGORY_OPTIONS, mapTemplate } from "@/utils/templateHelpers";
+import { mapTemplate } from "@/utils/templateHelpers";
 
 // Extracted from pages/Templates.jsx — no behavior changes.
 export function useTemplates() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState(null);
+  // Replaces the old client-side "is popular" section (removed along with
+  // migrations/037_remove_template_is_popular.sql) - a real server-side
+  // sort instead of a manually-curated flag, matching category's existing
+  // pattern of being included in the query key so switching it triggers
+  // a genuine refetch with the new ORDER BY applied in the DB, not a
+  // client-side re-sort of whatever page of data happened to load first.
+  const [sortBy, setSortBy] = useState("usage");
   const [preview, setPreview] = useState(null);
   const [applyTarget, setApplyTarget] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -16,8 +23,8 @@ export function useTemplates() {
   const [actionError, setActionError] = useState("");
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["extraction-templates", category],
-    queryFn: () => api.listExtractionTemplates({ category }),
+    queryKey: ["extraction-templates", category, sortBy],
+    queryFn: () => api.listExtractionTemplates({ category, sortBy }),
   });
 
   const templates = useMemo(
@@ -36,9 +43,6 @@ export function useTemplates() {
       ),
     [templates, search],
   );
-
-  const categoryLabel =
-    CATEGORY_OPTIONS.find((c) => c.value === category)?.label || "All";
 
   // deleteTarget is cleared up front (not after the request resolves) so
   // the ConfirmDialog closes immediately on click, same as
@@ -98,6 +102,8 @@ export function useTemplates() {
     setSearch,
     category,
     setCategory,
+    sortBy,
+    setSortBy,
     preview,
     setPreview,
     applyTarget,
@@ -116,6 +122,5 @@ export function useTemplates() {
     error,
     templates,
     filtered,
-    categoryLabel,
   };
 }

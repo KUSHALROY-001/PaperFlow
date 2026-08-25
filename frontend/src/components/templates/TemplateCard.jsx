@@ -7,6 +7,7 @@ import {
   Star,
   Target,
   Trash2,
+  Users,
   Zap,
 } from "lucide-react";
 import { colorMap, iconBgMap } from "@/utils/templateHelpers";
@@ -48,7 +49,14 @@ export default function TemplateCard({
                 {template.category}
               </span>
             </div>
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-1 shrink-0 flex-wrap text-sm">
+              <span
+                className="flex items-center gap-1 mr-3"
+                title="Times this template has been applied"
+              >
+                <Users className="w-3.5 h-3.5 text-orange-500" />{" "}
+                {template.uses || 0} {template.uses === 1 ? "use" : "uses"}
+              </span>
               <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
               <span className="text-xs font-bold text-foreground">
                 {template.rating ?? "—"}
@@ -93,7 +101,7 @@ export default function TemplateCard({
                   ? "Editor role is required to apply templates"
                   : undefined
               }
-              className={`flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${
+              className={`flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-md transition-all ${
                 isViewer
                   ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50 border border-border"
                   : "bg-orange-500/10 dark:bg-orange-500/15 border border-orange-500/30 hover:bg-orange-500/20"

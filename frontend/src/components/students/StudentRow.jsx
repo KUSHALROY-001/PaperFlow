@@ -18,7 +18,7 @@ function StudentRow({
         className="flex items-center gap-3 min-w-0 flex-1"
       >
         <div
-          className={`w-10 h-10 rounded-xl ${avatarColorFor(student.email)} flex items-center justify-center text-white font-bold text-sm shrink-0`}
+          className={`w-10 h-10 rounded-3xl ${avatarColorFor(student.email)} flex items-center justify-center text-white font-bold text-sm shrink-0`}
         >
           {initialsFor(student.name || student.email)}
         </div>
@@ -80,9 +80,10 @@ function StudentRow({
             <select
               value=""
               onChange={(e) => {
-                if (e.target.value) onAddToCohort(e.target.value, student.email);
+                if (e.target.value)
+                  onAddToCohort(e.target.value, student.email);
               }}
-              className="px-2 py-1.5 rounded-lg text-xs font-bold border border-border bg-card text-muted-foreground hover:border-orange-500/30 transition-all shrink-0 max-w-[7.5rem] sm:max-w-none"
+              className="px-2 py-1.5 rounded-md text-xs font-bold border border-border bg-card text-muted-foreground hover:border-orange-500/30 transition-all shrink-0 max-w-30 sm:max-w-none"
             >
               <option value="">+ Add to cohort</option>
               {cohorts.map((cohort) => (

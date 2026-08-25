@@ -15,6 +15,17 @@ export const CATEGORY_LABELS = Object.fromEntries(
   CATEGORY_OPTIONS.filter((c) => c.value).map((c) => [c.value, c.label]),
 );
 
+// Mirrors extraction-templates.service.js's SORT_OPTIONS exactly - replaces
+// the old is_popular flag (migration
+// 037_remove_template_is_popular.sql) with a choice between real signals
+// (actual usage, actual submitted ratings) instead of one manually-set,
+// admin-only flag.
+export const SORT_OPTIONS = [
+  { label: "Most Used", value: "usage" },
+  { label: "Top Rated", value: "rating" },
+  { label: "Name", value: "name" },
+];
+
 export const colorMap = {
   orange: "bg-orange-500/10 text-orange-500 border border-orange-500/20",
   blue: "bg-blue-500/10 text-blue-500 border border-blue-500/20",
@@ -57,14 +68,14 @@ export function mapTemplate(row) {
     name: row.name,
     description: row.description,
     category: CATEGORY_LABELS[row.category] || row.category,
-    // Bug fix: these four used to read row.question_count / .duration_minutes
-    // / .usage_count / .is_popular (snake_case). TEMPLATE_COLUMNS aliases
+    // Bug fix: these three used to read row.question_count / .duration_minutes
+    // / .usage_count (snake_case). TEMPLATE_COLUMNS aliases
     // every multi-word column to camelCase in the query itself
     // (`t.question_count AS "questionCount"`, etc.) - the row this function
-    // actually receives never had snake_case keys for these, so all four
+    // actually receives never had snake_case keys for these, so all three
     // silently evaluated to undefined for every template (rendering as
-    // "undefined Qs" / always "Variable" duration / undefined uses /
-    // always falsy popular) regardless of what was actually in the DB.
+    // "undefined Qs" / always "Variable" duration / undefined uses)
+    // regardless of what was actually in the DB.
     questions: row.questionCount,
     duration: formatDuration(row.durationMinutes),
     difficulty: row.difficulty,
@@ -88,7 +99,6 @@ export function mapTemplate(row) {
     myRating: row.myRating ?? null,
     tags: Array.isArray(row.tags) ? row.tags : [],
     color: row.color,
-    popular: row.isPopular,
     sections: Array.isArray(row.sections) ? row.sections : [],
     // extraction-templates.repository.js's TEMPLATE_COLUMNS already aliases
     // these to camelCase (workspace_id AS "workspaceId", etc.) - previously
@@ -170,7 +180,8 @@ export function sectionRowFromTemplateSection(section, index) {
         ? ""
         : String(section.questionCount),
     marksPerCorrect:
-      section?.marksPerCorrect === undefined || section?.marksPerCorrect === null
+      section?.marksPerCorrect === undefined ||
+      section?.marksPerCorrect === null
         ? ""
         : String(section.marksPerCorrect),
     negativeMarksPerWrong:
@@ -180,4 +191,3 @@ export function sectionRowFromTemplateSection(section, index) {
         : String(section.negativeMarksPerWrong),
   };
 }
-

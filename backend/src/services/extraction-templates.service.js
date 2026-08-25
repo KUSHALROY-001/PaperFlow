@@ -22,6 +22,11 @@ const CATEGORIES = [
   "study_notes",
 ];
 const DIFFICULTIES = ["Easy", "Medium", "Hard", "Variable"];
+// Mirrors extraction-templates.repository.js's SORT_CLAUSES keys exactly -
+// replaces the old is_popular flag (migration
+// 037_remove_template_is_popular.sql) with a choice between real signals
+// instead of one manually-set flag.
+const SORT_OPTIONS = ["usage", "rating", "name"];
 const COLORS = [
   "orange",
   "blue",
@@ -218,9 +223,16 @@ export async function listTemplates(workspaceId, userId, query) {
     ? requiredEnum(query.category, CATEGORIES, "category")
     : undefined;
   const search = optionalString(query.search);
+  const sortBy = query.sortBy
+    ? requiredEnum(query.sortBy, SORT_OPTIONS, "sortBy")
+    : undefined;
 
   const [templates, categories] = await Promise.all([
-    templatesRepo.listAccessibleTemplates(workspaceId, { category, search }),
+    templatesRepo.listAccessibleTemplates(workspaceId, {
+      category,
+      search,
+      sortBy,
+    }),
     templatesRepo.listTemplateCategories(workspaceId),
   ]);
 
@@ -305,7 +317,6 @@ export async function createTemplate(workspaceId, userId, body) {
   );
   const tags = normalizeStringArray(body.tags, "tags") ?? [];
   const sections = normalizeSections(body.sections, "sections") ?? [];
-  const isPopular = Boolean(body.isPopular);
   const rating = ratingValue(body.rating);
   const settings =
     body.settings && typeof body.settings === "object" ? body.settings : {};
@@ -337,7 +348,6 @@ export async function createTemplate(workspaceId, userId, body) {
         negativeMarksPerWrong,
         tags,
         sections,
-        isPopular,
         rating,
         settings,
       });
@@ -404,7 +414,6 @@ export async function updateTemplate(templateId, workspaceId, body) {
           ),
     tags,
     sections,
-    isPopular: typeof body.isPopular === "boolean" ? body.isPopular : undefined,
     isActive: typeof body.isActive === "boolean" ? body.isActive : undefined,
     ratingProvided,
     rating: ratingValue(body.rating),

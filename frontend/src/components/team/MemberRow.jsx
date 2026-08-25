@@ -1,15 +1,34 @@
 import { memo } from "react";
-import { CheckCircle, Mail, MoreVertical, Trash2, FolderKanban, Calendar } from "lucide-react";
-import { ASSIGNABLE_ROLES, avatarColorFor, initialsFor, roleColors, roleLabel } from "@/utils/teamHelpers";
+import {
+  CheckCircle,
+  Mail,
+  MoreVertical,
+  Trash2,
+  FolderKanban,
+  Calendar,
+} from "lucide-react";
+import {
+  ASSIGNABLE_ROLES,
+  avatarColorFor,
+  initialsFor,
+  roleColors,
+  roleLabel,
+} from "@/utils/teamHelpers";
 import { formatDate } from "@/lib/date";
 
-function MemberRow({ member, isMenuOpen, onToggleMenu, onChangeRole, onRemove }) {
+function MemberRow({
+  member,
+  isMenuOpen,
+  onToggleMenu,
+  onChangeRole,
+  onRemove,
+}) {
   return (
     <div className="px-3.5 sm:px-6 py-3.5 sm:py-4 hover:bg-muted/40 transition-colors relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
       {/* User Info Section */}
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <div
-          className={`w-10 h-10 rounded-xl ${avatarColorFor(member.id)} flex items-center justify-center text-white font-bold text-sm shrink-0`}
+          className={`w-10 h-10 rounded-3xl ${avatarColorFor(member.id)} flex items-center justify-center text-white font-bold text-sm shrink-0`}
         >
           {initialsFor(member.name)}
         </div>

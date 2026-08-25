@@ -76,7 +76,7 @@ export default function RecentClustersList({ clusters, isLoading }) {
             </div>
           ))
         ) : clusters.length === 0 ? (
-          <div className="surface-card rounded-2xl border border-border p-8 text-center">
+          <div className="surface-card rounded-md border border-border p-8 text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-500">
               <FolderOpen className="h-7 w-7" />
             </div>
@@ -104,7 +104,7 @@ export default function RecentClustersList({ clusters, isLoading }) {
               {/* Cluster Card Header */}
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-orange-500/15 text-orange-500 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-md text-orange-500 flex items-center justify-center shrink-0">
                     <FolderOpen className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
@@ -152,7 +152,7 @@ export default function RecentClustersList({ clusters, isLoading }) {
                   </span>
                 </div>
 
-                <span className="flex w-full items-center justify-center gap-1 rounded-lg border border-orange-500/30 px-3 py-1.5 text-xs font-semibold text-orange-500 transition-colors group-hover:bg-orange-500/10 sm:w-auto">
+                <span className="flex w-full items-center justify-center gap-1 rounded-full border border-orange-500/30 px-3 py-1.5 text-xs font-semibold text-orange-500 transition-colors group-hover:bg-orange-500/10 sm:w-auto">
                   Open <ArrowRight className="w-3 h-3" />
                 </span>
               </div>

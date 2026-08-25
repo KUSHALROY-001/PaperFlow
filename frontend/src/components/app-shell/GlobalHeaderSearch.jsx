@@ -1,7 +1,14 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Search, X, ChevronRight, FolderOpen, FileText, Library } from "lucide-react";
+import {
+  Search,
+  X,
+  ChevronRight,
+  FolderOpen,
+  FileText,
+  Library,
+} from "lucide-react";
 import { api } from "@/lib/api";
 
 export default function GlobalHeaderSearch() {
@@ -62,7 +69,7 @@ export default function GlobalHeaderSearch() {
         .filter(
           (m) =>
             m.name?.toLowerCase().includes(cleanQuery) ||
-            m.cluster_name?.toLowerCase().includes(cleanQuery)
+            m.cluster_name?.toLowerCase().includes(cleanQuery),
         )
         .slice(0, 5)
     : [];
@@ -72,7 +79,7 @@ export default function GlobalHeaderSearch() {
         .filter(
           (t) =>
             t.name?.toLowerCase().includes(cleanQuery) ||
-            t.exam_body?.toLowerCase().includes(cleanQuery)
+            t.exam_body?.toLowerCase().includes(cleanQuery),
         )
         .slice(0, 5)
     : [];
@@ -102,7 +109,7 @@ export default function GlobalHeaderSearch() {
             if (!isOpen) setIsOpen(true);
           }}
           placeholder="Search clusters, mocks, templates..."
-          className="w-full pl-9 pr-12 py-2 text-xs sm:text-sm rounded-xl border border-border bg-muted/50 focus:bg-card focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all text-foreground placeholder:text-muted-foreground"
+          className="w-full pl-9 pr-12 py-2 text-xs sm:text-sm rounded-full border border-border bg-muted/50 focus:bg-card focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all text-foreground placeholder:text-muted-foreground"
         />
         {query ? (
           <button
@@ -124,7 +131,10 @@ export default function GlobalHeaderSearch() {
 
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setIsOpen(false)}
+          />
           <div className="absolute left-0 top-full mt-2 w-full min-w-[320px] max-w-lg surface-card rounded-2xl border border-border shadow-2xl z-50 overflow-hidden animate-in zoom-in-95 duration-150">
             {!cleanQuery ? (
               <div className="p-5 text-center text-xs text-muted-foreground">
@@ -132,11 +142,11 @@ export default function GlobalHeaderSearch() {
               </div>
             ) : !hasResults ? (
               <div className="p-8 text-center text-xs text-muted-foreground">
-                No matching results found for "<span className="text-foreground font-semibold">{query}</span>"
+                No matching results found for "
+                <span className="text-foreground font-semibold">{query}</span>"
               </div>
             ) : (
               <div className="max-h-80 overflow-y-auto divide-y divide-border p-2 space-y-2">
-
                 {clusterResults.length > 0 && (
                   <div>
                     <p className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
@@ -176,7 +186,7 @@ export default function GlobalHeaderSearch() {
                           handleSelect(
                             m.cluster_id
                               ? `/cluster/${m.cluster_id}/mocktest/${m.id}`
-                              : `/session/${m.id}`
+                              : `/session/${m.id}`,
                           )
                         }
                         className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-muted text-left transition-colors group cursor-pointer"
