@@ -1,4 +1,10 @@
-import { FileText, Sparkles, Zap } from "lucide-react";
+import {
+  AlertCircle,
+  AlertTriangle,
+  FileText,
+  Sparkles,
+  Zap,
+} from "lucide-react";
 import ProcessingTimeline from "./ProcessingTimeline";
 
 export default function ProcessingTab({
@@ -52,7 +58,7 @@ export default function ProcessingTab({
             className={`h-full rounded-full transition-all duration-500 relative overflow-hidden shadow-xs ${
               job?.status === "completed"
                 ? "bg-emerald-500"
-                : "bg-gradient-to-r from-[#ea580c] via-orange-500 to-amber-500"
+                : "bg-linear-to-r from-[#ea580c] via-orange-500 to-amber-500"
             }`}
             style={{
               width: `${Math.min(Math.max(progress, isProcessing ? 6 : 0), 100)}%`,
@@ -60,13 +66,13 @@ export default function ProcessingTab({
           >
             {/* Sliding Sheen Light Beam across filled progress */}
             {isProcessing && (
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent animate-progress-shine" />
+              <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/60 to-transparent animate-progress-shine" />
             )}
           </div>
 
           {/* Indeterminate Sliding Pulse when starting at 0% */}
           {isProcessing && progress === 0 && (
-            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-orange-500/60 to-transparent animate-progress-indeterminate" />
+            <div className="absolute inset-0 rounded-full bg-linear-to-r from-transparent via-orange-500/60 to-transparent animate-progress-indeterminate" />
           )}
         </div>
 
@@ -120,7 +126,7 @@ export default function ProcessingTab({
             </div>
           </div>
 
-          <div className="rounded-[24px] border border-border bg-muted/40 p-5">
+          <div className="rounded-3xl border border-border bg-muted/40 p-5">
             <div className="space-y-3 font-mono text-xs text-muted-foreground">
               {documentPreview.map((line, index) => (
                 <div

@@ -4,6 +4,7 @@ import { useDashboardSummary } from "../hooks/useDashboardSummary";
 import StatCardGrid from "../components/dashboard/StatCardGrid";
 import BannerCard from "../components/dashboard/BannerCard";
 import RecentClustersList from "../components/dashboard/RecentClustersList";
+import RecentMockTestsList from "../components/dashboard/RecentMockTestsList";
 import ActiveJobsPanel from "../components/dashboard/ActiveJobsPanel";
 import QuickActionsPanel from "../components/dashboard/QuickActionsPanel";
 
@@ -15,6 +16,7 @@ export default function Dashboard() {
     error,
     displayClusters,
     activeJobs,
+    recentMockTests,
     statCards,
   } = useDashboardSummary();
 
@@ -33,7 +35,7 @@ export default function Dashboard() {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-md text-sm shadow-sm transition-all shrink-0"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-md text-sm shadow-sm transition-all shrink-0"
         >
           <Plus className="w-4 h-4" /> New Cluster
         </button>
@@ -49,9 +51,14 @@ export default function Dashboard() {
 
       <BannerCard onCreateCluster={() => setShowModal(true)} />
 
-      {/* Main 2-Column Content */}
+      {/* Main 3-Column Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <RecentClustersList clusters={displayClusters} isLoading={isLoading} />
+
+        <RecentMockTestsList
+          mockTests={recentMockTests}
+          isLoading={isLoading}
+        />
 
         {/* Right Column: Active Jobs & Quick Actions */}
         <div className="space-y-6">

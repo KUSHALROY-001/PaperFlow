@@ -16,7 +16,7 @@ export async function getSummaryStats(workspaceId) {
   return result.rows[0];
 }
 
-export async function getRecentClusters(workspaceId, limit = 5) {
+export async function getRecentClusters(workspaceId, limit = 3) {
   const result = await pool.query(
     `
     SELECT
@@ -66,3 +66,28 @@ export async function getActiveJobs(workspaceId, limit = 5) {
 
   return result.rows;
 }
+
+export async function getRecentMockTests(workspaceId, limit = 3) {
+  const result = await pool.query(
+    `
+    SELECT
+      mt.id,
+      mt.name,
+      mt.status,
+      mt.total_questions,
+      mt.cluster_id,
+      mt.created_at,
+      mt.updated_at,
+      c.name AS cluster_name
+    FROM mock_tests mt
+    JOIN clusters c ON c.id = mt.cluster_id
+    WHERE mt.workspace_id = $1
+    ORDER BY mt.updated_at DESC
+    LIMIT $2
+    `,
+    [workspaceId, limit],
+  );
+
+  return result.rows;
+}
+

@@ -55,6 +55,32 @@ OCR_LANGUAGE = os.environ.get("OCR_LANGUAGE", "eng").strip()
 OCR_RENDER_DPI = int(os.environ.get("OCR_RENDER_DPI", "220"))
 TESSERACT_CMD = os.environ.get("TESSERACT_CMD", "").strip()
 
+# Backblaze B2 - PDFs only. B2 speaks the S3 API, so boto3's plain S3
+# client works against it unmodified once pointed at B2's own endpoint -
+# no B2-specific SDK needed. KEY_ID/APPLICATION_KEY are B2's own naming
+# for what boto3 calls the access key id / secret access key.
+B2_ENDPOINT_URL = os.environ.get("B2_ENDPOINT_URL", "").strip()
+B2_REGION = os.environ.get("B2_REGION", "").strip()
+B2_BUCKET = os.environ.get("B2_BUCKET", "").strip()
+B2_KEY_ID = os.environ.get("B2_KEY_ID", "").strip()
+B2_APPLICATION_KEY = os.environ.get("B2_APPLICATION_KEY", "").strip()
+
+# Cloudinary - diagram images only (both extracted crops and manual
+# uploads - see storage.py). CLOUDINARY_URL, if set, is a single
+# cloudinary://key:secret@cloud_name string the SDK parses on its own;
+# the three separate vars are the fallback for anyone who'd rather set
+# them individually.
+CLOUDINARY_URL = os.environ.get("CLOUDINARY_URL", "").strip()
+CLOUDINARY_CLOUD_NAME = os.environ.get(
+    "CLOUDINARY_CLOUD_NAME", os.environ.get("CLOUD_NAME", "")
+).strip()
+CLOUDINARY_API_KEY = os.environ.get(
+    "CLOUDINARY_API_KEY", os.environ.get("API_KEY", "")
+).strip()
+CLOUDINARY_API_SECRET = os.environ.get(
+    "CLOUDINARY_API_SECRET", os.environ.get("API_SECRET", "")
+).strip()
+
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL is required")
 

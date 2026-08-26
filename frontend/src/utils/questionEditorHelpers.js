@@ -170,6 +170,24 @@ function wrapPlainSegment(segment) {
       continue;
     }
 
+    // A blank-line whitespace token never starts a math run (a formula
+    // should never span a paragraph break, same reasoning as the
+    // run-growing loop's own stop condition below) - emit it as-is and
+    // advance, exactly like the "word" branch above. Without this check,
+    // whenever tokens[i] IS a blank-line token, the run-growing loop's
+    // guard is already false on its very first iteration (end === i), so
+    // it executes zero times - runTokens ends up empty, nothing gets
+    // appended, and `i = end` sets i to itself. The outer while loop then
+    // never advances again and spins forever at 100% CPU - this is the
+    // exact freeze/"Page Unresponsive" bug, and it fires on ANY
+    // multi-paragraph input (a blank line between a question stem and its
+    // explanation, a passage and its question, etc.), not an edge case.
+    if (kinds[i] === "space" && /\n\s*\n/.test(tokens[i])) {
+      output += tokens[i];
+      i++;
+      continue;
+    }
+
     // Grow a maximal run of non-word tokens - numbers, symbols, letters,
     // math-function words, latex commands, and whitespace - stopping at
     // the next real word or a blank line, since a math expression should
@@ -223,4 +241,94 @@ export function wrapBareLatex(text) {
       index % 2 === 1 ? segment : wrapPlainSegment(segment),
     )
     .join("");
+}
+
+// --- Shared textarea keyboard shortcuts -------------------------------
+//
+// Ctrl/Cmd+B (bold), Ctrl/Cmd+I (italic), Tab/Shift+Tab (indent/dedent).
+// Extracted from QuestionForm.jsx's old per-field handler so the same
+// behavior works both on its top-level Question Text/Explanation
+// textareas AND on FormattedTextEditor.jsx's per-segment textareas
+// (Formatted view) without duplicating this logic in two places. Takes
+// the current string value and a setter rather than reaching into
+// `updateSelected` directly, since a segment's raw text isn't a field on
+// `selected` - it's a slice the caller owns.
+export function handleRichTextareaKeyDown(e, value, onChange) {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
+    e.preventDefault();
+    wrapSelection(e.target, value, onChange, "**");
+    return;
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "i") {
+    e.preventDefault();
+    wrapSelection(e.target, value, onChange, "*");
+    return;
+  }
+  if (e.key === "Tab") {
+    e.preventDefault();
+    indentSelection(e.target, value, onChange, e.shiftKey);
+  }
+}
+
+function wrapSelection(target, value, onChange, marker) {
+  const start = target.selectionStart;
+  const end = target.selectionEnd;
+  const selectedText = value.slice(start, end) || "text";
+  const next = `${value.slice(0, start)}${marker}${selectedText}${marker}${value.slice(end)}`;
+  onChange(next);
+  requestAnimationFrame(() =>
+    target.setSelectionRange(
+      start + marker.length,
+      start + marker.length + selectedText.length,
+    ),
+  );
+}
+
+function indentSelection(target, value, onChange, dedent) {
+  const start = target.selectionStart;
+  const end = target.selectionEnd;
+
+  if (start === end) {
+    if (dedent) {
+      // Dedent the line the cursor is on - no selection required, same
+      // gesture a standard code editor supports.
+      const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+      let lineEnd = value.indexOf("\n", start);
+      if (lineEnd === -1) lineEnd = value.length;
+      const line = value.slice(lineStart, lineEnd);
+      const match = line.match(/^ {1,4}/);
+      const removed = match ? match[0].length : 0;
+
+      if (removed > 0) {
+        const newLine = line.slice(removed);
+        const next = value.slice(0, lineStart) + newLine + value.slice(lineEnd);
+        onChange(next);
+        const newCursor = Math.max(lineStart, start - removed);
+        requestAnimationFrame(() => {
+          target.selectionStart = target.selectionEnd = newCursor;
+        });
+      }
+      return;
+    }
+
+    const next = value.slice(0, start) + "    " + value.slice(end);
+    onChange(next);
+    requestAnimationFrame(() => {
+      target.selectionStart = target.selectionEnd = start + 4;
+    });
+    return;
+  }
+
+  const selectedText = value.slice(start, end);
+  const lines = selectedText.split("\n");
+  const newLines = dedent
+    ? lines.map((line) => line.replace(/^ {1,4}/, ""))
+    : lines.map((line) => "    " + line);
+  const replacement = newLines.join("\n");
+  const next = value.slice(0, start) + replacement + value.slice(end);
+  onChange(next);
+  requestAnimationFrame(() => {
+    target.selectionStart = start;
+    target.selectionEnd = start + replacement.length;
+  });
 }

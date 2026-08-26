@@ -84,9 +84,15 @@ export function useQuestionEditor() {
   );
 
   const updateSelected = useCallback(
-    (field, value) => {
+    (fieldOrPatch, value) => {
       setQuestions((prev) =>
-        prev.map((q) => (q.id === selectedId ? { ...q, [field]: value } : q)),
+        prev.map((q) => {
+          if (q.id !== selectedId) return q;
+          if (typeof fieldOrPatch === "object" && fieldOrPatch !== null) {
+            return { ...q, ...fieldOrPatch };
+          }
+          return { ...q, [fieldOrPatch]: value };
+        }),
       );
       setHasUnsavedChanges(true);
     },

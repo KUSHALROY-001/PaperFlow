@@ -1,5 +1,8 @@
+import { Eye } from "lucide-react";
 import { useQuestionForm } from "@/hooks/useQuestionForm";
+import { usePanelResize } from "@/hooks/usePanelResize";
 import DiagramCropModal from "./DiagramCropModal";
+import EditorPanelResizer from "./EditorPanelResizer";
 import QuestionTextCard from "./QuestionTextCard";
 import QuestionExplanationCard from "./QuestionExplanationCard";
 import QuestionOptionsCard from "./QuestionOptionsCard";
@@ -57,11 +60,34 @@ export default function QuestionForm({
     updateOption,
   });
 
+  const {
+    containerRef,
+    leftPercent,
+    isDragging,
+    isCollapsed,
+    handlePointerDown,
+    toggleCollapse,
+  } = usePanelResize({
+    storageKey: "paperflow_question_editor_split",
+    defaultPercent: 50,
+    minPercent: 30,
+    maxPercent: 75,
+  });
+
   return (
     <main className="flex-1 p-2 w-full min-w-0">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 items-start">
+      <div
+        ref={containerRef}
+        className="flex flex-col lg:flex-row gap-3 lg:gap-0 items-start w-full relative"
+      >
         {/* Left Column: Question Editor Controls */}
-        <div className="space-y-6">
+        <div
+          className="w-full space-y-6 min-w-0 shrink-0 transition-[flex-basis] duration-75 ease-out"
+          style={{
+            flexBasis: isCollapsed ? "100%" : `calc(${leftPercent}% - 0.5rem)`,
+            flexGrow: isCollapsed ? 1 : 0,
+          }}
+        >
           <QuestionTextCard
             topic={selected.topic}
             extractedTopics={extractedTopics}
@@ -119,15 +145,43 @@ export default function QuestionForm({
           />
         </div>
 
-        {/* Right Column: Live Preview & Diagram Settings */}
-        <QuestionPreviewCard
-          selected={selected}
-          mockTestId={mockTestId}
-          diagramError={diagramError}
-          setDiagramError={setDiagramError}
-          onOpenCropModal={() => setIsCropModalOpen(true)}
-          isViewer={isViewer}
+        {/* Vertical Resizer / Dragger */}
+        <EditorPanelResizer
+          isDragging={isDragging}
+          isCollapsed={isCollapsed}
+          onPointerDown={handlePointerDown}
+          onToggleCollapse={toggleCollapse}
         />
+
+        {/* Right Column: Live Preview & Diagram Settings */}
+        {!isCollapsed ? (
+          <div
+            className="w-full min-w-0 shrink-0 transition-[flex-basis] duration-75 ease-out"
+            style={{
+              flexBasis: `calc(${100 - leftPercent}% - 0.5rem)`,
+              flexGrow: 1,
+            }}
+          >
+            <QuestionPreviewCard
+              selected={selected}
+              mockTestId={mockTestId}
+              diagramError={diagramError}
+              setDiagramError={setDiagramError}
+              onOpenCropModal={() => setIsCropModalOpen(true)}
+              updateSelected={updateSelected}
+              isViewer={isViewer}
+            />
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={toggleCollapse}
+            className="hidden lg:flex fixed right-4 bottom-6 z-30 items-center gap-2 px-3.5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs shadow-lg hover:shadow-xl transition-all shadow-orange-500/25 animate-in fade-in"
+            title="Expand live preview"
+          >
+            <Eye className="w-4 h-4" /> Live Preview
+          </button>
+        )}
       </div>
 
       {isCropModalOpen && (
@@ -142,3 +196,4 @@ export default function QuestionForm({
     </main>
   );
 }
+

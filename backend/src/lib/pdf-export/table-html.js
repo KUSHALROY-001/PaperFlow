@@ -2,17 +2,36 @@ import { escapeHtml, renderTextWithMath } from "./math-html.js";
 import { splitIntoTextBlocks } from "./text-blocks.js";
 
 function tableBlockHtml(block) {
+  const colgroupHtml =
+    Array.isArray(block.colWidths) &&
+    block.colWidths.length === block.header.length
+      ? `<colgroup>${block.colWidths.map((w) => `<col style="width: ${w};">`).join("")}</colgroup>`
+      : "";
+
   const headerCells = block.header
-    .map((cell) => `<th>${renderTextWithMath(cell)}</th>`)
+    .map((cell, i) => {
+      const widthStyle = block.colWidths?.[i]
+        ? ` style="width: ${block.colWidths[i]};"`
+        : "";
+      return `<th${widthStyle}>${renderTextWithMath(cell)}</th>`;
+    })
     .join("");
+
   const bodyRows = block.rows
     .map(
       (row) =>
-        `<tr>${row.map((cell) => `<td>${renderTextWithMath(cell)}</td>`).join("")}</tr>`,
+        `<tr>${row
+          .map((cell, i) => {
+            const widthStyle = block.colWidths?.[i]
+              ? ` style="width: ${block.colWidths[i]};"`
+              : "";
+            return `<td${widthStyle}>${renderTextWithMath(cell)}</td>`;
+          })
+          .join("")}</tr>`,
     )
     .join("");
 
-  return `<table class="q-table"><thead><tr>${headerCells}</tr></thead><tbody>${bodyRows}</tbody></table>`;
+  return `<table class="q-table" style="table-layout: fixed; width: 100%;">${colgroupHtml}<thead><tr>${headerCells}</tr></thead><tbody>${bodyRows}</tbody></table>`;
 }
 
 // The PDF-export counterpart to QuestionContent.jsx's block rendering -

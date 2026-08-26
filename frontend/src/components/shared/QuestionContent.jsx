@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+import { AlertTriangle, ImageOff, RotateCcw, ExternalLink, Loader2 } from "lucide-react";
 import { resolveAssetUrl } from "@/lib/api";
 import CodeText from "./CodeText";
 
@@ -6,19 +8,89 @@ import CodeText from "./CodeText";
 // QuestionContent only ever renders inline (above or below the text), it
 // never has access to the options list that comes after it.
 export function QuestionDiagram({ diagramUrl, className = "" }) {
+  const [status, setStatus] = useState("loading"); // "loading" | "loaded" | "error"
+  const [retryCount, setRetryCount] = useState(0);
+
+  useEffect(() => {
+    setStatus("loading");
+  }, [diagramUrl, retryCount]);
+
   if (!diagramUrl) return null;
+
+  const rawUrl = resolveAssetUrl(diagramUrl);
+  // Cache buster for manual retries
+  const imageUrl = retryCount > 0
+    ? `${rawUrl}${rawUrl.includes("?") ? "&" : "?"}_r=${retryCount}`
+    : rawUrl;
+
+  const handleRetry = () => {
+    setStatus("loading");
+    setRetryCount((prev) => prev + 1);
+  };
+
   return (
-    <img
-      src={resolveAssetUrl(diagramUrl)}
-      alt="Question diagram"
-      className={`max-w-full rounded-xl border border-border ${className}`}
-      loading="lazy"
-    />
+    <div className={`relative max-w-full my-2 ${className}`}>
+      {status === "loading" && (
+        <div className="flex h-36 w-full max-w-md items-center justify-center rounded-2xl border border-border/80 bg-muted/40 p-4 text-xs font-semibold text-muted-foreground animate-pulse">
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin text-orange-500" />
+            <span>Loading diagram...</span>
+          </div>
+        </div>
+      )}
+
+      {status === "error" && (
+        <div className="flex flex-col gap-2 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs text-foreground max-w-lg shadow-xs transition-all">
+          <div className="flex items-center gap-2 font-bold text-amber-600 dark:text-amber-400">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span>Diagram image could not be loaded</span>
+          </div>
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            The cloud image could not be retrieved from Cloudinary storage. The link might be expired, cloud storage unconfigured, or blocked by network restrictions.
+          </p>
+          <div className="flex items-center gap-2 pt-1 flex-wrap">
+            <button
+              type="button"
+              onClick={handleRetry}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/15 px-2.5 py-1 text-xs font-bold text-amber-600 dark:text-amber-300 hover:bg-amber-500/25 transition-all"
+            >
+              <RotateCcw className="h-3 w-3" />
+              Retry Loading
+            </button>
+            <a
+              href={rawUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+            >
+              <ExternalLink className="h-3 w-3" />
+              Open Image Link
+            </a>
+          </div>
+        </div>
+      )}
+
+      <img
+        src={imageUrl}
+        alt="Question diagram"
+        onLoad={() => setStatus("loaded")}
+        onError={() => setStatus("error")}
+        className={`max-w-full rounded-xl border border-border transition-opacity duration-300 ${
+          status === "loaded" ? "block opacity-100" : "hidden opacity-0"
+        }`}
+        loading="lazy"
+      />
+    </div>
   );
 }
 
 // Extracted so QuestionContent consumers can render it after their options block.
-export function QuestionExplanation({ explanation, className = "" }) {
+export function QuestionExplanation({
+  explanation,
+  className = "",
+  editable = false,
+  onUpdateExplanation,
+}) {
   if (!explanation) return null;
   return (
     <div
@@ -28,7 +100,12 @@ export function QuestionExplanation({ explanation, className = "" }) {
         Explanation
       </div>
       <div className="space-y-2">
-        <CodeText text={explanation} textClassName="text-sm text-foreground" />
+        <CodeText
+          text={explanation}
+          textClassName="text-sm text-foreground"
+          editable={editable}
+          onUpdateText={onUpdateExplanation}
+        />
       </div>
     </div>
   );
@@ -43,6 +120,8 @@ export default function QuestionContent({
   diagramUrl,
   placement = "below_text",
   textClassName = "text-sm text-foreground",
+  editable = false,
+  onUpdateText,
 }) {
   const showAboveText = diagramUrl && placement === "above_text";
   const showBelowText =
@@ -64,9 +143,17 @@ export default function QuestionContent({
         </div>
       )}
       {showAboveText && <QuestionDiagram diagramUrl={diagramUrl} />}
-      {text && <CodeText text={text} textClassName={textClassName} />}
+      {text && (
+        <CodeText
+          text={text}
+          textClassName={textClassName}
+          editable={editable}
+          onUpdateText={onUpdateText}
+        />
+      )}
       {showBelowText && <QuestionDiagram diagramUrl={diagramUrl} />}
     </div>
   );
 }
+
 

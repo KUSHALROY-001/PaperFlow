@@ -30,9 +30,27 @@ export function errorHandler(error, _req, res, _next) {
     ? error.message || "Internal server error"
     : "Something went wrong on our end. Please try again in a moment.";
 
-  if (!isDeliberate && error.code && PG_ERROR_MAP[error.code]) {
-    statusCode = PG_ERROR_MAP[error.code].statusCode;
-    message = PG_ERROR_MAP[error.code].message;
+  if (!isDeliberate) {
+    if (error.code && PG_ERROR_MAP[error.code]) {
+      statusCode = PG_ERROR_MAP[error.code].statusCode;
+      message = PG_ERROR_MAP[error.code].message;
+    } else if (error.name === "MulterError") {
+      statusCode = 400;
+      if (error.code === "LIMIT_FILE_SIZE") {
+        message = "File is too large. Please upload a smaller file.";
+      } else {
+        message = `File upload error: ${error.message}`;
+      }
+    } else if (
+      error.message &&
+      (error.message.includes("Cloudinary") ||
+        error.message.includes("Backblaze") ||
+        error.message.includes("B2") ||
+        error.message.includes("cloud storage"))
+    ) {
+      statusCode = 502;
+      message = error.message;
+    }
   }
 
   // Always log the real error server-side, regardless of what the client
@@ -49,3 +67,4 @@ export function errorHandler(error, _req, res, _next) {
     },
   });
 }
+

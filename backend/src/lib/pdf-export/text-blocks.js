@@ -22,7 +22,8 @@ function isSeparatorRow(line) {
 }
 
 function splitTableRow(line) {
-  const trimmed = line.trim().replace(/^\|/, "").replace(/\|$/, "");
+  const cleaned = line.replace(/<!--\s*colwidths:[^>]*-->/gi, "");
+  const trimmed = cleaned.trim().replace(/^\|/, "").replace(/\|$/, "");
   const cells = [];
   let current = "";
   let inMath = false;
@@ -38,6 +39,34 @@ function splitTableRow(line) {
   }
   cells.push(current.trim());
   return cells;
+}
+
+function extractColWidths(headerLine, separatorLine) {
+  const combined = `${headerLine} ${separatorLine}`;
+  const match = combined.match(/<!--\s*colwidths:\s*([^>]+?)\s*-->/i);
+  if (match) {
+    const rawParts = match[1].split(",").map((s) => s.trim().replace("%", ""));
+    const nums = rawParts.map(Number).filter((n) => Number.isFinite(n) && n > 0);
+    if (nums.length > 0) {
+      const total = nums.reduce((a, b) => a + b, 0);
+      return nums.map((n) => `${Math.round((n / total) * 100)}%`);
+    }
+  }
+
+  const sepCells = splitTableRow(separatorLine);
+  const sepWidths = [];
+  for (const cell of sepCells) {
+    const widthMatch = cell.match(/(\d+)%/);
+    if (widthMatch) {
+      sepWidths.push(Number(widthMatch[1]));
+    }
+  }
+  if (sepWidths.length === sepCells.length && sepWidths.length > 0) {
+    const total = sepWidths.reduce((a, b) => a + b, 0);
+    return sepWidths.map((n) => `${Math.round((n / total) * 100)}%`);
+  }
+
+  return null;
 }
 
 export function splitIntoTextBlocks(text) {
@@ -62,6 +91,7 @@ export function splitIntoTextBlocks(text) {
       isSeparatorRow(next.trim())
     ) {
       flushProse();
+      const colWidths = extractColWidths(line, next);
       const header = splitTableRow(line);
       i += 2;
       const rows = [];
@@ -69,7 +99,7 @@ export function splitIntoTextBlocks(text) {
         rows.push(splitTableRow(lines[i]));
         i += 1;
       }
-      blocks.push({ type: "table", header, rows });
+      blocks.push({ type: "table", header, rows, colWidths });
     } else {
       prose.push(line);
       i += 1;
@@ -79,3 +109,4 @@ export function splitIntoTextBlocks(text) {
 
   return blocks;
 }
+

@@ -212,7 +212,7 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
                 passage={question.passage}
                 diagramUrl={question.diagramUrl}
                 placement={question.placement}
-                textClassName="text-lg font-semibold text-foreground"
+                textClassName="text-base sm:text-lg text-foreground"
               />
 
               <div className="mt-5 grid gap-3 md:grid-cols-2">
@@ -221,7 +221,7 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
                   return (
                     <div
                       key={option}
-                      className={`rounded-md border px-4 py-3 text-sm font-medium whitespace-pre-wrap ${
+                      className={`rounded-md border px-4 py-3 text-sm whitespace-pre-wrap ${
                         correct
                           ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
                           : "border-border bg-card text-muted-foreground"

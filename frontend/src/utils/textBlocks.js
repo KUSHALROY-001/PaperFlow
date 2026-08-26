@@ -34,7 +34,8 @@ function isSeparatorRow(line) {
 // enough to not worry about, and single-$ toggling still degrades
 // gracefully (worst case, extra/missing cells on that one malformed row).
 function splitTableRow(line) {
-  const trimmed = line.trim().replace(/^\|/, "").replace(/\|$/, "");
+  const cleaned = line.replace(/<!--\s*colwidths:[^>]*-->/gi, "");
+  const trimmed = cleaned.trim().replace(/^\|/, "").replace(/\|$/, "");
   const cells = [];
   let current = "";
   let inMath = false;
@@ -52,11 +53,36 @@ function splitTableRow(line) {
   return cells;
 }
 
+function extractColWidths(headerLine, separatorLine) {
+  const combined = `${headerLine} ${separatorLine}`;
+  const match = combined.match(/<!--\s*colwidths:\s*([^>]+?)\s*-->/i);
+  if (match) {
+    const rawParts = match[1].split(",").map((s) => s.trim().replace("%", ""));
+    const nums = rawParts.map(Number).filter((n) => Number.isFinite(n) && n > 0);
+    if (nums.length > 0) {
+      const total = nums.reduce((a, b) => a + b, 0);
+      return nums.map((n) => `${Math.round((n / total) * 100)}%`);
+    }
+  }
+
+  const sepCells = splitTableRow(separatorLine);
+  const sepWidths = [];
+  for (const cell of sepCells) {
+    const widthMatch = cell.match(/(\d+)%/);
+    if (widthMatch) {
+      sepWidths.push(Number(widthMatch[1]));
+    }
+  }
+  if (sepWidths.length === sepCells.length && sepWidths.length > 0) {
+    const total = sepWidths.reduce((a, b) => a + b, 0);
+    return sepWidths.map((n) => `${Math.round((n / total) * 100)}%`);
+  }
+
+  return null;
+}
+
 // Splits `text` into an ordered list of { type: "prose", content } and
-// { type: "table", header, rows } blocks. A string with no table in it at
-// all returns a single prose block containing the whole thing unchanged -
-// safe to run on every question's text unconditionally, including options
-// (which will just never match the 2-line table-start pattern below).
+// { type: "table", header, rows, colWidths } blocks.
 export function splitIntoTextBlocks(text) {
   const lines = String(text ?? "").split("\n");
   const blocks = [];
@@ -79,6 +105,7 @@ export function splitIntoTextBlocks(text) {
       isSeparatorRow(next.trim())
     ) {
       flushProse();
+      const colWidths = extractColWidths(line, next);
       const header = splitTableRow(line);
       i += 2;
       const rows = [];
@@ -86,7 +113,7 @@ export function splitIntoTextBlocks(text) {
         rows.push(splitTableRow(lines[i]));
         i += 1;
       }
-      blocks.push({ type: "table", header, rows });
+      blocks.push({ type: "table", header, rows, colWidths });
     } else {
       prose.push(line);
       i += 1;
@@ -96,3 +123,47 @@ export function splitIntoTextBlocks(text) {
 
   return blocks;
 }
+
+export function updateTableColWidthsInMarkdown(
+  text,
+  tableIndex = 0,
+  newColWidths = [],
+) {
+  if (!text || !newColWidths || newColWidths.length === 0) return text;
+
+  const lines = String(text).split("\n");
+  let currentTableIndex = -1;
+  let i = 0;
+
+  const formattedWidthsComment = `<!-- colwidths: ${newColWidths
+    .map((w) => String(w).replace("%", "") + "%")
+    .join(", ")} -->`;
+
+  while (i < lines.length) {
+    const line = lines[i];
+    const next = lines[i + 1];
+    if (
+      isTableRow(line.trim()) &&
+      next !== undefined &&
+      isSeparatorRow(next.trim())
+    ) {
+      currentTableIndex += 1;
+      if (currentTableIndex === tableIndex) {
+        const cleanedHeader = line
+          .replace(/<!--\s*colwidths:[^>]*-->/gi, "")
+          .trim();
+        lines[i] = `${cleanedHeader} ${formattedWidthsComment}`;
+        return lines.join("\n");
+      }
+      i += 2;
+      while (i < lines.length && isTableRow(lines[i].trim())) {
+        i += 1;
+      }
+    } else {
+      i += 1;
+    }
+  }
+
+  return lines.join("\n");
+}
+

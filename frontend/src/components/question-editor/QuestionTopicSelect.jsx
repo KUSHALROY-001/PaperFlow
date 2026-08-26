@@ -15,9 +15,7 @@ export default function QuestionTopicSelect({
         <select
           disabled={isViewer}
           value={
-            extractedTopics.includes(topic) && !isCustomTopic
-              ? topic
-              : "custom"
+            extractedTopics.includes(topic) && !isCustomTopic ? topic : "custom"
           }
           onChange={(e) => {
             if (isViewer) return;
@@ -29,7 +27,7 @@ export default function QuestionTopicSelect({
               updateSelected("topic", val);
             }
           }}
-          className={`flex-1 px-4 py-2.5 rounded-xl border border-border bg-card text-foreground text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500/30 ${
+          className={`flex-1 px-4 py-2.5 rounded-md border border-border bg-card text-foreground text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500/30 ${
             isViewer ? "cursor-not-allowed opacity-60" : ""
           }`}
         >
@@ -54,7 +52,7 @@ export default function QuestionTopicSelect({
               !isViewer && updateSelected("topic", e.target.value)
             }
             placeholder="Enter topic name..."
-            className={`flex-1 px-4 py-2.5 rounded-xl border border-border bg-card text-foreground text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500/30 ${
+            className={`flex-1 px-4 py-2.5 rounded-md border border-border bg-card text-foreground text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500/30 ${
               isViewer ? "cursor-not-allowed opacity-60" : ""
             }`}
           />

@@ -149,7 +149,27 @@ const markdownSerializer = new MarkdownSerializer(
       });
       if (!rows.length) return;
 
-      state.write(`| ${rows[0].join(" | ")} |\n`);
+      let colWidthsComment = "";
+      const firstRow = node.firstChild;
+      if (firstRow) {
+        const colWidths = [];
+        firstRow.forEach((cell) => {
+          if (cell.attrs.colwidth && cell.attrs.colwidth.length) {
+            colWidths.push(cell.attrs.colwidth[0]);
+          }
+        });
+        if (colWidths.length === rows[0].length) {
+          const total = colWidths.reduce((a, b) => a + b, 0);
+          if (total > 0) {
+            const percents = colWidths.map(
+              (w) => `${Math.round((w / total) * 100)}%`,
+            );
+            colWidthsComment = ` <!-- colwidths: ${percents.join(", ")} -->`;
+          }
+        }
+      }
+
+      state.write(`| ${rows[0].join(" | ")} |${colWidthsComment}\n`);
       state.write(`| ${rows[0].map(() => "---").join(" | ")} |\n`);
       rows.slice(1).forEach((cells) => {
         state.write(`| ${cells.join(" | ")} |\n`);
@@ -321,34 +341,49 @@ function paragraphOrHeading(line) {
   };
 }
 
-function tableCell(text, type) {
-  const inline = inlineContent(text);
+function tableCell(text, type, colwidth = null) {
   return {
     type,
-    content: [
-      {
-        type: "paragraph",
-        ...(inline.length ? { content: inline } : {}),
-      },
-    ],
+    attrs: {
+      colspan: 1,
+      rowspan: 1,
+      colwidth: colwidth != null ? [colwidth] : null,
+    },
+    content: [paragraphOrHeading(text)],
   };
 }
 
-function tableBlock({ header, rows }) {
-  const columnCount = header.length;
+function tableBlock({ header, rows, colWidths }) {
+  const columnCount = Math.max(
+    header.length,
+    ...rows.map((row) => row.length),
+    0,
+  );
   const normalizeRow = (cells) =>
     Array.from({ length: columnCount }, (_, index) => cells[index] || "");
+
+  const parsedWidths =
+    Array.isArray(colWidths) && colWidths.length === columnCount
+      ? colWidths.map((w) => {
+          const num = Number(String(w).replace("%", ""));
+          return Number.isFinite(num) ? Math.round(num * 6) : null;
+        })
+      : null;
 
   return {
     type: "table",
     content: [
       {
         type: "tableRow",
-        content: normalizeRow(header).map((cell) => tableCell(cell, "tableHeader")),
+        content: normalizeRow(header).map((cell, i) =>
+          tableCell(cell, "tableHeader", parsedWidths?.[i]),
+        ),
       },
       ...rows.map((row) => ({
         type: "tableRow",
-        content: normalizeRow(row).map((cell) => tableCell(cell, "tableCell")),
+        content: normalizeRow(row).map((cell, i) =>
+          tableCell(cell, "tableCell", parsedWidths?.[i]),
+        ),
       })),
     ],
   };

@@ -22,8 +22,9 @@ export function useDashboardSummary() {
   });
 
   const stats = data?.stats || {};
-  const displayClusters = data?.recentClusters || [];
+  const displayClusters = (data?.recentClusters || []).slice(0, 3);
   const activeJobs = data?.activeJobs || [];
+  const recentMockTests = (data?.recentMockTests || []).slice(0, 3);
   const needsReview = stats.needs_review || 0;
 
   const fallbackTotalClusters = displayClusters.length;
@@ -80,6 +81,7 @@ export function useDashboardSummary() {
     error,
     displayClusters,
     activeJobs,
+    recentMockTests,
     statCards,
   };
 }

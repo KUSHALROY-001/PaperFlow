@@ -142,7 +142,7 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
                 setForm((current) => ({ ...current, name: event.target.value }))
               }
               placeholder="e.g. JECA PYQ 2024"
-              className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
+              className="w-full rounded-md border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
             />
           </div>
 
@@ -160,7 +160,7 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
               }
               rows={3}
               placeholder="Optional notes for this mock test"
-              className="w-full resize-none rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
+              className="w-full resize-none rounded-md border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
             />
           </div>
 
@@ -178,7 +178,7 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
                   durationMinutes: event.target.value,
                 }))
               }
-              className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
+              className="w-full rounded-md border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
             />
           </div>
 
@@ -415,7 +415,7 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-xl border border-border py-2.5 text-sm font-semibold text-muted-foreground transition-all hover:bg-muted"
+              className="flex-1 rounded-md border border-border py-2.5 text-sm font-semibold text-muted-foreground transition-all hover:bg-muted"
             >
               Cancel
             </button>
@@ -427,10 +427,10 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
                   ? "Editor role is required to add mock tests"
                   : undefined
               }
-              className={`flex-1 rounded-xl py-2.5 text-sm font-semibold text-white transition-all shadow-sm ${
+              className={`flex-1 rounded-md py-2.5 text-sm font-semibold text-white transition-all shadow-sm ${
                 isViewer
                   ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50"
-                  : "bg-[#ea580c] hover:bg-[#c2410c]"
+                  : "bg-blue-500 hover:bg-blue-600"
               }`}
             >
               {isSubmitting

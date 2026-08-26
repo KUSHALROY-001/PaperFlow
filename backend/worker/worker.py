@@ -2,7 +2,6 @@ import argparse
 import json
 import time
 import traceback
-from pathlib import Path
 
 from .config import (
     AI_DUPLICATE_REGEN_THRESHOLD,
@@ -22,6 +21,7 @@ from .duplicate_detector import (
 )
 from .db import (
     JobCancelled,
+    add_job_event,
     claim_next_job,
     find_flagged_duplicate_slots,
     get_connection,
@@ -35,6 +35,7 @@ from .db import (
 from .pdf_extract import extract_pdf_pages
 from .pdf_ocr import convert_scanned_pdf_to_searchable_pdf
 from .question_parser import parse_questions
+from .storage import download_pdf_to_temp_file, upload_diagram
 
 
 def check_not_cancelled(job_id):
@@ -48,16 +49,25 @@ def check_not_cancelled(job_id):
             raise JobCancelled(job_id)
 
 
-def local_path_from_job(job):
-    metadata = job.get("uploaded_file_metadata") or {}
-    if isinstance(metadata, str):
-        metadata = json.loads(metadata)
+def download_job_pdf(job):
+    # input_config.storageKey is set on EVERY job (see
+    # mock-tests.service.js#uploadDocument and #reprocessMockTest, which
+    # both pass it through queueProcessingJob) - unlike the old
+    # uploaded_files.metadata.localPath this replaces, it's never specific
+    # to whichever machine originally received the upload, since it's a
+    # B2 object key, not a filesystem path. Only called from the PDF
+    # branch of process_job - the "generate from existing tests" branch
+    # never has a storageKey (uploaded_file_id is NULL for that job type)
+    # and never calls this at all.
+    input_config = job.get("input_config") or {}
+    if isinstance(input_config, str):
+        input_config = json.loads(input_config)
 
-    local_path = metadata.get("localPath")
-    if not local_path:
-        raise RuntimeError("uploaded_files.metadata.localPath is missing")
+    storage_key = input_config.get("storageKey")
+    if not storage_key:
+        raise RuntimeError("processing_jobs.input_config.storageKey is missing")
 
-    return Path(local_path)
+    return download_pdf_to_temp_file(storage_key)
 
 
 # Every RuntimeError this codebase raises itself (grep for "raise RuntimeError"
@@ -71,12 +81,28 @@ def local_path_from_job(job):
 # user in mind - that's what error_message on the job ultimately becomes
 # (see ProcessingTab.jsx, which renders it verbatim in a banner to whoever
 # uploaded the file), so it needs a friendly stand-in instead.
-_SELF_DESCRIBING_ERROR_TYPES = (RuntimeError, FileNotFoundError)
+_SELF_DESCRIBING_ERROR_TYPES = (RuntimeError, FileNotFoundError, ValueError)
 
 
 def friendly_job_error_message(error):
     if isinstance(error, _SELF_DESCRIBING_ERROR_TYPES):
         return str(error) or error.__class__.__name__
+    err_str = str(error)
+    keywords = (
+        "b2",
+        "backblaze",
+        "cloudinary",
+        "s3",
+        "bucket",
+        "endpoint",
+        "gemini",
+        "openai",
+        "tesseract",
+        "cloud",
+        "storage",
+    )
+    if any(k in err_str.lower() for k in keywords):
+        return err_str
     return (
         "Processing failed unexpectedly. Try re-uploading the file, or "
         "contact support if this keeps happening."
@@ -86,7 +112,7 @@ def friendly_job_error_message(error):
 def process_job(job):
     # "Generate from existing tests" has no PDF at all - branches into its
     # own function immediately, before anything below that assumes
-    # local_path_from_job(job) will succeed (it won't - uploaded_file_id
+    # download_job_pdf(job) will succeed (it won't - uploaded_file_id
     # is NULL for this job type, see migration 034's header for why that's
     # safe and what it required fixing in db.py#claim_next_job).
     document_type = (job.get("input_config") or {}).get("documentType", "questions")
@@ -103,7 +129,15 @@ def process_job(job):
         )
         connection.commit()
 
-    pdf_path = local_path_from_job(job)
+    # Downloaded fresh from B2 for this one job and deleted in the
+    # cleanup loop near the end of this function, regardless of how this
+    # function exits - never a permanent location anything else refers
+    # back to (unlike the old local-disk convention, where the uploaded
+    # file's path stuck around for as long as the mock test existed). If
+    # OCR later replaces pdf_path with its own searchable-PDF output (see
+    # below), that temp file's cleanup is handled the same way.
+    pdf_path = download_job_pdf(job)
+    temp_pdf_paths = [pdf_path]
     pages = extract_pdf_pages(pdf_path)
     ocr_summary = {
         "enabled": OCR_ENABLED,
@@ -142,6 +176,7 @@ def process_job(job):
 
             if ocr_result.output_path:
                 pdf_path = ocr_result.output_path
+                temp_pdf_paths.append(pdf_path)
                 pages = extract_pdf_pages(pdf_path)
         except Exception as error:
             ocr_summary = {
@@ -269,7 +304,6 @@ def process_job(job):
                 workspace_id=job["workspace_id"],
                 mock_test_id=job["mock_test_id"],
                 questions=questions,
-                pdf_path=pdf_path,
             )
             mark_mock_test_after_processing(connection, job["mock_test_id"], inserted)
             update_job(
@@ -289,20 +323,34 @@ def process_job(job):
             )
 
     # Deliberately OUTSIDE the transaction block above, and only reached if
-    # it committed successfully - see db.py#replace_questions. Writing the
-    # files first and the DB rows second would risk an orphaned file
-    # pointing at a question that got rolled back; this order can only ever
-    # leave a question_assets row with no file on disk yet (which the
-    # signed-URL image endpoint should treat as "not found" - a much safer
-    # failure than serving a phantom row from an unwritten file).
+    # it committed successfully - see db.py#replace_questions. Uploading
+    # to Cloudinary first and the DB rows second would risk an orphaned
+    # asset pointing at a question that got rolled back; this order can
+    # only ever leave a question_assets row with no Cloudinary asset
+    # behind it yet (which the signed-URL image endpoint should treat as
+    # "not found" - a much safer failure than serving a phantom row for
+    # bytes that were never uploaded).
+    diagram_upload_errors = []
     for pending_write in pending_diagram_writes:
         try:
-            pending_write["storage_path"].write_bytes(pending_write["png_bytes"])
+            upload_diagram(pending_write["png_bytes"], pending_write["public_id"])
         except Exception as error:
             # Best-effort - the question and its DB asset row are already
             # committed and correct either way; losing one diagram image to
-            # a disk error shouldn't fail a job that otherwise succeeded.
-            print(f"Failed to write diagram asset {pending_write['storage_path']}: {error}")
+            # an upload error shouldn't fail a job that otherwise succeeded.
+            diagram_upload_errors.append(f"{pending_write['public_id']}: {error}")
+            print(f"Failed to upload diagram asset {pending_write['public_id']}: {error}")
+
+    if diagram_upload_errors:
+        with get_connection() as connection:
+            add_job_event(
+                connection,
+                job["id"],
+                "warning",
+                f"Cloud image upload warning: {len(diagram_upload_errors)} diagram(s) could not be uploaded",
+                {"errors": diagram_upload_errors[:5]},
+            )
+            connection.commit()
 
     # Also deliberately outside the "Saving questions" transaction and only
     # reached once that committed - first auto-merges any EXACT duplicate
@@ -344,6 +392,20 @@ def process_job(job):
             print(f"Found {new_pairs} new duplicate question pair(s)")
     except Exception as error:
         print(f"Duplicate detection failed for job {job['id']}: {error}")
+
+    # Best-effort, success-path cleanup - a job that raises before reaching
+    # here (an AI failure, a cancellation) leaves its temp file behind for
+    # the OS to reclaim on its own (container restart, /tmp's own
+    # lifecycle), rather than this function needing a full try/finally
+    # around everything above just to guarantee it. That's a deliberate
+    # trade: leftover temp files on the rarer failure path are a much
+    # smaller problem than the bug this replaced (a worker that could
+    # never find the uploaded file at all).
+    for temp_path in temp_pdf_paths:
+        try:
+            temp_path.unlink(missing_ok=True)
+        except Exception as error:
+            print(f"Failed to remove temp PDF {temp_path}: {error}")
 
     return len(questions)
 
@@ -423,18 +485,18 @@ def process_generation_job(job):
                 progress=80,
                 summary={"ai": ai_summary, "questionsParsed": len(questions)},
             )
-            # pdf_path=None - replace_questions already treats a missing
-            # pdf_path as "no diagrams possible for this job" (see its own
-            # `if crop_bytes and pdf_path:` guard), which is exactly
-            # correct here: a generated question never has has_diagram
+            # No pdf_path argument (and never was any diagram data) for
+            # this job type - a generated question never has has_diagram
             # set, since METADATA_GENERATION_SYSTEM_PROMPT never asks for
-            # one and normalize_ai_questions defaults it to False.
+            # one and normalize_ai_questions defaults it to False, so
+            # question.get("_diagram_crop_bytes") is always falsy here and
+            # replace_questions never produces a pending diagram write for
+            # any of these questions.
             inserted, pending_diagram_writes, diagrams_extracted = replace_questions(
                 connection,
                 workspace_id=job["workspace_id"],
                 mock_test_id=job["mock_test_id"],
                 questions=questions,
-                pdf_path=None,
             )
             mark_mock_test_after_processing(connection, job["mock_test_id"], inserted)
             update_job(
@@ -452,15 +514,28 @@ def process_generation_job(job):
             )
 
     # pending_diagram_writes will always be empty for this job type (see
-    # the pdf_path=None note above) - this loop is a no-op in practice,
-    # kept only so this function's shape stays a genuine mirror of
-    # process_job's, rather than a special case someone has to remember
-    # is missing a step process_job has.
+    # the note above) - this loop is a no-op in practice, kept only so
+    # this function's shape stays a genuine mirror of process_job's,
+    # rather than a special case someone has to remember is missing a
+    # step process_job has.
+    diagram_upload_errors = []
     for pending_write in pending_diagram_writes:
         try:
-            pending_write["storage_path"].write_bytes(pending_write["png_bytes"])
+            upload_diagram(pending_write["png_bytes"], pending_write["public_id"])
         except Exception as error:
-            print(f"Failed to write diagram asset {pending_write['storage_path']}: {error}")
+            diagram_upload_errors.append(f"{pending_write['public_id']}: {error}")
+            print(f"Failed to upload diagram asset {pending_write['public_id']}: {error}")
+
+    if diagram_upload_errors:
+        with get_connection() as connection:
+            add_job_event(
+                connection,
+                job["id"],
+                "warning",
+                f"Cloud image upload warning: {len(diagram_upload_errors)} diagram(s) could not be uploaded",
+                {"errors": diagram_upload_errors[:5]},
+            )
+            connection.commit()
 
     # Same best-effort duplicate handling process_job runs after every
     # extraction job - see that function's own comments for the full

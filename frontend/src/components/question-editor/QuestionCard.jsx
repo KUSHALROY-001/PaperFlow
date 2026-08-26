@@ -87,7 +87,7 @@ function QuestionCard({
             e.stopPropagation();
             if (!isViewer) onDelete(q.id);
           }}
-          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors shrink-0 ${
+          className={`w-7 h-7 rounded-md border hover:border-red-500 flex items-center justify-center transition-colors shrink-0 ${
             isViewer
               ? "text-muted-foreground/30 cursor-not-allowed opacity-50"
               : "text-muted-foreground hover:text-red-500 hover:bg-red-500/10"

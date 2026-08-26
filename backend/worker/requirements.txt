@@ -3,3 +3,5 @@ PyMuPDF==1.24.14
 python-dotenv==1.0.1
 pytesseract==0.3.13
 Pillow==11.0.0
+boto3==1.35.68
+cloudinary==1.41.0

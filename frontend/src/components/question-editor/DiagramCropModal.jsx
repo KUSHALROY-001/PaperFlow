@@ -53,17 +53,36 @@ export default function DiagramCropModal({
   });
   const [completedCrop, setCompletedCrop] = useState(null);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+
+  const currentImageUrl =
+    retryCount > 0
+      ? `${imageUrl}${imageUrl.includes("?") ? "&" : "?"}_r=${retryCount}`
+      : imageUrl;
 
   const busy = isSaving;
 
   function onImageLoad() {
     setImageLoaded(true);
+    setImageError(false);
     // Full-image crop by default - "give a large image, crop it down"
     // means starting from everything selected, not a pre-clipped guess.
     setCrop({ unit: "%", x: 0, y: 0, width: 100, height: 100 });
     setCompletedCrop(null);
+  }
+
+  function onImageError() {
+    setImageLoaded(false);
+    setImageError(true);
+  }
+
+  function handleRetryImage() {
+    setImageError(false);
+    setImageLoaded(false);
+    setRetryCount((prev) => prev + 1);
   }
 
   function handleAspectChange(nextAspect) {
@@ -156,26 +175,48 @@ export default function DiagramCropModal({
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4">
-          <div className="relative flex max-h-72 sm:max-h-96 w-full items-center justify-center overflow-hidden rounded-2xl bg-muted border border-border">
-            <ReactCrop
-              crop={crop}
-              aspect={aspectPreset}
-              onChange={(_pixelCrop, percentCrop) => setCrop(percentCrop)}
-              onComplete={(_pixelCrop, percentCrop) =>
-                setCompletedCrop(percentCrop)
-              }
-              className="max-h-72 sm:max-h-96"
-            >
-              {/* eslint-disable-next-line jsx-a11y/alt-text */}
-              <img
-                ref={imgRef}
-                src={imageUrl}
-                onLoad={onImageLoad}
-                className="max-h-72 sm:max-h-96 w-auto"
-              />
-            </ReactCrop>
-            {!imageLoaded && (
+          <div className="relative flex min-h-64 max-h-72 sm:max-h-96 w-full items-center justify-center overflow-hidden rounded-2xl bg-muted border border-border">
+            {!imageError ? (
+              <ReactCrop
+                crop={crop}
+                aspect={aspectPreset}
+                onChange={(_pixelCrop, percentCrop) => setCrop(percentCrop)}
+                onComplete={(_pixelCrop, percentCrop) =>
+                  setCompletedCrop(percentCrop)
+                }
+                className="max-h-72 sm:max-h-96"
+              >
+                {/* eslint-disable-next-line jsx-a11y/alt-text */}
+                <img
+                  ref={imgRef}
+                  src={currentImageUrl}
+                  onLoad={onImageLoad}
+                  onError={onImageError}
+                  className={`max-h-72 sm:max-h-96 w-auto transition-opacity duration-200 ${
+                    imageLoaded ? "opacity-100" : "opacity-0"
+                  }`}
+                />
+              </ReactCrop>
+            ) : (
+              <div className="flex flex-col items-center justify-center p-6 text-center text-xs">
+                <p className="font-bold text-red-500 mb-1">
+                  Could not load diagram image for cropping
+                </p>
+                <p className="text-muted-foreground mb-3 max-w-sm">
+                  The image file could not be retrieved from Cloudinary cloud storage.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleRetryImage}
+                  className="px-3 py-1.5 rounded-lg border border-orange-500/40 bg-orange-500/10 font-bold text-orange-500 hover:bg-orange-500/20 transition-all"
+                >
+                  Retry Loading
+                </button>
+              </div>
+            )}
+            {!imageLoaded && !imageError && (
               <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-muted-foreground bg-muted">
+                <Loader2 className="w-4 h-4 mr-2 animate-spin text-orange-500" />
                 Loading image...
               </div>
             )}

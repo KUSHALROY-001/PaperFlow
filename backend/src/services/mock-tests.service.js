@@ -1,21 +1,19 @@
 import { pool } from "../db/pool.js";
 import { httpError } from "../lib/http-error.js";
-import {
-  buildStorageKey,
-  deleteFileByPath,
-  deleteMockTestUploadDir,
-} from "../lib/file-storage.js";
+import { buildPdfStorageKey, deletePdf, uploadPdf } from "../lib/pdf-storage.js";
+import { deleteDiagram } from "../lib/cloudinary-storage.js";
 import {
   optionalNumber,
   optionalString,
   requiredString,
 } from "../lib/validators.js";
-import { startWorkerOnce } from "../lib/worker-runner.js";
 import * as mockTestsRepo from "../repositories/mock-tests.repository.js";
+import * as questionAssetsRepo from "../repositories/question-assets.repository.js";
 import {
   attachDiagramUrls,
   attachDiagramSource,
 } from "./question-assets.service.js";
+import { startWorkerOnce } from "../lib/worker-runner.js";
 
 export async function listMockTests(workspaceId) {
   return mockTestsRepo.listMockTests(workspaceId);
@@ -122,16 +120,35 @@ export async function publishMockTest(mockTestId, workspaceId) {
 }
 
 // Deleting a mock test cascades its uploaded_files/processing_jobs/questions
-// rows at the DB level, but the actual PDF files on disk are not touched by
-// Postgres. Clean the upload directory up ourselves.
+// rows at the DB level, but the actual PDF (B2) and diagram (Cloudinary)
+// objects those rows pointed at are not touched by Postgres. Clean those up
+// ourselves.
 export async function deleteMockTest(mockTestId, workspaceId) {
+  // Collected BEFORE the delete below, not after - deleteMockTest cascades
+  // (uploaded_files/questions/question_assets all reference mock_tests
+  // with ON DELETE CASCADE), so the DB rows telling us which B2 objects
+  // and Cloudinary assets belong to this mock test would already be gone
+  // by the time we could ask. Remote cleanup below is best-effort and
+  // happens after the cascade regardless - a mock test that's already
+  // gone from the DB shouldn't be blocked from finishing its delete by a
+  // slow/failed B2 or Cloudinary call.
+  const [uploadedFiles, diagramAssets] = await Promise.all([
+    mockTestsRepo.listUploadedFilesForMockTest(mockTestId, workspaceId),
+    questionAssetsRepo.findAssetsForMockTest(mockTestId),
+  ]);
+
   const deleted = await mockTestsRepo.deleteMockTest(mockTestId, workspaceId);
 
   if (!deleted) {
     throw httpError(404, "Mock test not found");
   }
 
-  await deleteMockTestUploadDir(workspaceId, mockTestId);
+  await Promise.all([
+    ...uploadedFiles.map((file) => deletePdf(file.storage_key)),
+    ...[...diagramAssets.values()].map((asset) =>
+      deleteDiagram(asset.storagePath),
+    ),
+  ]);
 }
 
 // The only two values the worker understands (worker/ai/provider.py reads
@@ -199,7 +216,11 @@ function buildTemplateContext(mockTest) {
 
 // Shared by both the fresh-upload flow and the reprocess flow: insert a
 // processing_jobs row + its first event + flip the mock test to "processing",
-// all in one transaction, then kick the worker.
+// all in one transaction. After the commit, kicks the Python worker via
+// worker-runner.js#startWorkerOnce so the job is processed within seconds
+// without needing a separately-running worker daemon. startWorkerOnce is
+// idempotent - if a worker process is already running it returns immediately
+// without spawning a second one.
 async function queueProcessingJob({
   mockTest,
   workspaceId,
@@ -266,9 +287,13 @@ async function queueProcessingJob({
 
     await client.query("COMMIT");
 
-    const worker = startWorkerOnce();
+    // Kick the Python worker - spawns it if not already running, no-op otherwise.
+    const kickResult = startWorkerOnce();
+    if (kickResult.started) {
+      console.log(`[worker-runner] Started worker process (pid ${kickResult.pid}) for job ${job.id}`);
+    }
 
-    return { processingJob: job, mockTest: updatedMockTest, worker };
+    return { processingJob: job, mockTest: updatedMockTest };
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
@@ -469,11 +494,7 @@ export async function generateFromExisting({
     uniqueSourceIds,
   );
 
-  const {
-    processingJob,
-    mockTest: updatedMockTest,
-    worker,
-  } = await queueProcessingJob({
+  const { processingJob, mockTest: updatedMockTest } = await queueProcessingJob({
     mockTest,
     workspaceId,
     uploadedFileId: null,
@@ -489,7 +510,7 @@ export async function generateFromExisting({
     },
   });
 
-  return { processingJob, mockTest: updatedMockTest, worker };
+  return { processingJob, mockTest: updatedMockTest };
 }
 
 export async function uploadDocument({
@@ -504,7 +525,18 @@ export async function uploadDocument({
   }
 
   const normalizedDocumentType = normalizeDocumentType(documentType);
-  const storageKey = buildStorageKey(workspaceId, mockTest.id, file.filename);
+  const storageKey = buildPdfStorageKey(
+    workspaceId,
+    mockTest.id,
+    file.originalname,
+  );
+  // Uploaded before the DB transaction below, same ordering the old
+  // local-disk version used (multer wrote the file to disk before this
+  // function ever ran) - if the DB insert then fails, there's a real but
+  // orphaned B2 object to clean up (see the catch block), never a DB row
+  // pointing at a PDF that was never actually stored.
+  await uploadPdf(file.buffer, storageKey, file.mimetype);
+
   const client = await pool.connect();
 
   let uploadedFile;
@@ -519,8 +551,12 @@ export async function uploadDocument({
       storageKey,
       mimeType: file.mimetype || "application/pdf",
       fileSizeBytes: file.size,
+      // No localPath anymore - worker/worker.py#download_job_pdf reads
+      // storageKey straight off processing_jobs.input_config instead
+      // (see queueProcessingJob below), which is set on every job
+      // regardless of upload vs reprocess, so this metadata blob no
+      // longer needs to carry a path of any kind.
       metadata: {
-        localPath: file.path,
         uploadedVia: "mock-test-create-modal",
         documentType: normalizedDocumentType,
       },
@@ -529,19 +565,15 @@ export async function uploadDocument({
     await client.query("COMMIT");
   } catch (error) {
     await client.query("ROLLBACK");
-    // The file already landed on disk via multer before this transaction ran.
-    // If the DB insert failed, don't leave an orphaned PDF behind.
-    await deleteFileByPath(file.path);
+    // The file already landed in B2 before this transaction ran. If the
+    // DB insert failed, don't leave an orphaned PDF behind there either.
+    await deletePdf(storageKey);
     throw error;
   } finally {
     client.release();
   }
 
-  const {
-    processingJob,
-    mockTest: updatedMockTest,
-    worker,
-  } = await queueProcessingJob({
+  const { processingJob, mockTest: updatedMockTest } = await queueProcessingJob({
     mockTest,
     workspaceId,
     uploadedFileId: uploadedFile.id,
@@ -551,7 +583,7 @@ export async function uploadDocument({
     documentType: normalizedDocumentType,
   });
 
-  return { uploadedFile, processingJob, mockTest: updatedMockTest, worker };
+  return { uploadedFile, processingJob, mockTest: updatedMockTest };
 }
 
 // The reprocess button becomes a Cancel button while a job is queued/

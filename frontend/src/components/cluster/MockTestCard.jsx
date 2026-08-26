@@ -62,7 +62,7 @@ export default function MockTestCard({ mocktest, clusterId }) {
         >
           <div>
             <div className="flex items-start justify-between mb-3">
-              <div className="w-10 h-10 bg-orange-500/15 text-orange-500 rounded-xl flex items-center justify-center">
+              <div className="text-orange-500 flex items-center justify-center">
                 <FileText className="w-5 h-5" />
               </div>
               <div className="flex items-center gap-2">
@@ -125,7 +125,7 @@ export default function MockTestCard({ mocktest, clusterId }) {
               <Clock className="w-3.5 h-3.5" />{" "}
               {formatTimeAgo(mocktest.created_at)}
             </span>
-            <span className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-orange-500 border border-orange-500/30 group-hover:bg-orange-500/10 rounded-lg transition-colors">
+            <span className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-orange-500 border border-orange-500/30 group-hover:bg-orange-500/10 rounded-md transition-colors">
               Open <ArrowRight className="w-3 h-3" />
             </span>
           </div>

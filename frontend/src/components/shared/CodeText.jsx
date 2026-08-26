@@ -1,21 +1,41 @@
 import { useMemo } from "react";
 import MathText from "./MathText";
 import QuestionTable from "./QuestionTable";
-import { splitIntoTextBlocks } from "@/utils/textBlocks";
+import {
+  splitIntoTextBlocks,
+  updateTableColWidthsInMarkdown,
+} from "@/utils/textBlocks";
 
 const CODE_FENCE_RE = /```(\w*)\n([\s\S]*?)```/g;
 
-function renderProseSegment(segment, textClassName, keyPrefix) {
+function renderProseSegment(
+  segment,
+  textClassName,
+  keyPrefix,
+  editable,
+  onUpdateText,
+  getTableIndex,
+) {
   if (!segment) return null;
   const blocks = splitIntoTextBlocks(segment);
   return blocks.flatMap((block, index) => {
     if (block.type === "table") {
+      const tableIdx = getTableIndex();
       return (
-      <QuestionTable
-        key={`${keyPrefix}-tbl-${index}`}
-        header={block.header}
-        rows={block.rows}
-      />
+        <QuestionTable
+          key={`${keyPrefix}-tbl-${index}`}
+          header={block.header}
+          rows={block.rows}
+          colWidths={block.colWidths}
+          editable={editable}
+          onColWidthsChange={(newWidths) => {
+            if (onUpdateText) {
+              onUpdateText((prevText) =>
+                updateTableColWidthsInMarkdown(prevText, tableIdx, newWidths),
+              );
+            }
+          }}
+        />
       );
     }
 
@@ -47,9 +67,12 @@ function renderProseSegment(segment, textClassName, keyPrefix) {
         }[heading[2].length];
         const Tag = `h${heading[2].length}`;
         nodes.push(
-          <Tag key={`${keyPrefix}-h-${index}-${lineIndex}`} className={`${headingClassName} text-foreground`}>
+          <Tag
+            key={`${keyPrefix}-h-${index}-${lineIndex}`}
+            className={`${headingClassName} text-foreground`}
+          >
             <MathText text={`${heading[1]}${line.slice(heading[0].length)}`} />
-          </Tag>
+          </Tag>,
         );
         return;
       }
@@ -61,15 +84,31 @@ function renderProseSegment(segment, textClassName, keyPrefix) {
   });
 }
 
-function buildNodes(text, textClassName) {
+function buildNodes(text, textClassName, editable, onUpdateText) {
   if (!text) return null;
   const str = String(text);
   const parts = str.split(CODE_FENCE_RE);
   const nodes = [];
+  let tableCounter = 0;
+  const getTableIndex = () => {
+    const idx = tableCounter;
+    tableCounter += 1;
+    return idx;
+  };
+
   for (let i = 0; i < parts.length; i += 3) {
     const prose = parts[i];
     if (prose) {
-      nodes.push(renderProseSegment(prose, textClassName, `prose-${i}`));
+      nodes.push(
+        renderProseSegment(
+          prose,
+          textClassName,
+          `prose-${i}`,
+          editable,
+          onUpdateText,
+          getTableIndex,
+        ),
+      );
     }
     if (i + 1 < parts.length) {
       const codeLanguage = parts[i + 1]?.trim() || null;
@@ -100,10 +139,13 @@ function buildNodes(text, textClassName) {
 export default function CodeText({
   text,
   textClassName = "text-sm text-foreground",
+  editable = false,
+  onUpdateText,
 }) {
   const nodes = useMemo(
-    () => buildNodes(text, textClassName),
-    [text, textClassName],
+    () => buildNodes(text, textClassName, editable, onUpdateText),
+    [text, textClassName, editable, onUpdateText],
   );
   return <>{nodes}</>;
 }
+

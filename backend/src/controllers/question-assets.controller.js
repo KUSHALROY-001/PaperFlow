@@ -1,13 +1,15 @@
-import fs from "node:fs";
-import { writeFile } from "node:fs/promises";
-import path from "node:path";
 import sharp from "sharp";
 import { httpError } from "../lib/http-error.js";
 import { verifyDiagramAccessToken } from "../lib/diagram-signed-url.js";
 import {
-  deleteFileByPath,
-  ensureManualDiagramDir,
-} from "../lib/file-storage.js";
+  buildDiagramPublicId,
+  deleteDiagram,
+  diagramUrlForPublicId,
+  fetchDiagramBuffer,
+  isCloudinaryConfigured,
+  uploadDiagramBuffer,
+  validateCloudinaryConfig,
+} from "../lib/cloudinary-storage.js";
 import * as questionAssetsRepo from "../repositories/question-assets.repository.js";
 import * as questionsRepo from "../repositories/questions.repository.js";
 import * as sharedService from "../services/shared.service.js";
@@ -32,8 +34,15 @@ async function streamDiagram(req, res, { questionId, workspaceId }) {
     throw httpError(403, "This image link is invalid or has expired");
   }
 
+  if (!isCloudinaryConfigured()) {
+    throw httpError(
+      503,
+      "Cloud image storage (Cloudinary) is not configured on the server",
+    );
+  }
+
   const asset = await questionAssetsRepo.findAssetForQuestion(questionId);
-  if (!asset) {
+  if (!asset || !asset.storagePath) {
     // A valid, unexpired token for a question that has no (or no longer
     // has) a saved diagram - treat exactly like "not found", not a server
     // error. Can legitimately happen if a mock test was reprocessed
@@ -41,14 +50,11 @@ async function streamDiagram(req, res, { questionId, workspaceId }) {
     throw httpError(404, "No diagram found for this question");
   }
 
+  // asset.storagePath holds a Cloudinary public_id (see worker/asset_extractor.py
+  // and uploadDiagramImage). Redirect straight to Cloudinary's CDN edge.
+  const deliveryUrl = diagramUrlForPublicId(asset.storagePath);
   res.setHeader("Cache-Control", "private, max-age=86400");
-  const stream = fs.createReadStream(asset.storagePath);
-  stream.on("error", () => {
-    if (!res.headersSent) {
-      res.status(404).json({ error: "Diagram file not found on disk" });
-    }
-  });
-  stream.pipe(res);
+  res.redirect(302, deliveryUrl);
 }
 
 // Authenticated path - this route deliberately sits OUTSIDE requireAuth
@@ -132,16 +138,11 @@ export async function updateDiagramCrop(req, res) {
   const rect = parseCropRect(req.body);
   const asset = await loadAsset(req.params.questionId, req.workspaceId);
 
+  const currentImage = await fetchDiagramBuffer(asset.storagePath);
+
   let cropped;
   try {
-    // Read fully into a buffer BEFORE writing anything back out - sharp
-    // reading FROM and writing TO the exact same path in one pipeline
-    // (.toFile(asset.storagePath) here, when asset.storagePath IS the
-    // source) risks the write truncating the file out from under the
-    // still-in-progress read on some platforms/pipeline shapes. Buffering
-    // first means the read has fully completed before the write ever
-    // opens the file.
-    cropped = await sharp(asset.storagePath)
+    cropped = await sharp(currentImage)
       .extract({
         left: rect.x,
         top: rect.y,
@@ -157,7 +158,11 @@ export async function updateDiagramCrop(req, res) {
     throw httpError(400, "Crop rectangle is outside the image bounds");
   }
 
-  await writeFile(asset.storagePath, cropped);
+  // overwrite: true (see cloudinary-storage.js#uploadDiagramBuffer) means
+  // this re-uploads under the SAME public_id the asset already has - no
+  // DB row change needed, exactly mirroring the old write-to-the-same-path
+  // behavior this replaces.
+  await uploadDiagramBuffer(cropped, asset.storagePath);
 
   res.json({ success: true });
 }
@@ -182,8 +187,7 @@ export async function uploadDiagramImage(req, res) {
 
   // Read before replace, purely so the new row can carry the placement the
   // user already had chosen forward (a replace shouldn't silently reset it
-  // to the default) and so the OLD file can be cleaned up below once the
-  // new one is safely on disk and the DB row points at it instead.
+  // to the default).
   const previousAsset = await questionAssetsRepo.findAssetForQuestion(
     req.params.questionId,
   );
@@ -193,40 +197,33 @@ export async function uploadDiagramImage(req, res) {
     // Re-encode through sharp rather than trusting the uploaded bytes
     // as-is - strips EXIF, normalizes to PNG regardless of whether the
     // upload was a JPEG/WEBP, and gives a clean 400 instead of a corrupt
-    // file on disk if what came through fileFilter's mimetype check isn't
+    // upload if what came through fileFilter's mimetype check isn't
     // actually a decodable image.
     normalizedPng = await sharp(req.file.buffer).png().toBuffer();
   } catch (error) {
     throw httpError(400, "Could not process this image");
   }
 
-  const targetDir = await ensureManualDiagramDir(
+  // Deliberately the SAME public_id an extracted diagram for this exact
+  // question would get (see asset_extractor.py#build_diagram_public_id,
+  // which this mirrors) - a manual upload always overwrites in place at
+  // that one predictable location, extracted or manual, so there's no
+  // separate "clean up the old file" step needed the way the old
+  // local-disk version required (an extracted asset and a manual one used
+  // to live in genuinely different directories).
+  const publicId = buildDiagramPublicId(
     req.workspaceId,
     question.mock_test_id,
+    question.id,
   );
-  // Fixed, deterministic filename (not a random UUID like the PDF-upload
-  // multer config uses) - a second manual upload for the same question is
-  // a REPLACE, and reusing the same path means it overwrites in place
-  // instead of leaving the previous manual upload's file behind.
-  const storagePath = path.join(targetDir, `${question.id}.png`);
 
-  await writeFile(storagePath, normalizedPng);
+  await uploadDiagramBuffer(normalizedPng, publicId);
 
   await questionAssetsRepo.replaceAssetForQuestion(question.id, {
-    storagePath: String(storagePath),
+    storagePath: publicId,
     source: "manual",
     placement: previousAsset?.placement || "below_text",
   });
-
-  // Only the previous asset's file can be orphaned now - a second manual
-  // upload reuses the exact path above (already overwritten by the
-  // writeFile call), so there's nothing to delete in that case. An
-  // extracted asset lived under diagrams/, a different directory entirely,
-  // so its file is genuinely unreferenced once replaceAssetForQuestion's
-  // DELETE+INSERT commits.
-  if (previousAsset && previousAsset.storagePath !== String(storagePath)) {
-    await deleteFileByPath(previousAsset.storagePath);
-  }
 
   res.status(201).json({ success: true });
 }
@@ -281,7 +278,7 @@ export async function deleteDiagramImage(req, res) {
   }
 
   await questionAssetsRepo.deleteAsset(asset.id);
-  await deleteFileByPath(asset.storagePath);
+  await deleteDiagram(asset.storagePath);
 
   res.status(204).send();
 }

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   AlertTriangle,
+  ArrowDownUp,
   CheckCircle,
   Edit2,
   FileText,
@@ -15,9 +16,16 @@ import MockTestCard from "../components/cluster/MockTestCard";
 import CreateMockTestModal from "../components/cluster/CreateMockTestModal";
 import { ConfirmDialog } from "../components/design-system/ConfirmDialog";
 
+const SORT_OPTIONS = [
+  { value: "recently_changed", label: "Recently Changed" },
+  { value: "date", label: "Date Created" },
+  { value: "name", label: "Name (A-Z)" },
+];
+
 export default function ClusterWorkspace() {
   const { isViewer } = useAuth();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [sortBy, setSortBy] = useState("recently_changed");
 
   const {
     id,
@@ -36,6 +44,32 @@ export default function ClusterWorkspace() {
     handleSaveEdit,
     startEdit,
   } = useClusterWorkspace();
+
+  const sortedMockTests = useMemo(() => {
+    if (!mocktests || mocktests.length === 0) return [];
+    const items = [...mocktests];
+
+    switch (sortBy) {
+      case "name":
+        return items.sort((a, b) =>
+          (a.name || "").localeCompare(b.name || "", undefined, {
+            numeric: true,
+            sensitivity: "base",
+          }),
+        );
+      case "date":
+        return items.sort(
+          (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0),
+        );
+      case "recently_changed":
+      default:
+        return items.sort(
+          (a, b) =>
+            new Date(b.updated_at || b.created_at || 0) -
+            new Date(a.updated_at || a.created_at || 0),
+        );
+    }
+  }, [mocktests, sortBy]);
 
   if (isLoading) {
     return (
@@ -63,7 +97,7 @@ export default function ClusterWorkspace() {
       <div className="surface-card rounded-2xl p-3 sm:p-6 border border-border">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-4">
           <div className="flex items-center gap-4 flex-1 min-w-0">
-            <div className="w-12 h-12 bg-orange-500/15 text-orange-500 rounded-2xl flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 bg-orange-500/15 text-orange-500 rounded-md flex items-center justify-center shrink-0">
               <FolderOpen className="w-6 h-6" />
             </div>
             {editing ? (
@@ -127,10 +161,10 @@ export default function ClusterWorkspace() {
               <button
                 disabled={isViewer}
                 onClick={() => !isViewer && startEdit()}
-                className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
+                className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all ${
                   isViewer
                     ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-50"
-                    : "border-border text-muted-foreground hover:text-foreground hover:border-orange-500/40"
+                    : "border-border text-muted-foreground hover:text-foreground hover:border-blue-500 hover:bg-blue-500/15"
                 }`}
                 title={
                   isViewer ? "Editor role is required to edit cluster" : "Edit"
@@ -141,10 +175,10 @@ export default function ClusterWorkspace() {
               <button
                 disabled={isViewer}
                 onClick={() => !isViewer && setShowDeleteConfirm(true)}
-                className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
+                className={`w-9 h-9 rounded-md border flex items-center justify-center transition-all ${
                   isViewer
                     ? "border-red-500/10 text-red-500/30 cursor-not-allowed opacity-50"
-                    : "border-red-500/20 text-muted-foreground hover:text-red-500 hover:border-red-500/40"
+                    : "border-red-500/20 hover:bg-red-500/15 text-muted-foreground hover:text-red-500 hover:border-red-500"
                 }`}
                 title={
                   isViewer
@@ -196,7 +230,7 @@ export default function ClusterWorkspace() {
               className="surface-card rounded-xl p-3.5 border border-border flex items-center gap-3"
             >
               <div
-                className={`w-9 h-9 rounded-xl flex items-center justify-center ${stat.color} shrink-0`}
+                className={`w-9 h-9 rounded-full flex items-center justify-center ${stat.color} shrink-0`}
               >
                 <stat.icon className="w-4 h-4" />
               </div>
@@ -214,21 +248,49 @@ export default function ClusterWorkspace() {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-bold text-foreground">Mock Tests</h2>
-        <button
-          disabled={isViewer}
-          onClick={() => !isViewer && setShowModal(true)}
-          title={
-            isViewer ? "Editor role is required to add mock tests" : undefined
-          }
-          className={`flex items-center gap-2 px-4 py-2.5 font-semibold rounded-xl text-xs sm:text-sm shadow-sm transition-all w-full sm:w-auto justify-center ${
-            isViewer
-              ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50"
-              : "bg-[#ea580c] hover:bg-[#c2410c] text-white"
-          }`}
-        >
-          <Plus className="w-4 h-4" /> Add Mock Test
-        </button>
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-bold text-foreground">Mock Tests</h2>
+          {mocktests.length > 0 && (
+            <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-muted text-muted-foreground">
+              {mocktests.length}
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap w-full sm:w-auto">
+          {mocktests.length > 1 && (
+            <div className="relative">
+              <ArrowDownUp className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                aria-label="Sort mock tests"
+                className="appearance-none pl-8 pr-3 py-2 text-xs sm:text-sm font-semibold rounded-md border border-border bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-gray-500/30 transition-all cursor-pointer shadow-xs"
+              >
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <button
+            disabled={isViewer}
+            onClick={() => !isViewer && setShowModal(true)}
+            title={
+              isViewer ? "Editor role is required to add mock tests" : undefined
+            }
+            className={`flex items-center gap-2 px-4 py-2.5 font-semibold rounded-full text-xs sm:text-sm shadow-sm transition-all w-full sm:w-auto justify-center ${
+              isViewer
+                ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50"
+                : "bg-blue-500 hover:bg-blue-600 text-white"
+            }`}
+          >
+            <Plus className="w-4 h-4" /> Add Mock Test
+          </button>
+        </div>
       </div>
 
       {mocktests.length === 0 ? (
@@ -246,7 +308,7 @@ export default function ClusterWorkspace() {
             title={
               isViewer ? "Editor role is required to add mock tests" : undefined
             }
-            className={`px-4 py-2.5 font-semibold rounded-xl text-xs shadow-sm transition-all ${
+            className={`px-4 py-2.5 font-semibold rounded-md text-xs shadow-sm transition-all ${
               isViewer
                 ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50"
                 : "bg-[#ea580c] hover:bg-[#c2410c] text-white"
@@ -257,7 +319,7 @@ export default function ClusterWorkspace() {
         </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {mocktests.map((mocktest) => (
+          {sortedMockTests.map((mocktest) => (
             <MockTestCard
               key={mocktest.id}
               mocktest={mocktest}

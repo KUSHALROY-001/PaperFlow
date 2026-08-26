@@ -1,6 +1,10 @@
 import "dotenv/config";
+import dns from "node:dns";
 import { createApp } from "./app.js";
 import { closePdfExportBrowser } from "./lib/pdf-export/browser.js";
+
+// Prevent IPv6 connection stalls and latency timeouts on cloud storage and external APIs
+dns.setDefaultResultOrder("ipv4first");
 
 const port = Number(process.env.PORT || 4000);
 const app = createApp();

@@ -36,6 +36,7 @@ export default function DiagramUploadControl({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isPlacementSaving, setIsPlacementSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [localError, setLocalError] = useState("");
 
   const hasDiagram = Boolean(diagramUrl);
   const busy = isUploading || isDeleting;
@@ -43,13 +44,19 @@ export default function DiagramUploadControl({
   const invalidateQuestions = () =>
     queryClient.invalidateQueries({ queryKey: ["questions", mockTestId] });
 
+  const reportError = (msg) => {
+    setLocalError(msg);
+    onError?.(msg);
+  };
+
   const handleFileChange = (event) => {
     const file = event.target.files?.[0];
     event.target.value = ""; // allow re-selecting the same file next time
     if (!file) return;
 
+    setLocalError("");
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      onError?.("Images must be 6MB or smaller");
+      reportError("Images must be 6MB or smaller");
       return;
     }
 
@@ -67,11 +74,12 @@ export default function DiagramUploadControl({
 
   const doUpload = async (file) => {
     setIsUploading(true);
+    setLocalError("");
     try {
       await api.uploadDiagramImage(questionId, file);
       await invalidateQuestions();
     } catch (error) {
-      onError?.(error.message || "Could not upload image");
+      reportError(error.message || "Could not upload image to cloud storage");
     } finally {
       setIsUploading(false);
       setPendingFile(null);
@@ -80,11 +88,12 @@ export default function DiagramUploadControl({
 
   const handleDelete = async () => {
     setIsDeleting(true);
+    setLocalError("");
     try {
       await api.deleteDiagramImage(questionId);
       await invalidateQuestions();
     } catch (error) {
-      onError?.(error.message || "Could not remove image");
+      reportError(error.message || "Could not remove image");
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
@@ -94,18 +103,20 @@ export default function DiagramUploadControl({
   const handlePlacementChange = async (nextPlacement) => {
     if (nextPlacement === placement) return;
     setIsPlacementSaving(true);
+    setLocalError("");
     try {
       await api.updateDiagramPlacement(questionId, nextPlacement);
       await invalidateQuestions();
     } catch (error) {
-      onError?.(error.message || "Could not update placement");
+      reportError(error.message || "Could not update placement");
     } finally {
       setIsPlacementSaving(false);
     }
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3">
+    <div className="space-y-2 mt-3">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
       <input
         ref={fileInputRef}
         type="file"
@@ -204,6 +215,20 @@ export default function DiagramUploadControl({
           destructive
           onConfirm={handleDelete}
         />
+      )}
+      </div>
+
+      {localError && (
+        <div className="flex items-center justify-between gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-500">
+          <span>{localError}</span>
+          <button
+            type="button"
+            onClick={() => setLocalError("")}
+            className="text-red-500 hover:text-red-600 font-bold ml-2 shrink-0"
+          >
+            Dismiss
+          </button>
+        </div>
       )}
     </div>
   );

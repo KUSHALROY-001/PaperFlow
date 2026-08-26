@@ -4,7 +4,7 @@ from contextlib import contextmanager
 import psycopg
 from psycopg.rows import dict_row
 
-from .asset_extractor import build_diagram_storage_path
+from .asset_extractor import build_diagram_public_id
 from .config import DATABASE_URL, DB_CA_CERT_PATH
 
 
@@ -141,11 +141,24 @@ def is_job_cancelled(connection, job_id):
     # gets noticed and abandoned within roughly one stage/chunk of that
     # happening, instead of running all the way to completion and then
     # overwriting whatever the newer job already wrote.
+    #
+    # row is None means this exact case: the mock test was deleted while
+    # this job was still mid-flight. deleteMockTest cancels active jobs
+    # first, but the DELETE FROM mock_tests that follows it cascades
+    # straight through processing_jobs (ON DELETE CASCADE, migration 001)
+    # and removes this very row - it doesn't leave a status='cancelled'
+    # row behind for us to find. A job whose row (and whose owning mock
+    # test) no longer exists at all is at least as dead as one marked
+    # 'cancelled', so treat a missing row the same way - otherwise this
+    # returned False ("not cancelled, keep going"), and the worker ran a
+    # deleted job through to completion: AI calls spent, and a guaranteed
+    # later failure trying to write questions against a mock_test_id that
+    # no longer exists.
     row = connection.execute(
         "SELECT status FROM processing_jobs WHERE id = %s",
         [job_id],
     ).fetchone()
-    return row is not None and row["status"] == "cancelled"
+    return row is None or row["status"] == "cancelled"
 
 
 def update_job(connection, job_id, *, status=None, stage=None, progress=None, summary=None, error=None):
@@ -204,7 +217,7 @@ def update_job(connection, job_id, *, status=None, stage=None, progress=None, su
     )
 
 
-def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_path=None):
+def replace_questions(connection, *, workspace_id, mock_test_id, questions):
     # questions is a read-only compatibility view as of migration 030 -
     # both the SELECT and DELETE below now target question_slots (the
     # physical table) directly. content_id is captured alongside id so
@@ -243,13 +256,15 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
         )
 
     inserted_count = 0
-    # (storage_path, png_bytes) pairs to actually write to disk - deferred
-    # until AFTER the caller's transaction commits (see worker.py), so a
-    # rolled-back transaction never leaves an orphaned PNG file on disk
-    # referencing a question row that doesn't exist. The question_assets
-    # DB row itself IS inserted now, inside the transaction, since
-    # inserting it doesn't require the file to exist yet - only serving it
-    # later does.
+    # (public_id, png_bytes) pairs to actually upload to Cloudinary -
+    # deferred until AFTER the caller's transaction commits (see
+    # worker.py), so a rolled-back transaction never leaves an orphaned
+    # Cloudinary asset referencing a question row that doesn't exist. The
+    # question_assets DB row itself IS inserted now, inside the
+    # transaction, since inserting it doesn't require the upload to have
+    # happened yet - only serving it later does (and public_id, unlike a
+    # random Cloudinary-assigned id, is knowable up front - see
+    # asset_extractor.py#build_diagram_public_id).
     #
     # One entry per diagram (see migration 022_diagram_single_image.sql,
     # reversing the manual-crop feature's earlier two-file-per-diagram
@@ -332,8 +347,10 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
         # read via .get() here, not part of the dict passed to json.dumps
         # for metadata).
         crop_bytes = question.get("_diagram_crop_bytes")
-        if crop_bytes and pdf_path:
-            storage_path = build_diagram_storage_path(pdf_path, question_row["id"])
+        if crop_bytes:
+            public_id = build_diagram_public_id(
+                workspace_id, mock_test_id, question_row["id"]
+            )
             connection.execute(
                 """
                 INSERT INTO question_assets
@@ -342,11 +359,11 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
                 """,
                 [
                     question_row["id"],
-                    str(storage_path),
+                    public_id,
                     question.get("source_page"),
                 ],
             )
-            pending_diagram_writes.append({"storage_path": storage_path, "png_bytes": crop_bytes})
+            pending_diagram_writes.append({"public_id": public_id, "png_bytes": crop_bytes})
             diagrams_extracted_count += 1
 
         inserted_count += 1

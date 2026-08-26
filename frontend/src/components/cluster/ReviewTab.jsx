@@ -269,7 +269,7 @@ export default function ReviewTab({
                       passage={question.passage}
                       diagramUrl={question.diagramUrl}
                       placement={question.placement}
-                      textClassName="text-base sm:text-lg font-bold text-foreground"
+                      textClassName="text-base sm:text-lg text-foreground"
                     />
                     <p className="mt-1.5 text-xs text-muted-foreground">
                       Source: {question.sourceLine}
@@ -372,7 +372,7 @@ export default function ReviewTab({
                     return (
                       <div
                         key={option}
-                        className={`flex flex-wrap items-center justify-between gap-2 rounded-2xl px-3 py-3 text-xs sm:px-4 sm:text-sm font-medium ${
+                        className={`flex flex-wrap items-center justify-between gap-2 rounded-2xl px-3 py-3 text-xs sm:px-4 sm:text-sm ${
                           correct
                             ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20"
                             : "bg-card text-muted-foreground border border-border"

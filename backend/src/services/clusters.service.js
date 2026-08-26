@@ -1,7 +1,10 @@
 import { httpError } from "../lib/http-error.js";
-import { deleteMockTestUploadDir } from "../lib/file-storage.js";
+import { deletePdf } from "../lib/pdf-storage.js";
+import { deleteDiagram } from "../lib/cloudinary-storage.js";
 import { optionalString, requiredString } from "../lib/validators.js";
 import * as clustersRepo from "../repositories/clusters.repository.js";
+import * as mockTestsRepo from "../repositories/mock-tests.repository.js";
+import * as questionAssetsRepo from "../repositories/question-assets.repository.js";
 
 export async function listClusters(workspaceId) {
   return clustersRepo.listClusters(workspaceId);
@@ -69,14 +72,31 @@ export async function updateCluster(clusterId, workspaceId, body) {
 
 // Deleting a cluster cascades to mock_tests / uploaded_files / processing_jobs
 // / questions at the DB level, but Postgres has no idea those mock tests also
-// own directories of PDFs on local disk. We have to clean those up ourselves,
-// before the DB rows (and therefore the workspaceId/mockTestId we need to
-// find the directory) disappear.
+// own PDFs on B2 and diagram images on Cloudinary. We have to clean those up
+// ourselves, before the DB rows (and therefore the storage keys/public ids we
+// need to find those remote objects) disappear.
 export async function deleteCluster(clusterId, workspaceId) {
   const mockTestIds = await clustersRepo.listMockTestIdsForCluster(
     clusterId,
     workspaceId,
   );
+
+  // Collected BEFORE the delete below, same reasoning as
+  // mock-tests.service.js#deleteMockTest - once the cluster's cascade
+  // delete runs, every uploaded_files/question_assets row for these mock
+  // tests is gone, taking the storage keys/public ids with it.
+  const [uploadedFilesByMockTest, diagramAssetsByMockTest] = await Promise.all([
+    Promise.all(
+      mockTestIds.map((mockTestId) =>
+        mockTestsRepo.listUploadedFilesForMockTest(mockTestId, workspaceId),
+      ),
+    ),
+    Promise.all(
+      mockTestIds.map((mockTestId) =>
+        questionAssetsRepo.findAssetsForMockTest(mockTestId),
+      ),
+    ),
+  ]);
 
   const deleted = await clustersRepo.deleteCluster(clusterId, workspaceId);
 
@@ -84,11 +104,16 @@ export async function deleteCluster(clusterId, workspaceId) {
     throw httpError(404, "Cluster not found");
   }
 
-  await Promise.all(
-    mockTestIds.map((mockTestId) =>
-      deleteMockTestUploadDir(workspaceId, mockTestId),
+  await Promise.all([
+    ...uploadedFilesByMockTest
+      .flat()
+      .map((file) => deletePdf(file.storage_key)),
+    ...diagramAssetsByMockTest.flatMap((assetsByQuestionId) =>
+      [...assetsByQuestionId.values()].map((asset) =>
+        deleteDiagram(asset.storagePath),
+      ),
     ),
-  );
+  ]);
 }
 
 export async function listMockTestsForCluster(clusterId, workspaceId) {

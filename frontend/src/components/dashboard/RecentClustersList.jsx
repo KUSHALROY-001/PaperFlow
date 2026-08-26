@@ -35,7 +35,7 @@ export default function RecentClustersList({ clusters, isLoading }) {
   };
 
   return (
-    <div className="lg:col-span-2 space-y-4">
+    <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-base sm:text-lg font-bold text-foreground">
           Recent Clusters

@@ -20,29 +20,30 @@ model means "skip this crop", not "crash extraction".
 """
 
 import io
-from pathlib import Path
 
 from PIL import Image
 
 
-def build_diagram_storage_path(pdf_path, question_id):
+def build_diagram_public_id(workspace_id, mock_test_id, question_id):
     """
-    Mirrors pdf_ocr.py#build_ocr_pdf_path's existing convention exactly
-    (a sibling directory next to the source PDF, not a path invented from
-    scratch) - .../uploads/{workspace}/{mockTestId}/{uploadedFileId}/diagrams/{question_id}.png,
-    the same base layout as .../ocr/{name}.searchable.pdf already uses one
-    directory over.
+    Cloudinary public_id for this diagram - deliberately a stable,
+    predictable string (not a random/Cloudinary-assigned id), so the
+    resulting delivery URL is knowable before the upload even happens
+    (see db.py#replace_questions, which writes question_assets.storage_path
+    with this id at INSERT time, then storage.upload_diagram uploads the
+    actual bytes to it afterward - same "predetermined location, deferred
+    write" shape the old local-disk version used, just with a Cloudinary
+    id standing in for a filesystem path).
 
-    This is the ONLY file written per diagram (see migration
-    022_diagram_single_image.sql, reversing migration 014's separate
-    "immutable original" sibling file) - question_assets.storage_path,
-    both the file currently served AND the one any future crop is derived
-    from.
+    Replaces build_diagram_storage_path's old pdf-relative sibling-
+    directory convention entirely - there's no longer a permanent "next
+    to the PDF" location to be relative to, since the PDF is now a
+    temp file downloaded from B2 for the duration of one job and deleted
+    afterward (see worker.py#process_job). workspace_id/mock_test_id take
+    over as the organizing structure instead, mirroring the old
+    uploads/{workspace}/{mockTestId}/... layout in spirit.
     """
-    source_path = Path(pdf_path)
-    diagrams_dir = source_path.parent / "diagrams"
-    diagrams_dir.mkdir(parents=True, exist_ok=True)
-    return diagrams_dir / f"{question_id}.png"
+    return f"paperflow/{workspace_id}/{mock_test_id}/diagrams/{question_id}"
 
 
 def normalized_bbox_to_pixels(bbox_normalized, pixel_width, pixel_height):

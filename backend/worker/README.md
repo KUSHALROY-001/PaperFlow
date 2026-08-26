@@ -5,7 +5,7 @@ This worker processes queued `processing_jobs`.
 Current behavior:
 
 1. Claims one queued job using `FOR UPDATE SKIP LOCKED`.
-2. Reads the uploaded PDF path from `uploaded_files.metadata.localPath`.
+2. Downloads the uploaded PDF from Backblaze B2 (via `processing_jobs.input_config.storageKey`) to a local temp file for the duration of the job.
 3. Extracts PDF text with PyMuPDF.
 4. If the PDF has no selectable text, optionally converts it to a searchable PDF with Tesseract OCR.
 5. Parses simple MCQ patterns using regex.

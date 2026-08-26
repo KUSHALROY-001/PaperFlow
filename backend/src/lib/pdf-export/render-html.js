@@ -15,11 +15,14 @@ import { renderQuestionTextHtml } from "./table-html.js";
 function normalizeQuestion(question) {
   return {
     ...question,
-    text: question.question_text,
-    questionNo: question.question_no,
-    correctOptionIndexes: question.correct_option_indexes,
+    text: question.question_text ?? question.text,
+    questionNo: question.question_no ?? question.questionNo,
+    correctOptionIndexes:
+      question.correct_option_indexes ?? question.correctOptionIndexes,
     options: (question.options || []).map((option) =>
-      typeof option === "string" ? option : option.optionText || "",
+      typeof option === "string"
+        ? option
+        : option.optionText || option.option_text || "",
     ),
   };
 }
@@ -95,20 +98,25 @@ function optionsHtml(question) {
 }
 
 function answerKeyHtml(questions) {
+  if (!questions || !questions.length) return "";
+
   return `
     <section class="answer-key">
-      <h2>Answer Key</h2>
-      <ol class="answer-list">
+      <div class="answer-key-header">
+        <span class="answer-key-badge">Answer Key</span>
+      </div>
+      <div class="answer-grid">
         ${questions
           .map((q, index) => {
+            const qNo = q.questionNo ?? index + 1;
             const letters = (q.correctOptionIndexes || [])
-              .map((i) => String.fromCharCode(65 + i))
+              .map((i) => `(${String.fromCharCode(97 + i)})`)
               .join(", ");
             const display = letters || "—";
-            return `<li><span class="ak-qno">Q${q.questionNo ?? index + 1}.</span> <span class="ak-answers">${escapeHtml(display)}</span></li>`;
+            return `<div class="answer-item"><span class="ak-num">${qNo}.</span> <span class="ak-val">${escapeHtml(display)}</span></div>`;
           })
           .join("")}
-      </ol>
+      </div>
     </section>
   `;
 }
@@ -165,7 +173,7 @@ export function renderMockTestHtml({ mockTest, questions, baseUrl }) {
 <title>${escapeHtml(titleText)}</title>
 <link rel="stylesheet" href="${katexCssUrl}" />
 <style>
-  @page { size: A4; margin: 20mm 16mm; }
+  @page { size: A4; margin: 8mm 8mm; }
   * { box-sizing: border-box; }
   body {
     font-family: "Helvetica Neue", Arial, sans-serif;
@@ -284,12 +292,11 @@ export function renderMockTestHtml({ mockTest, questions, baseUrl }) {
   .options {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 6px;
+    gap: 4px 16px;
   }
   .option {
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 8px 10px;
+    border: none;
+    padding: 3px 0;
     font-size: 10pt;
   }
   .option-text {
@@ -305,12 +312,32 @@ export function renderMockTestHtml({ mockTest, questions, baseUrl }) {
   .katex { font-size: 1.05em; }
 
   /* Answer key styles */
-  .answer-key { page-break-before: always; margin-top: 10px; }
-  .answer-key h2 { font-size: 16pt; margin: 0 0 8px; }
-  .answer-list { list-style: none; padding: 0; margin: 0; columns: 2; gap: 12px; }
-  .answer-list li { margin: 4px 0; }
-  .ak-qno { font-weight: 700; margin-right: 6px; }
-  .ak-answers { color: #0b6; font-weight: 600; }
+  .answer-key { page-break-before: always; margin-top: 16px; }
+  .answer-key-header { text-align: center; margin-bottom: 20px; }
+  .answer-key-badge {
+    display: inline-block;
+    font-size: 14pt;
+    font-weight: 800;
+    padding: 5px 22px;
+    border: 2px solid #1a1a1a;
+    border-radius: 8px;
+    letter-spacing: 0.5px;
+    background: #fff;
+  }
+  .answer-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 10px 4px;
+    font-size: 9.5pt;
+  }
+  .answer-item {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    gap: 3px;
+  }
+  .ak-num { font-weight: 700; color: #1a1a1a; }
+  .ak-val { font-weight: 400; color: #1a1a1a; }
 </style>
 </head>
 <body data-mocktest-title="${escapeHtml(titleText)}">

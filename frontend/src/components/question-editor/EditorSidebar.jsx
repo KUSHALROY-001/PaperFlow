@@ -57,7 +57,7 @@ export default function EditorSidebar({
             <button
               type="button"
               onClick={() => setIsCollapsed(false)}
-              className="w-9 h-9 rounded-xl border border-border bg-card hover:bg-orange-500/10 hover:border-orange-500/40 text-muted-foreground hover:text-orange-500 flex items-center justify-center transition-all"
+              className="w-9 h-9 rounded-full border border-border bg-card hover:bg-orange-500/10 hover:border-orange-500/40 text-muted-foreground hover:text-orange-500 flex items-center justify-center transition-all"
               title="Expand sidebar"
             >
               <PanelLeftOpen className="w-4 h-4" />
@@ -65,7 +65,7 @@ export default function EditorSidebar({
             <Link
               to={backPath}
               onClick={handleBackClick}
-              className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-orange-500 hover:bg-muted transition-colors"
+              className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-orange-500 hover:bg-muted transition-colors"
               title="Back to Mock Test"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
@@ -88,7 +88,7 @@ export default function EditorSidebar({
             <button
               type="button"
               onClick={() => setIsCollapsed(true)}
-              className="hidden lg:flex w-7 h-7 rounded-lg border border-border bg-card hover:bg-orange-500/10 hover:border-orange-500/40 text-muted-foreground hover:text-orange-500 items-center justify-center transition-all shrink-0"
+              className="hidden lg:flex w-7 h-7 rounded-full border border-border bg-card hover:bg-orange-500/10 hover:border-orange-500/40 text-muted-foreground hover:text-orange-500 items-center justify-center transition-all shrink-0"
               title="Collapse sidebar"
             >
               <PanelLeftClose className="w-3.5 h-3.5" />
@@ -155,7 +155,9 @@ export default function EditorSidebar({
         )}
 
         {/* Full QuestionCards (Mobile Always + Desktop Expanded) */}
-        <div className={`space-y-2 ${isCollapsed ? "block lg:hidden" : "block"}`}>
+        <div
+          className={`space-y-2 ${isCollapsed ? "block lg:hidden" : "block"}`}
+        >
           {questions.map((q, index) => (
             <QuestionCard
               key={q.id}
@@ -183,7 +185,9 @@ export default function EditorSidebar({
               onClick={() => !isViewer && addQuestion()}
               disabled={isViewer}
               title={
-                isViewer ? "Editor role is required to add questions" : "Add Question"
+                isViewer
+                  ? "Editor role is required to add questions"
+                  : "Add Question"
               }
               className={`w-10 h-10 rounded-full border-2 border-dashed flex items-center justify-center transition-all ${
                 isViewer

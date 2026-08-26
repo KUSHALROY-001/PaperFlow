@@ -11,6 +11,7 @@ export default function UploadPdfPanel({ mocktest, isViewer, onUpload }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [documentType, setDocumentType] = useState("questions");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   const templateName = mocktest?.settings?.templateName;
   const expectedQuestionCount = mocktest?.settings?.expectedQuestionCount;
@@ -32,9 +33,12 @@ export default function UploadPdfPanel({ mocktest, isViewer, onUpload }) {
     event.preventDefault();
     if (isViewer || !selectedFile) return;
 
+    setUploadError("");
     setIsSubmitting(true);
     try {
       await onUpload(selectedFile, documentType);
+    } catch (err) {
+      setUploadError(err.message || "Could not upload document to cloud storage");
     } finally {
       setIsSubmitting(false);
     }
@@ -134,6 +138,12 @@ export default function UploadPdfPanel({ mocktest, isViewer, onUpload }) {
                 </span>
               </button>
             </div>
+          </div>
+        )}
+
+        {uploadError && (
+          <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs font-medium text-red-500">
+            {uploadError}
           </div>
         )}
 

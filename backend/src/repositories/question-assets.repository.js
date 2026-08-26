@@ -37,9 +37,9 @@ export async function deleteAsset(assetId) {
 }
 
 // The DB half of a manual image upload/replace (see
-// question-assets.controller.js#uploadDiagramImage, which writes the files
-// to disk BEFORE calling this - same file-then-row ordering worker.py
-// uses, for the same reason: a row can point at a file that briefly
+// question-assets.controller.js#uploadDiagramImage, which uploads to
+// Cloudinary BEFORE calling this - same upload-then-row ordering worker.py
+// uses, for the same reason: a row can point at an asset that briefly
 // doesn't exist yet under concurrent load, never the reverse).
 //
 // DELETE-then-INSERT in one transaction rather than an UPDATE, because

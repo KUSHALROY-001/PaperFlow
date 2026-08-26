@@ -1,13 +1,10 @@
 import { Router } from "express";
-import crypto from "node:crypto";
-import path from "node:path";
 import multer from "multer";
 import * as mockTestsController from "../controllers/mock-tests.controller.js";
 import * as questionsController from "../controllers/questions.controller.js";
 import * as attemptsController from "../controllers/attempts.controller.js";
 import * as sharedController from "../controllers/shared.controller.js";
 import { asyncHandler } from "../lib/async-handler.js";
-import { ensureUploadDir } from "../lib/file-storage.js";
 import { httpError } from "../lib/http-error.js";
 import { requireRole } from "../middleware/require-role.js";
 import * as mockTestsService from "../services/mock-tests.service.js";
@@ -17,8 +14,10 @@ export const mockTestsRouter = Router();
 // Loads the mock test (scoped to the caller's workspace) and attaches it to
 // req.mockTest. Runs BEFORE multer on the upload route specifically so an
 // unauthorized/nonexistent mockTestId fails with a 404 before any file is
-// ever written to disk, instead of after (which used to leave orphaned PDFs
-// behind - see the audit notes).
+// ever read into memory, instead of after (which used to leave orphaned PDFs
+// behind on local disk - see the audit notes; now that uploads go straight
+// to B2 via a memory buffer, an early failure here means nothing was ever
+// sent to B2 at all, an even cleaner version of the same guarantee).
 const loadMockTest = asyncHandler(async (req, _res, next) => {
   req.mockTest = await mockTestsService.getMockTestOrFail(
     req.params.mockTestId,
@@ -27,31 +26,21 @@ const loadMockTest = asyncHandler(async (req, _res, next) => {
   next();
 });
 
+// memoryStorage, not diskStorage - the file needs to end up in B2, not on
+// this container's local disk (which the worker, running as a separate
+// deployed service, can't see at all - see mock-tests.service.js
+// #uploadDocument, which uploads req.file.buffer to B2 directly).
+// req.file.buffer replaces the old req.file.path/filename this route used
+// to read.
 const upload = multer({
-  storage: multer.diskStorage({
-    async destination(req, _file, callback) {
-      try {
-        const targetDir = await ensureUploadDir(
-          req.workspaceId,
-          req.params.mockTestId,
-        );
-        callback(null, targetDir);
-      } catch (error) {
-        callback(error);
-      }
-    },
-    filename(_req, file, callback) {
-      const extension = path.extname(file.originalname).toLowerCase() || ".pdf";
-      callback(null, `${crypto.randomUUID()}${extension}`);
-    },
-  }),
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 25 * 1024 * 1024,
   },
   fileFilter(_req, file, callback) {
     const isPdf =
       file.mimetype === "application/pdf" ||
-      path.extname(file.originalname).toLowerCase() === ".pdf";
+      file.originalname.toLowerCase().endsWith(".pdf");
 
     if (!isPdf) {
       callback(httpError(400, "Only PDF files are supported"));

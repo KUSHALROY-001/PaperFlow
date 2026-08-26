@@ -64,7 +64,7 @@ export async function apiRequest(path, options = {}) {
     });
   } catch {
     throw new Error(
-      `Cannot connect to the backend at ${API_BASE_URL}. Start the backend with: cd backend && npm run dev`,
+      "Couldn't reach the server. Please check your internet connection and try again.",
     );
   }
 

@@ -35,7 +35,7 @@ export default function EditorHeader({
         <button
           type="button"
           onClick={onShowLatexReference}
-          className="inline-flex items-center gap-2 px-4 py-2 font-bold rounded-xl text-xs sm:text-sm transition-all border border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+          className="inline-flex items-center gap-2 px-4 py-2 font-bold rounded-md text-xs sm:text-sm transition-all border border-border text-muted-foreground hover:text-foreground hover:bg-muted"
         >
           <Sigma className="w-4 h-4" /> Show LaTeX
         </button>
@@ -45,10 +45,10 @@ export default function EditorHeader({
           title={
             isViewer ? "Editor role is required to add questions" : undefined
           }
-          className={`hidden lg:inline-flex items-center gap-2 px-4 py-2 font-bold rounded-xl text-xs sm:text-sm transition-all ${
+          className={`hidden lg:inline-flex items-center gap-2 px-4 py-2 font-bold rounded-md text-xs sm:text-sm transition-all ${
             isViewer
-              ? "bg-muted text-muted-foreground/40 cursor-not-allowed opacity-50"
-              : "bg-[#ea580c] hover:bg-[#c2410c] text-white shadow-xs"
+              ? "bg-muted text-foreground cursor-not-allowed opacity-50"
+              : "text-orange-600 hover:bg-orange-500/20 hover:text-foreground border border-orange-500/30"
           }`}
         >
           <Plus className="w-4 h-4" /> Add Question
@@ -59,12 +59,12 @@ export default function EditorHeader({
           title={
             isViewer ? "Editor role is required to save questions" : undefined
           }
-          className={`flex items-center gap-2 px-5 py-2 font-bold rounded-xl text-xs sm:text-sm transition-all ${
+          className={`flex items-center gap-2 px-5 py-2 font-bold rounded-full text-xs sm:text-sm transition-all ${
             isViewer
               ? "bg-muted text-muted-foreground/40 cursor-not-allowed opacity-50"
               : saved
                 ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30"
-                : "bg-[#ea580c] hover:bg-[#c2410c] text-white shadow-xs"
+                : "border border-blue-500/30 bg-transparent hover:bg-blue-500 dark:hover:bg-blue-600 text-blue-500 hover:text-white"
           }`}
         >
           {saved ? (

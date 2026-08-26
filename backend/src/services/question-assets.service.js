@@ -1,8 +1,10 @@
-import { copyFile } from "node:fs/promises";
-import path from "node:path";
 import * as questionAssetsRepo from "../repositories/question-assets.repository.js";
 import { generateDiagramAccessToken } from "../lib/diagram-signed-url.js";
-import { ensureManualDiagramDir } from "../lib/file-storage.js";
+import {
+  buildDiagramPublicId,
+  fetchDiagramBuffer,
+  uploadDiagramBuffer,
+} from "../lib/cloudinary-storage.js";
 
 function buildDiagramUrl(questionId, workspaceId, { shareToken } = {}) {
   const token = generateDiagramAccessToken(questionId, workspaceId);
@@ -121,18 +123,24 @@ export async function cloneDiagramAsset({
     return;
   }
 
-  const targetDir = await ensureManualDiagramDir(
+  // sourceAsset.storagePath is a Cloudinary public_id, not a filesystem
+  // path (see cloudinary-storage.js) - "cloning" means downloading the
+  // source's bytes and re-uploading them under the target question's own
+  // public_id, since Cloudinary has no server-side "copy this asset to a
+  // new id" primitive that avoids the round-trip anyway.
+  const imageBytes = await fetchDiagramBuffer(sourceAsset.storagePath);
+  const publicId = buildDiagramPublicId(
     targetWorkspaceId,
     targetMockTestId,
+    targetQuestionId,
   );
-  const storagePath = path.join(targetDir, `${targetQuestionId}.png`);
-  await copyFile(sourceAsset.storagePath, storagePath);
+  await uploadDiagramBuffer(imageBytes, publicId);
 
   // source/placement carried over as-is - the pixels are identical to
   // what the source asset already was, so there's nothing to reclassify
   // here.
   await questionAssetsRepo.replaceAssetForQuestion(targetQuestionId, {
-    storagePath: String(storagePath),
+    storagePath: publicId,
     source: sourceAsset.source,
     placement: sourceAsset.placement,
     pageNumber: null,

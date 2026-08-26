@@ -12,9 +12,26 @@ export default function QuestionPreviewCard({
   diagramError,
   setDiagramError,
   onOpenCropModal,
+  updateSelected,
   isViewer,
 }) {
   if (!selected) return null;
+
+  const handleUpdateText = (updater) => {
+    if (!updateSelected) return;
+    const nextText =
+      typeof updater === "function" ? updater(selected.text) : updater;
+    updateSelected("text", nextText);
+  };
+
+  const handleUpdateExplanation = (updater) => {
+    if (!updateSelected) return;
+    const nextExplanation =
+      typeof updater === "function"
+        ? updater(selected.explanation)
+        : updater;
+    updateSelected("explanation", nextExplanation);
+  };
 
   return (
     <div className="space-y-6 lg:sticky lg:top-10">
@@ -36,6 +53,8 @@ export default function QuestionPreviewCard({
           diagramUrl={selected.diagramUrl}
           placement={selected.placement}
           textClassName="text-sm font-bold text-foreground"
+          editable={!isViewer}
+          onUpdateText={handleUpdateText}
         />
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3">
           {selected.diagramUrl && (
@@ -94,7 +113,11 @@ export default function QuestionPreviewCard({
             <QuestionDiagram diagramUrl={selected.diagramUrl} />
           </div>
         )}
-        <QuestionExplanation explanation={selected.explanation} />
+        <QuestionExplanation
+          explanation={selected.explanation}
+          editable={!isViewer}
+          onUpdateExplanation={handleUpdateExplanation}
+        />
       </div>
     </div>
   );

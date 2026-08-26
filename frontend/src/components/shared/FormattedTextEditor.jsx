@@ -354,7 +354,7 @@ function FormattedTextEditor(
   return (
     <div className="relative">
       {showToolbar && (
-        <div className="mb-2 flex flex-wrap items-center gap-1 rounded-xl border border-border bg-muted/40 p-1.5">
+        <div className="mb-2 flex flex-wrap items-center gap-1  border border-border bg-muted/40 p-1.5">
           <button
             type="button"
             disabled={disabled}

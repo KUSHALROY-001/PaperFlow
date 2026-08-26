@@ -155,14 +155,14 @@ export default function RichTextToolbar({ textareaRef, disabled, onChange }) {
     applyBlockStyle(textareaRef.current, nextStyle, onChange);
   };
 
-  const buttonClassName = `flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold transition-colors ${
+  const buttonClassName = `flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-colors ${
     disabled
       ? "cursor-not-allowed text-muted-foreground/40"
       : "text-foreground hover:bg-muted"
   }`;
 
   return (
-    <div className="flex flex-wrap items-center gap-1 rounded-xl border border-border bg-muted/40 p-1.5">
+    <div className="flex flex-wrap items-center gap-1 rounded-full border border-border bg-muted/40 p-1.5">
       <button
         type="button"
         disabled={disabled}
