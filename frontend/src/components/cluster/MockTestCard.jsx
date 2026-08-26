@@ -45,7 +45,7 @@ export default function MockTestCard({ mocktest, clusterId }) {
         className={`group cursor-pointer transition-all ${
           isProcessing
             ? "relative p-0.5 rounded-2xl overflow-hidden shadow-lg"
-            : "surface-card rounded-2xl p-5 border border-border hover:border-orange-500/40 flex flex-col justify-between"
+            : "surface-card rounded-2xl p-4 sm:p-5 border border-border hover:border-orange-500/40 flex flex-col justify-between"
         }`}
       >
         {/* Continuous Rotating RGB Border Glow when mocktest is in running/processing phase */}
@@ -56,7 +56,7 @@ export default function MockTestCard({ mocktest, clusterId }) {
         <div
           className={
             isProcessing
-              ? "surface-card rounded-[14px] p-5 relative z-10 bg-card h-full flex flex-col justify-between"
+              ? "surface-card rounded-[14px] p-4 sm:p-5 relative z-10 bg-card h-full flex flex-col justify-between"
               : "flex flex-col justify-between h-full"
           }
         >
@@ -87,16 +87,16 @@ export default function MockTestCard({ mocktest, clusterId }) {
                 />
               </div>
             </div>
-            <h3 className="font-bold text-foreground mb-1 truncate text-base group-hover:text-orange-500 transition-colors">
+            <h3 className="font-bold text-foreground mb-1 truncate text-sm sm:text-base group-hover:text-orange-500 transition-colors">
               {mocktest.name}
             </h3>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
-              <FileText className="w-3.5 h-3.5" />
+              <FileText className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">
                 {mocktest.description || "Manual mock test"}
               </span>
             </div>
-            <div className="flex gap-2 mb-3 flex-wrap">
+            <div className="flex gap-1.5 sm:gap-2 mb-3 flex-wrap">
               {mocktest.exam_year && (
                 <span className="text-xs bg-orange-500/10 text-orange-500 font-semibold px-2 py-0.5 rounded-lg border border-orange-500/20">
                   {mocktest.exam_year}
@@ -125,7 +125,7 @@ export default function MockTestCard({ mocktest, clusterId }) {
               <Clock className="w-3.5 h-3.5" />{" "}
               {formatTimeAgo(mocktest.created_at)}
             </span>
-            <span className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-orange-500 border border-orange-500/30 group-hover:bg-orange-500/10 rounded-md transition-colors">
+            <span className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-orange-500 border border-orange-500/30 group-hover:bg-orange-500/10 rounded-xl transition-colors">
               Open <ArrowRight className="w-3 h-3" />
             </span>
           </div>

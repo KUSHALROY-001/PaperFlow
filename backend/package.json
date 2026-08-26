@@ -1,4 +1,7 @@
 {
+  "engines": {
+    "node": "22.x"
+  },
   "name": "paperflow-backend",
   "version": "0.1.0",
   "private": true,
@@ -9,6 +12,7 @@
     "db:migrate": "node src/db/migrate.js",
     "db:check": "node src/db/check.js",
     "db:backfill-math": "node src/db/backfill-math-formatting.js",
+    "db:backfill-math-validation": "node src/db/backfill-math-validation.js",
     "db:backfill-code": "node src/db/backfill-code-formatting.js",
     "worker:once": "python -m worker.worker --once",
     "worker": "python -m worker.worker"

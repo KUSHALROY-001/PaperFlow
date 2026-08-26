@@ -8,12 +8,14 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useExamSession } from "@/hooks/useExamSession";
+import { usePreventSessionExit } from "@/hooks/usePreventSessionExit";
 import SessionLoading from "../components/mock-session/SessionLoading";
 import SessionError from "../components/mock-session/SessionError";
 import SessionResultsView from "../components/mock-session/SessionResultsView";
 import SessionQuestionNav from "../components/mock-session/SessionQuestionNav";
 import SessionHeader from "../components/mock-session/SessionHeader";
 import SessionQuestionView from "../components/mock-session/SessionQuestionView";
+import { ConfirmDialog } from "../components/design-system/ConfirmDialog";
 
 export default function MockSession() {
   const navigate = useNavigate();
@@ -43,9 +45,20 @@ export default function MockSession() {
   const [slideDirection, setSlideDirection] = useState("");
   const [showShortcuts, setShowShortcuts] = useState(false);
 
+  const {
+    showExitConfirm,
+    setShowExitConfirm,
+    confirmExit,
+  } = usePreventSessionExit({
+    isActive: !loading && !loadError && !review && Boolean(session) && Boolean(q),
+    onConfirmExit: async () => {
+      await handleCancelSession();
+      navigate(-1);
+    },
+  });
+
   const handleCancel = async () => {
-    await handleCancelSession();
-    navigate(-1);
+    setShowExitConfirm(true);
   };
 
   const handleNavigateNext = () => {
@@ -220,6 +233,20 @@ export default function MockSession() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Exit Confirmation Dialog */}
+      {showExitConfirm && (
+        <ConfirmDialog
+          open={showExitConfirm}
+          onOpenChange={setShowExitConfirm}
+          title="Exit Test Session?"
+          description="Are you sure you want to exit this mock test session? Your active test progress will be lost."
+          confirmLabel="Exit Test"
+          cancelLabel="Continue Test"
+          destructive={true}
+          onConfirm={confirmExit}
+        />
       )}
     </div>
   );

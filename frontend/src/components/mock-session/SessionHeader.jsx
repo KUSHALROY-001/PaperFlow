@@ -34,7 +34,7 @@ export default function SessionHeader({
           <div className="text-sm font-bold text-foreground">
             {mockTestName}
           </div>
-          <div className="text-xs text-muted-foreground font-semibold">
+          <div className="text-xs text-muted-foreground font-normal">
             {subtitle ? `${subtitle} · ` : ""}
             {answeredCount}/{totalQuestions} answered
           </div>

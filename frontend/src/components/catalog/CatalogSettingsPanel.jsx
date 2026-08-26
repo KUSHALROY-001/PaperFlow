@@ -109,9 +109,9 @@ export default function CatalogSettingsPanel() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl flex flex-col mx-auto">
+    <div className="space-y-6 max-w-4xl flex flex-col mx-auto font-sans">
       {/* Slug / public URL */}
-      <div className="surface-card rounded-2xl p-5 border border-border space-y-3">
+      <div className="surface-card rounded-2xl p-4 sm:p-5 border border-border space-y-3">
         <h2 className="text-sm font-bold text-foreground">
           Your public catalog address
         </h2>
@@ -121,7 +121,7 @@ export default function CatalogSettingsPanel() {
               href={publicUrl}
               target="_blank"
               rel="noreferrer"
-              className="flex-1 min-w-0 flex items-center gap-2 px-3 py-2 rounded-full border border-border bg-muted/40 text-sm text-foreground hover:bg-muted transition-colors"
+              className="flex-1 min-w-0 flex items-center gap-2 px-3 py-2 rounded-full border border-border bg-muted/40 text-xs sm:text-sm text-foreground hover:bg-muted transition-colors"
             >
               <span className="truncate">{publicUrl}</span>
               <ExternalLink className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
@@ -148,11 +148,11 @@ export default function CatalogSettingsPanel() {
         {!isViewer && (
           <form
             onSubmit={handleSaveSlug}
-            className="flex items-start gap-2 pt-1"
+            className="flex flex-col sm:flex-row items-stretch sm:items-start gap-2.5 sm:gap-2 pt-1"
           >
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center rounded-full border border-border bg-card overflow-hidden focus-within:ring-2 focus-within:ring-orange-500/30">
-                <span className="pl-3 pr-1 text-xs text-muted-foreground shrink-0">
+                <span className="pl-3 pr-1 text-xs text-muted-foreground shrink-0 font-medium">
                   /catalog/
                 </span>
                 <input
@@ -163,7 +163,7 @@ export default function CatalogSettingsPanel() {
                     setSlugInput(e.target.value.toLowerCase());
                   }}
                   placeholder="jeca-coaching"
-                  className="flex-1 min-w-0 py-2 pr-3 text-sm bg-transparent focus:outline-none text-foreground"
+                  className="flex-1 min-w-0 py-2 pr-3 text-xs sm:text-sm bg-transparent focus:outline-none text-foreground"
                 />
               </div>
               {slugError && (
@@ -176,7 +176,7 @@ export default function CatalogSettingsPanel() {
             <button
               type="submit"
               disabled={savingSlug || !currentSlug}
-              className="shrink-0 px-4 py-2 border border-border bg-transparent hover:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-blue-500 hover:text-white text-sm font-semibold rounded-md transition-colors"
+              className="shrink-0 w-full sm:w-auto px-4 py-2 border border-border bg-transparent hover:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-blue-500 hover:text-white text-xs sm:text-sm font-semibold rounded-md transition-colors"
             >
               {settings?.public_slug ? "Update" : "Activate"}
             </button>
@@ -186,7 +186,7 @@ export default function CatalogSettingsPanel() {
 
       {/* Per-test listing */}
       <div className="surface-card rounded-2xl border border-border overflow-hidden">
-        <div className="px-5 py-4 border-b border-border">
+        <div className="px-4 sm:px-5 py-4 border-b border-border">
           <h2 className="text-sm font-bold text-foreground">
             Tests in your catalog
           </h2>
@@ -210,37 +210,30 @@ export default function CatalogSettingsPanel() {
                   onClick={() => setDetailMockTestId(mockTest.id)}
                   role="button"
                   tabIndex={0}
-                  className="group flex items-center gap-3 px-5 py-3 cursor-pointer transition-colors hover:bg-muted/40"
+                  className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-5 py-3.5 sm:py-3 cursor-pointer transition-colors hover:bg-muted/40"
                 >
-                  <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground truncate">
-                      {mockTest.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {mockTest.cluster_name}
-                      {mockTest.exam_year
-                        ? ` · ${mockTest.exam_year}`
-                        : ""} · {mockTest.total_questions} questions
-                      {!canList && " · not published yet"}
-                    </p>
+                  <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
+                    <FileText className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5 sm:mt-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-sm font-semibold text-foreground truncate">
+                        {mockTest.name}
+                      </p>
+                      <p className="text-[11px] sm:text-xs text-muted-foreground truncate">
+                        {mockTest.cluster_name}
+                        {mockTest.exam_year
+                          ? ` · ${mockTest.exam_year}`
+                          : ""} · {mockTest.total_questions} questions
+                        {!canList && " · not published yet"}
+                      </p>
+                    </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleStartOwn(mockTest.id);
-                    }}
-                    title="Start this test"
-                    className="shrink-0 h-8 w-8 rounded-xl border border-border flex items-center justify-center text-muted-foreground opacity-0 group-hover:opacity-100 focus:opacity-100 hover:text-emerald-500 hover:border-emerald-500/40 transition-all"
+                  <div
+                    className="flex items-center justify-between sm:justify-end gap-2.5 sm:gap-3 w-full sm:w-auto shrink-0"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    <Play className="w-3.5 h-3.5" />
-                  </button>
-
-                  <div className="shrink-0 relative h-6 w-11">
                     <span
-                      className={`absolute inset-0 flex items-center justify-center rounded-full text-[9px] font-bold transition-opacity group-hover:opacity-0 ${
+                      className={`sm:hidden px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                         mockTest.is_catalog_listed
                           ? "bg-orange-500/15 text-orange-500"
                           : "bg-muted text-muted-foreground"
@@ -248,36 +241,56 @@ export default function CatalogSettingsPanel() {
                     >
                       {mockTest.is_catalog_listed ? "Public" : "Private"}
                     </span>
-                    <button
-                      type="button"
-                      disabled={
-                        isViewer || !canList || togglingId === mockTest.id
-                      }
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        handleToggleListed(mockTest);
-                      }}
-                      title={
-                        !canList
-                          ? "Publish this test before listing it in the catalog"
-                          : mockTest.is_catalog_listed
-                            ? "Remove from public catalog"
-                            : "List in public catalog"
-                      }
-                      className={`absolute inset-0 opacity-0 group-hover:opacity-100 focus:opacity-100 inline-flex h-6 w-11 items-center rounded-full transition-opacity disabled:opacity-40 disabled:cursor-not-allowed ${
-                        mockTest.is_catalog_listed
-                          ? "bg-orange-500"
-                          : "bg-muted-foreground/30"
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          mockTest.is_catalog_listed
-                            ? "translate-x-6"
-                            : "translate-x-1"
-                        }`}
-                      />
-                    </button>
+
+                    <div className="flex items-center gap-2 ml-auto sm:ml-0">
+                      <button
+                        type="button"
+                        onClick={() => handleStartOwn(mockTest.id)}
+                        title="Start this test"
+                        className="h-8 w-8 rounded-xl border border-border flex items-center justify-center text-muted-foreground opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100 hover:text-emerald-500 hover:border-emerald-500/40 transition-all"
+                      >
+                        <Play className="w-3.5 h-3.5" />
+                      </button>
+
+                      <div className="shrink-0 relative h-6 w-11">
+                        <span
+                          className={`hidden sm:flex absolute inset-0 items-center justify-center rounded-full text-[9px] font-bold transition-opacity group-hover:opacity-0 ${
+                            mockTest.is_catalog_listed
+                              ? "bg-orange-500/15 text-orange-500"
+                              : "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {mockTest.is_catalog_listed ? "Public" : "Private"}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={
+                            isViewer || !canList || togglingId === mockTest.id
+                          }
+                          onClick={() => handleToggleListed(mockTest)}
+                          title={
+                            !canList
+                              ? "Publish this test before listing it in the catalog"
+                              : mockTest.is_catalog_listed
+                                ? "Remove from public catalog"
+                                : "List in public catalog"
+                          }
+                          className={`absolute inset-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100 inline-flex h-6 w-11 items-center rounded-full transition-opacity disabled:opacity-40 disabled:cursor-not-allowed ${
+                            mockTest.is_catalog_listed
+                              ? "bg-orange-500"
+                              : "bg-muted-foreground/30"
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                              mockTest.is_catalog_listed
+                                ? "translate-x-6"
+                                : "translate-x-1"
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               );

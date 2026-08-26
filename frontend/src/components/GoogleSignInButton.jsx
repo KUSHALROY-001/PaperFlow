@@ -67,11 +67,15 @@ export default function GoogleSignInButton({ mode, onCredential }) {
           client_id: GOOGLE_CLIENT_ID,
           callback: (response) => onCredential(response.credential),
         });
+        const buttonWidth = Math.min(
+          336,
+          Math.max(240, (containerRef.current?.offsetWidth || window.innerWidth - 48)),
+        );
         google.accounts.id.renderButton(containerRef.current, {
           type: "standard",
           theme: "outline",
           size: "large",
-          width: 336,
+          width: buttonWidth,
           text: mode === "signup" ? "signup_with" : "signin_with",
         });
       })
@@ -100,5 +104,10 @@ export default function GoogleSignInButton({ mode, onCredential }) {
     );
   }
 
-  return <div ref={containerRef} className="flex justify-center" />;
+  return (
+    <div
+      ref={containerRef}
+      className="flex justify-center w-full max-w-full overflow-hidden"
+    />
+  );
 }

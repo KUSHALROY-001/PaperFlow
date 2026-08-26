@@ -1,13 +1,16 @@
 import argparse
 import json
+import threading
 import time
 import traceback
+from concurrent.futures import ThreadPoolExecutor
 
 from .config import (
     AI_DUPLICATE_REGEN_THRESHOLD,
     MAX_JOBS_PER_RUN,
     OCR_ENABLED,
     POLL_INTERVAL_SECONDS,
+    WORKER_CONCURRENCY,
 )
 from .ai import (
     enhance_questions_with_ai,
@@ -669,12 +672,55 @@ def process_next_job():
     return True
 
 
-def run_once(max_jobs):
+def run_once(max_jobs, concurrency=None):
+    # Several jobs (e.g. different users' PDF uploads) are worked on at
+    # once in this pool of threads, rather than one job running to full
+    # completion before the next is even claimed - see WORKER_CONCURRENCY
+    # in config.py for why this is safe and what it does/doesn't affect.
+    #
+    # started/processed are counted separately: `started` is reserved
+    # (under the lock, before process_next_job runs) so concurrent threads
+    # can never collectively claim more than max_jobs jobs even if they
+    # all check in at once; `processed` only counts jobs that actually ran
+    # (claim_next_job found a row), which is what the caller-facing return
+    # value has always meant.
+    concurrency = max(1, min(concurrency or WORKER_CONCURRENCY, max_jobs))
+    started = 0
     processed = 0
-    for _ in range(max_jobs):
-        if not process_next_job():
-            break
-        processed += 1
+    counter_lock = threading.Lock()
+    queue_drained = threading.Event()
+
+    def reserve_slot():
+        nonlocal started
+        with counter_lock:
+            if started >= max_jobs or queue_drained.is_set():
+                return False
+            started += 1
+            return True
+
+    def worker_loop():
+        nonlocal processed
+        while reserve_slot():
+            handled = process_next_job()
+            if not handled:
+                # Nothing queued right now - stop every thread in this
+                # run_once call rather than having each one separately
+                # discover the same empty queue.
+                queue_drained.set()
+                return
+            with counter_lock:
+                processed += 1
+
+    with ThreadPoolExecutor(
+        max_workers=concurrency, thread_name_prefix="paperflow-job"
+    ) as executor:
+        futures = [executor.submit(worker_loop) for _ in range(concurrency)]
+        for future in futures:
+            # Propagates anything worker_loop itself raised (it shouldn't -
+            # process_next_job already catches per-job errors - but a
+            # silent thread death would otherwise be invisible).
+            future.result()
+
     return processed
 
 
@@ -689,10 +735,16 @@ def main():
     parser = argparse.ArgumentParser(description="PaperFlow OCR worker")
     parser.add_argument("--once", action="store_true", help="Process queued jobs once and exit")
     parser.add_argument("--max-jobs", type=int, default=MAX_JOBS_PER_RUN)
+    parser.add_argument(
+        "--concurrency",
+        type=int,
+        default=None,
+        help="How many jobs to run in parallel threads (defaults to WORKER_CONCURRENCY env var)",
+    )
     args = parser.parse_args()
 
     if args.once:
-        processed = run_once(args.max_jobs)
+        processed = run_once(args.max_jobs, concurrency=args.concurrency)
         print(f"Processed {processed} job(s)")
     else:
         run_forever()

@@ -42,7 +42,7 @@ export default function QuestionPreviewCard({
           </span>
         </div>
         {selected.subtopic && (
-          <div className="mb-2 inline-flex items-center rounded-full bg-sky-500/10 border border-sky-500/20 px-3 py-1 text-xs font-semibold text-sky-600 dark:text-sky-400">
+          <div className="mb-2 inline-flex items-center rounded-full bg-sky-500/10 border border-sky-500/20 px-3 py-1 text-xs text-sky-600 dark:text-sky-400">
             {selected.subtopic}
           </div>
         )}
@@ -52,7 +52,7 @@ export default function QuestionPreviewCard({
           explanation={selected.explanation}
           diagramUrl={selected.diagramUrl}
           placement={selected.placement}
-          textClassName="text-sm font-bold text-foreground"
+          textClassName="text-sm text-foreground"
           editable={!isViewer}
           onUpdateText={handleUpdateText}
         />
@@ -67,7 +67,7 @@ export default function QuestionPreviewCard({
                   ? "Editor role is required to edit the crop"
                   : undefined
               }
-              className={`flex items-center gap-1.5 text-xs font-bold transition-all ${
+              className={`flex items-center gap-1.5 text-xs transition-all ${
                 isViewer
                   ? "text-muted-foreground/40 cursor-not-allowed opacity-50"
                   : "text-orange-500 hover:underline"
@@ -87,7 +87,7 @@ export default function QuestionPreviewCard({
           onError={setDiagramError}
         />
         {diagramError && (
-          <p className="mt-2 text-xs font-bold text-red-500">
+          <p className="mt-2 text-xs text-red-500">
             {diagramError}
           </p>
         )}
@@ -97,11 +97,11 @@ export default function QuestionPreviewCard({
               key={i}
               className={`px-3 py-2.5 rounded-xl text-xs sm:text-sm whitespace-pre-wrap ${
                 (selected.correctOptionIndexes || []).includes(i)
-                  ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20 font-bold"
+                  ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20"
                   : "bg-card text-foreground border border-border"
               }`}
             >
-              <span className="font-bold mr-2">
+              <span className="mr-2">
                 {String.fromCharCode(65 + i)}.
               </span>
               <MathText text={opt} />

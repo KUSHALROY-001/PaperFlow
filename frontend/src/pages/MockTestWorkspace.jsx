@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText } from "lucide-react";
+import { FileText, BarChart3, ChevronDown } from "lucide-react";
 import { useMockTestWorkspace } from "@/hooks/useMockTestWorkspace";
 import { useAuth } from "@/lib/AuthContext";
 import { tabs } from "@/utils/mockTestHelpers";
@@ -16,6 +16,7 @@ export default function MockTestWorkspace() {
   const [showReprocessConfirm, setShowReprocessConfirm] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showMobileStats, setShowMobileStats] = useState(false);
 
   const {
     clusterId,
@@ -98,12 +99,38 @@ export default function MockTestWorkspace() {
           onDelete={() => setShowDeleteConfirm(true)}
         />
 
-        <WorkspaceStatsGrid
-          totalQuestions={mocktest.total_questions || questions.length}
-          approvedCount={approvedCount}
-          lowConfidence={lowConfidence}
-          topicsFound={topicsFound}
-        />
+        {/* Mobile Stats Toggle Button */}
+        <div className="md:hidden mt-4 pt-3 border-t border-border">
+          <button
+            type="button"
+            onClick={() => setShowMobileStats((prev) => !prev)}
+            className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-md border border-border bg-muted/40 hover:bg-muted text-xs font-semibold text-foreground transition-all"
+          >
+            <span className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-orange-500" />
+              <span>Stats & Metrics</span>
+            </span>
+            <ChevronDown
+              className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${
+                showMobileStats ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* Stats Grid */}
+        <div
+          className={`${
+            showMobileStats ? "block mt-3" : "hidden"
+          } md:block md:mt-4`}
+        >
+          <WorkspaceStatsGrid
+            totalQuestions={mocktest.total_questions || questions.length}
+            approvedCount={approvedCount}
+            lowConfidence={lowConfidence}
+            topicsFound={topicsFound}
+          />
+        </div>
       </div>
 
       <WorkspaceTabsBar

@@ -9,7 +9,47 @@ load_dotenv(BACKEND_ROOT / ".env")
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 POLL_INTERVAL_SECONDS = int(os.environ.get("WORKER_POLL_INTERVAL_SECONDS", "5"))
-MAX_JOBS_PER_RUN = int(os.environ.get("WORKER_MAX_JOBS_PER_RUN", "1"))
+# Default of 8 assumes the primary deployment is http_server.py (a Render
+# Web Service, triggered periodically by an external pinger like
+# cron-job.org) rather than a continuously-running run_forever() process -
+# see http_server.py's module docstring. Each /run hit should be able to
+# drain a real batch of the queue, not just one job, or WORKER_CONCURRENCY
+# below never gets a chance to do anything (run_once clips concurrency to
+# min(concurrency, max_jobs), so max_jobs=1 forces fully-sequential
+# processing no matter how high WORKER_CONCURRENCY is set).
+#
+# Kept modest (8, not e.g. 50) on purpose: a batch this size normally
+# finishes within a minute or two even with several AI-heavy jobs sharing
+# the 15/min Gemini gateway, so a ping every ~1 minute (the shortest
+# interval cron-job.org's free plan allows) keeps up with the queue in
+# small, fast chunks instead of one long-running request. Whether any one
+# /run call happens to finish before or after the pinger's own timeout
+# doesn't matter either way - http_server.py's _run_lock already stops a
+# ping that looks "failed" to the pinger from starting a second run on top
+# of one still going, so a raised timeout or a lower number here is not
+# something that needs tuning for correctness, only for how large a
+# backlog gets cleared per tick.
+MAX_JOBS_PER_RUN = int(os.environ.get("WORKER_MAX_JOBS_PER_RUN", "8"))
+# How many processing_jobs run in parallel THREADS within this one worker
+# process, instead of one job fully finishing (download -> OCR -> parse ->
+# every AI call -> DB writes) before the next job is even claimed. This is
+# safe to raise because:
+#   1. claim_next_job (db.py) claims with "FOR UPDATE OF pj SKIP LOCKED",
+#      so concurrent claimers can never grab the same row.
+#   2. Every DB access opens its own short-lived connection
+#      (db.py#get_connection), so threads never share a connection.
+#   3. The actual AI rate limit (AI_MAX_REQUESTS_PER_MINUTE) is enforced by
+#      a MODULE-LEVEL lock in gemini_provider.py shared by every thread in
+#      this process - raising this does NOT raise how many requests/minute
+#      reach Gemini, it only lets more jobs' non-AI work (download, OCR,
+#      parsing, DB writes) overlap instead of queueing behind each other.
+# This only holds within a single process. If this worker is ever run as
+# more than one OS process/container at the same time against the same
+# GEMINI_API_KEY, each process gets its OWN rate-limit counter and the
+# combined real request rate is concurrency * AI_MAX_REQUESTS_PER_MINUTE -
+# the limiter would need to move to shared storage (e.g. a Postgres-backed
+# counter) before that's safe.
+WORKER_CONCURRENCY = int(os.environ.get("WORKER_CONCURRENCY", "4"))
 AI_PROVIDER = os.environ.get("AI_PROVIDER", "disabled").strip().lower()
 AI_MODEL = os.environ.get("AI_MODEL", "").strip()
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "").strip()

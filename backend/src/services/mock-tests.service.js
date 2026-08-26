@@ -1,6 +1,10 @@
 import { pool } from "../db/pool.js";
 import { httpError } from "../lib/http-error.js";
-import { buildPdfStorageKey, deletePdf, uploadPdf } from "../lib/pdf-storage.js";
+import {
+  buildPdfStorageKey,
+  deletePdf,
+  uploadPdf,
+} from "../lib/pdf-storage.js";
 import { deleteDiagram } from "../lib/cloudinary-storage.js";
 import {
   optionalNumber,
@@ -13,7 +17,7 @@ import {
   attachDiagramUrls,
   attachDiagramSource,
 } from "./question-assets.service.js";
-import { startWorkerOnce } from "../lib/worker-runner.js";
+import { kickWorker } from "../lib/worker-runner.js";
 
 export async function listMockTests(workspaceId) {
   return mockTestsRepo.listMockTests(workspaceId);
@@ -216,11 +220,11 @@ function buildTemplateContext(mockTest) {
 
 // Shared by both the fresh-upload flow and the reprocess flow: insert a
 // processing_jobs row + its first event + flip the mock test to "processing",
-// all in one transaction. After the commit, kicks the Python worker via
-// worker-runner.js#startWorkerOnce so the job is processed within seconds
-// without needing a separately-running worker daemon. startWorkerOnce is
-// idempotent - if a worker process is already running it returns immediately
-// without spawning a second one.
+// all in one transaction. After the commit, kicks the deployed Python
+// worker service (see worker-runner.js#kickWorker) so the job is usually
+// picked up within seconds rather than waiting for the next scheduled
+// external ping - this is a best-effort latency optimization, not a
+// requirement for correctness (see kickWorker's own comment).
 async function queueProcessingJob({
   mockTest,
   workspaceId,
@@ -287,11 +291,7 @@ async function queueProcessingJob({
 
     await client.query("COMMIT");
 
-    // Kick the Python worker - spawns it if not already running, no-op otherwise.
-    const kickResult = startWorkerOnce();
-    if (kickResult.started) {
-      console.log(`[worker-runner] Started worker process (pid ${kickResult.pid}) for job ${job.id}`);
-    }
+    kickWorker({ jobId: job.id });
 
     return { processingJob: job, mockTest: updatedMockTest };
   } catch (error) {
@@ -494,21 +494,23 @@ export async function generateFromExisting({
     uniqueSourceIds,
   );
 
-  const { processingJob, mockTest: updatedMockTest } = await queueProcessingJob({
-    mockTest,
-    workspaceId,
-    uploadedFileId: null,
-    requestedBy: userId,
-    originalFilename: null,
-    storageKey: null,
-    documentType: "generate_from_existing",
-    extraInputConfig: {
-      sourceMockTestIds: uniqueSourceIds,
-      targetQuestionCount: count,
-      difficultyHint: normalizedDifficultyHint,
-      topicDistribution,
+  const { processingJob, mockTest: updatedMockTest } = await queueProcessingJob(
+    {
+      mockTest,
+      workspaceId,
+      uploadedFileId: null,
+      requestedBy: userId,
+      originalFilename: null,
+      storageKey: null,
+      documentType: "generate_from_existing",
+      extraInputConfig: {
+        sourceMockTestIds: uniqueSourceIds,
+        targetQuestionCount: count,
+        difficultyHint: normalizedDifficultyHint,
+        topicDistribution,
+      },
     },
-  });
+  );
 
   return { processingJob, mockTest: updatedMockTest };
 }
@@ -573,15 +575,17 @@ export async function uploadDocument({
     client.release();
   }
 
-  const { processingJob, mockTest: updatedMockTest } = await queueProcessingJob({
-    mockTest,
-    workspaceId,
-    uploadedFileId: uploadedFile.id,
-    requestedBy: userId,
-    originalFilename: file.originalname,
-    storageKey,
-    documentType: normalizedDocumentType,
-  });
+  const { processingJob, mockTest: updatedMockTest } = await queueProcessingJob(
+    {
+      mockTest,
+      workspaceId,
+      uploadedFileId: uploadedFile.id,
+      requestedBy: userId,
+      originalFilename: file.originalname,
+      storageKey,
+      documentType: normalizedDocumentType,
+    },
+  );
 
   return { uploadedFile, processingJob, mockTest: updatedMockTest };
 }

@@ -38,7 +38,7 @@ export default function SessionQuestionNav({
           <Link
             to={exitHref}
             onClick={handleExitClick}
-            className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-orange-500 transition-colors"
+            className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-orange-500 transition-colors"
           >
             <ChevronLeft className="w-3.5 h-3.5" /> Exit Session
           </Link>
@@ -57,7 +57,7 @@ export default function SessionQuestionNav({
                 onClick={() =>
                   onSelectQuestion ? onSelectQuestion(i) : setCurrent(i)
                 }
-                className={`w-8 h-8 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${
+                className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all flex items-center justify-center ${
                   i === current
                     ? "bg-orange-500/10 text-orange-500 dark:bg-orange-500/15 font-bold border border-orange-500/30"
                     : answers[question.questionId]?.selected?.length
@@ -74,13 +74,13 @@ export default function SessionQuestionNav({
         </div>
 
         {/* Real Data Legend with Hyphen */}
-        <div className="shrink-0 mt-4 pt-3 border-t border-border/60 space-y-2 text-xs font-semibold">
+        <div className="shrink-0 mt-4 pt-3 border-t border-border/60 space-y-2 text-xs font-normal">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/30 border border-emerald-500/50 inline-block" />
               <span className="text-muted-foreground">Answered -</span>
             </div>
-            <span className="font-bold text-foreground font-mono">
+            <span className="font-semibold text-foreground font-mono">
               {answeredCount}
             </span>
           </div>
@@ -90,7 +90,7 @@ export default function SessionQuestionNav({
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500/30 border border-amber-500/50 inline-block" />
               <span className="text-muted-foreground">Flagged -</span>
             </div>
-            <span className="font-bold text-foreground font-mono">
+            <span className="font-semibold text-foreground font-mono">
               {flaggedCount}
             </span>
           </div>
@@ -100,7 +100,7 @@ export default function SessionQuestionNav({
               <span className="w-2.5 h-2.5 rounded-full bg-muted border border-border inline-block" />
               <span className="text-muted-foreground">Not visited -</span>
             </div>
-            <span className="font-bold text-foreground font-mono">
+            <span className="font-semibold text-foreground font-mono">
               {notVisitedCount}
             </span>
           </div>

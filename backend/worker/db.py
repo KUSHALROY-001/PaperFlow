@@ -6,6 +6,16 @@ from psycopg.rows import dict_row
 
 from .asset_extractor import build_diagram_public_id
 from .config import DATABASE_URL, DB_CA_CERT_PATH
+from .math_validator import find_all_math_errors
+
+# Well below any confidence score the AI itself reports (question.get
+# ("confidence", 60) below defaults to 60, and real extraction confidence
+# realistically ranges roughly 50-95) - guarantees a question with broken
+# math sorts to the very top of the Review Queue (already sorted
+# lowest-confidence-first) regardless of how confident the AI otherwise
+# was about everything else on that question. Not 0: reserved in case a
+# genuinely-worse signal ever needs to sort even lower than this.
+MATH_ERROR_CONFIDENCE = 5
 
 
 @contextmanager
@@ -217,7 +227,7 @@ def update_job(connection, job_id, *, status=None, stage=None, progress=None, su
     )
 
 
-def replace_questions(connection, *, workspace_id, mock_test_id, questions):
+def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_path=None):
     # questions is a read-only compatibility view as of migration 030 -
     # both the SELECT and DELETE below now target question_slots (the
     # physical table) directly. content_id is captured alongside id so
@@ -281,6 +291,21 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions):
         question_type = question.get("question_type") or (
             "multi" if len(correct_option_indexes) > 1 else "single"
         )
+
+        # Checks every $...$/$$...$$ span across text/explanation/passage/
+        # options for a balanced-brace LaTeX error BEFORE this question is
+        # ever saved - the alternative is what happened before this
+        # existed: broken math sat silently in the database, indistinguishable
+        # from every other "needs_review" question, until a human happened
+        # to open that specific one and notice red text in the Live
+        # Preview. Recording the actual error(s) in metadata, not just
+        # dropping confidence silently, means a reviewer opening the
+        # Review Queue sees WHY it's flagged instead of having to
+        # re-discover it themselves.
+        math_errors = find_all_math_errors(question)
+        if math_errors:
+            question.setdefault("metadata", {})["mathErrors"] = math_errors
+            question["confidence"] = MATH_ERROR_CONFIDENCE
 
         content_row = connection.execute(
             """

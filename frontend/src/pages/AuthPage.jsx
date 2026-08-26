@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, ShieldCheck, Eye, EyeOff } from "lucide-react";
+import { ArrowRight, ShieldCheck, Eye, EyeOff, Loader2 } from "lucide-react";
 import ThemeToggle from "../components/ThemeToggle";
 import GoogleSignInButton from "../components/GoogleSignInButton";
 import { useAuth } from "@/lib/AuthContext";
@@ -129,40 +129,42 @@ export default function AuthPage({ mode, title, description }) {
   );
 
   return (
-    <div className="min-h-screen bg-background px-4 sm:px-6 py-6 sm:py-8 font-sans">
-      <div className="mx-auto flex max-w-6xl items-center justify-between">
+    <div className="min-h-screen bg-background px-4 sm:px-6 py-4 sm:py-8 font-sans flex flex-col justify-between">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between">
         <Link to="/">
           <PaperFlowLogo />
         </Link>
         <ThemeToggle />
       </div>
 
-      <div className="mx-auto mt-10 sm:mt-16 grid max-w-6xl gap-8 sm:gap-10 lg:grid-cols-[1.05fr_0.95fr] items-center">
+      <div className="mx-auto my-auto py-6 sm:py-10 grid w-full max-w-6xl gap-6 sm:gap-8 lg:gap-12 lg:grid-cols-[1.05fr_0.95fr] items-center">
         <div className="flex flex-col justify-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/10 px-4 py-1.5 text-xs sm:text-sm font-bold text-orange-500 w-fit">
-            <ShieldCheck className="h-4 w-4" />
-            Secure access to your exam workspace
+          <div className="mb-4 sm:mb-6 inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/10 px-3.5 sm:px-4 py-1.5 text-xs sm:text-sm font-bold text-orange-500 w-fit">
+            <ShieldCheck className="h-4 w-4 shrink-0" />
+            <span>Secure access to your exam workspace</span>
           </div>
-          <h1 className="max-w-xl text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight text-foreground tracking-tight">
+          <h1 className="max-w-xl text-2xl sm:text-4xl lg:text-5xl font-extrabold leading-tight text-foreground tracking-tight">
             {title}
           </h1>
-          <p className="mt-5 max-w-xl text-base sm:text-lg leading-relaxed text-muted-foreground">
+          <p className="mt-3 sm:mt-5 max-w-xl text-sm sm:text-base lg:text-lg leading-relaxed text-muted-foreground">
             {description}
           </p>
         </div>
 
-        <div className="surface-card rounded-[28px] px-3 py-4 sm:p-8 md:p-10 border border-border shadow-md">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-foreground">{ctaLabel}</h2>
-            <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+        <div className="surface-card rounded-2xl sm:rounded-[28px] p-5 sm:p-8 md:p-10 border border-border shadow-md">
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground">
+              {ctaLabel}
+            </h2>
+            <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
               Use your PaperFlow account to access clusters and mock tests.
             </p>
           </div>
 
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          <form className="space-y-3.5 sm:space-y-4" onSubmit={handleSubmit}>
             {mode === "signup" && (
               <div>
-                <label className="mb-2 block text-sm font-semibold text-foreground">
+                <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-foreground">
                   Name
                 </label>
                 <input
@@ -176,13 +178,13 @@ export default function AuthPage({ mode, title, description }) {
                     }))
                   }
                   placeholder="Kushal"
-                  className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/30"
+                  className="w-full rounded-md border border-border bg-card px-3.5 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/30"
                 />
               </div>
             )}
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-foreground">
+              <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-foreground">
                 Email
               </label>
               <input
@@ -196,11 +198,11 @@ export default function AuthPage({ mode, title, description }) {
                   }))
                 }
                 placeholder="you@example.com"
-                className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/30"
+                className="w-full rounded-md border border-border bg-card px-3.5 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/30"
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-semibold text-foreground">
+              <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-foreground">
                 Password
               </label>
               <div className="relative">
@@ -215,26 +217,26 @@ export default function AuthPage({ mode, title, description }) {
                     }))
                   }
                   placeholder="At least 8 characters"
-                  className="w-full rounded-md border border-border bg-card pl-4 pr-12 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/30"
+                  className="w-full rounded-md border border-border bg-card pl-3.5 sm:pl-4 pr-11 sm:pr-12 py-2.5 sm:py-3 text-xs sm:text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/30"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1.5 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500/30 flex items-center justify-center"
+                  className="absolute right-2 sm:right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1.5 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500/30 flex items-center justify-center"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                   title={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
-                    <Eye className="h-5 w-5" />
+                    <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
                   ) : (
-                    <EyeOff className="h-5 w-5" />
+                    <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
                   )}
                 </button>
               </div>
             </div>
 
             {error && (
-              <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs font-medium text-red-500">
+              <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-3.5 sm:px-4 py-2.5 sm:py-3 text-xs font-medium text-red-500">
                 {error}
               </div>
             )}
@@ -242,14 +244,23 @@ export default function AuthPage({ mode, title, description }) {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex w-full items-center border border-border justify-center gap-2 rounded-3xl px-6 py-3.5 text-sm font-semibold text-foreground transition-all hover:bg-green-500/80 dark:hover:bg-emerald-500 dark:border-white/25 disabled:opacity-60 shadow-sm"
+              className="inline-flex w-full items-center border border-border justify-center gap-2 rounded-3xl px-4 sm:px-6 py-3 sm:py-3.5 text-xs sm:text-sm font-semibold text-foreground transition-all hover:bg-green-500/80 dark:hover:bg-emerald-500 dark:border-white/25 disabled:opacity-60 shadow-sm cursor-pointer"
             >
-              {isSubmitting ? "Please wait..." : ctaLabel}{" "}
-              <ArrowRight className="h-4 w-4" />
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                  <span>Please wait...</span>
+                </>
+              ) : (
+                <>
+                  <span>{ctaLabel}</span>
+                  <ArrowRight className="h-4 w-4 shrink-0" />
+                </>
+              )}
             </button>
           </form>
 
-          <div className="my-6 flex items-center gap-3">
+          <div className="my-5 sm:my-6 flex items-center gap-3">
             <div className="h-px flex-1 bg-border" />
             <span className="text-xs font-medium text-muted-foreground">
               or
@@ -262,7 +273,7 @@ export default function AuthPage({ mode, title, description }) {
             onCredential={handleGoogleCredential}
           />
 
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 text-sm">
+          <div className="mt-5 sm:mt-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 text-xs sm:text-sm text-center sm:text-left">
             <Link
               to={altHref}
               className="font-semibold text-orange-500 hover:text-orange-600"

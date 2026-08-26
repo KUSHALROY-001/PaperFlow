@@ -94,14 +94,14 @@ export default function ClusterWorkspace() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      <div className="surface-card rounded-2xl p-3 sm:p-6 border border-border">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-4">
-          <div className="flex items-center gap-4 flex-1 min-w-0">
-            <div className="w-12 h-12 bg-orange-500/15 text-orange-500 rounded-md flex items-center justify-center shrink-0">
-              <FolderOpen className="w-6 h-6" />
+      <div className="surface-card rounded-2xl p-4 sm:p-6 border border-border">
+        <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-start sm:justify-between mb-4">
+          <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-500/15 text-orange-500 rounded-xl flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
+              <FolderOpen className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             {editing ? (
-              <div className="flex-1 space-y-2">
+              <div className="flex-1 space-y-2 min-w-0">
                 <input
                   value={editForm.name}
                   onChange={(event) =>
@@ -110,7 +110,7 @@ export default function ClusterWorkspace() {
                       name: event.target.value,
                     }))
                   }
-                  className="w-full px-3 py-2 rounded-xl border border-border bg-card text-foreground text-lg font-bold focus:outline-none focus:ring-2 focus:ring-orange-500/30"
+                  className="w-full px-3 py-2 rounded-xl border border-border bg-card text-foreground text-base sm:text-lg font-bold focus:outline-none focus:ring-2 focus:ring-orange-500/30"
                 />
                 <textarea
                   value={editForm.description}
@@ -122,34 +122,34 @@ export default function ClusterWorkspace() {
                   }
                   placeholder="Description..."
                   rows={2}
-                  className="w-full px-3 py-2 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 resize-none text-foreground"
+                  className="w-full px-3 py-2 rounded-xl border border-border bg-card text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 resize-none text-foreground"
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={handleSaveEdit}
-                    className="px-4 py-1.5 bg-[#ea580c] hover:bg-[#c2410c] text-white text-xs font-semibold rounded-xl"
+                    className="flex-1 sm:flex-none px-4 py-2 bg-[#ea580c] hover:bg-[#c2410c] text-white text-xs font-semibold rounded-xl transition-all"
                   >
                     Save
                   </button>
                   <button
                     onClick={() => setEditing(false)}
-                    className="px-4 py-1.5 border border-border text-xs font-semibold rounded-xl text-muted-foreground hover:text-foreground"
+                    className="flex-1 sm:flex-none px-4 py-2 border border-border text-xs font-semibold rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
                   >
                     Cancel
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="min-w-0">
-                <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight wrap-break-word">
                   {cluster.name}
                 </h1>
                 {cluster.description && (
-                  <p className="text-sm text-muted-foreground mt-0.5">
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 line-clamp-2 sm:line-clamp-none">
                     {cluster.description}
                   </p>
                 )}
-                <p className="text-xs text-muted-foreground mt-1 font-medium">
+                <p className="text-[11px] sm:text-xs text-muted-foreground mt-1 font-medium">
                   {mocktests.length} mock test
                   {mocktests.length !== 1 ? "s" : ""}
                 </p>
@@ -157,11 +157,11 @@ export default function ClusterWorkspace() {
             )}
           </div>
           {!editing && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
               <button
                 disabled={isViewer}
                 onClick={() => !isViewer && startEdit()}
-                className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all ${
+                className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
                   isViewer
                     ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-50"
                     : "border-border text-muted-foreground hover:text-foreground hover:border-blue-500 hover:bg-blue-500/15"
@@ -175,7 +175,7 @@ export default function ClusterWorkspace() {
               <button
                 disabled={isViewer}
                 onClick={() => !isViewer && setShowDeleteConfirm(true)}
-                className={`w-9 h-9 rounded-md border flex items-center justify-center transition-all ${
+                className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
                   isViewer
                     ? "border-red-500/10 text-red-500/30 cursor-not-allowed opacity-50"
                     : "border-red-500/20 hover:bg-red-500/15 text-muted-foreground hover:text-red-500 hover:border-red-500"
@@ -198,7 +198,7 @@ export default function ClusterWorkspace() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 min-[380px]:grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
           {[
             {
               label: "Total Mock Tests",
@@ -227,18 +227,18 @@ export default function ClusterWorkspace() {
           ].map((stat) => (
             <div
               key={stat.label}
-              className="surface-card rounded-xl p-3.5 border border-border flex items-center gap-3"
+              className="surface-card rounded-xl p-3 sm:p-3.5 border border-border flex items-center gap-2.5 sm:gap-3 min-w-0"
             >
               <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center ${stat.color} shrink-0`}
+                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center ${stat.color} shrink-0`}
               >
                 <stat.icon className="w-4 h-4" />
               </div>
-              <div>
-                <div className="text-xl font-bold text-foreground">
+              <div className="min-w-0 flex-1">
+                <div className="text-lg sm:text-xl font-bold text-foreground truncate">
                   {stat.value}
                 </div>
-                <div className="text-xs font-medium text-muted-foreground">
+                <div className="text-[11px] sm:text-xs font-medium text-muted-foreground truncate">
                   {stat.label}
                 </div>
               </div>
@@ -247,9 +247,11 @@ export default function ClusterWorkspace() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <h2 className="text-lg font-bold text-foreground">Mock Tests</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <h2 className="text-base sm:text-lg font-bold text-foreground">
+            Mock Tests
+          </h2>
           {mocktests.length > 0 && (
             <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-muted text-muted-foreground">
               {mocktests.length}
@@ -257,15 +259,15 @@ export default function ClusterWorkspace() {
           )}
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap w-full sm:w-auto">
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
           {mocktests.length > 1 && (
-            <div className="relative">
+            <div className="relative flex-1 sm:flex-initial">
               <ArrowDownUp className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 aria-label="Sort mock tests"
-                className="appearance-none pl-8 pr-3 py-2 text-xs sm:text-sm font-semibold rounded-md border border-border bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-gray-500/30 transition-all cursor-pointer shadow-xs"
+                className="w-full sm:w-auto appearance-none pl-8 pr-7 py-2 text-xs sm:text-sm font-semibold rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all cursor-pointer shadow-xs"
               >
                 {SORT_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -282,7 +284,11 @@ export default function ClusterWorkspace() {
             title={
               isViewer ? "Editor role is required to add mock tests" : undefined
             }
-            className={`flex items-center gap-2 px-4 py-2.5 font-semibold rounded-full text-xs sm:text-sm shadow-sm transition-all w-full sm:w-auto justify-center ${
+            className={`flex items-center justify-center gap-2 px-4 py-2 font-semibold rounded-xl text-xs sm:text-sm shadow-xs transition-all ${
+              mocktests.length > 1
+                ? "flex-1 sm:flex-initial"
+                : "w-full sm:w-auto"
+            } ${
               isViewer
                 ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50"
                 : "bg-blue-500 hover:bg-blue-600 text-white"
@@ -294,7 +300,7 @@ export default function ClusterWorkspace() {
       </div>
 
       {mocktests.length === 0 ? (
-        <div className="surface-card rounded-2xl p-12 text-center border border-border">
+        <div className="surface-card rounded-2xl p-8 sm:p-12 text-center border border-border">
           <FileText className="w-10 h-10 text-orange-500/60 mx-auto mb-3" />
           <h3 className="text-base font-bold text-foreground mb-1">
             No mock tests yet
@@ -308,7 +314,7 @@ export default function ClusterWorkspace() {
             title={
               isViewer ? "Editor role is required to add mock tests" : undefined
             }
-            className={`px-4 py-2.5 font-semibold rounded-md text-xs shadow-sm transition-all ${
+            className={`w-full sm:w-auto px-4 py-2.5 font-semibold rounded-xl text-xs shadow-xs transition-all ${
               isViewer
                 ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50"
                 : "bg-[#ea580c] hover:bg-[#c2410c] text-white"
@@ -318,7 +324,7 @@ export default function ClusterWorkspace() {
           </button>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
           {sortedMockTests.map((mocktest) => (
             <MockTestCard
               key={mocktest.id}

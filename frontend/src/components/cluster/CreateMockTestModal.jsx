@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Upload, X, Sparkles, FileText, FilePlus } from "lucide-react";
+import { Upload, X, Sparkles, FileText, FilePlus, Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 
@@ -109,11 +109,13 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-xs">
-      <div className="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl surface-card border border-border shadow-2xl">
-        <div className="flex items-center justify-between border-b border-border p-5 sm:p-6">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-3 sm:p-4 py-4 sm:py-8 backdrop-blur-xs sm:items-center">
+      <div className="flex max-h-[90dvh] sm:max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl sm:rounded-3xl surface-card border border-border shadow-2xl">
+        <div className="flex items-center justify-between border-b border-border p-4 sm:p-6 shrink-0">
           <div>
-            <h2 className="text-lg font-bold text-foreground">Add Mock Test</h2>
+            <h2 className="text-base sm:text-lg font-bold text-foreground">
+              Add Mock Test
+            </h2>
             <p className="text-xs text-muted-foreground">
               Create a mock test inside this cluster.
             </p>
@@ -129,10 +131,10 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-5 overflow-y-auto p-5 sm:p-6"
+          className="min-h-0 flex-1 space-y-4 sm:space-y-5 overflow-y-auto p-4 sm:p-6 overscroll-contain"
         >
           <div>
-            <label className="mb-2 block text-sm font-semibold text-foreground">
+            <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-foreground">
               Mock Test Name *
             </label>
             <input
@@ -142,7 +144,7 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
                 setForm((current) => ({ ...current, name: event.target.value }))
               }
               placeholder="e.g. JECA PYQ 2024"
-              className="w-full rounded-md border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
+              className="w-full rounded-xl border border-border bg-card px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
             />
           </div>
 
@@ -411,11 +413,11 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
             </div>
           )}
 
-          <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row">
+          <div className="flex flex-col-reverse sm:flex-row gap-2.5 sm:gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-md border border-border py-2.5 text-sm font-semibold text-muted-foreground transition-all hover:bg-muted"
+              className="flex-1 rounded-md border border-border py-2.5 text-xs sm:text-sm font-semibold text-muted-foreground transition-all hover:bg-muted"
             >
               Cancel
             </button>
@@ -427,17 +429,22 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
                   ? "Editor role is required to add mock tests"
                   : undefined
               }
-              className={`flex-1 rounded-md py-2.5 text-sm font-semibold text-white transition-all shadow-sm ${
+              className={`flex-1 flex items-center justify-center gap-2 rounded-md py-2.5 text-xs sm:text-sm font-semibold text-white transition-all shadow-sm ${
                 isViewer
                   ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50"
                   : "bg-blue-500 hover:bg-blue-600"
               }`}
             >
-              {isSubmitting
-                ? mode === "generate"
-                  ? "Generating..."
-                  : "Creating..."
-                : "Add Mock Test"}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                  <span>
+                    {mode === "generate" ? "Generating..." : "Creating..."}
+                  </span>
+                </>
+              ) : (
+                <span>Add Mock Test</span>
+              )}
             </button>
           </div>
         </form>

@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Upload,
@@ -13,6 +14,7 @@ import {
   Users,
   GraduationCap,
   Headphones,
+  MoreVertical,
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -122,12 +124,31 @@ const useCases = [
 
 export default function Landing() {
   const { isAuthenticated, logout } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target)
+      ) {
+        setMobileMenuOpen(false);
+      }
+    }
+    if (mobileMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [mobileMenuOpen]);
 
   return (
     <div className="min-h-screen font-sans bg-background">
       {/* Navbar */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link to="/">
             <PaperFlowLogo />
           </Link>
@@ -165,7 +186,9 @@ export default function Landing() {
               </Link>
             )}
           </div>
-          <div className="flex items-center gap-3">
+
+          {/* Desktop Right Actions */}
+          <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
             {isAuthenticated ? (
               <button
@@ -183,6 +206,64 @@ export default function Landing() {
                 Login
               </Link>
             )}
+          </div>
+
+          {/* Mobile Right Actions (Three-Dot Menu for small screens) */}
+          <div className="flex md:hidden items-center gap-2">
+            <ThemeToggle />
+            <div className="relative" ref={mobileMenuRef}>
+              <button
+                type="button"
+                aria-label="Open navigation menu"
+                onClick={() => setMobileMenuOpen((prev) => !prev)}
+                className="w-9 h-9 rounded-xl border border-border bg-card flex items-center justify-center text-muted-foreground hover:text-foreground transition-all shrink-0"
+              >
+                <MoreVertical className="w-5 h-5" />
+              </button>
+
+              {mobileMenuOpen && (
+                <div className="absolute right-0 top-11 w-52 surface-card rounded-2xl border border-border shadow-xl p-3 z-50 space-y-2.5 animate-in fade-in zoom-in-95 duration-100">
+                  <Link
+                    to="/catalog"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex w-full items-center justify-center text-sm font-semibold px-3.5 py-2 border border-border rounded-md text-foreground hover:text-orange-500 hover:border-orange-500/30 bg-card transition-all text-center"
+                  >
+                    Public Catalog
+                  </Link>
+
+                  {isAuthenticated && (
+                    <Link
+                      to="/dashboard"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex w-full items-center justify-center text-sm font-semibold px-3.5 py-2 border border-border rounded-md text-foreground hover:text-orange-500 hover:border-orange-500/30 bg-card transition-all text-center"
+                    >
+                      Dashboard
+                    </Link>
+                  )}
+
+                  {isAuthenticated ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        logout();
+                      }}
+                      className="flex w-full items-center justify-center text-sm font-semibold px-4 py-2 border border-border bg-card text-foreground hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 rounded-md shadow-xs transition-all text-center"
+                    >
+                      Logout
+                    </button>
+                  ) : (
+                    <Link
+                      to="/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex w-full items-center justify-center text-sm font-semibold px-4 py-2 border border-border bg-card hover:bg-emerald-500/10 text-foreground hover:text-emerald-500 hover:border-emerald-500/30 rounded-3xl shadow-sm transition-all text-center"
+                    >
+                      Login
+                    </Link>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </nav>

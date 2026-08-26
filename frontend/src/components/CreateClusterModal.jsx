@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { FolderOpen, Sparkles, X } from "lucide-react";
+import { FolderOpen, Sparkles, X, Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 
@@ -39,7 +39,7 @@ export default function CreateClusterModal({ onClose, onCreated }) {
       <div className="flex max-h-[85dvh] w-full max-w-lg flex-col overflow-hidden rounded-3xl surface-card border border-border shadow-2xl">
         <div className="flex shrink-0 items-center justify-between border-b border-border p-5 sm:p-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500/15 text-orange-500">
+            <div className="flex h-9 w-9 items-center justify-center rounded-md sm:bg-orange-500/15 text-orange-500">
               <FolderOpen className="h-4 w-4" />
             </div>
             <div>
@@ -79,7 +79,7 @@ export default function CreateClusterModal({ onClose, onCreated }) {
                 }))
               }
               placeholder="e.g. JECA"
-              className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
+              className="w-full rounded-md border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
             />
             <p className="mt-2 text-xs text-muted-foreground">
               A cluster is just a container, like JECA, GATE, or Class 10
@@ -104,7 +104,7 @@ export default function CreateClusterModal({ onClose, onCreated }) {
               }
               placeholder="e.g. MCA entrance preparation workspace for PYQs and practice mocks"
               rows={3}
-              className="w-full resize-none rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
+              className="w-full resize-none rounded-md border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
             />
           </div>
 
@@ -133,7 +133,7 @@ export default function CreateClusterModal({ onClose, onCreated }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-xl border border-border py-2.5 text-sm font-semibold text-muted-foreground transition-all hover:bg-muted"
+              className="flex-1 rounded-md border border-border py-2.5 text-sm font-semibold text-muted-foreground transition-all hover:bg-muted"
             >
               Cancel
             </button>
@@ -141,15 +141,24 @@ export default function CreateClusterModal({ onClose, onCreated }) {
               type="submit"
               disabled={isSubmitting || isViewer}
               title={
-                isViewer ? "Editor role is required to create clusters" : undefined
+                isViewer
+                  ? "Editor role is required to create clusters"
+                  : undefined
               }
-              className={`flex-1 rounded-xl py-2.5 text-sm font-semibold text-white transition-all shadow-sm ${
+              className={`flex-1 flex items-center justify-center gap-2 rounded-md py-2.5 text-sm font-semibold text-white transition-all shadow-sm ${
                 isViewer
                   ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50"
-                  : "bg-[#ea580c] hover:bg-[#c2410c]"
+                  : "bg-blue-500 hover:bg-blue-600"
               }`}
             >
-              {isSubmitting ? "Creating..." : "Create Cluster"}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                  <span>Creating...</span>
+                </>
+              ) : (
+                <span>Create Cluster</span>
+              )}
             </button>
           </div>
         </form>

@@ -44,22 +44,22 @@ export default function SessionResultsView({
           <div className="text-6xl font-black mb-2 bg-linear-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
             {percentage}%
           </div>
-          <p className="text-muted-foreground text-sm font-semibold mb-1">
+          <p className="text-muted-foreground text-sm font-normal mb-1">
             {attempt.correctCount} / {attempt.totalQuestions} correct
           </p>
-          <p className="text-muted-foreground text-xs font-semibold mb-8">
+          <p className="text-muted-foreground text-xs font-normal mb-8">
             Score: {attempt.score} marks (negative marking applied)
           </p>
 
           {showSaveResultBanner && claimStatus !== "saved" && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-8 px-4 py-3.5 rounded-2xl border border-orange-500/20 bg-orange-500/10 text-left">
-              <p className="text-xs sm:text-sm font-semibold text-foreground">
+              <p className="text-xs sm:text-sm font-medium text-foreground">
                 Want to keep this result? Log in to save it to your account.
               </p>
               <button
                 onClick={onSaveResult}
                 disabled={claimStatus === "claiming"}
-                className="flex items-center gap-1.5 px-4 py-2 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-xl text-xs sm:text-sm shrink-0 disabled:opacity-60"
+                className="flex items-center gap-1.5 px-4 py-2 bg-[#ea580c] hover:bg-[#c2410c] text-white font-medium rounded-xl text-xs sm:text-sm shrink-0 disabled:opacity-60"
               >
                 <LogIn className="w-3.5 h-3.5" />
                 {claimStatus === "claiming" ? "Saving…" : saveLabel}
@@ -67,13 +67,13 @@ export default function SessionResultsView({
             </div>
           )}
           {claimStatus === "saved" && (
-            <div className="flex items-center gap-2 mb-8 px-4 py-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 text-xs sm:text-sm font-semibold">
+            <div className="flex items-center gap-2 mb-8 px-4 py-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 text-xs sm:text-sm font-medium">
               <CheckCircle className="w-4 h-4 shrink-0" /> Saved to your account
               - you'll find it in My Results.
             </div>
           )}
           {claimStatus === "error" && (
-            <div className="flex items-center gap-2 mb-8 px-4 py-3 rounded-2xl border border-red-500/20 bg-red-500/10 text-red-500 text-xs sm:text-sm font-semibold">
+            <div className="flex items-center gap-2 mb-8 px-4 py-3 rounded-2xl border border-red-500/20 bg-red-500/10 text-red-500 text-xs sm:text-sm font-medium">
               <XCircle className="w-4 h-4 shrink-0" /> Couldn't save this result
               - the link may have expired.
             </div>
@@ -100,7 +100,7 @@ export default function SessionResultsView({
             ].map((s) => (
               <div key={s.label} className={`rounded-2xl p-4 ${s.color}`}>
                 <div className="text-2xl font-bold">{s.value}</div>
-                <div className="text-xs font-semibold">{s.label}</div>
+                <div className="text-xs font-medium">{s.label}</div>
               </div>
             ))}
           </div>
@@ -125,12 +125,12 @@ export default function SessionResultsView({
                       {(rq.topic || rq.subtopic) && (
                         <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
                           {rq.topic && (
-                            <span className="text-[11px] font-semibold text-muted-foreground bg-muted border border-border px-2 py-0.5 rounded-full">
+                            <span className="text-[11px] font-normal text-muted-foreground bg-muted border border-border px-2 py-0.5 rounded-full">
                               {rq.topic}
                             </span>
                           )}
                           {rq.subtopic && (
-                            <span className="text-[11px] font-semibold text-sky-600 dark:text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded-full">
+                            <span className="text-[11px] font-normal text-sky-600 dark:text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded-full">
                               {rq.subtopic}
                             </span>
                           )}
@@ -141,10 +141,10 @@ export default function SessionResultsView({
                         passage={rq.passage}
                         diagramUrl={rq.diagramUrl}
                         placement={rq.placement}
-                        textClassName="font-bold text-foreground"
+                        textClassName="text-sm font-normal text-foreground leading-relaxed"
                       />
                       {!correct && !skipped && (
-                        <p className="text-xs text-red-500 font-semibold mt-1">
+                        <p className="text-xs text-red-500 font-normal mt-1">
                           Your answer:{" "}
                           <MathText
                             text={getOptionText(
@@ -155,7 +155,7 @@ export default function SessionResultsView({
                         </p>
                       )}
                       {!correct && rq.correctOptionIndexes?.length > 0 && (
-                        <p className="text-xs text-emerald-500 font-semibold mt-0.5">
+                        <p className="text-xs text-emerald-500 font-normal mt-0.5">
                           Correct:{" "}
                           {rq.correctOptionIndexes.map((i, idx) => (
                             <span key={i}>

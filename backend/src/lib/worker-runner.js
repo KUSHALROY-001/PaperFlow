@@ -1,78 +1,69 @@
-import { spawn } from "node:child_process";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+// Tells the already-deployed Python worker (backend/worker/http_server.py,
+// a separate Render Web Service) that a job is waiting, right when it's
+// queued - instead of relying only on an external pinger (cron-job.org
+// etc.) polling on a fixed schedule.
+//
+// This is deliberately fire-and-forget:
+//   - We do NOT await this before responding to the upload request. The
+//     job is already safely committed to processing_jobs by the time this
+//     runs; the kick is purely a latency optimization; job processing
+//     works correctly with zero kicks, just slower (waiting for the next
+//     scheduled external ping).
+//   - Any failure here (worker asleep and still cold-starting, network
+//     blip, timeout, wrong/missing secret) is logged and swallowed, never
+//     thrown - a user's upload must never fail because the kick failed.
+//
+// Why this exists instead of pinging on a short interval from
+// cron-job.org: Render's free tier grants a shared 750 instance-hours/
+// month across a workspace's free services. A service that's polled
+// every ~1 minute never gets the 15-minutes-idle chance to spin down, so
+// it runs ~24/7 - which alone is close to the entire monthly budget, and
+// pushes a workspace with more than one always-on free service over the
+// limit (Render then suspends every free service in the workspace until
+// next month). Kicking directly on upload means the worker is normally
+// only briefly awake right when there's real work, and can be left to
+// spin down the rest of the time; keep any external pinger's interval
+// long (e.g. 15-20 min) - it only needs to be a backstop for a kick that
+// got lost, not the primary trigger.
+const WORKER_SERVICE_URL = (process.env.WORKER_SERVICE_URL || "")
+  .trim()
+  .replace(/\/+$/, "");
+const WORKER_TRIGGER_SECRET = (process.env.WORKER_TRIGGER_SECRET || "").trim();
 
-const backendRoot = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "..",
-  "..",
-);
+// The worker may be asleep (cold start ~30-60s) or mid-batch already -
+// give the request enough time to land without hanging the event loop
+// indefinitely if something's badly wrong (e.g. DNS/network failure).
+const KICK_TIMEOUT_MS = 10_000;
 
-let activeWorker = null;
-
-export function startWorkerOnce() {
-  if (activeWorker && !activeWorker.killed) {
-    return {
-      started: false,
-      reason: "worker_already_running",
-    };
+export function kickWorker({ jobId } = {}) {
+  if (!WORKER_SERVICE_URL || !WORKER_TRIGGER_SECRET) {
+    // Not configured (e.g. local dev without the worker deployed) - fall
+    // back silently to relying on the external pinger alone.
+    return;
   }
 
-  // PYTHON_COMMAND lets deployments pin a specific interpreter path.
-  // On Windows, "python" may not be on PATH - "py" (Python Launcher) is
-  // the reliable fallback. We try "python" first (cross-platform default),
-  // but the env var override handles any edge case.
-  const pythonCommand = process.env.PYTHON_COMMAND || "python";
-  const maxJobs = process.env.WORKER_UPLOAD_MAX_JOBS || "5";
+  const url = `${WORKER_SERVICE_URL}/run?token=${encodeURIComponent(WORKER_TRIGGER_SECRET)}`;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), KICK_TIMEOUT_MS);
 
-  console.log(`[worker-runner] Spawning worker: ${pythonCommand} -m worker.worker --once --max-jobs ${maxJobs} (cwd: ${backendRoot})`);
-
-  const worker = spawn(
-    pythonCommand,
-    ["-B", "-m", "worker.worker", "--once", "--max-jobs", maxJobs],
-    {
-      cwd: backendRoot,
-      env: process.env,
-      stdio: ["ignore", "pipe", "pipe"],
-      windowsHide: true,
-    },
-  );
-
-  activeWorker = worker;
-
-  worker.stdout.on("data", (data) => {
-    console.log(`[worker] ${data.toString().trim()}`);
-  });
-
-  worker.stderr.on("data", (data) => {
-    // Python writes import errors and tracebacks to stderr - log at error
-    // level so they're visible even if the console is noisy.
-    console.error(`[worker] ${data.toString().trim()}`);
-  });
-
-  worker.on("close", (code) => {
-    if (code === 0) {
-      console.log(`[worker] Finished successfully (exit code 0)`);
-    } else {
-      console.error(`[worker] Exited with code ${code} — check stderr above for details`);
-    }
-    if (activeWorker === worker) {
-      activeWorker = null;
-    }
-  });
-
-  worker.on("error", (error) => {
-    console.error(
-      `[worker] Failed to start Python process ("${pythonCommand}"): ${error.message}. ` +
-      `Try setting PYTHON_COMMAND=py in backend/.env if you're on Windows.`
-    );
-    if (activeWorker === worker) {
-      activeWorker = null;
-    }
-  });
-
-  return {
-    started: true,
-    pid: worker.pid,
-  };
+  fetch(url, { method: "POST", signal: controller.signal })
+    .then(async (response) => {
+      if (!response.ok) {
+        // 429 here just means a previous run is already in flight (see
+        // http_server.py#_run_lock) - that run will pick this job up
+        // anyway, so it's expected/harmless, not worth logging loudly.
+        if (response.status !== 429) {
+          const body = await response.text().catch(() => "");
+          console.warn(
+            `[worker-runner] Kick for job ${jobId} got ${response.status}: ${body}`,
+          );
+        }
+      }
+    })
+    .catch((error) => {
+      console.warn(
+        `[worker-runner] Kick for job ${jobId} failed (worker will still be picked up by the next scheduled ping): ${error.message}`,
+      );
+    })
+    .finally(() => clearTimeout(timeout));
 }

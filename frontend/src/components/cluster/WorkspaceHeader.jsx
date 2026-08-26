@@ -78,7 +78,9 @@ export default function WorkspaceHeader({
             to={`/session/${mocktest.id}`}
             className="flex flex-1 items-center justify-center gap-2 px-4 py-2 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-semibold rounded-md hover:bg-emerald-500/20 transition-all text-xs sm:text-sm sm:flex-none"
           >
-            <Play className="w-4 h-4 text-emerald-500" /> Start Test
+            <Play className="w-4 h-4 text-emerald-500" />
+            <span className="sm:hidden">Start</span>
+            <span className="hidden sm:inline">Start Test</span>
           </Link>
           {mocktest.status !== "published" && (
             <button

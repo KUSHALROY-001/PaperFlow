@@ -46,24 +46,24 @@ export default function WorkspaceStatsGrid({
   ];
 
   return (
-    <div className="grid grid-cols-1 min-[380px]:grid-cols-2 md:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
       {statsList.map((stat) => (
         <div
           key={stat.label}
-          className={`rounded-2xl p-4 flex items-center gap-3.5 transition-all ${stat.cardBg}`}
+          className={`rounded-md p-1 sm:p-4 flex items-center gap-3 transition-all ${stat.cardBg}`}
         >
           <div
-            className={`w-9 h-9 rounded-xl flex items-center justify-center ${stat.iconBg} shrink-0`}
+            className={`w-0 h-0 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center ${stat.iconBg} shrink-0`}
           >
             <stat.icon className="w-4 h-4" />
           </div>
-          <div>
+          <div className="min-w-0 flex-1">
             <div
-              className={`text-xl font-extrabold tracking-tight ${stat.valColor}`}
+              className={`text-lg sm:text-xl font-extrabold tracking-tight ${stat.valColor}`}
             >
               {stat.value}
             </div>
-            <div className="text-xs font-semibold text-muted-foreground">
+            <div className="text-[11px] sm:text-xs font-semibold text-muted-foreground truncate">
               {stat.label}
             </div>
           </div>

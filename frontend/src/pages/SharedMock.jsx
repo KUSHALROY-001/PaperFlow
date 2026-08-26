@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertTriangle, Keyboard, X } from "lucide-react";
 import { useExamSession } from "@/hooks/useExamSession";
+import { usePreventSessionExit } from "@/hooks/usePreventSessionExit";
 import SharedMockIntro from "../components/shared-mock/SharedMockIntro";
 import SessionLoading from "../components/mock-session/SessionLoading";
 import SessionError from "../components/mock-session/SessionError";
@@ -9,6 +10,7 @@ import SessionResultsView from "../components/mock-session/SessionResultsView";
 import SessionQuestionNav from "../components/mock-session/SessionQuestionNav";
 import SessionHeader from "../components/mock-session/SessionHeader";
 import SessionQuestionView from "../components/mock-session/SessionQuestionView";
+import { ConfirmDialog } from "../components/design-system/ConfirmDialog";
 
 export default function SharedMock() {
   const navigate = useNavigate();
@@ -47,6 +49,18 @@ export default function SharedMock() {
 
   const [slideDirection, setSlideDirection] = useState("");
   const [showShortcuts, setShowShortcuts] = useState(false);
+
+  const {
+    showExitConfirm,
+    setShowExitConfirm,
+    confirmExit,
+  } = usePreventSessionExit({
+    isActive: phase === "session" && Boolean(session) && Boolean(q) && !review,
+    onConfirmExit: async () => {
+      await handleCancelSession();
+      navigate("/");
+    },
+  });
 
   const handleNavigateNext = () => {
     if (current < questions.length - 1) {
@@ -183,10 +197,7 @@ export default function SharedMock() {
           timeLeft={timeLeft}
           submitting={submitting}
           handleSubmit={handleSubmit}
-          onCancelSession={async () => {
-            await handleCancelSession();
-            navigate("/");
-          }}
+          onCancelSession={() => setShowExitConfirm(true)}
         />
 
         {/* Shortcut Info Bar */}
@@ -270,6 +281,20 @@ export default function SharedMock() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Exit Confirmation Dialog */}
+      {showExitConfirm && (
+        <ConfirmDialog
+          open={showExitConfirm}
+          onOpenChange={setShowExitConfirm}
+          title="Exit Test Session?"
+          description="Are you sure you want to exit this mock test session? Your active test progress will be lost."
+          confirmLabel="Exit Test"
+          cancelLabel="Continue Test"
+          destructive={true}
+          onConfirm={confirmExit}
+        />
       )}
     </div>
   );

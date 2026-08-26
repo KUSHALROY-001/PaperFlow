@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Menu, ClipboardList, Bell } from "lucide-react";
+import { Menu, ClipboardList, Bell, Search } from "lucide-react";
 import ThemeToggle from "../ThemeToggle";
 import WorkspaceSwitcher from "../WorkspaceSwitcher";
 import GlobalHeaderSearch from "./GlobalHeaderSearch";
@@ -17,12 +17,22 @@ export default function TopBar({
         type="button"
         aria-label="Open navigation"
         onClick={onOpenMobileNav}
-        className="h-9 w-9 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:text-foreground lg:hidden shrink-0"
+        className="h-9 w-9 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground lg:hidden shrink-0"
       >
         <Menu className="w-5 h-5" />
       </button>
 
-      <GlobalHeaderSearch />
+      <div className="hidden lg:block flex-1">
+        <GlobalHeaderSearch />
+      </div>
+
+      <button
+        type="button"
+        aria-label="Search"
+        className="h-9 w-9 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground lg:hidden shrink-0"
+      >
+        <Search className="w-5 h-5" />
+      </button>
 
       <div className="flex items-center gap-2 sm:gap-3 ml-auto">
         <SubscribedPublishersMenu />
