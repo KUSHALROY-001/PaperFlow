@@ -13,7 +13,7 @@ export default function PageNotFound() {
         </p>
         <Link
           to="/"
-          className="mt-8 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+          className="mt-8 rounded-md bg-primary px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
         >
           Back to home
         </Link>

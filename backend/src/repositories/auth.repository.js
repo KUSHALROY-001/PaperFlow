@@ -14,6 +14,35 @@ export async function findActiveUserByEmail(email) {
   return result.rows[0] || null;
 }
 
+// Google's stable per-account identifier (the ID token's "sub" claim) -
+// never the email, which can change on Google's side independently of
+// this app ever knowing. See migration 038_google_sign_in.sql.
+export async function findActiveUserByGoogleId(googleId) {
+  const result = await pool.query(
+    `
+    SELECT id, name, email, password_hash
+    FROM users
+    WHERE google_id = $1
+      AND is_active = TRUE
+    `,
+    [googleId],
+  );
+
+  return result.rows[0] || null;
+}
+
+// Links a Google account onto an EXISTING user - reached when someone
+// with a password-based account signs in with Google using the same
+// (Google-verified) email address, rather than ending up with two
+// separate, disconnected accounts for the same person. Does not touch
+// password_hash - a linked account can still log in either way afterward.
+export async function linkGoogleIdToUser(userId, googleId) {
+  await pool.query("UPDATE users SET google_id = $2 WHERE id = $1", [
+    userId,
+    googleId,
+  ]);
+}
+
 export async function findFirstWorkspaceIdForUser(userId) {
   const result = await pool.query(
     `
@@ -92,12 +121,21 @@ export async function updateProfile(userId, { name, accountType }) {
   return result.rows[0] || null;
 }
 
+// Returns null when there's no such user at all, or { password_hash }
+// (password_hash itself possibly null, for a Google-only account with no
+// password ever set - see migration 038_google_sign_in.sql) when the user
+// exists. Callers (changePassword/deleteAccount below) need to tell these
+// two cases apart - collapsing both to a single null return here (the
+// previous behavior) meant a Google-only user's very real account looked
+// indistinguishable from a nonexistent one, surfacing as a misleading
+// 404 "Account not found" for someone who was, in fact, logged into a
+// real account.
 export async function findPasswordHashById(userId) {
   const result = await pool.query(
     "SELECT password_hash FROM users WHERE id = $1",
     [userId],
   );
-  return result.rows[0]?.password_hash || null;
+  return result.rows[0] ?? null;
 }
 
 export async function updatePassword(userId, passwordHash) {
@@ -145,6 +183,64 @@ export async function createUserWithWorkspace({ name, email, passwordHash }) {
       RETURNING id, name, email
       `,
       [name, email, passwordHash],
+    );
+    const user = userResult.rows[0];
+
+    const workspaceResult = await client.query(
+      `
+      INSERT INTO workspaces (name, owner_id)
+      VALUES ($1, $2)
+      RETURNING id
+      `,
+      [`${name}'s Workspace`, user.id],
+    );
+    const workspaceId = workspaceResult.rows[0].id;
+
+    await client.query(
+      `
+      INSERT INTO workspace_members (workspace_id, user_id, role)
+      VALUES ($1, $2, 'owner')
+      `,
+      [workspaceId, user.id],
+    );
+
+    await client.query("COMMIT");
+    return { user, workspaceId };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+// Google-account counterpart to createUserWithWorkspace above - same
+// transaction shape (user row, then their own workspace, then owner
+// membership), just with password_hash left NULL and google_id/avatar_url
+// set instead. Kept as a separate function rather than an optional-param
+// branch on the original: the two have different required fields
+// (password vs googleId) and mixing them would make it possible to call
+// createUserWithWorkspace with neither a password nor a googleId by
+// accident, silently violating the users_has_auth_method constraint at
+// the DB layer instead of failing clearly here.
+export async function createUserWithWorkspaceFromGoogle({
+  name,
+  email,
+  googleId,
+  avatarUrl,
+}) {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const userResult = await client.query(
+      `
+      INSERT INTO users (name, email, google_id, avatar_url)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id, name, email
+      `,
+      [name, email, googleId, avatarUrl],
     );
     const user = userResult.rows[0];
 

@@ -144,6 +144,12 @@ export const api = {
       body: JSON.stringify(payload),
     });
   },
+  googleAuth(credential) {
+    return apiRequest("/api/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ credential }),
+    });
+  },
   me() {
     return apiRequest("/api/auth/me");
   },

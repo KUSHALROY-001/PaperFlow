@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Settings, LogOut, ChevronRight } from "lucide-react";
+import { Settings, LogOut, ChevronRight, Headphones } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 
 export default function UserMenu() {
@@ -48,6 +48,14 @@ export default function UserMenu() {
           >
             <LogOut className="w-4 h-4" /> Sign Out
           </button>
+          <div className="h-px bg-border my-1" />
+          <Link
+            to="/contact"
+            onClick={() => setShowUserMenu(false)}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+          >
+            <Headphones className="w-4 h-4 text-orange-500" /> Contact Us
+          </Link>
         </div>
       )}
     </div>

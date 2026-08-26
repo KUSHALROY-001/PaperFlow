@@ -18,6 +18,13 @@ export async function login(req, res) {
   res.json(result);
 }
 
+export async function googleAuth(req, res) {
+  const credential = requiredString(req.body.credential, "credential");
+
+  const result = await authService.googleAuth({ credential });
+  res.json(result);
+}
+
 export async function me(req, res) {
   const workspaces = await authService.listWorkspacesForUser(req.user.id);
   res.json({ user: req.user, workspaceId: req.workspaceId, workspaces });

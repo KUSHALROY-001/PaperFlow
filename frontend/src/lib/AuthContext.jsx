@@ -94,6 +94,24 @@ export function AuthProvider({ children }) {
     [checkUserAuth],
   );
 
+  // Shared by both the signup and login Google buttons on AuthPage.jsx -
+  // the backend's own googleAuth (auth.service.js) already collapses
+  // "sign up" vs "log in" into one outcome (an account for this Google
+  // identity either exists or gets created), so there's no separate
+  // loginWithGoogle/signupWithGoogle split needed here either.
+  const loginWithGoogle = useCallback(
+    async (credential) => {
+      const result = await api.googleAuth(credential);
+      storeAuth(result);
+      setUser(result.user);
+      setWorkspaceId(result.workspaceId);
+      setIsAuthenticated(true);
+      await checkUserAuth();
+      return result;
+    },
+    [checkUserAuth],
+  );
+
   // Switching workspace changes which data every page-scoped query returns
   // (clusters, mock tests, dashboard summary, team - all of it). Rather than
   // hand-picking every react-query key to invalidate, a full reload is the
@@ -129,6 +147,7 @@ export function AuthProvider({ children }) {
       isLoadingAuth: !authChecked,
       isLoadingPublicSettings: false,
       login,
+      loginWithGoogle,
       logout,
       navigateToLogin,
       signup,
@@ -146,6 +165,7 @@ export function AuthProvider({ children }) {
       checkUserAuth,
       isAuthenticated,
       login,
+      loginWithGoogle,
       logout,
       navigateToLogin,
       signup,

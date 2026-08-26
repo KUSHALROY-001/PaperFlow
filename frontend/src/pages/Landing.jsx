@@ -12,6 +12,7 @@ import {
   Sparkles,
   Users,
   GraduationCap,
+  Headphones,
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -149,6 +150,12 @@ export default function Landing() {
             >
               Use Cases
             </a>
+            <Link
+              to="/catalog"
+              className="text-sm font-semibold px-3.5 py-1.5 border border-border rounded-md text-foreground hover:text-orange-500 hover:border-orange-500/30 transition-all"
+            >
+              Public Catalog
+            </Link>
             {isAuthenticated && (
               <Link
                 to="/dashboard"
@@ -427,14 +434,109 @@ export default function Landing() {
       )}
 
       {/* Footer */}
-      <footer className="py-8 px-6 border-t border-border bg-card">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <Link to="/">
-            <PaperFlowLogo />
-          </Link>
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            Turn scanned PDFs into structured mock tests.
-          </p>
+      <footer className="pt-16 pb-12 px-6 border-t border-border bg-card">
+        <div className="max-w-7xl mx-auto space-y-10">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+            {/* Brand column (5 cols) */}
+            <div className="md:col-span-5 space-y-4">
+              <Link to="/">
+                <PaperFlowLogo />
+              </Link>
+              <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
+                Transform scanned papers and PDFs into searchable, reviewable, AI-powered mock tests with full LaTeX and diagram support.
+              </p>
+              <div className="flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>All cloud systems operational</span>
+              </div>
+            </div>
+
+            {/* Navigation links (7 cols) */}
+            <div className="md:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-6">
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                  Product
+                </h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li>
+                    <a href="#how-it-works" className="hover:text-foreground transition-colors">
+                      How It Works
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#features" className="hover:text-foreground transition-colors">
+                      Features
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#use-cases" className="hover:text-foreground transition-colors">
+                      Use Cases
+                    </a>
+                  </li>
+                  <li>
+                    <Link to="/catalog" className="hover:text-foreground transition-colors">
+                      Public Catalog
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                  Platform
+                </h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li>
+                    <Link to="/login" className="hover:text-foreground transition-colors">
+                      Sign In
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/signup" className="hover:text-foreground transition-colors">
+                      Create Workspace
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/templates" className="hover:text-foreground transition-colors">
+                      Extraction Templates
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                  Support
+                </h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li>
+                    <Link
+                      to="/contact"
+                      className="flex items-center gap-1.5 font-semibold text-[#ea580c] hover:text-[#c2410c] transition-colors"
+                    >
+                      <Headphones className="w-4 h-4" />
+                      Contact Us
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/contact" className="hover:text-foreground transition-colors">
+                      Help &amp; FAQs
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/contact" className="hover:text-foreground transition-colors">
+                      Report an Issue
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-8 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
+            <p>&copy; {new Date().getFullYear()} PaperFlow. All rights reserved.</p>
+            <p>Empowering educators and students worldwide.</p>
+          </div>
         </div>
       </footer>
     </div>

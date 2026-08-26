@@ -38,6 +38,7 @@ import MyResults from "./pages/MyResults";
 import AuthPage from "./pages/AuthPage";
 import MyInvitations from "./pages/MyInvitations";
 import AcceptInvite from "./pages/AcceptInvite";
+import ContactUs from "./pages/ContactUs";
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated } =
@@ -128,6 +129,8 @@ const AuthenticatedApp = () => {
         <Route path="/question-bank" element={<QuestionBank />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/my-results" element={<MyResults />} />
+        <Route path="/contact" element={<ContactUs />} />
+        <Route path="/contact-us" element={<ContactUs />} />
       </Route>
 
       <Route path="*" element={<PageNotFound />} />

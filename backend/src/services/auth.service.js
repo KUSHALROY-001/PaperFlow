@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { httpError } from "../lib/http-error.js";
 import { signAccessToken } from "../lib/jwt.js";
+import { verifyGoogleIdToken } from "../lib/google-oauth.js";
 import { requiredEnum, requiredString } from "../lib/validators.js";
 import * as authRepo from "../repositories/auth.repository.js";
 
@@ -91,12 +92,26 @@ export async function changePassword(userId, body) {
     throw httpError(400, "New password must be at least 8 characters");
   }
 
-  const passwordHash = await authRepo.findPasswordHashById(userId);
-  if (!passwordHash) {
+  const row = await authRepo.findPasswordHashById(userId);
+  if (!row) {
     throw httpError(404, "Account not found");
   }
+  if (!row.password_hash) {
+    // A Google-only account (migration 038_google_sign_in.sql) has never
+    // had a password to begin with - "change" doesn't apply here, and
+    // treating this the same as "account not found" (the old collapsed
+    // null-or-null-hash behavior) would be actively misleading to someone
+    // who's genuinely logged into a real account.
+    throw httpError(
+      400,
+      "This account signed up with Google and has no password to change.",
+    );
+  }
 
-  const currentMatches = await bcrypt.compare(currentPassword, passwordHash);
+  const currentMatches = await bcrypt.compare(
+    currentPassword,
+    row.password_hash,
+  );
   if (!currentMatches) {
     throw httpError(401, "Current password is incorrect");
   }
@@ -111,17 +126,24 @@ export async function changePassword(userId, body) {
 // auth.repository.js#findOwnedWorkspacesWithOtherMembers for why that's
 // possible at all.
 export async function deleteAccount(userId, body) {
-  const password = requiredString(body.password, "password");
-
-  const passwordHash = await authRepo.findPasswordHashById(userId);
-  if (!passwordHash) {
+  const row = await authRepo.findPasswordHashById(userId);
+  if (!row) {
     throw httpError(404, "Account not found");
   }
 
-  const passwordMatches = await bcrypt.compare(password, passwordHash);
-  if (!passwordMatches) {
-    throw httpError(401, "Incorrect password");
+  if (row.password_hash) {
+    const password = requiredString(body.password, "password");
+    const passwordMatches = await bcrypt.compare(password, row.password_hash);
+    if (!passwordMatches) {
+      throw httpError(401, "Incorrect password");
+    }
   }
+  // else: a Google-only account (migration 038_google_sign_in.sql) has no
+  // password to confirm with - the valid, already-checked JWT that got
+  // this request past requireAuth in the first place IS the
+  // authentication for this action. Requiring a `password` field that
+  // structurally cannot exist for this account would just be a hard
+  // block, not a real extra security step.
 
   const blockedWorkspaces =
     await authRepo.findOwnedWorkspacesWithOtherMembers(userId);
@@ -143,6 +165,17 @@ export async function login({ email, password }) {
     throw httpError(401, "Invalid email or password");
   }
 
+  if (!user.password_hash) {
+    // A Google-only account trying the password form - "Invalid email or
+    // password" here would be technically true but actively unhelpful;
+    // telling them how they actually signed up gets them unstuck instead
+    // of leaving them guessing at a password that was never set.
+    throw httpError(
+      401,
+      "This account uses Google Sign-In - use the Google button instead",
+    );
+  }
+
   const passwordMatches = await bcrypt.compare(password, user.password_hash);
 
   if (!passwordMatches) {
@@ -150,6 +183,58 @@ export async function login({ email, password }) {
   }
 
   const workspaceId = await authRepo.findFirstWorkspaceIdForUser(user.id);
+
+  if (!workspaceId) {
+    throw httpError(500, "User has no workspace");
+  }
+
+  await authRepo.touchLastLogin(user.id);
+
+  return buildAuthResponse(user, workspaceId);
+}
+
+// Shared by both the signup and login Google buttons on AuthPage.jsx -
+// there's no meaningful difference between "sign up" and "log in" once
+// you're verifying a Google identity: either an account for this Google
+// user already exists (log them in) or it doesn't (create one), and the
+// button the person happened to click doesn't change that outcome.
+export async function googleAuth({ credential }) {
+  const payload = await verifyGoogleIdToken(credential);
+
+  if (!payload.email_verified) {
+    // Google itself flags unverified emails - trusting one here would
+    // mean anyone could claim an email address they don't actually
+    // control just by creating a Google account with it.
+    throw httpError(401, "Google account email is not verified");
+  }
+
+  const email = payload.email.toLowerCase();
+  let user = await authRepo.findActiveUserByGoogleId(payload.sub);
+  let workspaceId;
+
+  if (user) {
+    workspaceId = await authRepo.findFirstWorkspaceIdForUser(user.id);
+  } else {
+    const existing = await authRepo.findActiveUserByEmail(email);
+    if (existing) {
+      // Same (Google-verified) email already has a password-based
+      // account - link Google onto it as an additional sign-in method
+      // instead of creating a second, disconnected account that happens
+      // to share an email address with the first.
+      await authRepo.linkGoogleIdToUser(existing.id, payload.sub);
+      user = existing;
+      workspaceId = await authRepo.findFirstWorkspaceIdForUser(user.id);
+    } else {
+      const created = await authRepo.createUserWithWorkspaceFromGoogle({
+        name: payload.name || email.split("@")[0],
+        email,
+        googleId: payload.sub,
+        avatarUrl: payload.picture || null,
+      });
+      user = created.user;
+      workspaceId = created.workspaceId;
+    }
+  }
 
   if (!workspaceId) {
     throw httpError(500, "User has no workspace");

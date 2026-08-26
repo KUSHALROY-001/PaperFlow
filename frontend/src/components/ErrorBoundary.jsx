@@ -40,14 +40,14 @@ export default class ErrorBoundary extends Component {
             Something went wrong
           </h1>
           <p className="max-w-sm text-sm text-muted-foreground">
-            This page ran into an unexpected error. Reloading usually fixes
-            it - if it keeps happening, please let us know.
+            This page ran into an unexpected error. Reloading usually fixes it -
+            if it keeps happening, please let us know.
           </p>
         </div>
         <button
           type="button"
           onClick={() => window.location.reload()}
-          className="rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
+          className="rounded-md bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
         >
           Reload page
         </button>

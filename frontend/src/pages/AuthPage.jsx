@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import ThemeToggle from "../components/ThemeToggle";
+import GoogleSignInButton from "../components/GoogleSignInButton";
 import { useAuth } from "@/lib/AuthContext";
 import { api } from "@/lib/api";
 import { PENDING_INVITE_TOKEN_KEY } from "./AcceptInvite";
@@ -30,7 +31,7 @@ function PaperFlowLogo() {
 
 export default function AuthPage({ mode, title, description }) {
   const navigate = useNavigate();
-  const { login, signup } = useAuth();
+  const { login, signup, loginWithGoogle } = useAuth();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -46,6 +47,47 @@ export default function AuthPage({ mode, title, description }) {
       ? "Need an account? Sign Up"
       : "Already have an account? Login";
   const altHref = mode === "login" ? "/signup" : "/login";
+
+  // Shared by the password form (handleSubmit) and the Google button
+  // (handleGoogleCredential) - identical redirect logic either way once
+  // someone is actually authenticated, since neither the pending-invite
+  // nor pending-claim checks below care HOW they signed in. Wrapped in
+  // useCallback with no dependency on `form` (Google auth never touches
+  // it) so GoogleSignInButton's effect - which intentionally only reruns
+  // when `mode` changes, not on every render - always calls a function
+  // that's actually current instead of a stale closure from first mount.
+  const redirectAfterAuth = useCallback(async () => {
+    // If AcceptInvite.jsx sent them here to log in/sign up first (see its
+    // stash-and-redirect logic), send them back to finish accepting
+    // instead of dropping them on the dashboard and losing the invite.
+    const pendingInviteToken = sessionStorage.getItem(PENDING_INVITE_TOKEN_KEY);
+    if (pendingInviteToken) {
+      navigate(`/accept-invite?token=${pendingInviteToken}`, {
+        replace: true,
+      });
+      return;
+    }
+
+    // Same idea for a guest who just took a shared mock test and chose
+    // "log in to save this result" from the results screen (see
+    // useExamSession's PENDING_CLAIM_KEY) - claim it now that they're
+    // authenticated, then send them straight to My Results.
+    const pendingClaimRaw = sessionStorage.getItem(PENDING_CLAIM_KEY);
+    if (pendingClaimRaw) {
+      sessionStorage.removeItem(PENDING_CLAIM_KEY);
+      try {
+        const { attemptId, shareToken } = JSON.parse(pendingClaimRaw);
+        await api.claimSharedAttempt(shareToken, attemptId);
+      } catch {
+        // Link may have expired between submitting and logging in - not
+        // worth blocking the login itself over, just skip the redirect.
+      }
+      navigate("/my-results", { replace: true });
+      return;
+    }
+
+    navigate("/dashboard", { replace: true });
+  }, [navigate]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -65,44 +107,26 @@ export default function AuthPage({ mode, title, description }) {
           password: form.password,
         });
       }
-      // If AcceptInvite.jsx sent them here to log in/sign up first (see its
-      // stash-and-redirect logic), send them back to finish accepting
-      // instead of dropping them on the dashboard and losing the invite.
-      const pendingInviteToken = sessionStorage.getItem(
-        PENDING_INVITE_TOKEN_KEY,
-      );
-      if (pendingInviteToken) {
-        navigate(`/accept-invite?token=${pendingInviteToken}`, {
-          replace: true,
-        });
-        return;
-      }
-
-      // Same idea for a guest who just took a shared mock test and chose
-      // "log in to save this result" from the results screen (see
-      // useExamSession's PENDING_CLAIM_KEY) - claim it now that they're
-      // authenticated, then send them straight to My Results.
-      const pendingClaimRaw = sessionStorage.getItem(PENDING_CLAIM_KEY);
-      if (pendingClaimRaw) {
-        sessionStorage.removeItem(PENDING_CLAIM_KEY);
-        try {
-          const { attemptId, shareToken } = JSON.parse(pendingClaimRaw);
-          await api.claimSharedAttempt(shareToken, attemptId);
-        } catch {
-          // Link may have expired between submitting and logging in - not
-          // worth blocking the login itself over, just skip the redirect.
-        }
-        navigate("/my-results", { replace: true });
-        return;
-      }
-
-      navigate("/dashboard", { replace: true });
+      await redirectAfterAuth();
     } catch (err) {
       setError(err.message || "Authentication failed");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const handleGoogleCredential = useCallback(
+    async (credential) => {
+      setError("");
+      try {
+        await loginWithGoogle(credential);
+        await redirectAfterAuth();
+      } catch (err) {
+        setError(err.message || "Google Sign-In failed");
+      }
+    },
+    [loginWithGoogle, redirectAfterAuth],
+  );
 
   return (
     <div className="min-h-screen bg-background px-4 sm:px-6 py-6 sm:py-8 font-sans">
@@ -224,6 +248,19 @@ export default function AuthPage({ mode, title, description }) {
               <ArrowRight className="h-4 w-4" />
             </button>
           </form>
+
+          <div className="my-6 flex items-center gap-3">
+            <div className="h-px flex-1 bg-border" />
+            <span className="text-xs font-medium text-muted-foreground">
+              or
+            </span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+
+          <GoogleSignInButton
+            mode={mode}
+            onCredential={handleGoogleCredential}
+          />
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 text-sm">
             <Link
