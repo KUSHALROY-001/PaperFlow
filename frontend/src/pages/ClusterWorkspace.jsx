@@ -161,7 +161,7 @@ export default function ClusterWorkspace() {
               <button
                 disabled={isViewer}
                 onClick={() => !isViewer && startEdit()}
-                className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
+                className={`w-9 h-9 rounded-md border flex items-center justify-center transition-all ${
                   isViewer
                     ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-50"
                     : "border-border text-muted-foreground hover:text-foreground hover:border-blue-500 hover:bg-blue-500/15"
@@ -175,7 +175,7 @@ export default function ClusterWorkspace() {
               <button
                 disabled={isViewer}
                 onClick={() => !isViewer && setShowDeleteConfirm(true)}
-                className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
+                className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all ${
                   isViewer
                     ? "border-red-500/10 text-red-500/30 cursor-not-allowed opacity-50"
                     : "border-red-500/20 hover:bg-red-500/15 text-muted-foreground hover:text-red-500 hover:border-red-500"
@@ -267,7 +267,7 @@ export default function ClusterWorkspace() {
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 aria-label="Sort mock tests"
-                className="w-full sm:w-auto appearance-none pl-8 pr-7 py-2 text-xs sm:text-sm font-semibold rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all cursor-pointer shadow-xs"
+                className="w-full sm:w-auto appearance-none pl-8 pr-7 py-2 text-xs sm:text-sm font-semibold rounded-md border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all cursor-pointer shadow-xs"
               >
                 {SORT_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -284,7 +284,7 @@ export default function ClusterWorkspace() {
             title={
               isViewer ? "Editor role is required to add mock tests" : undefined
             }
-            className={`flex items-center justify-center gap-2 px-4 py-2 font-semibold rounded-xl text-xs sm:text-sm shadow-xs transition-all ${
+            className={`flex items-center justify-center gap-2 px-4 py-2 font-semibold rounded-md text-xs sm:text-sm shadow-xs transition-all ${
               mocktests.length > 1
                 ? "flex-1 sm:flex-initial"
                 : "w-full sm:w-auto"

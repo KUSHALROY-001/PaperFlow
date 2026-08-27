@@ -4,7 +4,9 @@ import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  HeadObjectCommand,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { httpError } from "./http-error.js";
 
 // B2 speaks the S3 API, so the plain AWS SDK works against it unmodified
@@ -58,6 +60,18 @@ function getClient() {
       // Essential for Backblaze B2 and custom S3 endpoints with uppercase bucket names:
       // prevents virtual-hosted subdomains (e.g. PaperFlow-PDF.s3...) which cause DNS/SSL failures
       forcePathStyle: true,
+      // Recent SDK versions default to auto-attaching a request checksum
+      // (x-amz-checksum-crc32) to every PutObjectCommand. That's fine for
+      // uploadPdf() below, which sends real bytes the SDK can hash - but
+      // fatal for getPresignedUploadUrl(): presigning has no body to hash,
+      // so the SDK bakes in the checksum of an EMPTY payload
+      // ("AAAAAA==") as part of the signed URL, and the browser's later
+      // PUT of the real file then mismatches it. "WHEN_REQUIRED" restores
+      // the pre-default-checksum behavior (only attach one when the
+      // command explicitly asks via ChecksumAlgorithm, which we don't),
+      // fixing presigned uploads without touching uploadPdf()'s own
+      // direct, already-correct checksum behavior.
+      requestChecksumCalculation: "WHEN_REQUIRED",
     });
   }
   return client;
@@ -126,6 +140,62 @@ export async function uploadPdf(buffer, storageKey, mimeType) {
     }
     const friendlyMessage = formatB2Error(error, "upload");
     console.error(`Failed to upload PDF to B2 (${storageKey}):`, error);
+    throw httpError(502, friendlyMessage, { originalError: error.message });
+  }
+}
+
+// Lets the browser PUT the PDF bytes straight to B2 - the request never
+// touches this Node process at all, so the upload's speed is capped only
+// by the user's link to B2 and B2's own ingest, not by this server's own
+// (often much smaller) outbound bandwidth or its distance from B2. See
+// mock-tests.service.js#createUploadUrl / #completeUpload for the two
+// endpoints that use this instead of the old buffer-through-Node path in
+// #uploadDocument.
+export async function getPresignedUploadUrl(
+  storageKey,
+  mimeType,
+  expiresInSeconds = 300,
+) {
+  validatePdfStorageConfig();
+  try {
+    return await getSignedUrl(
+      getClient(),
+      new PutObjectCommand({
+        Bucket: getBucket(),
+        Key: storageKey,
+        ContentType: mimeType || "application/pdf",
+      }),
+      { expiresIn: expiresInSeconds },
+    );
+  } catch (error) {
+    const friendlyMessage = formatB2Error(error, "presign");
+    console.error(`Failed to presign PDF upload URL (${storageKey}):`, error);
+    throw httpError(502, friendlyMessage, { originalError: error.message });
+  }
+}
+
+// Called once the browser reports the direct PUT finished, so a client
+// that lies about (or never actually completes) the upload can't get a
+// DB row / processing job created for an object that isn't really in B2.
+// Also the source of truth for the real ContentLength/ContentType, rather
+// than trusting whatever the browser claims in the completion request.
+export async function headPdf(storageKey) {
+  validatePdfStorageConfig();
+  try {
+    const result = await getClient().send(
+      new HeadObjectCommand({ Bucket: getBucket(), Key: storageKey }),
+    );
+    return {
+      exists: true,
+      sizeBytes: result.ContentLength,
+      mimeType: result.ContentType,
+    };
+  } catch (error) {
+    if (error.name === "NotFound" || error.$metadata?.httpStatusCode === 404) {
+      return { exists: false };
+    }
+    const friendlyMessage = formatB2Error(error, "verify");
+    console.error(`Failed to verify PDF upload (${storageKey}):`, error);
     throw httpError(502, friendlyMessage, { originalError: error.message });
   }
 }

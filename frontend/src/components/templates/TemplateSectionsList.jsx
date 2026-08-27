@@ -31,7 +31,7 @@ export default function TemplateSectionsList({
       </p>
 
       {sections.length === 0 ? (
-        <p className="text-xs text-muted-foreground italic border border-dashed border-border rounded-xl px-3 py-4 text-center">
+        <p className="text-xs text-muted-foreground italic border border-dashed border-border rounded-md px-3 py-4 text-center">
           No sections yet — extraction will still work, just without per-topic
           syllabus guidance.
         </p>

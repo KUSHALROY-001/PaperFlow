@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Upload, Sparkles } from "lucide-react";
+import { Upload, Sparkles, Loader2 } from "lucide-react";
 
 // Shown on the Overview tab when a mock test exists but no PDF has ever
 // been uploaded to it - the gap left by the "Apply Template" flow, which
@@ -157,8 +157,17 @@ export default function UploadPdfPanel({ mocktest, isViewer, onUpload }) {
               : "bg-[#ea580c] hover:bg-[#c2410c] text-white"
           }`}
         >
-          <Upload className="w-4 h-4" />
-          {isSubmitting ? "Uploading..." : "Upload & Start Extraction"}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+              <span>Uploading...</span>
+            </>
+          ) : (
+            <>
+              <Upload className="w-4 h-4" />
+              <span>Upload & Start Extraction</span>
+            </>
+          )}
         </button>
       </form>
     </div>

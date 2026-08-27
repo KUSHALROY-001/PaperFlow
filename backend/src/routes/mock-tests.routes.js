@@ -84,6 +84,22 @@ mockTestsRouter.post(
   upload.single("document"),
   asyncHandler(mockTestsController.upload),
 );
+// Direct-to-B2 upload path (see mock-tests.service.js#createUploadUrl /
+// #completeUpload) - both plain JSON, deliberately no `upload.single()`
+// here since the PDF bytes never pass through this server at all on this
+// path, only the presigned URL request and the small completion receipt.
+mockTestsRouter.post(
+  "/:mockTestId/upload-url",
+  requireRole("editor"),
+  loadMockTest,
+  asyncHandler(mockTestsController.createUploadUrl),
+);
+mockTestsRouter.post(
+  "/:mockTestId/upload-complete",
+  requireRole("editor"),
+  loadMockTest,
+  asyncHandler(mockTestsController.completeUpload),
+);
 mockTestsRouter.post(
   "/:mockTestId/generate-from-existing",
   requireRole("editor"),

@@ -128,7 +128,7 @@ export default function TemplatePreviewModal({
         <div className="flex gap-3 pt-4 border-t border-border mt-4 shrink-0">
           <button
             onClick={onClose}
-            className="flex-1 py-2.5 border border-border bg-card text-foreground font-semibold rounded-xl hover:bg-muted text-xs sm:text-sm transition-all"
+            className="flex-1 py-2.5 border border-border bg-card text-foreground font-semibold rounded-md hover:bg-muted text-xs sm:text-sm transition-all"
           >
             Close
           </button>

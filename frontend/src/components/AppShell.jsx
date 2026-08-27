@@ -86,7 +86,9 @@ export default function AppShell() {
       )}
 
       {/* Main content */}
-      <div className={`min-h-screen flex flex-col ${isEditorRoute ? "" : "lg:ml-55"}`}>
+      <div
+        className={`min-h-screen flex flex-col ${isEditorRoute ? "" : "lg:ml-55"}`}
+      >
         {!isEditorRoute && (
           <TopBar
             location={location}
@@ -97,7 +99,9 @@ export default function AppShell() {
 
         {!isEditorRoute && <GuestWorkspaceBanner />}
 
-        <main className={`flex-1 min-w-0 ${isEditorRoute ? "p-0" : "p-2 sm:p-6"}`}>
+        <main
+          className={`flex-1 min-w-0 ${isEditorRoute ? "p-0" : "p-2 sm:p-6"}`}
+        >
           <Outlet />
         </main>
       </div>

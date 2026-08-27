@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
-import { AlertTriangle, ImageOff, RotateCcw, ExternalLink, Loader2 } from "lucide-react";
+import {
+  AlertTriangle,
+  ImageOff,
+  RotateCcw,
+  ExternalLink,
+  Loader2,
+} from "lucide-react";
 import { resolveAssetUrl } from "@/lib/api";
 import CodeText from "./CodeText";
 
@@ -19,9 +25,10 @@ export function QuestionDiagram({ diagramUrl, className = "" }) {
 
   const rawUrl = resolveAssetUrl(diagramUrl);
   // Cache buster for manual retries
-  const imageUrl = retryCount > 0
-    ? `${rawUrl}${rawUrl.includes("?") ? "&" : "?"}_r=${retryCount}`
-    : rawUrl;
+  const imageUrl =
+    retryCount > 0
+      ? `${rawUrl}${rawUrl.includes("?") ? "&" : "?"}_r=${retryCount}`
+      : rawUrl;
 
   const handleRetry = () => {
     setStatus("loading");
@@ -46,7 +53,9 @@ export function QuestionDiagram({ diagramUrl, className = "" }) {
             <span>Diagram image could not be loaded</span>
           </div>
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            The cloud image could not be retrieved from Cloudinary storage. The link might be expired, cloud storage unconfigured, or blocked by network restrictions.
+            The cloud image could not be retrieved from Cloudinary storage. The
+            link might be expired, cloud storage unconfigured, or blocked by
+            network restrictions.
           </p>
           <div className="flex items-center gap-2 pt-1 flex-wrap">
             <button
@@ -75,8 +84,21 @@ export function QuestionDiagram({ diagramUrl, className = "" }) {
         alt="Question diagram"
         onLoad={() => setStatus("loaded")}
         onError={() => setStatus("error")}
+        // Deliberately never `display:none` (Tailwind `hidden`) while
+        // loading - native `loading="lazy"` decides whether to even
+        // START fetching an image based on its layout box via
+        // IntersectionObserver, and `display:none` elements have no box
+        // at all. That combination silently never fetches the image (no
+        // request, no error, stuck on the loading placeholder forever)
+        // rather than failing loudly - see the bug report this fixes.
+        // `opacity-0` + `absolute` keeps a real, measurable box (so lazy
+        // loading can still trigger) while staying invisible and out of
+        // flow so it doesn't add extra space next to the loading
+        // placeholder above.
         className={`max-w-full rounded-xl border border-border transition-opacity duration-300 ${
-          status === "loaded" ? "block opacity-100" : "hidden opacity-0"
+          status === "loaded"
+            ? "relative opacity-100"
+            : "absolute inset-0 opacity-0 pointer-events-none"
         }`}
         loading="lazy"
       />
@@ -155,5 +177,3 @@ export default function QuestionContent({
     </div>
   );
 }
-
-

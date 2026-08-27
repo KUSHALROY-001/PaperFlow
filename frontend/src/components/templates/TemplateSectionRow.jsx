@@ -8,7 +8,7 @@ export default function TemplateSectionRow({
   isViewer,
 }) {
   return (
-    <div className="rounded-xl border border-border bg-muted/40 p-3 space-y-2.5">
+    <div className="rounded-md border border-border bg-muted/40 p-3 space-y-2.5">
       <div className="flex items-center gap-2">
         <input
           disabled={isViewer}
@@ -21,7 +21,7 @@ export default function TemplateSectionRow({
           type="button"
           disabled={isViewer}
           onClick={() => onRemove(section.key)}
-          className="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-all"
+          className="w-8 h-8 shrink-0 rounded-md flex items-center justify-center text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-all"
         >
           <Trash2 className="w-3.5 h-3.5" />
         </button>

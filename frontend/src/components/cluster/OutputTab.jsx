@@ -119,7 +119,7 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
   };
 
   return (
-    <div className="space-y-6 font-inter">
+    <div className="space-y-6 font-inter w-full min-w-0">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="inline-flex max-w-full rounded-3xl bg-muted/60 p-1.5 border border-border">
           {viewTabs.map((view) => {
@@ -177,12 +177,12 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
       </div>
 
       {activeView === "Visual" && (
-        <div className="grid gap-4">
+        <div className="grid gap-4 w-full min-w-0">
           {questions.map((question) => (
             <div
               key={question.id}
               id={`question-${question.questionNo}`}
-              className="rounded-3xl p-2.5 sm:p-5 surface-card border border-border transition-all"
+              className="rounded-3xl p-3 sm:p-5 surface-card border border-border transition-all w-full min-w-0 overflow-hidden"
             >
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 flex-wrap min-w-0">
@@ -212,16 +212,16 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
                 passage={question.passage}
                 diagramUrl={question.diagramUrl}
                 placement={question.placement}
-                textClassName="text-base sm:text-lg text-foreground"
+                textClassName="text-base sm:text-lg text-foreground break-words"
               />
 
-              <div className="mt-5 grid gap-3 md:grid-cols-2">
+              <div className="mt-5 grid gap-3 md:grid-cols-2 w-full min-w-0">
                 {question.options.map((option) => {
                   const correct = option === question.answer;
                   return (
                     <div
                       key={option}
-                      className={`rounded-md border px-4 py-3 text-sm whitespace-pre-wrap ${
+                      className={`rounded-md border px-4 py-3 text-sm whitespace-pre-wrap break-words min-w-0 overflow-x-auto scrollbar-hidden ${
                         correct
                           ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
                           : "border-border bg-card text-muted-foreground"

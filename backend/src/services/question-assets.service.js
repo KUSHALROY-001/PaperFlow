@@ -4,6 +4,7 @@ import {
   buildDiagramPublicId,
   fetchDiagramBuffer,
   uploadDiagramBuffer,
+  isValidDiagramPublicId,
 } from "../lib/cloudinary-storage.js";
 
 function buildDiagramUrl(questionId, workspaceId, { shareToken } = {}) {
@@ -46,6 +47,17 @@ export async function attachDiagramUrls(
     const id = question[idField];
     const asset = id ? assetsByQuestionId.get(id) : null;
     if (!asset) {
+      return question;
+    }
+    // Stale pre-Cloudinary rows (see cloudinary-storage.js#isValidDiagramPublicId)
+    // get treated the same as "no diagram" here rather than handed to
+    // the frontend as a diagramUrl that's guaranteed to 400 - same
+    // silent-failure shape a genuinely missing asset already gets, not a
+    // new kind of broken state to handle.
+    if (!isValidDiagramPublicId(asset.storagePath)) {
+      console.warn(
+        `Skipping diagramUrl for question ${id}: question_assets.storage_path is not a valid Cloudinary public_id (${asset.storagePath}). This question likely needs its diagram re-extracted or re-uploaded.`,
+      );
       return question;
     }
     return {

@@ -198,14 +198,43 @@ export const api = {
   // instead of trying to extract questions that don't exist). Passed as a
   // plain form field alongside the file so multer's upload.single('document')
   // still parses the file normally; multer puts non-file fields into req.body.
-  uploadMockTestDocument(mockTestId, file, documentType = "questions") {
-    const formData = new FormData();
-    formData.append("document", file);
-    formData.append("documentType", documentType);
+  // Direct-to-B2 upload: ask the backend for a presigned PUT URL, send
+  // the file bytes straight to B2 from the browser (bypassing our own
+  // server entirely, so upload speed isn't capped by its bandwidth),
+  // then tell the backend the upload finished so it can verify + create
+  // the processing job. Three requests instead of one, but only the
+  // first and third are small JSON - the actual PDF only travels once,
+  // browser -> B2, instead of browser -> backend -> B2.
+  async uploadMockTestDocument(mockTestId, file, documentType = "questions") {
+    const { uploadUrl, storageKey } = await apiRequest(
+      `/api/mock-tests/${mockTestId}/upload-url`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          originalFilename: file.name,
+          mimeType: file.type || "application/pdf",
+        }),
+      },
+    );
 
-    return apiRequest(`/api/mock-tests/${mockTestId}/upload`, {
+    const putResponse = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": file.type || "application/pdf" },
+      body: file,
+    });
+    if (!putResponse.ok) {
+      throw new Error(
+        `Upload to storage failed (${putResponse.status}). Please try again.`,
+      );
+    }
+
+    return apiRequest(`/api/mock-tests/${mockTestId}/upload-complete`, {
       method: "POST",
-      body: formData,
+      body: JSON.stringify({
+        storageKey,
+        originalFilename: file.name,
+        documentType,
+      }),
     });
   },
   // "Generate from existing tests" - no file, plain JSON. The AI is only

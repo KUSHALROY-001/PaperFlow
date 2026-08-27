@@ -37,7 +37,10 @@ export function checkCloudinaryConfig() {
 
   return {
     configured: missing.length === 0,
-    missing: missing.length > 0 ? ["CLOUDINARY_URL or (" + missing.join(", ") + ")"] : [],
+    missing:
+      missing.length > 0
+        ? ["CLOUDINARY_URL or (" + missing.join(", ") + ")"]
+        : [],
   };
 }
 
@@ -86,15 +89,41 @@ export function buildDiagramPublicId(workspaceId, mockTestId, questionId) {
   return `paperflow/${workspaceId}/${mockTestId}/diagrams/${questionId}`;
 }
 
+// Guards against stale question_assets.storage_path values from before
+// this app stored diagrams in Cloudinary at all (an older version wrote
+// local filesystem paths like "D:\...\backend\uploads\...\diagrams\x.png"
+// straight into this column). Passing one of those into cloudinary.url()
+// doesn't error - it just builds a nonsense URL that 400s in the
+// browser, silently, per diagram, with no indication of why. Every
+// legitimate storage_path - extracted or manually uploaded alike -
+// always starts with "paperflow/" (see buildDiagramPublicId above and
+// asset_extractor.py#build_diagram_public_id), so that prefix is enough
+// to tell real data apart from this leftover legacy shape.
+export function isValidDiagramPublicId(storagePath) {
+  return (
+    typeof storagePath === "string" && storagePath.startsWith("paperflow/")
+  );
+}
+
 function formatCloudinaryError(error, operation = "upload") {
   const message = error?.message || String(error);
-  if (message.includes("Must supply api_key") || message.includes("Must supply cloud_name")) {
+  if (
+    message.includes("Must supply api_key") ||
+    message.includes("Must supply cloud_name")
+  ) {
     return "Cloudinary credentials are incomplete or invalid. Please check your environment variables.";
   }
-  if (message.includes("Invalid Signature") || message.includes("Unauthorized")) {
+  if (
+    message.includes("Invalid Signature") ||
+    message.includes("Unauthorized")
+  ) {
     return "Authentication to Cloudinary failed. Please verify your API Key and API Secret.";
   }
-  if (message.includes("ENOTFOUND") || message.includes("fetch failed") || message.includes("ECONNREFUSED")) {
+  if (
+    message.includes("ENOTFOUND") ||
+    message.includes("fetch failed") ||
+    message.includes("ECONNREFUSED")
+  ) {
     return "Could not connect to Cloudinary image servers. Please check your internet connection.";
   }
   return `Cloud image ${operation} failed: ${message}`;
@@ -116,7 +145,10 @@ export async function uploadDiagramBuffer(buffer, publicId) {
   } catch (error) {
     if (error.statusCode) throw error;
     const friendlyMessage = formatCloudinaryError(error, "upload");
-    console.error(`Failed to upload diagram buffer to Cloudinary (${publicId}):`, error);
+    console.error(
+      `Failed to upload diagram buffer to Cloudinary (${publicId}):`,
+      error,
+    );
     throw httpError(502, friendlyMessage, { originalError: error.message });
   }
 }
@@ -137,7 +169,10 @@ export function diagramUrlForPublicId(publicId) {
     });
     return url;
   } catch (error) {
-    throw httpError(500, `Could not generate image delivery URL: ${error.message}`);
+    throw httpError(
+      500,
+      `Could not generate image delivery URL: ${error.message}`,
+    );
   }
 }
 
@@ -157,7 +192,10 @@ export async function fetchDiagramBuffer(publicId) {
 
   if (!response.ok) {
     if (response.status === 404) {
-      throw httpError(404, `Diagram image not found on Cloudinary (id: ${publicId})`);
+      throw httpError(
+        404,
+        `Diagram image not found on Cloudinary (id: ${publicId})`,
+      );
     }
     throw httpError(
       502,
@@ -171,7 +209,9 @@ export async function fetchDiagramBuffer(publicId) {
 export async function deleteDiagram(publicId) {
   if (!publicId) return;
   if (!isCloudinaryConfigured()) {
-    console.warn(`Skipping delete for diagram ${publicId}: Cloudinary is not configured`);
+    console.warn(
+      `Skipping delete for diagram ${publicId}: Cloudinary is not configured`,
+    );
     return;
   }
   configureCloudinary();
@@ -181,6 +221,9 @@ export async function deleteDiagram(publicId) {
     // Best-effort, same stance as pdf-storage.js#deletePdf - a question
     // delete shouldn't fail just because its Cloudinary asset was already
     // gone some other way.
-    console.error(`Failed to delete diagram ${publicId} from Cloudinary:`, error);
+    console.error(
+      `Failed to delete diagram ${publicId} from Cloudinary:`,
+      error,
+    );
   }
 }

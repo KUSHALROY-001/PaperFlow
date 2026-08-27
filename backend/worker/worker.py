@@ -189,6 +189,19 @@ def process_job(job):
                 "searchablePdfPath": None,
                 "error": str(error),
             }
+    elif len(pages) == 0:
+        # OCR_ENABLED is off and this PDF has no extractable text at all
+        # (i.e. it's scanned/image-only) - without this, execution would
+        # fall through to parse_questions([]) and silently produce a
+        # near-empty mock test instead of a clear, actionable failure.
+        # RuntimeError is deliberate: friendly_job_error_message (above)
+        # renders RuntimeError messages verbatim to the uploader, same as
+        # every other self-describing failure in this file.
+        raise RuntimeError(
+            "This PDF appears to be scanned or image-only, and OCR is "
+            "currently disabled - text couldn't be extracted from it. "
+            "Try a text-based PDF, or ask an admin to enable OCR."
+        )
 
     check_not_cancelled(job["id"])
 

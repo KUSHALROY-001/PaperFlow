@@ -67,7 +67,11 @@ function renderMathNodes(text, keyPrefix) {
         <span
           // eslint-disable-next-line react/no-danger
           key={`${keyPrefix}-math-${index}`}
-          className={displayMode ? "block my-2" : undefined}
+          className={
+            displayMode
+              ? "block my-2 max-w-full overflow-x-auto scrollbar-hidden"
+              : undefined
+          }
           dangerouslySetInnerHTML={{ __html: html }}
         />
       );

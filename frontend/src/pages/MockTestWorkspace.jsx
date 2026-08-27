@@ -70,7 +70,7 @@ export default function MockTestWorkspace() {
   const { lowConfidence, topicsFound, approvedCount } = stats;
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto w-full min-w-0">
       <WorkspaceBreadcrumbs
         clusterId={clusterId}
         clusterName={cluster?.name}

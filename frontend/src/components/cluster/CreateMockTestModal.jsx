@@ -144,7 +144,7 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
                 setForm((current) => ({ ...current, name: event.target.value }))
               }
               placeholder="e.g. JECA PYQ 2024"
-              className="w-full rounded-xl border border-border bg-card px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
+              className="w-full rounded-md border border-border bg-card px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
             />
           </div>
 
@@ -192,7 +192,7 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
               <button
                 type="button"
                 onClick={() => setMode("upload")}
-                className={`flex flex-col items-center gap-1.5 rounded-2xl border-2 px-2 py-3 text-center transition-all ${
+                className={`flex flex-col items-center gap-1.5 rounded-md border-2 px-2 py-3 text-center transition-all ${
                   mode === "upload"
                     ? "border-orange-500/60 bg-orange-500/10"
                     : "border-border bg-muted/40 hover:border-orange-500/30"
@@ -206,7 +206,7 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
               <button
                 type="button"
                 onClick={() => setMode("generate")}
-                className={`flex flex-col items-center gap-1.5 rounded-2xl border-2 px-2 py-3 text-center transition-all ${
+                className={`flex flex-col items-center gap-1.5 rounded-md border-2 px-2 py-3 text-center transition-all ${
                   mode === "generate"
                     ? "border-orange-500/60 bg-orange-500/10"
                     : "border-border bg-muted/40 hover:border-orange-500/30"
@@ -220,7 +220,7 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
               <button
                 type="button"
                 onClick={() => setMode("blank")}
-                className={`flex flex-col items-center gap-1.5 rounded-2xl border-2 px-2 py-3 text-center transition-all ${
+                className={`flex flex-col items-center gap-1.5 rounded-md border-2 px-2 py-3 text-center transition-all ${
                   mode === "blank"
                     ? "border-orange-500/60 bg-orange-500/10"
                     : "border-border bg-muted/40 hover:border-orange-500/30"
@@ -381,7 +381,7 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
                     onChange={(event) =>
                       setTargetQuestionCount(event.target.value)
                     }
-                    className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
+                    className="w-full rounded-md border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
                   />
                   <p className="mt-1 text-[11px] text-muted-foreground">
                     {MIN_GENERATED_QUESTIONS}–{MAX_GENERATED_QUESTIONS}
@@ -394,7 +394,7 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
                   <select
                     value={difficultyHint}
                     onChange={(event) => setDifficultyHint(event.target.value)}
-                    className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
+                    className="w-full rounded-md border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
                   >
                     {DIFFICULTY_OPTIONS.map((option) => (
                       <option key={option} value={option}>
@@ -408,7 +408,7 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
           )}
 
           {error && (
-            <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs font-medium text-red-500">
+            <div className="rounded-md border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs font-medium text-red-500">
               {error}
             </div>
           )}

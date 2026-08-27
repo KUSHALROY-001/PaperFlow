@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -67,7 +67,7 @@ export default function ApplyTemplateModal({ template, onClose, onApplied }) {
           disabled={isViewer}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className={`w-full px-3 py-2 mb-4 text-sm rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 ${
+          className={`w-full px-3 py-2 mb-4 text-sm rounded-md border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 ${
             isViewer ? "cursor-not-allowed opacity-60" : ""
           }`}
         />
@@ -86,7 +86,7 @@ export default function ApplyTemplateModal({ template, onClose, onApplied }) {
             disabled={isViewer}
             value={clusterId}
             onChange={(e) => setClusterId(e.target.value)}
-            className={`w-full px-3 py-2 mb-4 text-sm rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 ${
+            className={`w-full px-3 py-2 mb-4 text-sm rounded-md border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 ${
               isViewer ? "cursor-not-allowed opacity-60" : ""
             }`}
           >
@@ -105,7 +105,7 @@ export default function ApplyTemplateModal({ template, onClose, onApplied }) {
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2.5 border border-border bg-card text-foreground font-semibold rounded-xl hover:bg-muted text-xs sm:text-sm transition-all"
+            className="flex-1 py-2.5 border border-border bg-card text-foreground font-semibold rounded-md hover:bg-muted text-xs sm:text-sm transition-all"
           >
             Cancel
           </button>
@@ -113,7 +113,9 @@ export default function ApplyTemplateModal({ template, onClose, onApplied }) {
             type="submit"
             disabled={isSubmitting || clusters.length === 0 || isViewer}
             title={
-              isViewer ? "Editor role is required to apply templates" : undefined
+              isViewer
+                ? "Editor role is required to apply templates"
+                : undefined
             }
             className={`flex-1 py-2.5 font-bold rounded-xl text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 ${
               isViewer
@@ -122,11 +124,14 @@ export default function ApplyTemplateModal({ template, onClose, onApplied }) {
             }`}
           >
             {isSubmitting ? (
-              "Applying..."
+              <>
+                <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                <span>Applying...</span>
+              </>
             ) : (
               <>
-                <CheckCircle className="w-4 h-4 text-orange-500" /> Confirm &
-                Apply
+                <CheckCircle className="w-4 h-4 text-orange-500" />
+                <span>Confirm & Apply</span>
               </>
             )}
           </button>

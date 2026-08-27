@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { useTemplateForm } from "@/hooks/useTemplateForm";
 import TemplateBasicInfoFields from "./TemplateBasicInfoFields";
 import TemplateColorPicker from "./TemplateColorPicker";
@@ -123,7 +123,7 @@ export default function CreateTemplateModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2.5 border border-border bg-card text-foreground font-semibold rounded-xl hover:bg-muted text-xs sm:text-sm transition-all"
+            className="flex-1 py-2.5 border border-border bg-card text-foreground font-semibold rounded-md hover:bg-muted text-xs sm:text-sm transition-all"
           >
             Cancel
           </button>
@@ -135,19 +135,20 @@ export default function CreateTemplateModal({
                 ? `Editor role is required to ${isEditing ? "edit" : "create"} templates`
                 : undefined
             }
-            className={`flex-1 py-2.5 font-bold rounded-xl text-xs sm:text-sm transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 font-bold text-xs sm:text-sm transition-all ${
               isViewer
                 ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50 border border-border"
                 : "bg-orange-500/10 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30 hover:bg-orange-500/20"
             }`}
           >
-            {isSubmitting
-              ? isEditing
-                ? "Saving..."
-                : "Creating..."
-              : isEditing
-                ? "Save Changes"
-                : "Create Template"}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                <span>{isEditing ? "Saving..." : "Creating..."}</span>
+              </>
+            ) : (
+              <span>{isEditing ? "Save Changes" : "Create Template"}</span>
+            )}
           </button>
         </div>
       </form>

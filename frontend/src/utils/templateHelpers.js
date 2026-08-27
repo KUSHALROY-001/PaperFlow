@@ -126,7 +126,7 @@ export const DIFFICULTY_OPTIONS = ["Easy", "Medium", "Hard", "Variable"];
 export const COLOR_OPTIONS = Object.keys(colorMap);
 
 export const fieldClass =
-  "w-full px-3 py-2 text-sm rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30";
+  "w-full px-3 py-2 text-sm rounded-md border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30";
 export const labelClass =
   "block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5";
 

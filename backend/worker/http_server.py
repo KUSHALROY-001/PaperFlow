@@ -66,6 +66,21 @@ class Handler(BaseHTTPRequestHandler):
             return
         self._send_json(404, {"error": "not found"})
 
+    def do_HEAD(self):
+        # BaseHTTPRequestHandler returns 501 for HEAD unless a do_HEAD is
+        # defined - some uptime/health-check tools (and Render itself, if
+        # an HTTP Health Check Path is ever configured for this service
+        # instead of the default TCP check) send HEAD rather than GET. A
+        # 501 there would make an otherwise-healthy instance look
+        # unhealthy, so mirror do_GET's status without a body.
+        if urlparse(self.path).path == "/":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            return
+        self.send_response(404)
+        self.end_headers()
+
     def do_POST(self):
         parsed = urlparse(self.path)
         if parsed.path != "/run":

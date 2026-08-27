@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { ArrowLeftRight, Check, Loader2, X } from "lucide-react";
-import QuestionContent, { QuestionExplanation } from "../shared/QuestionContent";
+import QuestionContent, {
+  QuestionExplanation,
+} from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
 
 function QuestionSide({ question, onKeep, disabled, side }) {
@@ -33,7 +35,7 @@ function QuestionSide({ question, onKeep, disabled, side }) {
               return (
                 <li
                   key={typeof option === "string" ? index : option.optionIndex}
-                  className="text-xs text-muted-foreground pl-3 border-l-2 border-border whitespace-pre-wrap"
+                  className="text-xs text-muted-foreground pl-3 border-l-2 border-border whitespace-pre-wrap break-words"
                 >
                   <MathText text={optionText} />
                 </li>

@@ -4,6 +4,8 @@ import {
   buildPdfStorageKey,
   deletePdf,
   uploadPdf,
+  getPresignedUploadUrl,
+  headPdf,
 } from "../lib/pdf-storage.js";
 import { deleteDiagram } from "../lib/cloudinary-storage.js";
 import {
@@ -515,30 +517,22 @@ export async function generateFromExisting({
   return { processingJob, mockTest: updatedMockTest };
 }
 
-export async function uploadDocument({
+// Shared by both the legacy buffer-through-Node path (#uploadDocument,
+// still used by anything that can't do a direct-to-B2 PUT) and the direct
+// upload path (#completeUpload) below - everything from here down runs
+// the same either way, the only difference is whether the PDF bytes
+// passed through this server or went straight to B2 from the browser.
+async function finalizeUpload({
   mockTest,
   workspaceId,
   userId,
-  file,
+  storageKey,
+  originalFilename,
+  mimeType,
+  fileSizeBytes,
   documentType,
 }) {
-  if (!file) {
-    throw httpError(400, "PDF document is required");
-  }
-
   const normalizedDocumentType = normalizeDocumentType(documentType);
-  const storageKey = buildPdfStorageKey(
-    workspaceId,
-    mockTest.id,
-    file.originalname,
-  );
-  // Uploaded before the DB transaction below, same ordering the old
-  // local-disk version used (multer wrote the file to disk before this
-  // function ever ran) - if the DB insert then fails, there's a real but
-  // orphaned B2 object to clean up (see the catch block), never a DB row
-  // pointing at a PDF that was never actually stored.
-  await uploadPdf(file.buffer, storageKey, file.mimetype);
-
   const client = await pool.connect();
 
   let uploadedFile;
@@ -549,10 +543,10 @@ export async function uploadDocument({
       workspaceId,
       mockTestId: mockTest.id,
       uploadedBy: userId,
-      originalFilename: file.originalname,
+      originalFilename,
       storageKey,
-      mimeType: file.mimetype || "application/pdf",
-      fileSizeBytes: file.size,
+      mimeType: mimeType || "application/pdf",
+      fileSizeBytes,
       // No localPath anymore - worker/worker.py#download_job_pdf reads
       // storageKey straight off processing_jobs.input_config instead
       // (see queueProcessingJob below), which is set on every job
@@ -581,13 +575,110 @@ export async function uploadDocument({
       workspaceId,
       uploadedFileId: uploadedFile.id,
       requestedBy: userId,
-      originalFilename: file.originalname,
+      originalFilename,
       storageKey,
       documentType: normalizedDocumentType,
     },
   );
 
   return { uploadedFile, processingJob, mockTest: updatedMockTest };
+}
+
+export async function uploadDocument({
+  mockTest,
+  workspaceId,
+  userId,
+  file,
+  documentType,
+}) {
+  if (!file) {
+    throw httpError(400, "PDF document is required");
+  }
+
+  const storageKey = buildPdfStorageKey(
+    workspaceId,
+    mockTest.id,
+    file.originalname,
+  );
+  // Uploaded before the DB transaction inside finalizeUpload, same
+  // ordering the old local-disk version used (multer wrote the file to
+  // disk before this function ever ran) - if the DB insert then fails,
+  // there's a real but orphaned B2 object to clean up, never a DB row
+  // pointing at a PDF that was never actually stored.
+  await uploadPdf(file.buffer, storageKey, file.mimetype);
+
+  return finalizeUpload({
+    mockTest,
+    workspaceId,
+    userId,
+    storageKey,
+    originalFilename: file.originalname,
+    mimeType: file.mimetype,
+    fileSizeBytes: file.size,
+    documentType,
+  });
+}
+
+// Step 1 of the direct-to-B2 path: hand the browser a short-lived URL it
+// can PUT the PDF to itself, so the bytes go browser -> B2 directly
+// instead of browser -> this server -> B2. See useMockTestWorkspace's
+// upload handler / api.js#uploadMockTestDocument on the frontend.
+export async function createUploadUrl({
+  workspaceId,
+  mockTest,
+  originalFilename,
+  mimeType,
+}) {
+  if (!originalFilename) {
+    throw httpError(400, "originalFilename is required");
+  }
+  const storageKey = buildPdfStorageKey(
+    workspaceId,
+    mockTest.id,
+    originalFilename,
+  );
+  const uploadUrl = await getPresignedUploadUrl(
+    storageKey,
+    mimeType || "application/pdf",
+  );
+  return { uploadUrl, storageKey };
+}
+
+// Step 2 of the direct-to-B2 path: the browser has already PUT the bytes
+// to B2 itself by the time this runs. Never trust that on its own - a
+// client could call this with a storageKey it never actually uploaded to
+// - so headPdf() re-checks B2 directly and takes the real size/content
+// type from there rather than whatever the request body claims.
+export async function completeUpload({
+  mockTest,
+  workspaceId,
+  userId,
+  storageKey,
+  originalFilename,
+  documentType,
+}) {
+  if (!storageKey || !storageKey.startsWith(`uploads/${workspaceId}/${mockTest.id}/`)) {
+    throw httpError(400, "storageKey is missing or does not match this mock test");
+  }
+
+  const info = await headPdf(storageKey);
+  if (!info.exists) {
+    throw httpError(
+      400,
+      "Upload not found in storage - the direct upload to B2 may not have completed. Please retry.",
+    );
+  }
+
+  return finalizeUpload({
+    mockTest,
+    workspaceId,
+    userId,
+    storageKey,
+    originalFilename: originalFilename || storageKey.split("/").pop(),
+    mimeType: info.mimeType,
+    fileSizeBytes: info.sizeBytes,
+    documentType,
+  });
 }
 
 // The reprocess button becomes a Cancel button while a job is queued/

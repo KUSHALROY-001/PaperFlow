@@ -378,7 +378,7 @@ export default function ReviewTab({
                             : "bg-card text-muted-foreground border border-border"
                         }`}
                       >
-                        <span className="whitespace-pre-wrap">
+                        <span className="whitespace-pre-wrap break-words">
                           <MathText text={option} />
                         </span>
                         {correct && (

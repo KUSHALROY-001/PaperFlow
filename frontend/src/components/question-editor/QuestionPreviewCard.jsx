@@ -27,9 +27,7 @@ export default function QuestionPreviewCard({
   const handleUpdateExplanation = (updater) => {
     if (!updateSelected) return;
     const nextExplanation =
-      typeof updater === "function"
-        ? updater(selected.explanation)
-        : updater;
+      typeof updater === "function" ? updater(selected.explanation) : updater;
     updateSelected("explanation", nextExplanation);
   };
 
@@ -87,23 +85,19 @@ export default function QuestionPreviewCard({
           onError={setDiagramError}
         />
         {diagramError && (
-          <p className="mt-2 text-xs text-red-500">
-            {diagramError}
-          </p>
+          <p className="mt-2 text-xs text-red-500">{diagramError}</p>
         )}
         <div className="grid grid-cols-1 gap-2 mt-4">
           {(selected.options || []).map((opt, i) => (
             <div
               key={i}
-              className={`px-3 py-2.5 rounded-xl text-xs sm:text-sm whitespace-pre-wrap ${
+              className={`px-3 py-2.5 rounded-xl text-xs sm:text-sm whitespace-pre-wrap break-words ${
                 (selected.correctOptionIndexes || []).includes(i)
                   ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20"
                   : "bg-card text-foreground border border-border"
               }`}
             >
-              <span className="mr-2">
-                {String.fromCharCode(65 + i)}.
-              </span>
+              <span className="mr-2">{String.fromCharCode(65 + i)}.</span>
               <MathText text={opt} />
             </div>
           ))}

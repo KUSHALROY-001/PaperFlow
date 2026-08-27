@@ -66,6 +66,35 @@ export async function upload(req, res) {
   res.status(201).json(result);
 }
 
+// Direct-to-B2 upload, step 1: hand back a presigned PUT URL. Ordinary
+// JSON body, no multer - the whole point is the PDF bytes never come
+// through this server.
+export async function createUploadUrl(req, res) {
+  const result = await mockTestsService.createUploadUrl({
+    mockTest: req.mockTest,
+    workspaceId: req.workspaceId,
+    originalFilename: req.body.originalFilename,
+    mimeType: req.body.mimeType,
+  });
+  res.status(200).json(result);
+}
+
+// Direct-to-B2 upload, step 2: browser has already PUT the file straight
+// to B2 using the URL from createUploadUrl above; this just confirms it
+// landed (see mock-tests.service.js#completeUpload) and does the same
+// DB-insert + queue-processing-job work #upload does for the old path.
+export async function completeUpload(req, res) {
+  const result = await mockTestsService.completeUpload({
+    mockTest: req.mockTest,
+    workspaceId: req.workspaceId,
+    userId: req.user.id,
+    storageKey: req.body.storageKey,
+    originalFilename: req.body.originalFilename,
+    documentType: req.body.documentType,
+  });
+  res.status(201).json(result);
+}
+
 // "Generate from existing tests" - no file upload, no multer, ordinary
 // JSON body (see routes file - this route sits in the same requireAuth-
 // wrapped router as everything else, unlike /upload which has its own
