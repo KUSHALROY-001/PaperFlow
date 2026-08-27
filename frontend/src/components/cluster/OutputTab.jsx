@@ -221,7 +221,7 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
                   return (
                     <div
                       key={option}
-                      className={`rounded-md border px-4 py-3 text-sm whitespace-pre-wrap break-words min-w-0 overflow-x-auto scrollbar-hidden ${
+                      className={`rounded-md border px-4 py-3 text-sm whitespace-pre-wrap wrap-break-word min-w-0 overflow-x-auto scrollbar-hidden ${
                         correct
                           ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
                           : "border-border bg-card text-muted-foreground"

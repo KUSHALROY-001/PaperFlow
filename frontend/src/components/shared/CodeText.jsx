@@ -47,7 +47,7 @@ function renderProseSegment(
       nodes.push(
         <p
           key={`${keyPrefix}-p-${index}-${proseIndex}`}
-          className={`whitespace-pre-wrap break-words [overflow-wrap:anywhere] ${textClassName}`}
+          className={`whitespace-pre-wrap wrap-break-word ${textClassName}`}
         >
           <MathText text={proseLines.join("\n")} />
         </p>,

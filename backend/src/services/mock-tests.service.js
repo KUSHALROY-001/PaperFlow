@@ -657,8 +657,14 @@ export async function completeUpload({
   originalFilename,
   documentType,
 }) {
-  if (!storageKey || !storageKey.startsWith(`uploads/${workspaceId}/${mockTest.id}/`)) {
-    throw httpError(400, "storageKey is missing or does not match this mock test");
+  if (
+    !storageKey ||
+    !storageKey.startsWith(`uploads/${workspaceId}/${mockTest.id}/`)
+  ) {
+    throw httpError(
+      400,
+      "storageKey is missing or does not match this mock test",
+    );
   }
 
   const info = await headPdf(storageKey);

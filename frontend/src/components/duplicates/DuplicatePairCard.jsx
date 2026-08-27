@@ -35,7 +35,7 @@ function QuestionSide({ question, onKeep, disabled, side }) {
               return (
                 <li
                   key={typeof option === "string" ? index : option.optionIndex}
-                  className="text-xs text-muted-foreground pl-3 border-l-2 border-border whitespace-pre-wrap break-words"
+                  className="text-xs text-muted-foreground pl-3 border-l-2 border-border whitespace-pre-wrap wrap-break-word"
                 >
                   <MathText text={optionText} />
                 </li>

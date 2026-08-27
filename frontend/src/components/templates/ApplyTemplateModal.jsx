@@ -117,7 +117,7 @@ export default function ApplyTemplateModal({ template, onClose, onApplied }) {
                 ? "Editor role is required to apply templates"
                 : undefined
             }
-            className={`flex-1 py-2.5 font-bold rounded-xl text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 ${
+            className={`flex-1 py-2.5 font-bold rounded-md text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 ${
               isViewer
                 ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50 border border-border"
                 : "bg-orange-500/10 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30 hover:bg-orange-500/20"

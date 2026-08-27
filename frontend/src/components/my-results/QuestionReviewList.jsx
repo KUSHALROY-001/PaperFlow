@@ -188,7 +188,7 @@ export default function QuestionReviewList({ questions }) {
                                       : "bg-card border-border text-muted-foreground"
                                 }`}
                               >
-                                <span className="flex-1 whitespace-pre-wrap break-words">
+                                <span className="flex-1 whitespace-pre-wrap wrap-break-word">
                                   <MathText
                                     text={normalizedOption.optionText}
                                   />
