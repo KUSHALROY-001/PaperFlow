@@ -1,8 +1,8 @@
 import { memo } from "react";
 import { Link } from "react-router-dom";
 import { Mail, FileCheck2, TrendingUp, Clock, UserMinus } from "lucide-react";
-import { avatarColorFor, initialsFor } from "@/utils/teamHelpers";
 import { formatDate } from "@/lib/date";
+import UserAvatar from "@/components/shared/UserAvatar";
 
 function StudentRow({
   student,
@@ -17,11 +17,12 @@ function StudentRow({
         to={`/students/${encodeURIComponent(student.email)}`}
         className="flex items-center gap-3 min-w-0 flex-1"
       >
-        <div
-          className={`w-10 h-10 rounded-3xl ${avatarColorFor(student.email)} flex items-center justify-center text-white font-bold text-sm shrink-0`}
-        >
-          {initialsFor(student.name || student.email)}
-        </div>
+        <UserAvatar
+          src={student.avatarUrl}
+          name={student.name || student.email}
+          seed={student.email}
+          rounded="3xl"
+        />
         <div className="flex-1 min-w-0">
           <div className="font-bold text-sm text-foreground truncate">
             {student.name || "Unnamed"}

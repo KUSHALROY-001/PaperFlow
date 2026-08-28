@@ -1,9 +1,41 @@
 import crypto from "node:crypto";
 import { pool } from "../db/pool.js";
 import { httpError } from "../lib/http-error.js";
+import { resolveAvatarUrl } from "../lib/cloudinary-storage.js";
 import { requiredEnum, requiredString } from "../lib/validators.js";
 import * as authRepo from "../repositories/auth.repository.js";
 import * as teamRepo from "../repositories/team.repository.js";
+
+function shapeMember(member) {
+  if (!member) return member;
+  const { avatarUrl, avatarPublicId, avatarUpdatedAt, ...rest } = member;
+  return {
+    ...rest,
+    avatarUrl: resolveAvatarUrl({
+      avatarPublicId,
+      avatarUpdatedAt,
+      avatarUrl,
+    }),
+  };
+}
+
+function shapeInvitation(invitation) {
+  if (!invitation) return invitation;
+  const {
+    invitedByAvatarUrl,
+    invitedByAvatarPublicId,
+    invitedByAvatarUpdatedAt,
+    ...rest
+  } = invitation;
+  return {
+    ...rest,
+    invitedByAvatarUrl: resolveAvatarUrl({
+      avatarPublicId: invitedByAvatarPublicId,
+      avatarUpdatedAt: invitedByAvatarUpdatedAt,
+      avatarUrl: invitedByAvatarUrl,
+    }),
+  };
+}
 
 // 'owner' deliberately excluded - see the CHECK constraint in
 // 005_team_invitations.sql for why (ownership isn't transferred through
@@ -22,7 +54,8 @@ function assertNotOwner(member) {
 // Members
 // ---------------------------------------------------------------------------
 export async function listMembers(workspaceId) {
-  return teamRepo.listMembers(workspaceId);
+  const members = await teamRepo.listMembers(workspaceId);
+  return members.map(shapeMember);
 }
 
 export async function updateMemberRole(memberId, workspaceId, body) {
@@ -37,7 +70,7 @@ export async function updateMemberRole(memberId, workspaceId, body) {
 
   await teamRepo.updateMemberRole(memberId, workspaceId, role);
 
-  return teamRepo.findMemberById(memberId, workspaceId);
+  return shapeMember(await teamRepo.findMemberById(memberId, workspaceId));
 }
 
 export async function removeMember(memberId, workspaceId) {
@@ -55,14 +88,16 @@ export async function removeMember(memberId, workspaceId) {
 // Invitations
 // ---------------------------------------------------------------------------
 export async function listInvitations(workspaceId) {
-  return teamRepo.listPendingInvitations(workspaceId);
+  const invitations = await teamRepo.listPendingInvitations(workspaceId);
+  return invitations.map(shapeInvitation);
 }
 
 // Deliberately takes an email, not a workspaceId - this is "invites sent to
 // me" across every workspace, the counterpart to listInvitations above
 // which is "invites I've sent from this one workspace."
 export async function listMyInvitations(email) {
-  return teamRepo.listInvitationsForEmail(email);
+  const invitations = await teamRepo.listInvitationsForEmail(email);
+  return invitations.map(shapeInvitation);
 }
 
 export async function createInvitation(workspaceId, invitedBy, body) {

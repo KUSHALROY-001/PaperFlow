@@ -3,7 +3,7 @@ import { pool } from "../db/pool.js";
 export async function findActiveUserByEmail(email) {
   const result = await pool.query(
     `
-    SELECT id, name, email, password_hash
+    SELECT id, name, email, password_hash, avatar_url, avatar_public_id, avatar_updated_at
     FROM users
     WHERE email = $1
       AND is_active = TRUE
@@ -20,7 +20,7 @@ export async function findActiveUserByEmail(email) {
 export async function findActiveUserByGoogleId(googleId) {
   const result = await pool.query(
     `
-    SELECT id, name, email, password_hash
+    SELECT id, name, email, password_hash, avatar_url, avatar_public_id, avatar_updated_at
     FROM users
     WHERE google_id = $1
       AND is_active = TRUE
@@ -36,11 +36,17 @@ export async function findActiveUserByGoogleId(googleId) {
 // (Google-verified) email address, rather than ending up with two
 // separate, disconnected accounts for the same person. Does not touch
 // password_hash - a linked account can still log in either way afterward.
-export async function linkGoogleIdToUser(userId, googleId) {
-  await pool.query("UPDATE users SET google_id = $2 WHERE id = $1", [
-    userId,
-    googleId,
-  ]);
+//
+// Backfills avatar_url from Google's photo, but only if the user doesn't
+// already have one (COALESCE) - a password-only account never had a
+// chance to set avatar_url before this point, so today that's always the
+// case in practice, but the COALESCE keeps this correct rather than
+// assuming that.
+export async function linkGoogleIdToUser(userId, googleId, avatarUrl) {
+  await pool.query(
+    "UPDATE users SET google_id = $2, avatar_url = COALESCE(avatar_url, $3) WHERE id = $1",
+    [userId, googleId, avatarUrl ?? null],
+  );
 }
 
 export async function findFirstWorkspaceIdForUser(userId) {
@@ -94,7 +100,10 @@ const PROFILE_COLUMNS = `
   name,
   email,
   account_type AS "accountType",
-  created_at AS "createdAt"
+  created_at AS "createdAt",
+  avatar_url AS "avatarUrl",
+  avatar_public_id AS "avatarPublicId",
+  avatar_updated_at AS "avatarUpdatedAt"
 `;
 
 export async function findProfileById(userId) {
@@ -118,6 +127,43 @@ export async function updateProfile(userId, { name, accountType }) {
     [userId, name ?? null, accountType ?? null],
   );
 
+  return result.rows[0] || null;
+}
+
+// Sets/replaces the user's self-uploaded avatar. Always the SAME
+// public_id for a given user (buildAvatarPublicId in cloudinary-storage.js
+// is keyed only on userId), so this is called after the Cloudinary
+// upload has already overwritten that location - this just records that
+// a custom avatar now exists and stamps avatar_updated_at so the
+// delivery URL's cache-busting version changes too (see
+// cloudinary-storage.js#resolveAvatarUrl).
+export async function setAvatar(userId, avatarPublicId) {
+  const result = await pool.query(
+    `
+    UPDATE users
+    SET avatar_public_id = $2, avatar_updated_at = now()
+    WHERE id = $1
+    RETURNING ${PROFILE_COLUMNS}
+    `,
+    [userId, avatarPublicId],
+  );
+  return result.rows[0] || null;
+}
+
+// Removes the custom avatar (the Cloudinary asset itself is deleted by
+// the caller first - see auth.service.js#deleteAvatar), reverting display
+// back to avatar_url (Google's photo, or null) since that column is
+// untouched by this.
+export async function clearAvatar(userId) {
+  const result = await pool.query(
+    `
+    UPDATE users
+    SET avatar_public_id = NULL, avatar_updated_at = now()
+    WHERE id = $1
+    RETURNING ${PROFILE_COLUMNS}
+    `,
+    [userId],
+  );
   return result.rows[0] || null;
 }
 
@@ -180,7 +226,7 @@ export async function createUserWithWorkspace({ name, email, passwordHash }) {
       `
       INSERT INTO users (name, email, password_hash)
       VALUES ($1, $2, $3)
-      RETURNING id, name, email
+      RETURNING id, name, email, avatar_url, avatar_public_id, avatar_updated_at
       `,
       [name, email, passwordHash],
     );
@@ -238,7 +284,7 @@ export async function createUserWithWorkspaceFromGoogle({
       `
       INSERT INTO users (name, email, google_id, avatar_url)
       VALUES ($1, $2, $3, $4)
-      RETURNING id, name, email
+      RETURNING id, name, email, avatar_url, avatar_public_id, avatar_updated_at
       `,
       [name, email, googleId, avatarUrl],
     );

@@ -9,6 +9,9 @@ const MEMBER_COLUMNS = `
   wm.user_id AS "userId",
   u.name,
   u.email,
+  u.avatar_url AS "avatarUrl",
+  u.avatar_public_id AS "avatarPublicId",
+  u.avatar_updated_at AS "avatarUpdatedAt",
   wm.role,
   wm.created_at AS "joinedAt",
   (
@@ -94,7 +97,10 @@ const INVITATION_COLUMNS = `
   wi.expires_at AS "expiresAt",
   wi.accepted_at AS "acceptedAt",
   wi.created_at AS "createdAt",
-  inviter.name AS "invitedByName"
+  inviter.name AS "invitedByName",
+  inviter.avatar_url AS "invitedByAvatarUrl",
+  inviter.avatar_public_id AS "invitedByAvatarPublicId",
+  inviter.avatar_updated_at AS "invitedByAvatarUpdatedAt"
 `;
 export async function listPendingInvitations(workspaceId) {
   const result = await pool.query(

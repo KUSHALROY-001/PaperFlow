@@ -666,6 +666,23 @@ export const api = {
       body: JSON.stringify(payload),
     });
   },
+  // profile.avatarUrl (from the response of this and the two calls below)
+  // is already an absolute URL - Cloudinary's own delivery URL for a
+  // self-uploaded avatar, or Google's own photo URL as a fallback - unlike
+  // uploadDiagramImage's backend-relative path above, so it's used
+  // directly as an <img src> and should NOT be passed through
+  // resolveAssetUrl().
+  uploadAvatar(file) {
+    const formData = new FormData();
+    formData.append("avatar", file);
+    return apiRequest("/api/auth/avatar", {
+      method: "POST",
+      body: formData,
+    });
+  },
+  deleteAvatar() {
+    return apiRequest("/api/auth/avatar", { method: "DELETE" });
+  },
   changePassword(payload) {
     return apiRequest("/api/auth/password", {
       method: "PATCH",

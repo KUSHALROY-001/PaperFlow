@@ -19,6 +19,7 @@ import {
 import { api } from "@/lib/api";
 import { useSubscriptions } from "@/lib/useSubscriptions";
 import { Skeleton } from "@/components/ui/skeleton";
+import UserAvatar from "@/components/shared/UserAvatar";
 
 export default function MockTestDetailModal({
   mockTestId,
@@ -86,6 +87,8 @@ export default function MockTestDetailModal({
 
   const publisherSlug = slug || mockTest?.workspace_slug;
   const publisherName = mockTest?.workspace_name;
+  const publisherAvatarUrl = mockTest?.publisherAvatarUrl;
+  const publisherOwnerName = mockTest?.publisherOwnerName;
   const subscribed = isSubscribed(publisherSlug);
 
   return (
@@ -151,9 +154,18 @@ export default function MockTestDetailModal({
             {(publisherName || publisherSlug) && (
               <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-border bg-card/60 backdrop-blur-sm">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 shrink-0 font-extrabold text-sm">
-                    <Building2 className="w-5 h-5" />
-                  </div>
+                  {publisherAvatarUrl || publisherOwnerName ? (
+                    <UserAvatar
+                      src={publisherAvatarUrl}
+                      name={publisherOwnerName || publisherName}
+                      seed={publisherSlug || publisherName}
+                      rounded="xl"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 shrink-0 font-extrabold text-sm">
+                      <Building2 className="w-5 h-5" />
+                    </div>
+                  )}
                   <div className="min-w-0">
                     <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
                       Publisher
@@ -180,16 +192,19 @@ export default function MockTestDetailModal({
                     type="button"
                     disabled={isSubscribing}
                     onClick={() => toggleSubscription(publisherSlug)}
-                    className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
+                    className={`px-4 py-2.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
                       subscribed
-                        ? "bg-orange-500/15 text-orange-500 border border-orange-500/30 hover:bg-red-500/15 hover:text-red-500 hover:border-red-500/30"
-                        : "bg-orange-500 text-white hover:bg-orange-600 shadow-md shadow-orange-500/20"
+                        ? "group bg-blue-500 border border-blue-500/30 text-white hover:bg-red-500"
+                        : "bg-blue-500/15 border border-blue-500/30 text-foreground hover:bg-blue-500 hover:text-white"
                     }`}
                   >
                     {subscribed ? (
                       <>
                         <UserCheck className="w-3.5 h-3.5" />
-                        Subscribed
+                        <span className="group-hover:hidden">Subscribed</span>
+                        <span className="hidden group-hover:inline">
+                          Unsubscribe
+                        </span>
                       </>
                     ) : (
                       <>

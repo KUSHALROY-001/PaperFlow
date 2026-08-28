@@ -49,7 +49,7 @@ export default function Team() {
         </div>
         <button
           onClick={() => setShowInviteModal(true)}
-          className="flex w-full sm:w-auto items-center justify-center gap-2 px-5 py-2.5 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-xl shadow-xs transition-all text-xs sm:text-sm"
+          className="flex w-full sm:w-auto items-center justify-center gap-2 px-5 py-2.5 bg-blue-500/15 hover:bg-blue-600 text-foreground hover:text-white border border-blue-500 font-semibold rounded-md shadow-xs transition-all text-xs sm:text-sm"
         >
           <Plus className="w-4 h-4" /> Invite Member
         </button>
@@ -70,7 +70,7 @@ export default function Team() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search members..."
-          className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all text-xs sm:text-sm"
+          className="w-full pl-9 pr-4 py-2.5 rounded-md border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all text-xs sm:text-sm"
         />
       </div>
 

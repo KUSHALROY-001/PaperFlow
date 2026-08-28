@@ -10,6 +10,12 @@ export default function Settings() {
     isLoading,
     profileLoadError,
     email,
+    avatarUrl,
+    hasCustomAvatar,
+    avatarError,
+    isSavingAvatar,
+    handleUploadAvatar,
+    handleRemoveAvatar,
     profileForm,
     setProfileForm,
     profileError,
@@ -44,6 +50,12 @@ export default function Settings() {
 
       <ProfileSection
         email={email}
+        avatarUrl={avatarUrl}
+        hasCustomAvatar={hasCustomAvatar}
+        avatarError={avatarError}
+        isSavingAvatar={isSavingAvatar}
+        handleUploadAvatar={handleUploadAvatar}
+        handleRemoveAvatar={handleRemoveAvatar}
         profileForm={profileForm}
         setProfileForm={setProfileForm}
         profileError={profileError}

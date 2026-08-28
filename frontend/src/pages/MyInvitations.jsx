@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle, Clock, Mail, Users } from "lucide-react";
+import { CheckCircle, Clock, Mail } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 import { formatTimeAgo } from "@/lib/date";
 import { SkeletonRowList } from "@/components/ui/skeleton-row";
+import UserAvatar from "@/components/shared/UserAvatar";
 
 const roleLabels = {
   admin: "Admin",
@@ -91,9 +92,12 @@ export default function MyInvitations() {
                 key={inv.id}
                 className="px-4 sm:px-6 py-4 flex flex-wrap sm:flex-nowrap items-center gap-4"
               >
-                <div className="w-10 h-10 rounded-xl bg-orange-500/15 flex items-center justify-center shrink-0">
-                  <Users className="w-4 h-4 text-orange-500" />
-                </div>
+                <UserAvatar
+                  src={inv.invitedByAvatarUrl}
+                  name={inv.invitedByName || inv.workspaceName}
+                  seed={inv.invitedByName || inv.workspaceName || inv.id}
+                  rounded="xl"
+                />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-bold text-foreground truncate">
                     {inv.workspaceName}

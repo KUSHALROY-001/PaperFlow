@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
 import { ChevronLeft, Mail, FileCheck2, TrendingUp, Clock } from "lucide-react";
 import { useStudentDetail } from "@/hooks/useStudentDetail";
-import { avatarColorFor, initialsFor } from "@/utils/teamHelpers";
 import { formatDate } from "@/lib/date";
 import TopicAccuracyList from "../components/students/TopicAccuracyList";
 import StudentAttemptRow from "../components/students/StudentAttemptRow";
+import UserAvatar from "@/components/shared/UserAvatar";
 
 export default function StudentDetail() {
   const { student, isLoading, error } = useStudentDetail();
@@ -34,11 +34,14 @@ export default function StudentDetail() {
         <>
           {/* Header */}
           <div className="flex items-center gap-4">
-            <div
-              className={`w-14 h-14 rounded-2xl ${avatarColorFor(student.email)} flex items-center justify-center text-white font-bold text-lg shrink-0`}
-            >
-              {initialsFor(student.name || student.email)}
-            </div>
+            <UserAvatar
+              src={student.avatarUrl}
+              name={student.name || student.email}
+              seed={student.email}
+              size="lg"
+              rounded="xl"
+              className="!w-14 !h-14 text-lg"
+            />
             <div className="min-w-0">
               <h1 className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight truncate">
                 {student.name || "Unnamed"}

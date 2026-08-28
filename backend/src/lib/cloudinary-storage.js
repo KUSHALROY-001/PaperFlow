@@ -1,7 +1,8 @@
 import { v2 as cloudinary } from "cloudinary";
 import { httpError } from "./http-error.js";
+import { assetCacheVersion } from "./diagram-cache-version.js";
 
-export { assetCacheVersion } from "./diagram-cache-version.js";
+export { assetCacheVersion };
 
 function getCloudinaryCredentials() {
   const cloudinaryUrl = process.env.CLOUDINARY_URL?.trim();
@@ -197,10 +198,7 @@ export async function fetchDiagramBuffer(publicId, version) {
   // for crop/clone, which always have the row), fall back to "now" so a
   // server-side fetch never silently reads a stale CDN copy of an
   // overwritten public_id.
-  const imageUrl = diagramUrlForPublicId(
-    publicId,
-    version ?? Date.now(),
-  );
+  const imageUrl = diagramUrlForPublicId(publicId, version ?? Date.now());
 
   let response;
   try {
@@ -248,4 +246,123 @@ export async function deleteDiagram(publicId) {
       error,
     );
   }
+}
+
+// --- User avatars -----------------------------------------------------
+//
+// Deliberately a separate, smaller set of functions rather than reusing
+// the diagram ones above: diagrams need their exact aspect ratio and
+// content preserved (they're extracted from a PDF page), so they get no
+// transformation at all. An avatar benefits from being normalized to a
+// square, face-centered thumbnail regardless of what the user uploads -
+// Cloudinary's gravity: "face" does that automatically at upload time,
+// which has no equivalent in the diagram path.
+
+// One stable public_id per user - re-uploading always overwrites in
+// place, exactly like buildDiagramPublicId's per-question stability, so
+// there's never a stale previous avatar left behind under a different id.
+export function buildAvatarPublicId(userId) {
+  return `paperflow/avatars/${userId}`;
+}
+
+export async function uploadAvatarBuffer(buffer, publicId) {
+  validateCloudinaryConfig();
+  configureCloudinary();
+
+  const dataUri = `data:image/png;base64,${buffer.toString("base64")}`;
+  try {
+    const result = await cloudinary.uploader.upload(dataUri, {
+      public_id: publicId,
+      overwrite: true,
+      invalidate: true,
+      unique_filename: false,
+      resource_type: "image",
+      format: "png",
+      // Square, face-centered thumbnail regardless of the source image's
+      // shape - crop: "fill" with gravity: "face" crops to fill a 512x512
+      // square around the detected face; Cloudinary falls back to a
+      // center crop automatically if no face is detected, rather than
+      // erroring.
+      transformation: [
+        { width: 512, height: 512, crop: "fill", gravity: "face" },
+      ],
+    });
+    return { publicId: result.public_id || publicId };
+  } catch (error) {
+    if (error.statusCode) throw error;
+    const friendlyMessage = formatCloudinaryError(error, "upload");
+    console.error(
+      `Failed to upload avatar buffer to Cloudinary (${publicId}):`,
+      error,
+    );
+    throw httpError(502, friendlyMessage, { originalError: error.message });
+  }
+}
+
+// Same versioned-URL reasoning as diagramUrlForPublicId above: re-upload
+// overwrites the same public_id, so without an explicit version the CDN
+// and the browser can keep serving the previous avatar for a while after
+// a successful change.
+export function avatarUrlForPublicId(publicId, version) {
+  validateCloudinaryConfig();
+  configureCloudinary();
+
+  try {
+    const options = {
+      secure: true,
+      resource_type: "image",
+      format: "png",
+    };
+    if (version != null && version !== "") {
+      options.version = String(version);
+    }
+    return cloudinary.url(publicId, options);
+  } catch (error) {
+    throw httpError(
+      500,
+      `Could not generate avatar delivery URL: ${error.message}`,
+    );
+  }
+}
+
+export async function deleteAvatar(publicId) {
+  if (!publicId) return;
+  if (!isCloudinaryConfigured()) {
+    console.warn(
+      `Skipping delete for avatar ${publicId}: Cloudinary is not configured`,
+    );
+    return;
+  }
+  configureCloudinary();
+  try {
+    await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
+  } catch (error) {
+    // Best-effort, same stance as deleteDiagram above - removing a custom
+    // avatar shouldn't fail just because the Cloudinary asset was
+    // already gone some other way.
+    console.error(
+      `Failed to delete avatar ${publicId} from Cloudinary:`,
+      error,
+    );
+  }
+}
+
+// Single source of truth for "what avatar do we actually show this
+// user", used everywhere a user-facing response includes one (auth.me,
+// GET/PATCH profile, login/signup/googleAuth responses): a self-uploaded
+// avatar (avatarPublicId set) always wins; otherwise fall back to
+// whatever external avatarUrl is on file (Google's photo, or null for a
+// password-only account that's never uploaded one).
+export function resolveAvatarUrl({
+  avatarPublicId,
+  avatarUpdatedAt,
+  avatarUrl,
+}) {
+  if (avatarPublicId) {
+    return avatarUrlForPublicId(
+      avatarPublicId,
+      assetCacheVersion(avatarUpdatedAt),
+    );
+  }
+  return avatarUrl || null;
 }

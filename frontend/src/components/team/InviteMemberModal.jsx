@@ -29,13 +29,13 @@ export default function InviteMemberModal({
           </button>
         </div>
         <p className="text-xs sm:text-sm text-muted-foreground mb-5">
-          No email provider is configured yet, so we'll give you a link to
-          share with them directly instead of emailing it.
+          No email provider is configured yet, so we'll give you a link to share
+          with them directly instead of emailing it.
         </p>
 
         {lastInviteLink ? (
           <div className="space-y-4">
-            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-xs font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+            <div className="rounded-md border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-xs font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
               <CheckCircle className="w-4 h-4 shrink-0" /> Invitation created
             </div>
             <div>
@@ -47,7 +47,7 @@ export default function InviteMemberModal({
                   readOnly
                   value={lastInviteLink}
                   onFocus={(e) => e.target.select()}
-                  className="w-full px-3 py-2.5 rounded-xl border border-border bg-muted text-foreground text-xs focus:outline-none"
+                  className="w-full px-3 py-2.5 rounded-md border border-border bg-muted text-foreground text-xs focus:outline-none"
                 />
                 <button
                   type="button"
@@ -59,7 +59,7 @@ export default function InviteMemberModal({
                       // still selectable/copyable by hand
                     }
                   }}
-                  className="px-3 rounded-xl bg-muted hover:bg-border transition-colors shrink-0"
+                  className="px-3 rounded-full bg-muted hover:bg-border transition-colors shrink-0"
                 >
                   <LinkIcon className="w-4 h-4 text-foreground" />
                 </button>
@@ -68,7 +68,7 @@ export default function InviteMemberModal({
             <button
               type="button"
               onClick={onClose}
-              className="w-full py-2.5 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-xl text-xs sm:text-sm transition-all"
+              className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-full text-xs sm:text-sm transition-all"
             >
               Done
             </button>
@@ -85,7 +85,7 @@ export default function InviteMemberModal({
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
                 placeholder="teammate@example.com"
-                className="w-full px-4 py-2.5 rounded-xl border border-border bg-card text-foreground text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all"
+                className="w-full px-4 py-2.5 rounded-md border border-border bg-card text-foreground text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all"
               />
             </div>
             <div>
@@ -95,7 +95,7 @@ export default function InviteMemberModal({
               <select
                 value={inviteRole}
                 onChange={(e) => setInviteRole(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-border bg-card text-foreground text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all"
+                className="w-full px-4 py-2.5 rounded-md border border-border bg-card text-foreground text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all"
               >
                 {ASSIGNABLE_ROLES.map((r) => (
                   <option key={r.value} value={r.value}>
@@ -104,13 +104,13 @@ export default function InviteMemberModal({
                 ))}
               </select>
             </div>
-            <div className="text-xs text-muted-foreground bg-muted border border-border rounded-xl p-3">
+            <div className="text-xs text-muted-foreground bg-muted border border-border rounded-md p-3">
               <strong className="text-orange-500">Role permissions:</strong>{" "}
-              Admin (full access) · Reviewer (edit clusters, review
-              questions) · Viewer (read-only)
+              Admin (full access) · Reviewer (edit clusters, review questions) ·
+              Viewer (read-only)
             </div>
             {inviteError && (
-              <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs font-medium text-red-500">
+              <div className="rounded-md border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs font-medium text-red-500">
                 {inviteError}
               </div>
             )}
@@ -118,14 +118,14 @@ export default function InviteMemberModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 py-2.5 border border-border bg-card text-foreground font-semibold rounded-xl hover:bg-muted text-xs sm:text-sm transition-all"
+                className="flex-1 py-2.5 border border-border bg-card text-foreground font-semibold rounded-md hover:bg-muted text-xs sm:text-sm transition-all"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isInviting}
-                className="flex-1 py-2.5 font-semibold rounded-xl text-xs sm:text-sm transition-all bg-[#ea580c] hover:bg-[#c2410c] text-white shadow-xs disabled:opacity-60"
+                className="flex-1 py-2.5 font-semibold rounded-md text-xs sm:text-sm transition-all bg-blue-500 hover:bg-blue-600 text-white shadow-xs disabled:opacity-60"
               >
                 {isInviting ? "Sending..." : "Create Invite"}
               </button>

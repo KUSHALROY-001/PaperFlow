@@ -1,4 +1,5 @@
 import { httpError } from "../lib/http-error.js";
+import { resolveAvatarUrl } from "../lib/cloudinary-storage.js";
 import * as studentsRepo from "../repositories/students.repository.js";
 import * as cohortsRepo from "../repositories/cohorts.repository.js";
 
@@ -22,6 +23,11 @@ function serializeStudent(row) {
     averageScore:
       row.averageScore === null ? null : Number(row.averageScore),
     lastActive: row.lastActive,
+    avatarUrl: resolveAvatarUrl({
+      avatarPublicId: row.avatarPublicId,
+      avatarUpdatedAt: row.avatarUpdatedAt,
+      avatarUrl: row.avatarUrl,
+    }),
   };
 }
 
@@ -128,10 +134,11 @@ export async function getStudentDetail(workspaceId, email) {
     throw httpError(400, "email is required");
   }
 
-  const [name, attempts, topicAccuracy] = await Promise.all([
+  const [name, attempts, topicAccuracy, avatarRow] = await Promise.all([
     studentsRepo.getLatestNameForStudent(workspaceId, normalizedEmail),
     studentsRepo.listAttemptsForStudent(workspaceId, normalizedEmail),
     studentsRepo.getTopicAccuracyForStudent(workspaceId, normalizedEmail),
+    studentsRepo.getAvatarForStudentEmail(normalizedEmail),
   ]);
 
   // Unlike listStudents (which only ever returns emails that already
@@ -152,6 +159,11 @@ export async function getStudentDetail(workspaceId, email) {
     attemptsTaken: attempts.length,
     averageScore: Number(averageScore.toFixed(2)),
     lastActive: attempts[0]?.submittedAt || null,
+    avatarUrl: resolveAvatarUrl({
+      avatarPublicId: avatarRow?.avatarPublicId,
+      avatarUpdatedAt: avatarRow?.avatarUpdatedAt,
+      avatarUrl: avatarRow?.avatarUrl,
+    }),
     attempts: attempts.map(serializeAttemptSummary),
     topicAccuracy: topicAccuracy.map(serializeTopicAccuracy),
   };

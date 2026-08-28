@@ -1,4 +1,5 @@
 import { httpError } from "../lib/http-error.js";
+import { resolveAvatarUrl } from "../lib/cloudinary-storage.js";
 import * as catalogRepo from "../repositories/catalog.repository.js";
 import { createOrGetShareLink } from "./shared.service.js";
 
@@ -39,7 +40,28 @@ export async function getCatalogMockTestDetail(mockTestId, slug) {
   }
 
   const topics = await catalogRepo.getCatalogMockTestTopics(mockTestId);
-  return { ...detail, topics };
+
+  // Collapse the three raw avatar columns into one display URL for the
+  // publisher card on MockTestDetailModal. Keep the workspace name as the
+  // publisher label; the avatar is the owner's photo when they have one.
+  const {
+    publisherAvatarUrl,
+    publisherAvatarPublicId,
+    publisherAvatarUpdatedAt,
+    publisherOwnerName,
+    ...rest
+  } = detail;
+
+  return {
+    ...rest,
+    publisherAvatarUrl: resolveAvatarUrl({
+      avatarPublicId: publisherAvatarPublicId,
+      avatarUpdatedAt: publisherAvatarUpdatedAt,
+      avatarUrl: publisherAvatarUrl,
+    }),
+    publisherOwnerName: publisherOwnerName || null,
+    topics,
+  };
 }
 
 // The "Public Mock Tests" tab (default) on PublicCatalog.jsx - no slug at

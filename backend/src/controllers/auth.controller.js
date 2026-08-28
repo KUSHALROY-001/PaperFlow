@@ -40,6 +40,16 @@ export async function updateProfile(req, res) {
   res.json({ profile });
 }
 
+export async function uploadAvatar(req, res) {
+  const profile = await authService.uploadAvatar(req.user.id, req.file);
+  res.status(201).json({ profile });
+}
+
+export async function deleteAvatar(req, res) {
+  const profile = await authService.deleteAvatar(req.user.id);
+  res.json({ profile });
+}
+
 export async function changePassword(req, res) {
   await authService.changePassword(req.user.id, req.body);
   res.status(204).send();

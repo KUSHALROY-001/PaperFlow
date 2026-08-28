@@ -1,8 +1,16 @@
 import bcrypt from "bcryptjs";
+import sharp from "sharp";
 import { httpError } from "../lib/http-error.js";
 import { signAccessToken } from "../lib/jwt.js";
 import { verifyGoogleIdToken } from "../lib/google-oauth.js";
 import { requiredEnum, requiredString } from "../lib/validators.js";
+import {
+  buildAvatarPublicId,
+  deleteAvatar as deleteAvatarFromCloudinary,
+  isCloudinaryConfigured,
+  resolveAvatarUrl,
+  uploadAvatarBuffer,
+} from "../lib/cloudinary-storage.js";
 import * as authRepo from "../repositories/auth.repository.js";
 
 function buildAuthResponse(user, workspaceId) {
@@ -10,7 +18,16 @@ function buildAuthResponse(user, workspaceId) {
 
   return {
     token,
-    user: { id: user.id, name: user.name, email: user.email },
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatarUrl: resolveAvatarUrl({
+        avatarPublicId: user.avatar_public_id,
+        avatarUpdatedAt: user.avatar_updated_at,
+        avatarUrl: user.avatar_url,
+      }),
+    },
     workspaceId,
   };
 }
@@ -45,6 +62,21 @@ export async function listWorkspacesForUser(userId) {
 
 const ACCOUNT_TYPES = ["student", "educator", "coaching_center"];
 
+// Every profile-shaped response (getProfile, updateProfile, uploadAvatar,
+// deleteAvatar below) needs the same transform: the three raw avatar_*
+// columns collapse into the one URL that's actually displayed, plus a
+// hasCustomAvatar flag so the frontend knows whether "Remove avatar" is a
+// real action (a self-uploaded avatar exists to remove) or a no-op (only
+// the Google photo, or nothing, is showing).
+function shapeProfile(profile) {
+  const { avatarUrl, avatarPublicId, avatarUpdatedAt, ...rest } = profile;
+  return {
+    ...rest,
+    avatarUrl: resolveAvatarUrl({ avatarPublicId, avatarUpdatedAt, avatarUrl }),
+    hasCustomAvatar: Boolean(avatarPublicId),
+  };
+}
+
 export async function getProfile(userId) {
   const profile = await authRepo.findProfileById(userId);
 
@@ -52,7 +84,7 @@ export async function getProfile(userId) {
     throw httpError(404, "Account not found");
   }
 
-  return profile;
+  return shapeProfile(profile);
 }
 
 // Email is deliberately NOT accepted here - it's the account's login
@@ -78,7 +110,98 @@ export async function updateProfile(userId, body) {
     throw httpError(404, "Account not found");
   }
 
-  return profile;
+  return shapeProfile(profile);
+}
+
+// Uploads/replaces the user's custom avatar. Always overwrites the same
+// Cloudinary public_id (buildAvatarPublicId is keyed only on userId), so
+// there's no separate "delete the old one first" step the way question
+// diagrams need in some flows - the new upload simply replaces it in place.
+export async function uploadAvatar(userId, file) {
+  if (!file) {
+    throw httpError(400, "Missing image file");
+  }
+  if (!file.buffer || file.buffer.length === 0) {
+    throw httpError(400, "Uploaded file is empty");
+  }
+  // Fail fast with a clear message before any image work when Cloudinary
+  // is missing from the environment - otherwise the user only sees a
+  // generic 502 after sharp has already processed the file, same
+  // reasoning as question-assets.controller.js#uploadDiagramImage.
+  if (!isCloudinaryConfigured()) {
+    throw httpError(
+      503,
+      "Cloud image storage (Cloudinary) is not configured on the server",
+    );
+  }
+
+  let normalizedPng;
+  try {
+    // Re-encode through sharp rather than trusting the uploaded bytes as-is
+    // - strips EXIF, normalizes to PNG regardless of whether the upload was
+    // a JPEG/WEBP, and gives a clean 400 instead of a corrupt upload if
+    // what came through fileFilter's mimetype check isn't actually a
+    // decodable image. Cloudinary's own upload-time transformation (see
+    // uploadAvatarBuffer) handles the square face-crop after this.
+    normalizedPng = await sharp(file.buffer).png().toBuffer();
+  } catch (error) {
+    console.error("sharp failed to process uploaded avatar:", error);
+    throw httpError(
+      400,
+      "Could not process this image. Use a valid PNG, JPEG, or WebP file",
+    );
+  }
+
+  const publicId = buildAvatarPublicId(userId);
+
+  try {
+    await uploadAvatarBuffer(normalizedPng, publicId);
+  } catch (error) {
+    // uploadAvatarBuffer already maps Cloudinary failures to httpError(502).
+    console.error(`uploadAvatar failed for user ${userId} (publicId=${publicId}):`, error);
+    throw error;
+  }
+
+  let profile;
+  try {
+    profile = await authRepo.setAvatar(userId, publicId);
+  } catch (error) {
+    // Cloudinary already holds the new bytes under publicId - same
+    // partial-success situation question-assets.controller.js#uploadDiagramImage
+    // guards against, logged rather than silently swallowed.
+    console.error(`Avatar uploaded to Cloudinary but DB update failed for user ${userId}:`, error);
+    throw httpError(
+      500,
+      "Image was uploaded but could not be saved to your profile. Please try again",
+    );
+  }
+
+  if (!profile) {
+    throw httpError(404, "Account not found");
+  }
+
+  return shapeProfile(profile);
+}
+
+// Removes the custom avatar, reverting display back to avatar_url
+// (Google's photo, or nothing for a password-only account that never
+// uploaded one) - avatar_url itself is never touched by this.
+export async function deleteAvatar(userId) {
+  const current = await authRepo.findProfileById(userId);
+  if (!current) {
+    throw httpError(404, "Account not found");
+  }
+
+  if (current.avatarPublicId) {
+    await deleteAvatarFromCloudinary(current.avatarPublicId);
+  }
+
+  const profile = await authRepo.clearAvatar(userId);
+  if (!profile) {
+    throw httpError(404, "Account not found");
+  }
+
+  return shapeProfile(profile);
 }
 
 export async function changePassword(userId, body) {
@@ -221,8 +344,20 @@ export async function googleAuth({ credential }) {
       // account - link Google onto it as an additional sign-in method
       // instead of creating a second, disconnected account that happens
       // to share an email address with the first.
-      await authRepo.linkGoogleIdToUser(existing.id, payload.sub);
-      user = existing;
+      await authRepo.linkGoogleIdToUser(
+        existing.id,
+        payload.sub,
+        payload.picture || null,
+      );
+      // existing was fetched BEFORE the link/backfill above, so its
+      // avatar_url is still stale for this one in-memory object (the DB
+      // itself is already correct) - apply the same COALESCE the SQL
+      // used so buildAuthResponse below shows the newly-linked avatar
+      // immediately, rather than only from the next /api/auth/me call.
+      user = {
+        ...existing,
+        avatar_url: existing.avatar_url ?? payload.picture ?? null,
+      };
       workspaceId = await authRepo.findFirstWorkspaceIdForUser(user.id);
     } else {
       const created = await authRepo.createUserWithWorkspaceFromGoogle({

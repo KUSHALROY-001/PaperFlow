@@ -216,6 +216,7 @@ def extract_json_payload(text):
     if not text:
         raise ValueError("AI response was empty")
 
+    original_text = text
     fenced = JSON_BLOCK_RE.search(text)
     if fenced:
         text = fenced.group(1)
@@ -243,7 +244,20 @@ def extract_json_payload(text):
         if salvaged:
             return {"questions": salvaged}
 
-        raise first_error
+        # first_error's own message ("Expecting value: line 1 column 1
+        # (char 0)") is what json.JSONDecodeError says for ANY text that
+        # doesn't open with a valid JSON token - not just a genuinely
+        # empty string. A non-empty refusal or explanation from the model
+        # (e.g. prose declining to process the image, returned with
+        # finishReason=STOP so gemini_provider.py's own empty-response
+        # check never fires) produces this exact same message with zero
+        # indication of what the model actually said. Attaching a preview
+        # of the real response text is what turns "Expecting value: line
+        # 1 column 1 (char 0)" from a dead end into something actionable.
+        preview = original_text[:300].replace("\n", " ")
+        raise ValueError(
+            f"{first_error} — response preview: {preview!r}"
+        ) from first_error
 
 
 def normalize_ai_questions(payload, *, source="ai"):

@@ -89,6 +89,23 @@ def classify_page_content(page):
 
 
 def extract_pdf_pages(file_path):
+    # Returns one entry per PDF page, unconditionally - including pages
+    # with NO text layer at all (text ends up as "" for those). This used
+    # to skip any page that had no text, which quietly dropped it from
+    # every downstream pass at once: not just the regex/text parser (fair
+    # enough, there's no text to parse) but ALSO the vision pipeline in
+    # ai/provider.py, which decides what needs vision by looking at THIS
+    # function's output - a page that was never even in the list can never
+    # be routed to vision either. On a real exam PDF that's mostly
+    # text-layer pages with a handful of image-only inserts mixed in, that
+    # meant those specific pages produced no error anywhere - they just
+    # silently never existed to any part of the pipeline, and their
+    # questions came back missing with no trail explaining why. Including
+    # every page here fixes that at the source: classify_page_content
+    # still runs per page and will flag a genuinely image-only page as
+    # needsVision from its raster images / vector drawings, so it gets
+    # picked up by the vision pass the same way any other needs-vision
+    # page does, without requiring OCR to have run first.
     path = Path(file_path)
     if not path.exists():
         raise FileNotFoundError(f"Uploaded PDF not found: {path}")
@@ -96,10 +113,9 @@ def extract_pdf_pages(file_path):
     pages = []
     with fitz.open(path) as document:
         for index, page in enumerate(document, start=1):
-            text = page.get_text("text")
-            if text and text.strip():
-                page_entry = {"page": index, "text": text}
-                page_entry.update(classify_page_content(page))
-                pages.append(page_entry)
+            text = page.get_text("text") or ""
+            page_entry = {"page": index, "text": text}
+            page_entry.update(classify_page_content(page))
+            pages.append(page_entry)
 
     return pages

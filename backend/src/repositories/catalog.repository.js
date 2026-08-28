@@ -193,10 +193,20 @@ export async function getCatalogMockTestDetail(mockTestId, workspaceId) {
       mt.negative_marks_per_wrong,
       c.name AS cluster_name,
       w.name AS workspace_name,
-      w.public_slug AS workspace_slug
+      w.public_slug AS workspace_slug,
+      -- Publisher avatar = workspace owner's profile photo (custom upload
+      -- or Google). Used on the public catalog detail modal so visitors
+      -- see the same face the owner set in Settings.
+      owner_u.name AS "publisherOwnerName",
+      owner_u.avatar_url AS "publisherAvatarUrl",
+      owner_u.avatar_public_id AS "publisherAvatarPublicId",
+      owner_u.avatar_updated_at AS "publisherAvatarUpdatedAt"
     FROM mock_tests mt
     JOIN clusters c ON c.id = mt.cluster_id
     JOIN workspaces w ON w.id = mt.workspace_id
+    LEFT JOIN workspace_members owner_wm
+      ON owner_wm.workspace_id = w.id AND owner_wm.role = 'owner'
+    LEFT JOIN users owner_u ON owner_u.id = owner_wm.user_id
     WHERE ${conditions.join(" AND ")}
     `,
     params,

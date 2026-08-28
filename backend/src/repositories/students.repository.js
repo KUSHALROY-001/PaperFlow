@@ -33,9 +33,16 @@ export async function listStudents(workspaceId, search, cohortId) {
       ln.name,
       COUNT(*) FILTER (WHERE ea.status = 'submitted')::int AS "attemptsTaken",
       AVG(ea.score) FILTER (WHERE ea.status = 'submitted') AS "averageScore",
-      MAX(ea.submitted_at) AS "lastActive"
+      MAX(ea.submitted_at) AS "lastActive",
+      -- If this guest email matches a registered PaperFlow user, surface
+      -- their profile avatar so the roster shows the same photo they
+      -- uploaded / got from Google. Pure guests stay with initials.
+      u.avatar_url AS "avatarUrl",
+      u.avatar_public_id AS "avatarPublicId",
+      u.avatar_updated_at AS "avatarUpdatedAt"
     FROM exam_attempts ea
     JOIN latest_name ln ON ln.taker_email = ea.taker_email
+    LEFT JOIN users u ON lower(u.email) = lower(ea.taker_email)
     WHERE ea.workspace_id = $1
       AND ea.taker_email IS NOT NULL
       AND (
@@ -50,7 +57,7 @@ export async function listStudents(workspaceId, search, cohortId) {
           WHERE cm.cohort_id = $3 AND cm.taker_email = ea.taker_email
         )
       )
-    GROUP BY ea.taker_email, ln.name
+    GROUP BY ea.taker_email, ln.name, u.avatar_url, u.avatar_public_id, u.avatar_updated_at
     ORDER BY "lastActive" DESC NULLS LAST
     `,
     [workspaceId, search || null, cohortId || null],
@@ -139,6 +146,25 @@ export async function getLatestNameForStudent(workspaceId, email) {
   );
 
   return result.rows[0]?.name || null;
+}
+
+// Avatar for a student email when it matches a registered user account.
+// Returns the raw columns so the service can run resolveAvatarUrl.
+export async function getAvatarForStudentEmail(email) {
+  const result = await pool.query(
+    `
+    SELECT
+      avatar_url AS "avatarUrl",
+      avatar_public_id AS "avatarPublicId",
+      avatar_updated_at AS "avatarUpdatedAt"
+    FROM users
+    WHERE lower(email) = lower($1)
+    LIMIT 1
+    `,
+    [email],
+  );
+
+  return result.rows[0] || null;
 }
 
 // Phase 3: "12 students are weak in Rotational Motion". A student counts

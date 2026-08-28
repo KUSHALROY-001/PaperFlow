@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Settings, LogOut, ChevronRight, Headphones } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
+import UserAvatar from "@/components/shared/UserAvatar";
 
 export default function UserMenu() {
   const location = useLocation();
@@ -15,8 +16,7 @@ export default function UserMenu() {
     setShowUserMenu(false);
   }, [location.pathname]);
 
-  const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : "K";
-  const userName = user?.name ? user.name.split(" ")[0] : "Kushal";
+  const userName = user?.name ? user.name.split(" ")[0] : "User";
 
   return (
     <div className="relative">
@@ -24,9 +24,12 @@ export default function UserMenu() {
         onClick={() => setShowUserMenu(!showUserMenu)}
         className="flex items-center gap-2 px-2.5 py-1.5 rounded-3xl border border-border bg-card hover:bg-muted transition-all"
       >
-        <div className="w-6 h-6 rounded-full bg-[#ea580c] text-white font-bold text-xs flex items-center justify-center shrink-0">
-          {userInitial}
-        </div>
+        <UserAvatar
+          src={user?.avatarUrl}
+          name={user?.name}
+          seed={user?.id || user?.email}
+          size="sm"
+        />
         <span className="hidden sm:inline text-xs font-semibold text-foreground">
           {userName}
         </span>

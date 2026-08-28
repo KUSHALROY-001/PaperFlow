@@ -1,8 +1,15 @@
-import { User, Save } from "lucide-react";
+import { useRef, useState } from "react";
+import { User, Save, Camera, X, Loader2 } from "lucide-react";
 import { accountTypeOptions, accountTypeLabel } from "@/hooks/useSettings";
 
 export default function ProfileSection({
   email,
+  avatarUrl,
+  hasCustomAvatar,
+  avatarError,
+  isSavingAvatar,
+  handleUploadAvatar,
+  handleRemoveAvatar,
   profileForm,
   setProfileForm,
   profileError,
@@ -10,6 +17,31 @@ export default function ProfileSection({
   handleSaveProfile,
   saved,
 }) {
+  const fileInputRef = useRef(null);
+  // Client-side only, so the picture the user just chose shows up
+  // immediately instead of waiting on the upload round trip - cleared
+  // once the real avatarUrl from the server reflects it (see the
+  // onChange handler below).
+  const [localPreview, setLocalPreview] = useState(null);
+
+  const displayedAvatar = localPreview || avatarUrl;
+
+  const onFileChosen = (e) => {
+    const file = e.target.files?.[0];
+    // Always clear the input's own value, chosen or not, so picking the
+    // exact same file again still fires a fresh onChange next time.
+    e.target.value = "";
+    if (!file) return;
+
+    const objectUrl = URL.createObjectURL(file);
+    setLocalPreview(objectUrl);
+
+    handleUploadAvatar(file).finally(() => {
+      URL.revokeObjectURL(objectUrl);
+      setLocalPreview(null);
+    });
+  };
+
   return (
     <form
       onSubmit={handleSaveProfile}
@@ -24,21 +56,78 @@ export default function ProfileSection({
 
       <div className="space-y-4">
         <div className="flex items-center gap-4 mb-5">
-          <div className="w-16 h-16 bg-[#ea580c] rounded-full flex items-center justify-center shadow-xs shrink-0">
-            <User className="w-8 h-8 text-white" />
+          <div className="relative shrink-0">
+            {displayedAvatar ? (
+              <img
+                src={displayedAvatar}
+                alt=""
+                className="w-16 h-16 rounded-full object-cover shadow-xs"
+              />
+            ) : (
+              <div className="w-16 h-16 bg-[#ea580c] rounded-full flex items-center justify-center shadow-xs">
+                <User className="w-8 h-8 text-white" />
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isSavingAvatar}
+              aria-label="Change avatar"
+              className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center border-2 border-card hover:bg-orange-600 transition-colors disabled:opacity-60"
+            >
+              {isSavingAvatar ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Camera className="w-3.5 h-3.5" />
+              )}
+            </button>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={onFileChosen}
+              className="hidden"
+            />
           </div>
-          <div className="min-w-0">
+
+          <div className="min-w-0 flex-1">
             <p className="font-bold text-foreground truncate">
               {profileForm.name}
             </p>
             <p className="text-xs sm:text-sm text-muted-foreground truncate">
               {email}
             </p>
-            <span className="text-xs bg-orange-500/15 text-orange-500 border border-orange-500/20 px-2.5 py-0.5 rounded-lg font-bold mt-1 inline-block">
-              {accountTypeLabel(profileForm.accountType)}
-            </span>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <span className="text-xs bg-orange-500/15 text-orange-500 border border-orange-500/20 px-2.5 py-0.5 rounded-lg font-bold inline-block">
+                {accountTypeLabel(profileForm.accountType)}
+              </span>
+              {hasCustomAvatar && (
+                <button
+                  type="button"
+                  onClick={handleRemoveAvatar}
+                  disabled={isSavingAvatar}
+                  className="text-xs text-muted-foreground hover:text-red-500 inline-flex items-center gap-1 disabled:opacity-60 transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                  Remove avatar
+                </button>
+              )}
+              {saved === "avatar" && (
+                <span className="text-xs text-emerald-500 font-medium">
+                  Saved!
+                </span>
+              )}
+            </div>
           </div>
         </div>
+
+        {avatarError && (
+          <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs font-medium text-red-500">
+            {avatarError}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>

@@ -194,6 +194,60 @@ def _call_with_retry(make_request):
     raise RuntimeError("Gemini request failed after retries")
 
 
+def _extract_text_or_diagnose(data):
+    """
+    Pulls the generated text out of a parsed Gemini generateContent
+    response body. Same underlying extraction as before
+    (candidates[0].content.parts), but now also looks at finishReason (and
+    promptFeedback.blockReason) before deciding what to return, instead of
+    just returning whatever text happened to be there - or nothing.
+
+    Previously, a blocked or truncated response (content safety filter,
+    RECITATION, or MAX_TOKENS - the last one a real risk here since
+    QUESTION_GENERATION_CONFIG never sets maxOutputTokens or a
+    thinkingConfig budget, so a dense image chunk can spend its entire
+    token budget on internal "thinking" and leave nothing for the actual
+    output) came back as either an empty string (already handled as "AI
+    response was empty" by the caller) or, if `parts` existed but its text
+    was just whitespace/near-empty, fell all the way through to
+    extract_json_payload's json.loads(), which raised the generic
+    "Expecting value: line 1 column 1 (char 0)" - a message that says
+    nothing about WHY the model didn't return usable JSON. Confirmed on a
+    real job: several image chunks failed this exact way on every one of
+    their 3 retries, which only makes sense as a content-driven block or
+    budget exhaustion, not the ordinary network flakiness the retry loop
+    around this is actually built to recover from.
+
+    Only raises when there's NOTHING to work with (empty text AND a
+    non-STOP finish reason) - a finishReason like MAX_TOKENS that still
+    left SOME text is left alone and returned as-is, since
+    salvage_question_objects (schemas.py) can often recover whichever
+    individual questions were fully written before the cutoff.
+    """
+    block_reason = (data.get("promptFeedback") or {}).get("blockReason")
+    if block_reason:
+        raise RuntimeError(f"Gemini blocked the prompt (blockReason={block_reason})")
+
+    candidates = data.get("candidates") or [{}]
+    candidate = candidates[0]
+    finish_reason = candidate.get("finishReason")
+    parts = candidate.get("content", {}).get("parts", [])
+    text = "\n".join(part.get("text", "") for part in parts).strip()
+
+    if not text and finish_reason and finish_reason != "STOP":
+        flagged = [
+            rating.get("category")
+            for rating in candidate.get("safetyRatings") or []
+            if rating.get("probability") not in (None, "NEGLIGIBLE", "LOW")
+        ]
+        detail = f"finishReason={finish_reason}"
+        if flagged:
+            detail += f", flagged categories={flagged}"
+        raise RuntimeError(f"Gemini returned no usable content ({detail})")
+
+    return text
+
+
 def _group_pages_into_chunks(page_numbers, chunk_size):
     """
     Groups a sorted list of 1-indexed page numbers into chunks of at most
@@ -264,12 +318,7 @@ class GeminiProvider:
             with request.urlopen(req, timeout=AI_TIMEOUT_SECONDS) as response:
                 data = json.loads(response.read().decode("utf-8"))
 
-            parts = (
-                data.get("candidates", [{}])[0]
-                .get("content", {})
-                .get("parts", [])
-            )
-            return "\n".join(part.get("text", "") for part in parts).strip()
+            return _extract_text_or_diagnose(data)
 
         return _call_with_retry(make_request)
 
@@ -307,12 +356,7 @@ class GeminiProvider:
             with request.urlopen(req, timeout=AI_TIMEOUT_SECONDS) as response:
                 data = json.loads(response.read().decode("utf-8"))
 
-            parts = (
-                data.get("candidates", [{}])[0]
-                .get("content", {})
-                .get("parts", [])
-            )
-            return "\n".join(part.get("text", "") for part in parts).strip()
+            return _extract_text_or_diagnose(data)
 
         return _call_with_retry(make_request)
 
@@ -572,9 +616,4 @@ class GeminiProvider:
         with request.urlopen(req, timeout=AI_TIMEOUT_SECONDS) as response:
             data = json.loads(response.read().decode("utf-8"))
 
-        parts = (
-            data.get("candidates", [{}])[0]
-            .get("content", {})
-            .get("parts", [])
-        )
-        return "\n".join(part.get("text", "") for part in parts).strip()
+        return _extract_text_or_diagnose(data)

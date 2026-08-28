@@ -51,6 +51,9 @@ export function useSettings() {
 
   const [saved, setSaved] = useState(null);
 
+  const [avatarError, setAvatarError] = useState("");
+  const [isSavingAvatar, setIsSavingAvatar] = useState(false);
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteError, setDeleteError] = useState("");
@@ -87,6 +90,46 @@ export function useSettings() {
       setProfileError(error.message || "Could not save profile");
     } finally {
       setIsSavingProfile(false);
+    }
+  };
+
+  // file comes straight from an <input type="file"> onChange - the caller
+  // (ProfileSection) doesn't need to know anything about FormData/upload
+  // mechanics, same division of responsibility as handleSaveProfile above.
+  const handleUploadAvatar = async (file) => {
+    if (!file) return;
+    setAvatarError("");
+    setIsSavingAvatar(true);
+
+    try {
+      await api.uploadAvatar(file);
+      await queryClient.invalidateQueries({ queryKey: ["profile"] });
+      // Sidebar/header will read avatarUrl from AuthContext once that's
+      // wired up there too - refreshing now keeps this consistent with
+      // handleSaveProfile's name-change behavior above rather than only
+      // updating on this page.
+      await checkUserAuth();
+      flashSaved("avatar");
+    } catch (error) {
+      setAvatarError(error.message || "Could not upload avatar");
+    } finally {
+      setIsSavingAvatar(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    setAvatarError("");
+    setIsSavingAvatar(true);
+
+    try {
+      await api.deleteAvatar();
+      await queryClient.invalidateQueries({ queryKey: ["profile"] });
+      await checkUserAuth();
+      flashSaved("avatar");
+    } catch (error) {
+      setAvatarError(error.message || "Could not remove avatar");
+    } finally {
+      setIsSavingAvatar(false);
     }
   };
 
@@ -137,6 +180,12 @@ export function useSettings() {
     isLoading,
     profileLoadError,
     email: profile?.email || "",
+    avatarUrl: profile?.avatarUrl || null,
+    hasCustomAvatar: profile?.hasCustomAvatar || false,
+    avatarError,
+    isSavingAvatar,
+    handleUploadAvatar,
+    handleRemoveAvatar,
     profileForm,
     setProfileForm,
     profileError,

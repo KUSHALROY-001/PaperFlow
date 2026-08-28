@@ -9,12 +9,11 @@ import {
 } from "lucide-react";
 import {
   ASSIGNABLE_ROLES,
-  avatarColorFor,
-  initialsFor,
   roleColors,
   roleLabel,
 } from "@/utils/teamHelpers";
 import { formatDate } from "@/lib/date";
+import UserAvatar from "@/components/shared/UserAvatar";
 
 function MemberRow({
   member,
@@ -27,11 +26,12 @@ function MemberRow({
     <div className="px-3.5 sm:px-6 py-3.5 sm:py-4 hover:bg-muted/40 transition-colors relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
       {/* User Info Section */}
       <div className="flex items-center gap-3 min-w-0 flex-1">
-        <div
-          className={`w-10 h-10 rounded-3xl ${avatarColorFor(member.id)} flex items-center justify-center text-white font-bold text-sm shrink-0`}
-        >
-          {initialsFor(member.name)}
-        </div>
+        <UserAvatar
+          src={member.avatarUrl}
+          name={member.name}
+          seed={member.id || member.email}
+          rounded="3xl"
+        />
         <div className="flex-1 min-w-0">
           <div className="font-bold text-sm text-foreground truncate">
             {member.name}

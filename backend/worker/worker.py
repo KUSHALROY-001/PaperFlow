@@ -112,6 +112,16 @@ def friendly_job_error_message(error):
     )
 
 
+def _count_pages_with_text(pages):
+    # extract_pdf_pages now returns one dict per PDF page regardless of
+    # whether that page has any text (see its own docstring for why -
+    # dropping text-less pages used to make them invisible to vision
+    # routing too), so `len(pages)` is just the page count and no longer
+    # tells us how many pages actually have a text layer. This is the
+    # replacement for every spot that used to read `len(pages)` for that.
+    return sum(1 for page in pages if (page.get("text") or "").strip())
+
+
 def process_job(job):
     # "Generate from existing tests" has no PDF at all - branches into its
     # own function immediately, before anything below that assumes
@@ -151,7 +161,20 @@ def process_job(job):
 
     check_not_cancelled(job["id"])
 
-    if OCR_ENABLED and len(pages) == 0:
+    # Previously gated on `len(pages) == 0` - back when extract_pdf_pages
+    # dropped any page with no text layer entirely, that was the only way
+    # to detect "this document has nothing OCR could help with". Now that
+    # extract_pdf_pages returns an entry for every page (see its own
+    # comment for why - those dropped pages used to be invisible to
+    # vision routing too), `len(pages)` is just the page count and no
+    # longer signals anything about text coverage. convert_scanned_pdf_to_
+    # searchable_pdf now decides for itself, per page, whether there's
+    # anything to OCR - including the common case of a MOSTLY text-based
+    # exam PDF with a couple of image-only pages mixed in, which the old
+    # whole-document gate never even attempted. It's cheap to call
+    # unconditionally when OCR_ENABLED: it returns immediately with
+    # converted=False if no page needs it.
+    if OCR_ENABLED:
         with get_connection() as connection:
             update_job(
                 connection,
@@ -160,7 +183,7 @@ def process_job(job):
                 stage="Converting scanned PDF with OCR",
                 progress=35,
                 summary={
-                    "pagesWithText": len(pages),
+                    "pagesWithText": _count_pages_with_text(pages),
                     "ocr": ocr_summary,
                 },
             )
@@ -174,14 +197,28 @@ def process_job(job):
                 "pagesOcrd": ocr_result.pages_ocrd,
                 "pagesWithTextBeforeOcr": ocr_result.pages_with_text_before_ocr,
                 "searchablePdfPath": str(ocr_result.output_path) if ocr_result.output_path else None,
+                # Set only when there WAS a text-less page but Tesseract
+                # isn't installed on this host (e.g. this Render deploy
+                # today, which has no OCR system dependency configured) -
+                # surfaced so that's visible in the job summary instead of
+                # silently doing nothing. Vision-based extraction still
+                # gets a shot at these pages independently of OCR.
+                "skippedReason": ocr_result.skipped_reason,
                 "error": None,
             }
 
-            if ocr_result.output_path:
+            if ocr_result.output_path and ocr_result.converted:
                 pdf_path = ocr_result.output_path
                 temp_pdf_paths.append(pdf_path)
                 pages = extract_pdf_pages(pdf_path)
         except Exception as error:
+            # convert_scanned_pdf_to_searchable_pdf no longer raises for a
+            # missing Tesseract install (that's the skipped_reason path
+            # above) - this now only catches genuine unexpected failures
+            # (a corrupt page image, a disk error writing the merged PDF,
+            # etc.), which is why this can stay a broad catch: OCR is a
+            # best-effort enhancement, never something a job should die
+            # over.
             ocr_summary = {
                 "enabled": True,
                 "converted": False,
@@ -189,18 +226,24 @@ def process_job(job):
                 "searchablePdfPath": None,
                 "error": str(error),
             }
-    elif len(pages) == 0:
-        # OCR_ENABLED is off and this PDF has no extractable text at all
-        # (i.e. it's scanned/image-only) - without this, execution would
-        # fall through to parse_questions([]) and silently produce a
-        # near-empty mock test instead of a clear, actionable failure.
+
+    # Genuinely nothing for the rest of the pipeline to work with: no page
+    # has real text (OCR was off, unavailable, or found nothing) AND no
+    # page even has an image/drawing for vision-based extraction to read
+    # instead. Checked AFTER the OCR attempt (and using needsVision, not
+    # just text) rather than the old pre-OCR `len(pages) == 0` check,
+    # because a page with no text but a scanned image on it is exactly
+    # what needsVision is for - that page doesn't need OCR to be
+    # extractable, only a genuinely blank/corrupt page does.
+    if _count_pages_with_text(pages) == 0 and not any(page.get("needsVision") for page in pages):
         # RuntimeError is deliberate: friendly_job_error_message (above)
         # renders RuntimeError messages verbatim to the uploader, same as
         # every other self-describing failure in this file.
         raise RuntimeError(
-            "This PDF appears to be scanned or image-only, and OCR is "
-            "currently disabled - text couldn't be extracted from it. "
-            "Try a text-based PDF, or ask an admin to enable OCR."
+            "This PDF has no extractable content on any page - no text, "
+            "no images, no diagrams. It may be corrupted, password "
+            "protected in a way that strips content, or genuinely blank. "
+            "Try re-exporting or re-scanning the file."
         )
 
     check_not_cancelled(job["id"])
@@ -213,7 +256,7 @@ def process_job(job):
             stage="Parsing questions",
             progress=55,
             summary={
-                "pagesWithText": len(pages),
+                "pagesWithText": _count_pages_with_text(pages),
                 "ocr": ocr_summary,
             },
         )
@@ -243,7 +286,7 @@ def process_job(job):
             stage="AI cleanup",
             progress=68,
             summary={
-                "pagesWithText": len(pages),
+                "pagesWithText": _count_pages_with_text(pages),
                 "ocr": ocr_summary,
                 "regexQuestionsParsed": len(questions),
                 "documentType": document_type,
@@ -277,7 +320,16 @@ def process_job(job):
         questions,
         pdf_path=pdf_path,
         document_type=document_type,
-        was_scanned=bool(ocr_summary.get("converted")),
+        # was_scanned means "the WHOLE document's reading order is
+        # unreliable, route every page to vision" - only true for a fully
+        # scanned document (pagesWithTextBeforeOcr == 0), not merely
+        # "some pages got OCR'd". OCR now runs per-page for a mixed
+        # document (see convert_scanned_pdf_to_searchable_pdf), so
+        # `converted` alone would wrongly force every plain-text page
+        # through vision too just because a couple of OTHER pages needed
+        # OCR - per-page needsVision already routes those specific pages
+        # correctly without that blanket cost.
+        was_scanned=bool(ocr_summary.get("converted")) and ocr_summary.get("pagesWithTextBeforeOcr") == 0,
         on_progress=report_ai_progress,
         template_context=template_context,
     )
@@ -308,7 +360,7 @@ def process_job(job):
                 stage="Saving questions",
                 progress=80,
                 summary={
-                    "pagesWithText": len(pages),
+                    "pagesWithText": _count_pages_with_text(pages),
                     "ocr": ocr_summary,
                     "regexQuestionsParsed": ai_summary.get("regexQuestionsParsed"),
                     "ai": ai_summary,
@@ -329,7 +381,7 @@ def process_job(job):
                 stage="Completed",
                 progress=100,
                 summary={
-                    "pagesWithText": len(pages),
+                    "pagesWithText": _count_pages_with_text(pages),
                     "ocr": ocr_summary,
                     "ai": ai_summary,
                     "questionsParsed": len(questions),
