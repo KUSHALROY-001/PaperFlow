@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import {
   AlertTriangle,
-  ImageOff,
   RotateCcw,
   ExternalLink,
   Loader2,
@@ -19,12 +18,15 @@ export function QuestionDiagram({ diagramUrl, className = "" }) {
 
   useEffect(() => {
     setStatus("loading");
-  }, [diagramUrl, retryCount]);
+    setRetryCount(0);
+  }, [diagramUrl]);
 
   if (!diagramUrl) return null;
 
   const rawUrl = resolveAssetUrl(diagramUrl);
-  // Cache buster for manual retries
+  // Cache buster for manual retries. Replace/crop already change
+  // diagramUrl itself (backend attaches ?v=<created_at>), so a new
+  // image does not depend on this - only the Retry button does.
   const imageUrl =
     retryCount > 0
       ? `${rawUrl}${rawUrl.includes("?") ? "&" : "?"}_r=${retryCount}`
@@ -80,6 +82,7 @@ export function QuestionDiagram({ diagramUrl, className = "" }) {
       )}
 
       <img
+        key={imageUrl}
         src={imageUrl}
         alt="Question diagram"
         onLoad={() => setStatus("loaded")}
@@ -164,7 +167,9 @@ export default function QuestionContent({
           </div>
         </div>
       )}
-      {showAboveText && <QuestionDiagram diagramUrl={diagramUrl} />}
+      {showAboveText && (
+        <QuestionDiagram key={diagramUrl} diagramUrl={diagramUrl} />
+      )}
       {text && (
         <CodeText
           text={text}
@@ -173,7 +178,9 @@ export default function QuestionContent({
           onUpdateText={onUpdateText}
         />
       )}
-      {showBelowText && <QuestionDiagram diagramUrl={diagramUrl} />}
+      {showBelowText && (
+        <QuestionDiagram key={diagramUrl} diagramUrl={diagramUrl} />
+      )}
     </div>
   );
 }

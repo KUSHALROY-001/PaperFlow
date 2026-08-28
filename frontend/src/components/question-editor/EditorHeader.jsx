@@ -11,7 +11,23 @@ export default function EditorHeader({
   isViewer,
   onShowLatexReference,
   returnTo,
+  selectedIsDirty,
+  hasUnsavedChanges,
+  dirtyContentCount,
+  orderChangeCount,
 }) {
+  const saveLabel = isSaving ? "Saving..." : saved ? "Saved" : "Save";
+
+  const dirtyHint =
+    hasUnsavedChanges && (dirtyContentCount > 0 || orderChangeCount > 0)
+      ? [
+          dirtyContentCount > 0 ? `${dirtyContentCount} edited` : null,
+          orderChangeCount > 0 ? `${orderChangeCount} reordered` : null,
+        ]
+          .filter(Boolean)
+          .join(" · ")
+      : null;
+
   return (
     <header className="min-h-14 bg-card/80 backdrop-blur-md border-b border-border flex flex-col gap-3 sm:flex-row sm:items-center px-4 sm:px-6 py-3 sticky top-0 z-20">
       <div className="flex-1 flex items-center gap-3 min-w-0">
@@ -30,8 +46,16 @@ export default function EditorHeader({
         <span className="text-xs text-muted-foreground">
           {issueCount} with issues
         </span>
+        {dirtyHint && (
+          <span
+            className="hidden sm:inline text-xs font-semibold text-amber-600 dark:text-amber-400"
+            title="Unsaved changes waiting to be written to the server"
+          >
+            · {dirtyHint}
+          </span>
+        )}
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
         <button
           type="button"
           onClick={onShowLatexReference}
@@ -53,14 +77,24 @@ export default function EditorHeader({
         >
           <Plus className="w-4 h-4" /> Add Question
         </button>
+
         <button
+          type="button"
           onClick={() => !isViewer && handleSave()}
-          disabled={isSaving || questionsCount === 0 || isViewer}
-          title={
-            isViewer ? "Editor role is required to save questions" : undefined
+          disabled={
+            isSaving || questionsCount === 0 || isViewer || !selectedIsDirty
           }
-          className={`flex items-center gap-2 px-5 py-2 font-bold rounded-full text-xs sm:text-sm transition-all ${
+          title={
             isViewer
+              ? "Editor role is required to save questions"
+              : !selectedIsDirty
+                ? "No changes on the selected question (or its order)"
+                : orderChangeCount > 0
+                  ? "Saves this question and syncs any swapped positions"
+                  : "Save only the selected question"
+          }
+          className={`flex items-center gap-2 px-4 sm:px-5 py-2 font-bold rounded-full text-xs sm:text-sm transition-all ${
+            isViewer || !selectedIsDirty
               ? "bg-muted text-muted-foreground/40 cursor-not-allowed opacity-50"
               : saved
                 ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30"
@@ -69,11 +103,11 @@ export default function EditorHeader({
         >
           {saved ? (
             <>
-              <CheckCircle className="w-4 h-4" /> Saved
+              <CheckCircle className="w-4 h-4" /> {saveLabel}
             </>
           ) : (
             <>
-              <Save className="w-4 h-4" /> {isSaving ? "Saving..." : "Save All"}
+              <Save className="w-4 h-4" /> {saveLabel}
             </>
           )}
         </button>

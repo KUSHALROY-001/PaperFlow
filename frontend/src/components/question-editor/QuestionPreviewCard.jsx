@@ -91,7 +91,7 @@ export default function QuestionPreviewCard({
           {(selected.options || []).map((opt, i) => (
             <div
               key={i}
-              className={`px-3 py-2.5 rounded-xl text-xs sm:text-sm whitespace-pre-wrap wrap-break-word ${
+              className={`px-3 py-2.5 rounded-md text-xs sm:text-sm whitespace-pre-wrap wrap-break-word ${
                 (selected.correctOptionIndexes || []).includes(i)
                   ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20"
                   : "bg-card text-foreground border border-border"
@@ -104,7 +104,10 @@ export default function QuestionPreviewCard({
         </div>
         {selected.placement === "below_options" && (
           <div className="mt-4">
-            <QuestionDiagram diagramUrl={selected.diagramUrl} />
+            <QuestionDiagram
+              key={selected.diagramUrl}
+              diagramUrl={selected.diagramUrl}
+            />
           </div>
         )}
         <QuestionExplanation

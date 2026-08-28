@@ -42,7 +42,10 @@ export default function DiagramUploadControl({
   const busy = isUploading || isDeleting;
 
   const invalidateQuestions = () =>
-    queryClient.invalidateQueries({ queryKey: ["questions", mockTestId] });
+    queryClient.invalidateQueries({
+      queryKey: ["questions", mockTestId],
+      refetchType: "active",
+    });
 
   const reportError = (msg) => {
     setLocalError(msg);
@@ -72,14 +75,75 @@ export default function DiagramUploadControl({
     }
   };
 
+  const formatUploadError = (error) => {
+    if (!error) return "Could not upload image to cloud storage";
+
+    // Network / offline
+    if (
+      error.name === "TypeError" ||
+      error.message === "Failed to fetch" ||
+      /network|offline|ECONNREFUSED|ENOTFOUND|fetch failed/i.test(
+        error.message || "",
+      )
+    ) {
+      return "Network error — check your connection and try again";
+    }
+
+    // Explicit status from API client (common pattern in this codebase)
+    const status = error.status ?? error.statusCode ?? error.response?.status;
+    if (status === 413) {
+      return "Image is too large for the server to accept";
+    }
+    if (status === 400) {
+      return error.message || "This file could not be processed as an image";
+    }
+    if (status === 401 || status === 403) {
+      return "You do not have permission to update this diagram";
+    }
+    if (status === 404) {
+      return "Question not found — it may have been deleted";
+    }
+    if (status === 503) {
+      return (
+        error.message || "Cloud image storage is not configured on the server"
+      );
+    }
+    if (status === 502 || status >= 500) {
+      return (
+        error.message ||
+        "Cloud storage failed to save the image. Please try again"
+      );
+    }
+
+    return (
+      error.message || error.error || "Could not upload image to cloud storage"
+    );
+  };
+
   const doUpload = async (file) => {
+    if (!file) return;
     setIsUploading(true);
     setLocalError("");
     try {
       await api.uploadDiagramImage(questionId, file);
-      await invalidateQuestions();
+      // Invalidate after a successful upload so the versioned diagramUrl
+      // refreshes. A failure here still means the image is stored — surface
+      // a softer message so the user knows to refresh rather than re-upload.
+      try {
+        await invalidateQuestions();
+      } catch (invalidateError) {
+        console.warn(
+          "Diagram uploaded but question list failed to refresh:",
+          invalidateError,
+        );
+        reportError(
+          "Image uploaded, but the preview did not refresh. Reload the page to see the new image.",
+        );
+        return;
+      }
     } catch (error) {
-      reportError(error.message || "Could not upload image to cloud storage");
+      console.error("Diagram upload failed:", error);
+      reportError(formatUploadError(error));
     } finally {
       setIsUploading(false);
       setPendingFile(null);
@@ -91,9 +155,26 @@ export default function DiagramUploadControl({
     setLocalError("");
     try {
       await api.deleteDiagramImage(questionId);
-      await invalidateQuestions();
+      try {
+        await invalidateQuestions();
+      } catch (invalidateError) {
+        console.warn(
+          "Diagram deleted but question list failed to refresh:",
+          invalidateError,
+        );
+        reportError(
+          "Image removed, but the preview did not refresh. Reload the page.",
+        );
+        return;
+      }
     } catch (error) {
-      reportError(error.message || "Could not remove image");
+      console.error("Diagram delete failed:", error);
+      reportError(
+        formatUploadError(error).replace(
+          /upload image to cloud storage/i,
+          "remove image",
+        ) || "Could not remove image",
+      );
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
@@ -108,6 +189,7 @@ export default function DiagramUploadControl({
       await api.updateDiagramPlacement(questionId, nextPlacement);
       await invalidateQuestions();
     } catch (error) {
+      console.error("Diagram placement update failed:", error);
       reportError(error.message || "Could not update placement");
     } finally {
       setIsPlacementSaving(false);
@@ -117,105 +199,105 @@ export default function DiagramUploadControl({
   return (
     <div className="space-y-2 mt-3">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept={ACCEPTED_TYPES}
-        className="hidden"
-        onChange={handleFileChange}
-        disabled={isViewer || busy}
-      />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={ACCEPTED_TYPES}
+          className="hidden"
+          onChange={handleFileChange}
+          disabled={isViewer || busy}
+        />
 
-      <button
-        type="button"
-        disabled={isViewer || busy}
-        onClick={() => fileInputRef.current?.click()}
-        className={`flex items-center gap-1.5 text-xs font-bold transition-all ${
-          isViewer || busy
-            ? "text-muted-foreground/40 cursor-not-allowed opacity-50"
-            : "text-orange-500 hover:underline"
-        }`}
-      >
-        {isUploading ? (
-          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-        ) : (
-          <ImagePlus className="w-3.5 h-3.5" />
-        )}
-        {hasDiagram ? "Replace Image" : "Insert Image"}
-      </button>
-
-      {hasDiagram && (
         <button
           type="button"
           disabled={isViewer || busy}
-          onClick={() => setShowDeleteConfirm(true)}
+          onClick={() => fileInputRef.current?.click()}
           className={`flex items-center gap-1.5 text-xs font-bold transition-all ${
             isViewer || busy
               ? "text-muted-foreground/40 cursor-not-allowed opacity-50"
-              : "text-red-500 hover:underline"
+              : "text-orange-500 hover:underline"
           }`}
         >
-          {isDeleting ? (
+          {isUploading ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
           ) : (
-            <Trash2 className="w-3.5 h-3.5" />
+            <ImagePlus className="w-3.5 h-3.5" />
           )}
-          Remove
+          {hasDiagram ? "Replace Image" : "Insert Image"}
         </button>
-      )}
 
-      {hasDiagram && (
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            Position
-          </span>
-          <div className="flex items-center rounded-lg border border-border p-0.5">
-            {PLACEMENT_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                disabled={isViewer || busy || isPlacementSaving}
-                onClick={() => handlePlacementChange(option.value)}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all disabled:opacity-50 ${
-                  placement === option.value
-                    ? "bg-orange-500/15 text-orange-500"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
+        {hasDiagram && (
+          <button
+            type="button"
+            disabled={isViewer || busy}
+            onClick={() => setShowDeleteConfirm(true)}
+            className={`flex items-center gap-1.5 text-xs font-bold transition-all ${
+              isViewer || busy
+                ? "text-muted-foreground/40 cursor-not-allowed opacity-50"
+                : "text-red-500 hover:underline"
+            }`}
+          >
+            {isDeleting ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Trash2 className="w-3.5 h-3.5" />
+            )}
+            Remove
+          </button>
+        )}
+
+        {hasDiagram && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+              Position
+            </span>
+            <div className="flex items-center rounded-md border border-border p-0.5">
+              {PLACEMENT_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  disabled={isViewer || busy || isPlacementSaving}
+                  onClick={() => handlePlacementChange(option.value)}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all disabled:opacity-50 ${
+                    placement === option.value
+                      ? "bg-orange-500/15 text-orange-500"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {pendingFile && (
-        <ConfirmDialog
-          open={Boolean(pendingFile)}
-          onOpenChange={(open) => !open && setPendingFile(null)}
-          title="Replace this diagram?"
-          description={
-            source === "manual"
-              ? "This will replace your previously uploaded image. This can't be undone."
-              : "This will replace the diagram automatically extracted from the PDF. This can't be undone - if you want it back later, you'll need to re-extract from the original PDF."
-          }
-          confirmLabel="Replace"
-          destructive
-          onConfirm={() => doUpload(pendingFile)}
-        />
-      )}
+        {pendingFile && (
+          <ConfirmDialog
+            open={Boolean(pendingFile)}
+            onOpenChange={(open) => !open && setPendingFile(null)}
+            title="Replace this diagram?"
+            description={
+              source === "manual"
+                ? "This will replace your previously uploaded image. This can't be undone."
+                : "This will replace the diagram automatically extracted from the PDF. This can't be undone - if you want it back later, you'll need to re-extract from the original PDF."
+            }
+            confirmLabel="Replace"
+            destructive
+            onConfirm={() => doUpload(pendingFile)}
+          />
+        )}
 
-      {showDeleteConfirm && (
-        <ConfirmDialog
-          open={showDeleteConfirm}
-          onOpenChange={setShowDeleteConfirm}
-          title="Remove this diagram?"
-          description="This removes the image from the question entirely. This can't be undone."
-          confirmLabel="Remove"
-          destructive
-          onConfirm={handleDelete}
-        />
-      )}
+        {showDeleteConfirm && (
+          <ConfirmDialog
+            open={showDeleteConfirm}
+            onOpenChange={setShowDeleteConfirm}
+            title="Remove this diagram?"
+            description="This removes the image from the question entirely. This can't be undone."
+            confirmLabel="Remove"
+            destructive
+            onConfirm={handleDelete}
+          />
+        )}
       </div>
 
       {localError && (

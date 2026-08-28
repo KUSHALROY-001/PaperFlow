@@ -160,13 +160,12 @@ def upload_diagram(png_bytes, public_id):
     Uploads a cropped/manually-provided diagram PNG to Cloudinary under
     `public_id`, overwriting whatever was already there under that exact
     id (a re-extraction or a manual crop edit reuses the SAME public_id on
-    purpose - see asset_extractor.py#build_diagram_public_id - so the
-    question's diagramUrl, which is derived from public_id, never changes
-    across an edit; only the bytes behind it do).
+    purpose - see asset_extractor.py#build_diagram_public_id).
 
-    Returns the public_id unchanged (the caller already knows it - this
-    exists mainly so callers can handle upload failure at the call site,
-    same shape as the old write_bytes() call this replaces).
+    `invalidate=True` asks Cloudinary to purge CDN copies of that
+    public_id. The Node side also puts a version (`created_at`) on the
+    delivery URL, because CDN invalidation is best-effort and an
+    unversioned URL is what made replace/crop keep showing the old image.
     """
     if not is_cloudinary_configured():
         raise RuntimeError(
@@ -179,6 +178,8 @@ def upload_diagram(png_bytes, public_id):
             png_bytes,
             public_id=public_id,
             overwrite=True,
+            invalidate=True,
+            unique_filename=False,
             resource_type="image",
             format="png",
         )

@@ -37,6 +37,9 @@ export default function QuestionEditor() {
     issueCount,
     extractedTopics,
     hasUnsavedChanges,
+    selectedIsDirty,
+    dirtyContentCount,
+    orderChangeCount,
     updateSelected,
     updateOption,
     setCorrectOption,
@@ -182,6 +185,10 @@ export default function QuestionEditor() {
           isViewer={isViewer}
           onShowLatexReference={() => setIsLatexReferenceOpen(true)}
           returnTo={returnTo}
+          selectedIsDirty={selectedIsDirty}
+          hasUnsavedChanges={hasUnsavedChanges}
+          dirtyContentCount={dirtyContentCount}
+          orderChangeCount={orderChangeCount}
         />
 
         {error && (

@@ -1,5 +1,40 @@
 # PaperFlow Redesign Implementation Log
 
+## 2026-08-27 - Fix: replaced diagram still showing the previous image
+
+### Objective
+After a successful Replace Image (or crop) the editor kept rendering the old PNG even though the upload finished and the loader went away.
+
+### Cause
+Diagrams are stored under a stable Cloudinary `public_id` (`paperflow/<workspace>/<mockTest>/diagrams/<questionId>`). Replace and crop overwrite that id in place, so `diagramUrl` kept pointing at the same delivery URL. Cloudinary's CDN and the browser both cache on that URL, and the API 302 also sent `Cache-Control: private, max-age=86400`. The new bytes were in Cloudinary; every `<img>` still received the cached previous PNG.
+
+### Fix
+- Version every diagram delivery URL from `question_assets.created_at` (`?v=<ms>` on `/api/questions/:id/diagram`, and Cloudinary `/v<ms>/`).
+- Replace already DELETE+INSERTs a new row (new `created_at`). Crop now calls `touchAsset` so `created_at` bumps too.
+- Upload with `overwrite: true, invalidate: true`. Stop caching the 302.
+- Remount the preview `<img>` when `diagramUrl` changes.
+
+No database migration.
+
+### Affected Files
+- `backend/src/lib/diagram-cache-version.js` (new)
+- `backend/src/lib/cloudinary-storage.js`
+- `backend/src/lib/cloudinary-storage.selftest.js` (new)
+- `backend/src/repositories/question-assets.repository.js`
+- `backend/src/controllers/question-assets.controller.js`
+- `backend/src/services/question-assets.service.js`
+- `backend/worker/storage.py`
+- `frontend/src/components/shared/QuestionContent.jsx`
+- `frontend/src/components/question-editor/DiagramUploadControl.jsx`
+- `frontend/src/components/question-editor/DiagramCropModal.jsx`
+- `frontend/src/components/question-editor/QuestionPreviewCard.jsx`
+
+### Verification
+- Passed: `node src/lib/cloudinary-storage.selftest.js`
+- Passed: `node --check` on every edited backend module
+
+---
+
 ## 2026-07-23 - Milestone 1: Design System Foundation
 
 ### Objective

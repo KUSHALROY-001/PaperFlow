@@ -1,17 +1,24 @@
 import * as questionAssetsRepo from "../repositories/question-assets.repository.js";
 import { generateDiagramAccessToken } from "../lib/diagram-signed-url.js";
 import {
+  assetCacheVersion,
   buildDiagramPublicId,
   fetchDiagramBuffer,
   uploadDiagramBuffer,
   isValidDiagramPublicId,
 } from "../lib/cloudinary-storage.js";
 
-function buildDiagramUrl(questionId, workspaceId, { shareToken } = {}) {
+function buildDiagramUrl(
+  questionId,
+  workspaceId,
+  { shareToken, version } = {},
+) {
   const token = generateDiagramAccessToken(questionId, workspaceId);
+  const versionQuery =
+    version != null && version !== "" ? `&v=${encodeURIComponent(version)}` : "";
   return shareToken
-    ? `/api/shared/${shareToken}/questions/${questionId}/diagram?access_token=${token}`
-    : `/api/questions/${questionId}/diagram?access_token=${token}`;
+    ? `/api/shared/${shareToken}/questions/${questionId}/diagram?access_token=${token}${versionQuery}`
+    : `/api/questions/${questionId}/diagram?access_token=${token}${versionQuery}`;
 }
 
 // Enriches a list of question-like objects with a diagramUrl, for
@@ -62,7 +69,14 @@ export async function attachDiagramUrls(
     }
     return {
       ...question,
-      diagramUrl: buildDiagramUrl(id, workspaceId, { shareToken }),
+      // ?v=<created_at unix> is the browser-cache key. Replace DELETE+INSERTs
+      // a new row (new created_at); crop bumps created_at via touchAsset.
+      // Without this, <img src> stays identical after a successful replace
+      // and the previous PNG stays on screen.
+      diagramUrl: buildDiagramUrl(id, workspaceId, {
+        shareToken,
+        version: assetCacheVersion(asset.createdAt),
+      }),
       // Read by every QuestionContent consumer (exam-play, results,
       // review, editor alike) to decide above_text/below_text/below_options
       // rendering - not editor-only like `source` below, so it belongs on
@@ -140,7 +154,10 @@ export async function cloneDiagramAsset({
   // source's bytes and re-uploading them under the target question's own
   // public_id, since Cloudinary has no server-side "copy this asset to a
   // new id" primitive that avoids the round-trip anyway.
-  const imageBytes = await fetchDiagramBuffer(sourceAsset.storagePath);
+  const imageBytes = await fetchDiagramBuffer(
+    sourceAsset.storagePath,
+    assetCacheVersion(sourceAsset.createdAt),
+  );
   const publicId = buildDiagramPublicId(
     targetWorkspaceId,
     targetMockTestId,

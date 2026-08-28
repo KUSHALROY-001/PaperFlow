@@ -4,6 +4,36 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { getIssues, toEditorQuestion } from "@/utils/questionEditorHelpers";
 
+/**
+ * Content-only fingerprint (excludes questionNo / order and ephemeral UI
+ * fields). Used to decide whether a single question needs a PATCH without
+ * treating pure swaps as content edits.
+ */
+function contentFingerprint(question) {
+  return JSON.stringify({
+    text: question.text ?? "",
+    options: question.options ?? [],
+    correctOptionIndexes: question.correctOptionIndexes ?? [],
+    topic: question.topic ?? "",
+    subtopic: question.subtopic ?? "",
+    passage: question.passage ?? "",
+    explanation: question.explanation ?? "",
+    questionType: question.questionType ?? "single",
+  });
+}
+
+function buildInitialSnapshot(questions) {
+  const byId = new Map();
+  for (const q of questions) {
+    byId.set(q.id, {
+      content: contentFingerprint(q),
+      questionNo: Number(q.questionNo) || 0,
+      persisted: Boolean(q.persisted),
+    });
+  }
+  return byId;
+}
+
 export function useQuestionEditor() {
   const { clusterId, mockTestId } = useParams();
   const [searchParams] = useSearchParams();
@@ -15,8 +45,8 @@ export function useQuestionEditor() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const initialQuestionsRef = useRef([]);
+  // Snapshot of last-loaded / last-saved server state, keyed by question id.
+  const initialSnapshotRef = useRef(new Map());
 
   const questionsQuery = useQuery({
     queryKey: ["questions", mockTestId],
@@ -28,8 +58,7 @@ export function useQuestionEditor() {
     if (!questionsQuery.data?.questions) return;
     const loaded = questionsQuery.data.questions.map(toEditorQuestion);
     setQuestions(loaded);
-    initialQuestionsRef.current = loaded;
-    setHasUnsavedChanges(false);
+    initialSnapshotRef.current = buildInitialSnapshot(loaded);
     setSelectedId((current) => {
       if (targetQId && loaded.some((q) => q.id === targetQId)) {
         return targetQId;
@@ -83,6 +112,61 @@ export function useQuestionEditor() {
     [questions, issuesById],
   );
 
+  /**
+   * Derive which questions are dirty (content and/or order) vs the last
+   * successful load/save snapshot. Swaps only touch order; field edits only
+   * touch content. New drafts are always content-dirty.
+   */
+  const { dirtyContentIds, orderChangedItems, hasUnsavedChanges, selectedIsDirty } =
+    useMemo(() => {
+      const snapshot = initialSnapshotRef.current;
+      const contentIds = new Set();
+      const orderItems = [];
+
+      for (const q of questions) {
+        const prev = snapshot.get(q.id);
+        if (!prev || !q.persisted) {
+          // Draft or unknown id → must be created / treated as content dirty
+          contentIds.add(q.id);
+          continue;
+        }
+        if (contentFingerprint(q) !== prev.content) {
+          contentIds.add(q.id);
+        }
+        const currentNo = Number(q.questionNo) || 0;
+        if (currentNo !== prev.questionNo) {
+          orderItems.push({ id: q.id, questionNo: currentNo });
+        }
+      }
+
+      // Also: questions that existed in snapshot but were deleted locally
+      // are handled by deleteQuestion (immediate API), so not tracked here.
+
+      const dirty =
+        contentIds.size > 0 ||
+        orderItems.length > 0;
+
+      // Enable "Save" when the selection has content edits, OR when any
+      // reorder is pending (save-one always flushes the full order delta,
+      // which is typically just the two swapped rows — cheap).
+      const selectedDirty =
+        Boolean(selectedId) &&
+        (contentIds.has(selectedId) || orderItems.length > 0);
+
+      return {
+        dirtyContentIds: contentIds,
+        orderChangedItems: orderItems,
+        hasUnsavedChanges: dirty,
+        selectedIsDirty: selectedDirty,
+      };
+    }, [questions, selectedId]);
+
+  // Keep refs so async save handlers always see the latest dirty sets
+  const dirtyContentIdsRef = useRef(dirtyContentIds);
+  dirtyContentIdsRef.current = dirtyContentIds;
+  const orderChangedItemsRef = useRef(orderChangedItems);
+  orderChangedItemsRef.current = orderChangedItems;
+
   const updateSelected = useCallback(
     (fieldOrPatch, value) => {
       setQuestions((prev) =>
@@ -94,7 +178,6 @@ export function useQuestionEditor() {
           return { ...q, [fieldOrPatch]: value };
         }),
       );
-      setHasUnsavedChanges(true);
     },
     [selectedId],
   );
@@ -167,7 +250,6 @@ export function useQuestionEditor() {
       questionType: "single",
     };
     setQuestions((prev) => [...prev, newQ]);
-    setHasUnsavedChanges(true);
     setSelectedId(newQ.id);
   }, [nextQuestionNo, extractedTopics]);
 
@@ -197,8 +279,6 @@ export function useQuestionEditor() {
         questionNo: idx + 1,
       }));
     });
-
-    setHasUnsavedChanges(true);
   }, []);
 
   const deleteQuestion = useCallback(
@@ -223,6 +303,8 @@ export function useQuestionEditor() {
           .map((question, index) => ({ ...question, questionNo: index + 1 }));
 
         setQuestions(remaining);
+        // Drop deleted id from snapshot; remaining order will be dirty until save
+        initialSnapshotRef.current.delete(id);
         setSelectedId((current) =>
           current === id ? remaining[0]?.id || "" : current,
         );
@@ -258,47 +340,126 @@ export function useQuestionEditor() {
     [mockTestId],
   );
 
+  /**
+   * After a successful save, mark the given questions (and optional order
+   * items) as clean in the snapshot so hasUnsavedChanges shrinks without
+   * a full refetch. For brand-new drafts we still invalidate so the
+   * server-assigned id replaces `draft-*`.
+   */
+  const markSnapshotClean = useCallback((savedQuestions, orderItems = []) => {
+    const snap = initialSnapshotRef.current;
+    for (const q of savedQuestions) {
+      if (!q.persisted) continue; // draft still has temp id until refetch
+      snap.set(q.id, {
+        content: contentFingerprint(q),
+        questionNo: Number(q.questionNo) || 0,
+        persisted: true,
+      });
+    }
+    for (const item of orderItems) {
+      const existing = snap.get(item.id);
+      if (existing) {
+        snap.set(item.id, {
+          ...existing,
+          questionNo: Number(item.questionNo) || 0,
+        });
+      }
+    }
+    // Force re-render so derived dirty flags update
+    setQuestions((prev) => [...prev]);
+  }, []);
+
+  /**
+   * Persist only the questions whose questionNo moved (from swaps). The
+   * backend two-pass UPDATE handles unique constraints even for a partial
+   * list, so we never need to ship all 170 rows for a single swap.
+   */
+  const persistOrderChanges = useCallback(
+    async (orderItems) => {
+      if (!orderItems?.length) return;
+      await api.reorderQuestions(mockTestId, orderItems);
+    },
+    [mockTestId],
+  );
+
+  /**
+   * Save ONE: current selection only.
+   *
+   * Swap handling: if any questions were reordered (including the selected
+   * one or others), we first send ONLY the changed {id, questionNo} pairs
+   * via reorder. Then we PATCH/create the selected question if its content
+   * (or draft status) is dirty. Other questions' content is left alone.
+   */
   const handleSave = useCallback(async () => {
     setError("");
     setIsSaving(true);
 
     try {
-      const invalid = questionsRef.current.find(
-        (question) => issuesById.get(question.id) > 0,
-      );
-      if (invalid) {
-        throw new Error("Fix question issues before saving");
+      const current = questionsRef.current.find((q) => q.id === selectedId);
+      if (!current) {
+        throw new Error("No question selected");
       }
 
-      // First reorder all existing persisted questions in a single atomic transaction
-      const persistedItems = questionsRef.current
-        .filter((q) => q.persisted)
-        .map((q) => ({ id: q.id, questionNo: Number(q.questionNo) }));
-
-      if (persistedItems.length > 0) {
-        await api.reorderQuestions(mockTestId, persistedItems);
+      if (issuesById.get(current.id) > 0) {
+        throw new Error("Fix issues on this question before saving");
       }
 
-      // Then save question content edits and create draft questions
-      for (const question of questionsRef.current) {
-        await saveQuestion(question);
+      const orderItems = orderChangedItemsRef.current;
+      const contentDirty = dirtyContentIdsRef.current.has(current.id);
+
+      // 1) Minimal order sync (only ids whose questionNo changed)
+      if (orderItems.length > 0) {
+        await persistOrderChanges(orderItems);
       }
 
-      await queryClient.invalidateQueries({
-        queryKey: ["questions", mockTestId],
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ["mock-tests", clusterId],
-      });
+      // 2) Content for the selected question only (skip if pure reorder)
+      let createdNeedsRefetch = false;
+      if (contentDirty || !current.persisted) {
+        await saveQuestion(current);
+        if (!current.persisted) {
+          createdNeedsRefetch = true;
+        }
+      }
+
+      if (createdNeedsRefetch) {
+        // New row got a real id from the server — full list refresh is the
+        // simplest way to pick it up and replace draft-* in local state.
+        await queryClient.invalidateQueries({
+          queryKey: ["questions", mockTestId],
+        });
+        await queryClient.invalidateQueries({
+          queryKey: ["mock-tests", clusterId],
+        });
+      } else {
+        markSnapshotClean(
+          contentDirty || orderItems.some((i) => i.id === current.id)
+            ? [current]
+            : [],
+          orderItems,
+        );
+        // Soft-invalidate so other views stay fresh without blocking UI
+        void queryClient.invalidateQueries({
+          queryKey: ["questions", mockTestId],
+        });
+      }
+
       setSaved(true);
-      setHasUnsavedChanges(false);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
-      setError(err.message || "Could not save questions");
+      setError(err.message || "Could not save question");
     } finally {
       setIsSaving(false);
     }
-  }, [issuesById, saveQuestion, queryClient, mockTestId, clusterId]);
+  }, [
+    selectedId,
+    issuesById,
+    saveQuestion,
+    persistOrderChanges,
+    markSnapshotClean,
+    queryClient,
+    mockTestId,
+    clusterId,
+  ]);
 
   useEffect(() => {
     if (!hasUnsavedChanges) return;
@@ -327,6 +488,9 @@ export function useQuestionEditor() {
     issueCount,
     extractedTopics,
     hasUnsavedChanges,
+    selectedIsDirty,
+    dirtyContentCount: dirtyContentIds.size,
+    orderChangeCount: orderChangedItems.length,
     updateSelected,
     updateOption,
     setCorrectOption,

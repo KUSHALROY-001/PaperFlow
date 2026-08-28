@@ -132,16 +132,36 @@ export default function DiagramCropModal({
         width: Math.round((completedCrop.width / 100) * img.naturalWidth),
         height: Math.round((completedCrop.height / 100) * img.naturalHeight),
       });
-      // Same invalidation pattern used everywhere else in
-      // useQuestionEditor.js after a question mutation - refetching
-      // ["questions", mockTestId] is what gets the new storage_path bytes
-      // (same URL, new content) to actually show up in the preview.
+      // Refetch ["questions", mockTestId] so attachDiagramUrls rebuilds
+      // diagramUrl with a new ?v=<created_at> (touchAsset bumps it on
+      // crop). Same public_id, new version - that's what actually gets
+      // the cropped bytes onto the preview instead of a cached PNG.
       await queryClient.invalidateQueries({
         queryKey: ["questions", mockTestId],
       });
       onClose();
     } catch (err) {
-      setError(err.message || "Could not save crop");
+      console.error("Diagram crop save failed:", err);
+      const status = err.status ?? err.statusCode ?? err.response?.status;
+      let message = err.message || "Could not save crop";
+      if (
+        err.name === "TypeError" ||
+        err.message === "Failed to fetch" ||
+        /network|offline|ECONNREFUSED|ENOTFOUND|fetch failed/i.test(
+          err.message || "",
+        )
+      ) {
+        message = "Network error — check your connection and try again";
+      } else if (status === 400) {
+        message = err.message || "Crop area is invalid for this image";
+      } else if (status === 404) {
+        message = "Diagram not found — it may have been removed";
+      } else if (status === 502 || status === 503 || status >= 500) {
+        message =
+          err.message ||
+          "Cloud storage failed to save the crop. Please try again";
+      }
+      setError(message);
     } finally {
       setIsSaving(false);
     }
@@ -152,7 +172,7 @@ export default function DiagramCropModal({
       <div className="flex max-h-[90dvh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl surface-card border border-border shadow-2xl">
         <div className="flex shrink-0 items-center justify-between border-b border-border p-5 sm:p-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500/15 text-orange-500">
+            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-orange-500/15 text-orange-500">
               <Crop className="h-4 w-4" />
             </div>
             <div>
@@ -188,6 +208,7 @@ export default function DiagramCropModal({
               >
                 {/* eslint-disable-next-line jsx-a11y/alt-text */}
                 <img
+                  key={currentImageUrl}
                   ref={imgRef}
                   src={currentImageUrl}
                   onLoad={onImageLoad}
@@ -203,7 +224,8 @@ export default function DiagramCropModal({
                   Could not load diagram image for cropping
                 </p>
                 <p className="text-muted-foreground mb-3 max-w-sm">
-                  The image file could not be retrieved from Cloudinary cloud storage.
+                  The image file could not be retrieved from Cloudinary cloud
+                  storage.
                 </p>
                 <button
                   type="button"
@@ -232,7 +254,7 @@ export default function DiagramCropModal({
                 type="button"
                 disabled={busy}
                 onClick={() => handleAspectChange(preset.value)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all disabled:opacity-50 ${
+                className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all disabled:opacity-50 ${
                   aspectPreset === preset.value
                     ? "bg-orange-500/15 border-orange-500/40 text-orange-500"
                     : "border-border text-muted-foreground hover:border-orange-500/30"
@@ -255,7 +277,7 @@ export default function DiagramCropModal({
             type="button"
             onClick={handleClose}
             disabled={busy}
-            className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-muted-foreground hover:bg-muted transition-all disabled:opacity-50"
+            className="px-4 py-2.5 rounded-md text-xs sm:text-sm font-bold text-muted-foreground hover:bg-muted transition-all disabled:opacity-50"
           >
             Cancel
           </button>
@@ -263,7 +285,7 @@ export default function DiagramCropModal({
             type="button"
             onClick={handleSave}
             disabled={busy || !completedCrop}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-[#ea580c] hover:bg-[#c2410c] text-white shadow-xs transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-md text-xs sm:text-sm font-bold bg-[#ea580c] hover:bg-[#c2410c] text-white shadow-xs transition-all disabled:opacity-50"
           >
             {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
             Save Crop

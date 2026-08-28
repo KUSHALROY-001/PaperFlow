@@ -2,13 +2,13 @@ import sharp from "sharp";
 import { httpError } from "../lib/http-error.js";
 import { verifyDiagramAccessToken } from "../lib/diagram-signed-url.js";
 import {
+  assetCacheVersion,
   buildDiagramPublicId,
   deleteDiagram,
   diagramUrlForPublicId,
   fetchDiagramBuffer,
   isCloudinaryConfigured,
   uploadDiagramBuffer,
-  validateCloudinaryConfig,
 } from "../lib/cloudinary-storage.js";
 import * as questionAssetsRepo from "../repositories/question-assets.repository.js";
 import * as questionsRepo from "../repositories/questions.repository.js";
@@ -51,9 +51,18 @@ async function streamDiagram(req, res, { questionId, workspaceId }) {
   }
 
   // asset.storagePath holds a Cloudinary public_id (see worker/asset_extractor.py
-  // and uploadDiagramImage). Redirect straight to Cloudinary's CDN edge.
-  const deliveryUrl = diagramUrlForPublicId(asset.storagePath);
-  res.setHeader("Cache-Control", "private, max-age=86400");
+  // and uploadDiagramImage). Redirect to a VERSIONED Cloudinary URL so a
+  // replace/crop (same public_id, new bytes) is not served from CDN/browser
+  // cache of the previous PNG. The ?v= on our own /diagram URL is the
+  // matching browser-cache key (see attachDiagramUrls).
+  const deliveryUrl = diagramUrlForPublicId(
+    asset.storagePath,
+    assetCacheVersion(asset.createdAt),
+  );
+  // private, no-cache: this 302's Location includes the version, but a
+  // long-lived cached redirect to an unversioned (or old-version) URL is
+  // exactly how a successful replace used to keep showing the old image.
+  res.setHeader("Cache-Control", "private, no-cache");
   res.redirect(302, deliveryUrl);
 }
 
@@ -138,7 +147,10 @@ export async function updateDiagramCrop(req, res) {
   const rect = parseCropRect(req.body);
   const asset = await loadAsset(req.params.questionId, req.workspaceId);
 
-  const currentImage = await fetchDiagramBuffer(asset.storagePath);
+  const currentImage = await fetchDiagramBuffer(
+    asset.storagePath,
+    assetCacheVersion(asset.createdAt),
+  );
 
   let cropped;
   try {
@@ -159,10 +171,11 @@ export async function updateDiagramCrop(req, res) {
   }
 
   // overwrite: true (see cloudinary-storage.js#uploadDiagramBuffer) means
-  // this re-uploads under the SAME public_id the asset already has - no
-  // DB row change needed, exactly mirroring the old write-to-the-same-path
-  // behavior this replaces.
+  // this re-uploads under the SAME public_id the asset already has. The
+  // DB row's storage_path stays put; created_at is bumped so the next
+  // diagramUrl / Cloudinary /v<version>/ actually points at these bytes.
   await uploadDiagramBuffer(cropped, asset.storagePath);
+  await questionAssetsRepo.touchAsset(asset.id);
 
   res.json({ success: true });
 }
@@ -175,6 +188,20 @@ export async function updateDiagramCrop(req, res) {
 export async function uploadDiagramImage(req, res) {
   if (!req.file) {
     throw httpError(400, "Missing image file");
+  }
+
+  if (!req.file.buffer || req.file.buffer.length === 0) {
+    throw httpError(400, "Uploaded file is empty");
+  }
+
+  // Fail fast with a clear message before any image work when Cloudinary
+  // is missing from the environment — otherwise the user only sees a
+  // generic 502 after sharp has already processed the file.
+  if (!isCloudinaryConfigured()) {
+    throw httpError(
+      503,
+      "Cloud image storage (Cloudinary) is not configured on the server",
+    );
   }
 
   const question = await questionsRepo.findQuestionById(
@@ -201,7 +228,11 @@ export async function uploadDiagramImage(req, res) {
     // actually a decodable image.
     normalizedPng = await sharp(req.file.buffer).png().toBuffer();
   } catch (error) {
-    throw httpError(400, "Could not process this image");
+    console.error("sharp failed to process uploaded diagram:", error);
+    throw httpError(
+      400,
+      "Could not process this image. Use a valid PNG, JPEG, or WebP file",
+    );
   }
 
   // Deliberately the SAME public_id an extracted diagram for this exact
@@ -217,13 +248,35 @@ export async function uploadDiagramImage(req, res) {
     question.id,
   );
 
-  await uploadDiagramBuffer(normalizedPng, publicId);
+  try {
+    await uploadDiagramBuffer(normalizedPng, publicId);
+  } catch (error) {
+    // uploadDiagramBuffer already maps Cloudinary failures to httpError(502).
+    console.error(
+      `uploadDiagramImage failed for question ${question.id} (publicId=${publicId}):`,
+      error,
+    );
+    throw error;
+  }
 
-  await questionAssetsRepo.replaceAssetForQuestion(question.id, {
-    storagePath: publicId,
-    source: "manual",
-    placement: previousAsset?.placement || "below_text",
-  });
+  try {
+    await questionAssetsRepo.replaceAssetForQuestion(question.id, {
+      storagePath: publicId,
+      source: "manual",
+      placement: previousAsset?.placement || "below_text",
+    });
+  } catch (error) {
+    // Cloudinary already holds the new bytes under publicId. Log and surface
+    // a clear server error rather than a silent partial success.
+    console.error(
+      `Diagram uploaded to Cloudinary but DB replace failed for question ${question.id}:`,
+      error,
+    );
+    throw httpError(
+      500,
+      "Image was uploaded but could not be linked to this question. Please try again",
+    );
+  }
 
   res.status(201).json({ success: true });
 }

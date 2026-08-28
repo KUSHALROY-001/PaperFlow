@@ -1,6 +1,8 @@
 import { v2 as cloudinary } from "cloudinary";
 import { httpError } from "./http-error.js";
 
+export { assetCacheVersion } from "./diagram-cache-version.js";
+
 function getCloudinaryCredentials() {
   const cloudinaryUrl = process.env.CLOUDINARY_URL?.trim();
   const cloudName = (
@@ -135,13 +137,18 @@ export async function uploadDiagramBuffer(buffer, publicId) {
 
   const dataUri = `data:image/png;base64,${buffer.toString("base64")}`;
   try {
-    await cloudinary.uploader.upload(dataUri, {
+    const result = await cloudinary.uploader.upload(dataUri, {
       public_id: publicId,
       overwrite: true,
+      invalidate: true,
+      unique_filename: false,
       resource_type: "image",
       format: "png",
     });
-    return publicId;
+    return {
+      publicId: result.public_id || publicId,
+      version: result.version,
+    };
   } catch (error) {
     if (error.statusCode) throw error;
     const friendlyMessage = formatCloudinaryError(error, "upload");
@@ -157,16 +164,24 @@ export async function uploadDiagramBuffer(buffer, publicId) {
 // holds the public_id, not the URL) - it's rebuilt on every read instead,
 // so a cloud_name change or a switch to signed delivery later doesn't
 // need a backfill migration, just this one function.
-export function diagramUrlForPublicId(publicId) {
+//
+// `version` is required for correctness after overwrite: Cloudinary's CDN
+// keys on the full delivery URL, and an unversioned URL keeps returning
+// the previous PNG for minutes (sometimes hours) after a replace/crop.
+export function diagramUrlForPublicId(publicId, version) {
   validateCloudinaryConfig();
   configureCloudinary();
 
   try {
-    const url = cloudinary.url(publicId, {
+    const options = {
       secure: true,
       resource_type: "image",
       format: "png",
-    });
+    };
+    if (version != null && version !== "") {
+      options.version = String(version);
+    }
+    const url = cloudinary.url(publicId, options);
     return url;
   } catch (error) {
     throw httpError(
@@ -176,9 +191,16 @@ export function diagramUrlForPublicId(publicId) {
   }
 }
 
-export async function fetchDiagramBuffer(publicId) {
+export async function fetchDiagramBuffer(publicId, version) {
   validateCloudinaryConfig();
-  const imageUrl = diagramUrlForPublicId(publicId);
+  // When the caller doesn't know the asset's created_at (shouldn't happen
+  // for crop/clone, which always have the row), fall back to "now" so a
+  // server-side fetch never silently reads a stale CDN copy of an
+  // overwritten public_id.
+  const imageUrl = diagramUrlForPublicId(
+    publicId,
+    version ?? Date.now(),
+  );
 
   let response;
   try {

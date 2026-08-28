@@ -36,6 +36,21 @@ export async function deleteAsset(assetId) {
   await pool.query(`DELETE FROM question_assets WHERE id = $1`, [assetId]);
 }
 
+// Crop overwrites Cloudinary in place and does not INSERT a new row, so
+// created_at would otherwise stay at the original extraction time and
+// every cache-bust (diagramUrl ?v=, Cloudinary /v<version>/) would keep
+// pointing at the pre-crop bytes. Bumping it here is what makes the
+// next listQuestions / <img> request actually show the cropped image.
+export async function touchAsset(assetId) {
+  const result = await pool.query(
+    `UPDATE question_assets SET created_at = now() WHERE id = $1
+     RETURNING id, question_id, asset_type, storage_path,
+               source, placement, page_number, created_at`,
+    [assetId],
+  );
+  return result.rows[0] ? mapRow(result.rows[0]) : null;
+}
+
 // The DB half of a manual image upload/replace (see
 // question-assets.controller.js#uploadDiagramImage, which uploads to
 // Cloudinary BEFORE calling this - same upload-then-row ordering worker.py
