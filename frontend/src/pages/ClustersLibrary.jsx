@@ -115,9 +115,24 @@ export default function ClustersLibrary() {
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
-    await api.deleteCluster(deleteTarget.id);
-    queryClient.invalidateQueries({ queryKey: ["clusters"] });
-    setDeleteTarget(null);
+    try {
+      await api.deleteCluster(deleteTarget.id);
+      // Optimistically remove from clusters list so it disappears instantly
+      queryClient.setQueryData(["clusters"], (old) => {
+        if (!old?.clusters) return old;
+        return {
+          ...old,
+          clusters: old.clusters.filter((c) => c.id !== deleteTarget.id),
+        };
+      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["clusters"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] }),
+      ]);
+      setDeleteTarget(null);
+    } catch (err) {
+      console.error("Failed to delete cluster:", err);
+    }
   };
 
   const { isViewer } = useAuth();

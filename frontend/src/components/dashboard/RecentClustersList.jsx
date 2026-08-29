@@ -28,10 +28,35 @@ export default function RecentClustersList({ clusters, isLoading }) {
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
-    await api.deleteCluster(deleteTarget.id);
-    queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
-    queryClient.invalidateQueries({ queryKey: ["clusters"] });
-    setDeleteTarget(null);
+    try {
+      await api.deleteCluster(deleteTarget.id);
+      queryClient.setQueryData(["clusters"], (old) => {
+        if (!old?.clusters) return old;
+        return {
+          ...old,
+          clusters: old.clusters.filter((c) => c.id !== deleteTarget.id),
+        };
+      });
+      queryClient.setQueryData(["dashboard-summary"], (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          recentClusters: (old.recentClusters || []).filter(
+            (c) => c.id !== deleteTarget.id,
+          ),
+          clusters: (old.clusters || []).filter(
+            (c) => c.id !== deleteTarget.id,
+          ),
+        };
+      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] }),
+        queryClient.invalidateQueries({ queryKey: ["clusters"] }),
+      ]);
+      setDeleteTarget(null);
+    } catch (err) {
+      console.error("Failed to delete cluster:", err);
+    }
   };
 
   return (

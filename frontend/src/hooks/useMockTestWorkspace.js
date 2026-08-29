@@ -270,10 +270,21 @@ export function useMockTestWorkspace() {
   const handleDelete = async () => {
     try {
       await api.deleteMockTest(mocktest.id);
-      await queryClient.invalidateQueries({
-        queryKey: ["mock-tests", clusterId],
+      // Optimistically remove from mock-tests cache so it vanishes instantly upon returning
+      queryClient.setQueryData(["mock-tests", clusterId], (old) => {
+        if (!old?.mockTests) return old;
+        return {
+          ...old,
+          mockTests: old.mockTests.filter((m) => m.id !== mocktest.id),
+        };
       });
-      await queryClient.invalidateQueries({ queryKey: ["clusters"] });
+      queryClient.removeQueries({ queryKey: ["mock-test", mockTestId] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["mock-tests", clusterId] }),
+        queryClient.invalidateQueries({ queryKey: ["cluster", clusterId] }),
+        queryClient.invalidateQueries({ queryKey: ["clusters"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] }),
+      ]);
       navigate(`/cluster/${clusterId}`);
     } catch (error) {
       setActionError(error.message || "Could not delete mock test");

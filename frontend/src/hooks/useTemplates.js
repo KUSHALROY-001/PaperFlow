@@ -47,18 +47,27 @@ export function useTemplates() {
   // deleteTarget is cleared up front (not after the request resolves) so
   // the ConfirmDialog closes immediately on click, same as
   // MockTestWorkspace's delete flow — a failure surfaces via actionError
-  // instead of leaving the dialog hanging open.
   const handleDeleteTemplate = async () => {
     if (!deleteTarget) return;
     const target = deleteTarget;
-    setDeleteTarget(null);
 
     try {
       setActionError("");
       await api.deleteExtractionTemplate(target.id);
+      queryClient.setQueryData(
+        ["extraction-templates", category, sortBy],
+        (old) => {
+          if (!old?.templates) return old;
+          return {
+            ...old,
+            templates: old.templates.filter((t) => t.id !== target.id),
+          };
+        },
+      );
       await queryClient.invalidateQueries({
         queryKey: ["extraction-templates"],
       });
+      setDeleteTarget(null);
     } catch (deleteError) {
       setActionError(deleteError.message || "Could not delete template");
     }

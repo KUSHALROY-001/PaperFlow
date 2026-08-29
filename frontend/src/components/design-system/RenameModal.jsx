@@ -38,12 +38,12 @@ export default function RenameModal({
       onClick={onClose}
     >
       <div
-        className="surface-card w-full max-w-md rounded-3xl p-6 border border-border shadow-xl space-y-5 animate-in zoom-in-95 duration-150"
+        className="surface-card w-full max-w-md rounded-2xl p-6 border border-border shadow-xl space-y-5 animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-orange-500/15 text-orange-500 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-md bg-orange-500/15 text-orange-500 flex items-center justify-center">
               <Edit2 className="w-5 h-5" />
             </div>
             <h2 className="text-lg font-bold text-foreground">{title}</h2>
@@ -67,7 +67,7 @@ export default function RenameModal({
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter new name..."
               required
-              className="w-full px-4 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all"
+              className="w-full px-4 py-2.5 rounded-md border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all"
             />
           </div>
 
@@ -81,7 +81,7 @@ export default function RenameModal({
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Enter description..."
                 rows={3}
-                className="w-full px-4 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all resize-none"
+                className="w-full px-4 py-2.5 rounded-md border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all resize-none"
               />
             </div>
           )}
@@ -94,14 +94,14 @@ export default function RenameModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+              className="px-4 py-2 rounded-md border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={!name.trim() || submitting}
-              className="flex items-center gap-2 px-5 py-2 rounded-xl bg-[#ea580c] hover:bg-[#c2410c] text-white text-xs font-bold shadow-xs transition-all disabled:opacity-50"
+              className="flex items-center gap-2 px-5 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold shadow-xs transition-all disabled:opacity-50"
             >
               {submitting ? (
                 <>

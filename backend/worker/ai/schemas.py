@@ -144,7 +144,10 @@ GEMINI_QUESTION_RESPONSE_SCHEMA = _question_response_schema(nullable_as_union=Fa
 OPENAI_QUESTION_RESPONSE_SCHEMA = _question_response_schema(nullable_as_union=True)
 
 
-JSON_BLOCK_RE = re.compile(r"```(?:json)?\s*(.*?)```", re.IGNORECASE | re.DOTALL)
+# Historical note: this used to be a module-level JSON_BLOCK_RE constant
+# with an unanchored re.search() applied unconditionally before any parse
+# attempt - see extract_json_payload()'s comment for why that was buggy.
+# The anchored, try-parse-first version now lives inline in that function.
 
 
 def _find_balanced_objects(text):
@@ -217,11 +220,41 @@ def extract_json_payload(text):
         raise ValueError("AI response was empty")
 
     original_text = text
-    fenced = JSON_BLOCK_RE.search(text)
-    if fenced:
-        text = fenced.group(1)
+    stripped = text.strip()
 
-    text = text.strip()
+    # Try a direct parse FIRST. This is actually the common/expected case
+    # here - Gemini's responseMimeType="application/json" mode returns
+    # bare JSON with no markdown wrapper at all - so this succeeds most
+    # of the time and skips the fence-stripping step entirely.
+    #
+    # Trying this first (rather than unconditionally stripping fences
+    # before ever attempting a parse, which is what this function used to
+    # do) also fixes a real bug: JSON_BLOCK_RE.search() scans the WHOLE
+    # response for any ``` occurrence, anywhere - including one embedded
+    # INSIDE a JSON string value, e.g. a question whose own text is "What
+    # is the output of this program?\n```c\n#include <stdio.h>\n...```"
+    # (completely normal for a C/C++ programming question). The old code
+    # would find that inner fence, grab everything between it and the
+    # NEXT ``` as if THAT were "the JSON", and discard the real, fully
+    # valid `{"questions": [...]}` around it - producing "Expecting
+    # value: line 1 column 1" because a raw C code fragment obviously
+    # isn't JSON. Confirmed directly: every one of the "_parse" failures
+    # on a real job had a response that started with valid JSON in the
+    # response-preview diagnostic, and every failing chunk contained a
+    # question with an embedded ```c / ```cpp code block.
+    try:
+        return json.loads(stripped)
+    except json.JSONDecodeError:
+        pass
+
+    # Direct parse failed - NOW consider that the response might genuinely
+    # be wrapped in an outer fence (some models do add ```json ... ```
+    # around the whole reply). Anchor the match to the start and end of
+    # the string (not a bare .search() anywhere in the middle) so an
+    # embedded code fence deeper in the text can never be mistaken for
+    # the outer wrapper the way the old unanchored regex was.
+    fenced = re.match(r"```(?:json)?\s*(.*)```\s*$", stripped, re.IGNORECASE | re.DOTALL)
+    text = fenced.group(1).strip() if fenced else stripped
 
     try:
         return json.loads(text)
@@ -247,13 +280,9 @@ def extract_json_payload(text):
         # first_error's own message ("Expecting value: line 1 column 1
         # (char 0)") is what json.JSONDecodeError says for ANY text that
         # doesn't open with a valid JSON token - not just a genuinely
-        # empty string. A non-empty refusal or explanation from the model
-        # (e.g. prose declining to process the image, returned with
-        # finishReason=STOP so gemini_provider.py's own empty-response
-        # check never fires) produces this exact same message with zero
-        # indication of what the model actually said. Attaching a preview
-        # of the real response text is what turns "Expecting value: line
-        # 1 column 1 (char 0)" from a dead end into something actionable.
+        # empty string. Attaching a preview of the real response text is
+        # what turns that from a dead end into something actionable for
+        # whatever failure mode shows up next.
         preview = original_text[:300].replace("\n", " ")
         raise ValueError(
             f"{first_error} — response preview: {preview!r}"

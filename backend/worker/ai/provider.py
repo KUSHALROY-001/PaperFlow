@@ -1,3 +1,5 @@
+import re
+
 from ..asset_extractor import crop_diagram
 from ..config import (
     AI_GENERATE_FROM_NOTES,
@@ -846,6 +848,87 @@ def _attach_diagram_crops(ai_questions, page_images):
     return stats
 
 
+def _question_text_fingerprint(question):
+    """
+    Short normalized prefix of the question body used to decide whether two
+    extractions with the SAME paper question_no are the same question (e.g.
+    overlapping vision chunks of one subject) or different ones (e.g. JEE
+    Advanced Physics Q.1 vs Chemistry Q.1 vs Mathematics Q.1 - each subject
+    restarts numbering at 1).
+    """
+    text = (question.get("text") or "").strip().lower()
+    text = re.sub(r"\s+", " ", text)
+    return text[:160]
+
+
+def _is_same_extracted_question(existing, new):
+    """
+    True when two results with the same paper number are almost certainly
+    the same physical question (chunk overlap / fuller re-extraction), not
+    a subject-boundary restart.
+    """
+    fp_a = _question_text_fingerprint(existing)
+    fp_b = _question_text_fingerprint(new)
+    if not fp_a or not fp_b:
+        # No body to compare - treat as same number collision that should
+        # follow prefer_new, not as a guaranteed subject restart (empty
+        # bodies are more often parse failures than new subjects).
+        return True
+    if fp_a == fp_b:
+        return True
+    # Partial page-split: one extraction has a stub, the other the rest.
+    # Threshold is intentionally low (~24 chars) so short stems still match
+    # a fuller re-extraction of the same question across chunk boundaries.
+    if len(fp_a) >= 24 and fp_a[:80] in fp_b:
+        return True
+    if len(fp_b) >= 24 and fp_b[:80] in fp_a:
+        return True
+    return False
+
+
+def _put_extracted_question(questions_by_no, question, *, prefer_new):
+    """
+    Insert one extracted question into the question_no-keyed pool.
+
+    Same paper number + same/similar body  -> keep one (prefer_new decides
+    which). Same paper number + DIFFERENT body -> subject restart (JEE
+    Advanced Physics/Chemistry/Mathematics each use Q.1..Q.N independently);
+    assign the next free global number and remember the paper-local number
+    in metadata so nothing is silently overwritten.
+
+    This is the fix for the incident where Mathematics was extracted, then
+    Chemistry's Q.1-17 overwrote those keys, and gap-fill padded 18-51 so
+    the job reported 51 questions with Math content gone and Chemistry
+    duplicated.
+    """
+    if not question:
+        return
+    no = question.get("question_no")
+    if no is None:
+        return
+
+    if no not in questions_by_no:
+        questions_by_no[no] = question
+        return
+
+    existing = questions_by_no[no]
+    if _is_same_extracted_question(existing, question):
+        if prefer_new:
+            questions_by_no[no] = question
+        return
+
+    # Different question, same paper number - namespace into a free slot.
+    new_no = max(questions_by_no.keys()) + 1
+    metadata = dict(question.get("metadata") or {})
+    metadata["paper_question_no"] = no
+    metadata["renumbered_due_to_subject_restart"] = True
+    questions_by_no[new_no] = {
+        **question,
+        "question_no": new_no,
+        "metadata": metadata,
+    }
+
+
 def _missing_question_numbers(questions_by_no, regex_questions, expected_count=None):
     # Best-effort "how many questions should there be" estimate: the
     # highest question_no either extractor has actually detected so far.
@@ -1012,16 +1095,15 @@ def _enhance_questions_with_ai_inner(
                 chunk_diagram_stats = _attach_diagram_crops(ai_questions, result.get("page_images") or {})
                 for key in diagram_stats:
                     diagram_stats[key] += chunk_diagram_stats[key]
-                # This is the FIRST (highest-priority) pass to write into
-                # questions_by_no, so unconditional overwrite is fine here
-                # - within this same pass, a later chunk winning over an
-                # earlier one for the same question_no (e.g. a page split
-                # oddly across two chunks) is reasonable last-result-wins
-                # behavior. Every pass AFTER this one uses setdefault
-                # instead, specifically so it can never clobber what this
-                # pass already found.
+                # Highest-priority pass: same paper number + same body
+                # overwrites (later chunk wins on page splits). Same paper
+                # number + DIFFERENT body is a subject restart (JEE Advanced
+                # Physics/Chemistry/Mathematics each use Q.1..N) and is
+                # kept under a new global number - never silent overwrite.
                 for question in ai_questions:
-                    questions_by_no[question["question_no"]] = question
+                    _put_extracted_question(
+                        questions_by_no, question, prefer_new=True
+                    )
             except Exception as error:
                 errors.append({"chunk": f"{pages_label}_parse", "message": str(error)})
 
@@ -1046,17 +1128,13 @@ def _enhance_questions_with_ai_inner(
                 response_text = provider.generate_json(system_prompt, user_prompt)
                 payload = extract_json_payload(response_text)
                 ai_questions = normalize_ai_questions(payload, source=f"{provider.name}_ai_v1")
-                # Only fills question numbers not already found by an
-                # earlier, higher-priority pass (the primary vision pass
-                # above runs first specifically so it wins) - never
-                # overwrites an existing entry, which previously discarded
-                # already-successful diagram crops the moment ANY question
-                # number was still missing elsewhere in the document (see
-                # _attach_diagram_crops / diagram_stats above - a crop
-                # recorded there was being silently thrown away right
-                # here).
+                # Gap-fill only for true overlaps; subject restarts still
+                # get a new global number (prefer_new=False keeps the
+                # earlier vision result when bodies match).
                 for question in ai_questions:
-                    questions_by_no.setdefault(question["question_no"], question)
+                    _put_extracted_question(
+                        questions_by_no, question, prefer_new=False
+                    )
             except Exception as error:
                 errors.append({"chunk": chunk_index, "message": str(error)})
 
@@ -1088,13 +1166,12 @@ def _enhance_questions_with_ai_inner(
                 chunk_diagram_stats = _attach_diagram_crops(ai_questions, result.get("page_images") or {})
                 for key in diagram_stats:
                     diagram_stats[key] += chunk_diagram_stats[key]
-                # Gap-fill-only rule (setdefault, not overwrite): this is a
-                # "second opinion" retry of specific text-only-routed pages,
-                # never authoritative over a question the primary vision
-                # pass above already found and possibly cropped a diagram
-                # for.
+                # Gap-fill / second opinion only; subject restarts still
+                # preserved under a new global number.
                 for question in ai_questions:
-                    questions_by_no.setdefault(question["question_no"], question)
+                    _put_extracted_question(
+                        questions_by_no, question, prefer_new=False
+                    )
             except Exception as error:
                 errors.append({"chunk": f"{pages_label}_parse", "message": str(error)})
 
@@ -1108,21 +1185,13 @@ def _enhance_questions_with_ai_inner(
             )
             payload = extract_json_payload(response_text)
             ai_questions = normalize_ai_questions(payload, source=f"{provider.name}_pdf_ai_v1")
-            # This is the LAST-resort, lowest-fidelity pass - it reads the
-            # raw PDF file directly rather than rendered page images, so it
-            # structurally CANNOT crop a diagram (no page_images exist for
-            # it to crop from - _attach_diagram_crops is never called for
-            # this path at all). Previously this loop overwrote every
-            # question_no it returned unconditionally, which meant ANY
-            # remaining gap elsewhere in the document (a completely
-            # unrelated missing question) caused this pass to run and
-            # silently re-clobber EVERY already-successful vision result
-            # with a diagram-crop-incapable duplicate - discarding correct,
-            # already-cropped diagrams for questions that were never
-            # actually missing. setdefault fixes that: this pass can only
-            # ever fill in numbers no earlier pass found.
+            # Last-resort PDF text pass: never clobber an earlier vision
+            # result for the same body; still keeps subject-restart
+            # collisions under new global numbers.
             for question in ai_questions:
-                questions_by_no.setdefault(question["question_no"], question)
+                _put_extracted_question(
+                    questions_by_no, question, prefer_new=False
+                )
         except Exception as error:
             errors.append({"chunk": "pdf", "message": str(error)})
 

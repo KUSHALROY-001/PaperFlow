@@ -36,8 +36,8 @@ export default function WorkspaceConfirmDialogs({
           confirmLabel="Delete Mock Test"
           destructive={true}
           onConfirm={async () => {
-            setShowDeleteConfirm(false);
             await handleDelete();
+            setShowDeleteConfirm(false);
           }}
         />
       )}
@@ -55,8 +55,8 @@ export default function WorkspaceConfirmDialogs({
           confirmLabel="Re-extract"
           destructive={questionsCount > 0}
           onConfirm={async () => {
-            setShowReprocessConfirm(false);
             await handleReprocess();
+            setShowReprocessConfirm(false);
           }}
         />
       )}
@@ -70,8 +70,8 @@ export default function WorkspaceConfirmDialogs({
           confirmLabel="Cancel Processing"
           destructive={true}
           onConfirm={async () => {
-            setShowCancelConfirm(false);
             await handleCancelProcessing();
+            setShowCancelConfirm(false);
           }}
         />
       )}

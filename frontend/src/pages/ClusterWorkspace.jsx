@@ -314,7 +314,7 @@ export default function ClusterWorkspace() {
             title={
               isViewer ? "Editor role is required to add mock tests" : undefined
             }
-            className={`w-full sm:w-auto px-4 py-2.5 font-semibold rounded-xl text-xs shadow-xs transition-all ${
+            className={`w-full sm:w-auto px-4 py-2.5 font-semibold rounded-full text-xs shadow-xs transition-all ${
               isViewer
                 ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50"
                 : "bg-[#ea580c] hover:bg-[#c2410c] text-white"
@@ -351,8 +351,8 @@ export default function ClusterWorkspace() {
           confirmLabel="Delete Cluster"
           destructive={true}
           onConfirm={async () => {
-            setShowDeleteConfirm(false);
             await handleDeleteCluster();
+            setShowDeleteConfirm(false);
           }}
         />
       )}

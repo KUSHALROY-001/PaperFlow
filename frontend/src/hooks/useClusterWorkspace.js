@@ -42,7 +42,20 @@ export function useClusterWorkspace() {
   const handleDeleteCluster = async () => {
     try {
       await api.deleteCluster(cluster.id);
-      await queryClient.invalidateQueries({ queryKey: ["clusters"] });
+      // Optimistically remove from clusters cache so it's already gone upon redirecting
+      queryClient.setQueryData(["clusters"], (old) => {
+        if (!old?.clusters) return old;
+        return {
+          ...old,
+          clusters: old.clusters.filter((c) => c.id !== cluster.id),
+        };
+      });
+      queryClient.removeQueries({ queryKey: ["cluster", id] });
+      queryClient.removeQueries({ queryKey: ["mock-tests", id] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["clusters"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] }),
+      ]);
       navigate("/clusters");
     } catch (error) {
       setActionError(error.message || "Could not delete cluster");

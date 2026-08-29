@@ -119,6 +119,10 @@ export function createApp() {
     "/api/questions/:questionId/diagram",
     asyncHandler(questionAssetsController.serveDiagram),
   );
+  app.get(
+    "/api/questions/:questionId/diagram/:slotKey",
+    asyncHandler(questionAssetsController.serveDiagram),
+  );
   app.use("/api/questions", requireAuth, questionsRouter);
   app.use("/api/review-queue", requireAuth, reviewQueueRouter);
   app.use("/api/question-bank", requireAuth, questionBankRouter);

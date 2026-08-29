@@ -19,6 +19,10 @@ sharedRouter.get(
   "/:token/questions/:questionId/diagram",
   asyncHandler(questionAssetsController.serveSharedDiagram),
 );
+sharedRouter.get(
+  "/:token/questions/:questionId/diagram/:slotKey",
+  asyncHandler(questionAssetsController.serveSharedDiagram),
+);
 sharedRouter.put(
   "/:token/attempts/:attemptId/answers/:questionId",
   asyncHandler(sharedController.saveSharedAnswer),

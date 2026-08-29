@@ -80,7 +80,7 @@ const AuthenticatedApp = () => {
         element={
           <AuthPage
             mode="login"
-            title="Welcome back to MockCraft"
+            title="Welcome back to PaperFlow"
             description="Sign in to continue building and reviewing structured mock tests."
           />
         }
@@ -90,7 +90,7 @@ const AuthenticatedApp = () => {
         element={
           <AuthPage
             mode="signup"
-            title="Create your MockCraft workspace"
+            title="Create your own workspace"
             description="Start turning scanned papers into searchable, reviewable mock tests."
           />
         }

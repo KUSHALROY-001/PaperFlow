@@ -425,8 +425,8 @@ export default function ReviewTab({
           description="Are you sure you want to delete this question? This action cannot be undone."
           confirmLabel="Delete Question"
           destructive={true}
-          onConfirm={() => {
-            onDelete(deleteTarget.id);
+          onConfirm={async () => {
+            await onDelete(deleteTarget.id);
             setDeleteTarget(null);
           }}
         />

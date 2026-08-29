@@ -22,13 +22,14 @@ export default function UserMenu() {
     <div className="relative">
       <button
         onClick={() => setShowUserMenu(!showUserMenu)}
-        className="flex items-center gap-2 px-2.5 py-1.5 rounded-3xl border border-border bg-card hover:bg-muted transition-all"
+        className="flex items-center gap-2 sm:px-2.5 sm:py-1.5 rounded-3xl border border-border bg-card hover:bg-muted transition-all"
       >
         <UserAvatar
           src={user?.avatarUrl}
           name={user?.name}
           seed={user?.id || user?.email}
-          size="sm"
+          size="md"
+          className="sm:w-6! sm:h-6! sm:text-xs! shrink-0"
         />
         <span className="hidden sm:inline text-xs font-semibold text-foreground">
           {userName}

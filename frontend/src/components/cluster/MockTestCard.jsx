@@ -27,15 +27,33 @@ export default function MockTestCard({ mocktest, clusterId }) {
 
   const handleRenameSave = async (newName) => {
     await api.updateMockTest(mocktest.id, { name: newName });
-    queryClient.invalidateQueries({ queryKey: ["cluster", clusterId] });
-    queryClient.invalidateQueries({ queryKey: ["mockTests", clusterId] });
+    await queryClient.invalidateQueries({ queryKey: ["cluster", clusterId] });
+    await queryClient.invalidateQueries({
+      queryKey: ["mock-tests", clusterId],
+    });
   };
 
   const handleDeleteConfirm = async () => {
-    await api.deleteMockTest(mocktest.id);
-    queryClient.invalidateQueries({ queryKey: ["cluster", clusterId] });
-    queryClient.invalidateQueries({ queryKey: ["mockTests", clusterId] });
-    setShowDelete(false);
+    try {
+      await api.deleteMockTest(mocktest.id);
+      // Optimistically remove from mock-tests cache so it vanishes instantly
+      queryClient.setQueryData(["mock-tests", clusterId], (old) => {
+        if (!old?.mockTests) return old;
+        return {
+          ...old,
+          mockTests: old.mockTests.filter((m) => m.id !== mocktest.id),
+        };
+      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["mock-tests", clusterId] }),
+        queryClient.invalidateQueries({ queryKey: ["cluster", clusterId] }),
+        queryClient.invalidateQueries({ queryKey: ["clusters"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] }),
+      ]);
+      setShowDelete(false);
+    } catch (error) {
+      console.error("Failed to delete mock test:", error);
+    }
   };
 
   return (
