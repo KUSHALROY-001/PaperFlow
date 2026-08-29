@@ -4,16 +4,36 @@ import { pool } from "../db/pool.js";
 // enough to live directly in the controllers that already serve
 // questions/attempts; introducing a service here would be ceremony
 // without payoff, matching how thin this table's access pattern is.
+//
+// Multi-image (migration 038): a question can now have more than one
+// asset, each keyed by its own slot_key (UNIQUE per question). 'default'
+// is the slot every pre-038 row already has, and the one a question with
+// no ![[img:slot-key]] marker anywhere in its text/options/table cells
+// still uses via the legacy placement column - multi-image is additive on
+// top of that, not a replacement for it. Every function below now returns
+// or accepts a slot_key explicitly; nothing here still assumes "one asset
+// per question."
 
-export async function findAssetForQuestion(questionId) {
+export async function findAssetsForQuestion(questionId) {
   const result = await pool.query(
-    `SELECT id, question_id, asset_type, storage_path,
+    `SELECT id, question_id, slot_key, asset_type, storage_path,
             source, placement, page_number, created_at
      FROM question_assets
      WHERE question_id = $1
-     ORDER BY created_at ASC
-     LIMIT 1`,
+     ORDER BY (slot_key <> 'default'), slot_key ASC`,
     [questionId],
+  );
+
+  return result.rows.map(mapRow);
+}
+
+export async function findAssetForSlot(questionId, slotKey) {
+  const result = await pool.query(
+    `SELECT id, question_id, slot_key, asset_type, storage_path,
+            source, placement, page_number, created_at
+     FROM question_assets
+     WHERE question_id = $1 AND slot_key = $2`,
+    [questionId, slotKey],
   );
 
   return result.rows[0] ? mapRow(result.rows[0]) : null;
@@ -22,10 +42,14 @@ export async function findAssetForQuestion(questionId) {
 // Placement is independent of source (an extracted diagram is just as
 // repositionable as a manually uploaded one), so this is never called
 // from the same place as the upload/crop endpoints - it's its own PATCH.
+// Per-asset (by id), not per-slot - placement only ever means anything for
+// the 'default' slot's legacy above/below-text positioning; a non-default
+// slot's position is wherever its ![[img:slot-key]] marker sits in the
+// text, which this column has no say over.
 export async function setPlacement(assetId, placement) {
   const result = await pool.query(
     `UPDATE question_assets SET placement = $2 WHERE id = $1
-     RETURNING id, question_id, asset_type, storage_path,
+     RETURNING id, question_id, slot_key, asset_type, storage_path,
                source, placement, page_number, created_at`,
     [assetId, placement],
   );
@@ -36,85 +60,98 @@ export async function deleteAsset(assetId) {
   await pool.query(`DELETE FROM question_assets WHERE id = $1`, [assetId]);
 }
 
-// Crop overwrites Cloudinary in place and does not INSERT a new row, so
-// created_at would otherwise stay at the original extraction time and
-// every cache-bust (diagramUrl ?v=, Cloudinary /v<version>/) would keep
-// pointing at the pre-crop bytes. Bumping it here is what makes the
-// next listQuestions / <img> request actually show the cropped image.
+export async function deleteAssetForSlot(questionId, slotKey) {
+  await pool.query(
+    `DELETE FROM question_assets WHERE question_id = $1 AND slot_key = $2`,
+    [questionId, slotKey],
+  );
+}
+
+// A crop overwrites an existing Cloudinary public ID. Bumping created_at
+// gives all versioned delivery URLs a fresh cache key for that same slot.
 export async function touchAsset(assetId) {
   const result = await pool.query(
     `UPDATE question_assets SET created_at = now() WHERE id = $1
-     RETURNING id, question_id, asset_type, storage_path,
+     RETURNING id, question_id, slot_key, asset_type, storage_path,
                source, placement, page_number, created_at`,
     [assetId],
   );
   return result.rows[0] ? mapRow(result.rows[0]) : null;
 }
 
-// The DB half of a manual image upload/replace (see
+// The DB half of a manual image upload/replace for ONE slot (see
 // question-assets.controller.js#uploadDiagramImage, which uploads to
-// Cloudinary BEFORE calling this - same upload-then-row ordering worker.py
-// uses, for the same reason: a row can point at an asset that briefly
-// doesn't exist yet under concurrent load, never the reverse).
+// Cloudinary BEFORE calling this). Deliberately the OPPOSITE order from
+// worker.py's extraction path (which commits the question_assets row
+// first, inside the same transaction as the question itself, and uploads
+// the actual file bytes after, best-effort) - these are two different
+// situations, not one convention: a bulk extraction inserting potentially
+// thousands of questions shouldn't fail an entire question over one flaky
+// file upload, so degrading to "row exists, file missing" is the right
+// trade there. A manual upload is one single interactive user action -
+// if Cloudinary-first failed silently and the DB write still succeeded,
+// the user would see a false "success" for an image that was never
+// actually saved, with no error to prompt them to retry. Uploading first
+// here means a failure surfaces immediately as a failed request instead.
 //
-// DELETE-then-INSERT in one transaction rather than an UPDATE, because
-// this also has to work for a question that currently has ZERO assets
-// (nothing extracted at all - the whole reason this feature exists) as
-// well as one replacing an existing row, without the caller needing to
-// know which case it is. Also enforces the one-asset-per-question
-// invariant the rest of the app already assumes (see findAssetForQuestion's
-// LIMIT 1) at the single place that can violate it, without a DB
-// constraint - see migration 015's rationale for why not a UNIQUE index.
-export async function replaceAssetForQuestion(
+// INSERT ... ON CONFLICT (question_id, slot_key) DO UPDATE, not the old
+// DELETE-then-INSERT: that pattern enforced a one-asset-per-question
+// invariant by construction (deleting every row before inserting the one
+// new one), which is exactly what migration 038 removes. Replacing slot
+// "diagram-2" must never touch slot "default" or any other slot the same
+// question has - an upsert scoped to (question_id, slot_key) via the
+// UNIQUE constraint from that migration is what makes that scoping
+// atomic and race-safe instead of a separate SELECT-then-INSERT-or-UPDATE.
+export async function upsertAssetForSlot(
   questionId,
+  slotKey,
   { storagePath, source, placement, pageNumber = null },
 ) {
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    await client.query(`DELETE FROM question_assets WHERE question_id = $1`, [
-      questionId,
-    ]);
-    const result = await client.query(
-      `INSERT INTO question_assets
-         (question_id, asset_type, storage_path, source, placement, page_number)
-       VALUES ($1, 'diagram', $2, $3, $4, $5)
-       RETURNING id, question_id, asset_type, storage_path,
-                 source, placement, page_number, created_at`,
-      [questionId, storagePath, source, placement, pageNumber],
-    );
-    await client.query("COMMIT");
-    return mapRow(result.rows[0]);
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
+  const result = await pool.query(
+    `INSERT INTO question_assets
+       (question_id, slot_key, asset_type, storage_path, source, placement, page_number)
+     VALUES ($1, $2, 'diagram', $3, $4, $5, $6)
+     ON CONFLICT (question_id, slot_key) DO UPDATE
+       SET storage_path = EXCLUDED.storage_path,
+           source = EXCLUDED.source,
+           placement = EXCLUDED.placement,
+           page_number = EXCLUDED.page_number
+     RETURNING id, question_id, slot_key, asset_type, storage_path,
+               source, placement, page_number, created_at`,
+    [questionId, slotKey, storagePath, source, placement, pageNumber],
+  );
+  return mapRow(result.rows[0]);
 }
 
 // Batch lookup for a whole mock test's worth of questions in one query -
 // used by listPlayableQuestions / listQuestionsWithAnswersForAttempt /
 // the editor's question list, so rendering N questions doesn't cost N
-// extra queries.
+// extra queries. Returns EVERY asset per question now (an array), not
+// just the first one found.
 export async function findAssetsForQuestions(questionIds) {
   if (!questionIds || questionIds.length === 0) {
     return new Map();
   }
 
   const result = await pool.query(
-    `SELECT DISTINCT ON (question_id)
-       id, question_id, asset_type, storage_path,
-       source, placement, page_number, created_at
+    `SELECT id, question_id, slot_key, asset_type, storage_path,
+            source, placement, page_number, created_at
      FROM question_assets
      WHERE question_id = ANY($1::uuid[])
-     ORDER BY question_id, created_at ASC`,
+     ORDER BY question_id, (slot_key <> 'default'), slot_key ASC`,
     [questionIds],
   );
 
   const byQuestionId = new Map();
   for (const row of result.rows) {
-    byQuestionId.set(row.question_id, mapRow(row));
+    const mapped = mapRow(row);
+    const key = String(row.question_id);
+    const existing = byQuestionId.get(key);
+    if (existing) {
+      existing.push(mapped);
+    } else {
+      byQuestionId.set(key, [mapped]);
+    }
   }
   return byQuestionId;
 }
@@ -124,19 +161,25 @@ export async function findAssetsForQuestions(questionIds) {
 // list in hand (e.g. building the editor's initial question list).
 export async function findAssetsForMockTest(mockTestId) {
   const result = await pool.query(
-    `SELECT DISTINCT ON (qa.question_id)
-       qa.id, qa.question_id, qa.asset_type, qa.storage_path,
-       qa.source, qa.placement, qa.page_number, qa.created_at
+    `SELECT qa.id, qa.question_id, qa.slot_key, qa.asset_type, qa.storage_path,
+            qa.source, qa.placement, qa.page_number, qa.created_at
      FROM question_assets qa
      INNER JOIN questions q ON q.id = qa.question_id
      WHERE q.mock_test_id = $1
-     ORDER BY qa.question_id, qa.created_at ASC`,
+     ORDER BY qa.question_id, (qa.slot_key <> 'default'), qa.slot_key ASC`,
     [mockTestId],
   );
 
   const byQuestionId = new Map();
   for (const row of result.rows) {
-    byQuestionId.set(row.question_id, mapRow(row));
+    const mapped = mapRow(row);
+    const key = String(row.question_id);
+    const existing = byQuestionId.get(key);
+    if (existing) {
+      existing.push(mapped);
+    } else {
+      byQuestionId.set(key, [mapped]);
+    }
   }
   return byQuestionId;
 }
@@ -145,6 +188,7 @@ function mapRow(row) {
   return {
     id: row.id,
     questionId: row.question_id,
+    slotKey: row.slot_key,
     assetType: row.asset_type,
     storagePath: row.storage_path,
     source: row.source,

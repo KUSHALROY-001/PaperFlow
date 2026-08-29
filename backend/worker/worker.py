@@ -554,10 +554,9 @@ def process_generation_job(job):
                 summary={"ai": ai_summary, "questionsParsed": len(questions)},
             )
             # No pdf_path argument (and never was any diagram data) for
-            # this job type - a generated question never has has_diagram
-            # set, since METADATA_GENERATION_SYSTEM_PROMPT never asks for
-            # one and normalize_ai_questions defaults it to False, so
-            # question.get("_diagram_crop_bytes") is always falsy here and
+            # this job type - a generated question never has diagram crops,
+            # since the metadata-generation prompt has no source page image,
+            # so question.get("_diagram_crops") is always falsy here and
             # replace_questions never produces a pending diagram write for
             # any of these questions.
             inserted, pending_diagram_writes, diagrams_extracted = replace_questions(

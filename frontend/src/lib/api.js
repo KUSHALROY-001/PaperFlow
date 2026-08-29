@@ -352,8 +352,9 @@ export const api = {
   // from the first crop's result, not a separately preserved original.
   // There is deliberately no "reset to original" call anymore - nothing
   // is kept to reset to.
-  updateDiagramCrop(questionId, rect) {
-    return apiRequest(`/api/questions/${questionId}/diagram-crop`, {
+  updateDiagramCrop(questionId, rect, slotKey = "default") {
+    const suffix = slotKey === "default" ? "" : `/${slotKey}`;
+    return apiRequest(`/api/questions/${questionId}/diagram-crop${suffix}`, {
       method: "PUT",
       body: JSON.stringify(rect),
     });
@@ -362,24 +363,30 @@ export const api = {
   // no diagram at all or already has one (extracted or manual) - the
   // backend replaces whatever's there. isFormData in apiRequest handles
   // the content-type header, so this is just a plain FormData body.
-  uploadDiagramImage(questionId, file) {
+  uploadDiagramImage(questionId, file, slotKey = "default") {
     const formData = new FormData();
     formData.append("image", file);
-    return apiRequest(`/api/questions/${questionId}/diagram`, {
+    const suffix = slotKey === "default" ? "" : `/${slotKey}`;
+    return apiRequest(`/api/questions/${questionId}/diagram${suffix}`, {
       method: "POST",
       body: formData,
     });
   },
-  updateDiagramPlacement(questionId, placement) {
-    return apiRequest(`/api/questions/${questionId}/diagram-placement`, {
+  updateDiagramPlacement(questionId, placement, slotKey = "default") {
+    const suffix = slotKey === "default" ? "" : `/${slotKey}`;
+    return apiRequest(`/api/questions/${questionId}/diagram-placement${suffix}`, {
       method: "PATCH",
       body: JSON.stringify({ placement }),
     });
   },
-  deleteDiagramImage(questionId) {
-    return apiRequest(`/api/questions/${questionId}/diagram`, {
+  deleteDiagramImage(questionId, slotKey = "default") {
+    const suffix = slotKey === "default" ? "" : `/${slotKey}`;
+    return apiRequest(`/api/questions/${questionId}/diagram${suffix}`, {
       method: "DELETE",
     });
+  },
+  listQuestionAssets(questionId) {
+    return apiRequest(`/api/questions/${questionId}/diagram-assets`);
   },
   getPlayableMockTest(mockTestId) {
     return apiRequest(`/api/mock-tests/${mockTestId}/play`);

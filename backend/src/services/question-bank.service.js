@@ -100,14 +100,14 @@ export async function listTopics(workspaceId) {
 
 // Wraps the DB copy (question row + options, inside one transaction so a
 // crash mid-insert never leaves an orphaned question with no options) and
-// then, only once that's committed, best-effort clones the diagram asset
-// if there is one - see question-assets.service.js#cloneDiagramAsset's
-// own comment for why that's a separate, non-transactional, non-fatal
-// step: it's real file I/O, and a copy that succeeds with its question
-// text/options intact but silently missing its diagram image is a much
-// better outcome than the whole copy failing over a disk error, matching
-// worker.py's own best-effort diagram-write pattern for freshly extracted
-// questions.
+// then, only once that's committed, best-effort clones the diagram
+// asset(s) if there are any - see
+// question-assets.service.js#cloneDiagramAssets's own comment for why
+// that's a separate, non-transactional, non-fatal step: it's real file
+// I/O, and a copy that succeeds with its question text/options intact but
+// silently missing an image is a much better outcome than the whole copy
+// failing over a disk error, matching worker.py's own best-effort
+// diagram-write pattern for freshly extracted questions.
 export async function copyQuestionToMockTest(
   workspaceId,
   questionId,
@@ -167,7 +167,7 @@ export async function copyQuestionToMockTest(
   }
 
   try {
-    await questionAssetsService.cloneDiagramAsset({
+    await questionAssetsService.cloneDiagramAssets({
       sourceQuestionId: questionId,
       targetQuestionId: newQuestion.id,
       targetMockTestId,

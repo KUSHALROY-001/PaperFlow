@@ -4,7 +4,7 @@ from contextlib import contextmanager
 import psycopg
 from psycopg.rows import dict_row
 
-from .asset_extractor import build_diagram_public_id
+from .cloudinary_storage import build_diagram_public_id
 from .config import DATABASE_URL, DB_CA_CERT_PATH
 from .math_validator import find_all_math_errors
 
@@ -366,24 +366,26 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
             ],
         ).fetchone()
 
-        # _diagram_crop_bytes is an in-memory-only carrier attached by
-        # ai/provider.py#_attach_diagram_crops - never a real question
-        # field, and never written into `questions.metadata` above (it's
-        # read via .get() here, not part of the dict passed to json.dumps
-        # for metadata).
-        crop_bytes = question.get("_diagram_crop_bytes")
-        if crop_bytes:
+        # _diagram_crops is transient in-memory data keyed by image slot.
+        # It is deliberately excluded from question metadata and uploaded
+        # only after this transaction commits in worker.py.
+        crops = question.get("_diagram_crops") or {}
+        for slot_key, crop_bytes in crops.items():
             public_id = build_diagram_public_id(
-                workspace_id, mock_test_id, question_row["id"]
+                workspace_id, mock_test_id, question_row["id"], slot_key
             )
             connection.execute(
                 """
                 INSERT INTO question_assets
-                    (question_id, asset_type, storage_path, page_number)
-                VALUES (%s, 'diagram', %s, %s)
+                    (question_id, slot_key, asset_type, storage_path, page_number)
+                VALUES (%s, %s, 'diagram', %s, %s)
+                ON CONFLICT (question_id, slot_key) DO UPDATE
+                  SET storage_path = EXCLUDED.storage_path,
+                      page_number = EXCLUDED.page_number
                 """,
                 [
                     question_row["id"],
+                    slot_key,
                     public_id,
                     question.get("source_page"),
                 ],

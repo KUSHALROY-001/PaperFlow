@@ -27,6 +27,24 @@ function normalizeQuestion(question) {
   };
 }
 
+// Builds {slotKey: absoluteUrl} for one question's diagramAssets (see
+// attachDiagramUrls in question-assets.service.js) - resolved to an
+// absolute URL up front, same reasoning diagramHtml below already uses
+// for the single default-slot image: Puppeteer is a separate browser
+// process making a real HTTP request for each <img>, so every URL handed
+// to math-html.js/table-html.js needs to already be reachable on its own,
+// not relative to nothing. Returns {} for a question with no assets at
+// all (the common case) rather than undefined, so every renderTextWithMath
+// call downstream can do a plain `images?.[slotKey]` lookup without an
+// extra null check at each call site.
+function buildDiagramAssetsMap(question, { baseUrl }) {
+  const map = {};
+  for (const asset of question.diagramAssets || []) {
+    map[asset.slotKey] = `${baseUrl}${asset.url}`;
+  }
+  return map;
+}
+
 // Mirrors QuestionContent.jsx's placement rule exactly: "above_text"
 // renders before the question body, "below_text" (default) renders
 // after it but before options, "below_options" renders after the
@@ -45,7 +63,7 @@ function diagramHtml(question, { baseUrl }) {
 
 const CODE_FENCE_RE = /```(\w*)\n([\s\S]*?)```/g;
 
-function renderQuestionTextWithCodeHtml(text) {
+function renderQuestionTextWithCodeHtml(text, images) {
   if (!text) return "";
   const str = String(text);
   const parts = str.split(CODE_FENCE_RE);
@@ -53,7 +71,7 @@ function renderQuestionTextWithCodeHtml(text) {
   for (let i = 0; i < parts.length; i += 3) {
     const prose = parts[i];
     if (prose) {
-      html += renderQuestionTextHtml(prose);
+      html += renderQuestionTextHtml(prose, images);
     }
     if (i + 1 < parts.length) {
       const codeLanguage = parts[i + 1]?.trim() || null;
@@ -69,11 +87,11 @@ function renderQuestionTextWithCodeHtml(text) {
   return html;
 }
 
-function questionBodyHtml(question) {
-  return renderQuestionTextWithCodeHtml(question.text);
+function questionBodyHtml(question, images) {
+  return renderQuestionTextWithCodeHtml(question.text, images);
 }
 
-function optionsHtml(question) {
+function optionsHtml(question, images) {
   // Don't mark correct options inline; the answer key at the end will show answers.
   return `
     <div class="options">
@@ -90,7 +108,7 @@ function optionsHtml(question) {
           // parent .option div, so only the option's actual content -
           // never this function's own formatting - is what gets
           // preserved.
-          return `<div class="option"><span class="option-letter">${String.fromCharCode(65 + index)}.</span><span class="option-text">${renderTextWithMath(option)}</span></div>`;
+          return `<div class="option"><span class="option-letter">${String.fromCharCode(65 + index)}.</span><span class="option-text">${renderTextWithMath(option, images)}</span></div>`;
         })
         .join("")}
     </div>
@@ -121,12 +139,12 @@ function answerKeyHtml(questions) {
   `;
 }
 
-function explanationHtml(question) {
+function explanationHtml(question, images) {
   if (!question.explanation) return "";
   return `
     <div class="explanation-box" style="margin-top: 10px; padding: 8px 12px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px;">
       <div style="font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; color: #059669; margin-bottom: 4px;">Explanation</div>
-      <div>${renderQuestionTextWithCodeHtml(question.explanation)}</div>
+      <div>${renderQuestionTextWithCodeHtml(question.explanation, images)}</div>
     </div>
   `;
 }
@@ -134,6 +152,7 @@ function explanationHtml(question) {
 function questionHtml(question, index, { baseUrl }) {
   const placement = question.placement || "below_text";
   const diagram = diagramHtml(question, { baseUrl });
+  const images = buildDiagramAssetsMap(question, { baseUrl });
 
   return `
     <section class="question">
@@ -142,11 +161,11 @@ function questionHtml(question, index, { baseUrl }) {
         ${question.topic ? `<span class="question-topic">${escapeHtml(question.topic)}</span>` : ""}
       </div>
       ${placement === "above_text" ? diagram : ""}
-      ${questionBodyHtml(question)}
+      ${questionBodyHtml(question, images)}
       ${placement === "below_text" ? diagram : ""}
-      ${optionsHtml(question)}
+      ${optionsHtml(question, images)}
       ${placement === "below_options" ? diagram : ""}
-      ${explanationHtml(question)}
+      ${explanationHtml(question, images)}
     </section>
   `;
 }
@@ -258,6 +277,24 @@ export function renderMockTestHtml({ mockTest, questions, baseUrl }) {
     margin: 10px 0;
     border: 1px solid #ddd;
     border-radius: 8px;
+  }
+  .inline-diagram {
+    display: inline-block;
+    max-width: 100%;
+    max-height: 180px;
+    vertical-align: middle;
+    margin: 4px 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+  }
+  .missing-image {
+    display: inline-block;
+    padding: 1px 8px;
+    border: 1px dashed #d97706;
+    border-radius: 6px;
+    background: rgba(217, 119, 6, 0.08);
+    color: #d97706;
+    font-size: 10px;
   }
   .code-block {
     border: 1px solid #ddd;

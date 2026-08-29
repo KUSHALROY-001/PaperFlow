@@ -1,6 +1,7 @@
 import {
   Bold,
   Code2,
+  ImagePlus,
   Italic,
   MoreVertical,
   Sparkles,
@@ -9,6 +10,7 @@ import {
   Underline,
 } from "lucide-react";
 import FormattedTextEditor from "../shared/FormattedTextEditor";
+import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
 
 const OPTION_TOOLBAR_BUTTONS = [
   { action: "toggleBold", icon: Bold, label: "Bold" },
@@ -22,6 +24,9 @@ export default function QuestionOptionRow({
   option,
   isCorrect,
   totalOptions,
+  questionId,
+  mockTestId,
+  diagramAssets,
   areOptionsRaw,
   isOpenMenu,
   onToggleMenu,
@@ -127,6 +132,15 @@ export default function QuestionOptionRow({
                   <button
                     type="button"
                     onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => onOptionAction(index, "insertImage")}
+                    className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-xs font-semibold text-foreground transition-colors hover:bg-muted hover:text-orange-500"
+                  >
+                    <ImagePlus className="h-3.5 w-3.5 text-orange-500" />
+                    Insert image
+                  </button>
+                  <button
+                    type="button"
+                    onMouseDown={(event) => event.preventDefault()}
                     onClick={() => onOptionAction(index, "indentCode")}
                     className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-xs font-semibold text-foreground transition-colors hover:bg-muted hover:text-orange-500"
                   >
@@ -170,14 +184,18 @@ export default function QuestionOptionRow({
         />
       ) : (
         <div className="w-full sm:flex-1 min-w-0">
-          <FormattedTextEditor
-            ref={optionEditorRefCallback}
-            value={option || ""}
-            onChange={(value) => onUpdate(index, value)}
-            disabled={isViewer}
-            placeholder={`Option ${optionLetter}`}
-            showToolbar={false}
-          />
+          <DiagramAssetsProvider assets={diagramAssets}>
+            <FormattedTextEditor
+              ref={optionEditorRefCallback}
+              value={option || ""}
+              onChange={(value) => onUpdate(index, value)}
+              disabled={isViewer}
+              placeholder={`Option ${optionLetter}`}
+              showToolbar={false}
+              questionId={questionId}
+              mockTestId={mockTestId}
+            />
+          </DiagramAssetsProvider>
         </div>
       )}
     </div>

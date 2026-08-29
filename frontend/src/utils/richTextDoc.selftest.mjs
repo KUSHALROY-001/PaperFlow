@@ -40,6 +40,11 @@ const cases = [
   "String ending in bold**",
   "$$",
   "$$$$",
+  "Match List-I ![[img:list-i-1]] with List-II ![[img:list-i-2]] below.",
+  "An image with math nearby: $E=mc^2$ and ![[img:default]] the figure.",
+  "Two adjacent markers: ![[img:a]]![[img:b]] with no text between them.",
+  "![[img:default]]",
+  "A price of $50 should not be confused with ![[img:not-money]].",
 ];
 
 let failures = 0;

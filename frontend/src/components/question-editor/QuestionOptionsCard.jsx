@@ -5,6 +5,9 @@ export default function QuestionOptionsCard({
   options = [],
   correctOptionIndexes = [],
   questionType = "single",
+  questionId,
+  mockTestId,
+  diagramAssets,
   areOptionsRaw,
   setAreOptionsRaw,
   handleQuestionTypeChange,
@@ -63,6 +66,9 @@ export default function QuestionOptionsCard({
               option={opt}
               isCorrect={isCorrect}
               totalOptions={options.length}
+              questionId={questionId}
+              mockTestId={mockTestId}
+              diagramAssets={diagramAssets}
               areOptionsRaw={areOptionsRaw}
               isOpenMenu={openOptionMenu === i}
               onToggleMenu={() =>

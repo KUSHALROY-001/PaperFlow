@@ -5,6 +5,7 @@ import QuestionContent, {
   QuestionExplanation,
 } from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
+import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
 
 export default function QuestionReviewList({ questions }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -147,74 +148,77 @@ export default function QuestionReviewList({ questions }) {
                           </span>
                         )}
 
-                        <QuestionContent
-                          text={q.text}
-                          passage={q.passage}
-                          diagramUrl={q.diagramUrl}
-                          placement={q.placement}
-                          textClassName="font-bold text-foreground text-xs leading-relaxed"
-                        />
+                        <DiagramAssetsProvider assets={q.diagramAssets}>
+                          <QuestionContent
+                            text={q.text}
+                            passage={q.passage}
+                            diagramUrl={q.diagramUrl}
+                            placement={q.placement}
+                            textClassName="font-bold text-foreground text-xs leading-relaxed"
+                          />
 
-                        {/* Every option shown, not just a "Your answer"/"Correct"
-                          text summary - the correct option always gets a
-                          green tick + label, and whichever option the user
-                          actually picked gets a red cross if it was wrong
-                          (nothing is marked wrong if they skipped the
-                          question entirely). */}
-                        <div className="mt-2 space-y-1.5">
-                          {q.options.map((option, optionIndex) => {
-                            const normalizedOption =
-                              typeof option === "string"
-                                ? { optionIndex, optionText: option }
-                                : option;
-                            const isCorrect = q.correctOptionIndexes?.includes(
-                              normalizedOption.optionIndex,
-                            );
-                            const isYourWrongPick =
-                              !skipped &&
-                              !correct &&
-                              q.selectedOptionIndexes.includes(
-                                normalizedOption.optionIndex,
+                          {/* Every option shown, not just a "Your answer"/"Correct"
+                            text summary - the correct option always gets a
+                            green tick + label, and whichever option the user
+                            actually picked gets a red cross if it was wrong
+                            (nothing is marked wrong if they skipped the
+                            question entirely). */}
+                          <div className="mt-2 space-y-1.5">
+                            {q.options.map((option, optionIndex) => {
+                              const normalizedOption =
+                                typeof option === "string"
+                                  ? { optionIndex, optionText: option }
+                                  : option;
+                              const isCorrect =
+                                q.correctOptionIndexes?.includes(
+                                  normalizedOption.optionIndex,
+                                );
+                              const isYourWrongPick =
+                                !skipped &&
+                                !correct &&
+                                q.selectedOptionIndexes.includes(
+                                  normalizedOption.optionIndex,
+                                );
+
+                              return (
+                                <div
+                                  key={normalizedOption.optionIndex}
+                                  className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-2 text-xs ${
+                                    isCorrect
+                                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600"
+                                      : isYourWrongPick
+                                        ? "bg-red-500/10 border-red-500/30 text-red-600"
+                                        : "bg-card border-border text-muted-foreground"
+                                  }`}
+                                >
+                                  <span className="flex-1 whitespace-pre-wrap wrap-break-word">
+                                    <MathText
+                                      text={normalizedOption.optionText}
+                                    />
+                                  </span>
+                                  {isCorrect && (
+                                    <span className="inline-flex items-center gap-1 font-bold shrink-0">
+                                      <CheckCircle className="w-3.5 h-3.5" />
+                                      Correct
+                                    </span>
+                                  )}
+                                  {isYourWrongPick && (
+                                    <span className="inline-flex items-center gap-1 font-bold shrink-0">
+                                      <XCircle className="w-3.5 h-3.5" />
+                                      Your answer
+                                    </span>
+                                  )}
+                                </div>
                               );
-
-                            return (
-                              <div
-                                key={normalizedOption.optionIndex}
-                                className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-2 text-xs ${
-                                  isCorrect
-                                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600"
-                                    : isYourWrongPick
-                                      ? "bg-red-500/10 border-red-500/30 text-red-600"
-                                      : "bg-card border-border text-muted-foreground"
-                                }`}
-                              >
-                                <span className="flex-1 whitespace-pre-wrap wrap-break-word">
-                                  <MathText
-                                    text={normalizedOption.optionText}
-                                  />
-                                </span>
-                                {isCorrect && (
-                                  <span className="inline-flex items-center gap-1 font-bold shrink-0">
-                                    <CheckCircle className="w-3.5 h-3.5" />
-                                    Correct
-                                  </span>
-                                )}
-                                {isYourWrongPick && (
-                                  <span className="inline-flex items-center gap-1 font-bold shrink-0">
-                                    <XCircle className="w-3.5 h-3.5" />
-                                    Your answer
-                                  </span>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                        {q.placement === "below_options" && (
-                          <div className="mt-2">
-                            <QuestionDiagram diagramUrl={q.diagramUrl} />
+                            })}
                           </div>
-                        )}
-                        <QuestionExplanation explanation={q.explanation} />
+                          {q.placement === "below_options" && (
+                            <div className="mt-2">
+                              <QuestionDiagram diagramUrl={q.diagramUrl} />
+                            </div>
+                          )}
+                          <QuestionExplanation explanation={q.explanation} />
+                        </DiagramAssetsProvider>
                       </div>
                     </div>
                   </div>

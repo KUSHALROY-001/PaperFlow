@@ -1,6 +1,8 @@
 import { AlertTriangle, Check, Copy, FolderOpen, Plus } from "lucide-react";
 import { StatusBadge } from "../design-system/StatusBadge";
 import QuestionContent, { QuestionExplanation } from "../shared/QuestionContent";
+import MathText from "../shared/MathText";
+import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
 
 const STATUS_TONE = {
   approved: "success",
@@ -141,29 +143,31 @@ export default function BankQuestionCard({
         </button>
       </div>
 
-      <QuestionContent
-        text={question.text}
-        passage={question.passage}
-        diagramUrl={question.diagramUrl}
-        textClassName="text-sm text-foreground"
-      />
+      <DiagramAssetsProvider assets={question.diagramAssets}>
+        <QuestionContent
+          text={question.text}
+          passage={question.passage}
+          diagramUrl={question.diagramUrl}
+          textClassName="text-sm text-foreground"
+        />
 
-      <div className="mt-3 space-y-1">
-        {question.options.map((option, index) => (
-          <div
-            key={index}
-            className={`text-xs sm:text-sm px-2.5 py-1.5 rounded-lg ${
-              question.correctOptionIndexes.includes(index)
-                ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-semibold"
-                : "text-muted-foreground"
-            }`}
-          >
-            {String.fromCharCode(65 + index)}. {option}
-          </div>
-        ))}
-      </div>
+        <div className="mt-3 space-y-1">
+          {question.options.map((option, index) => (
+            <div
+              key={index}
+              className={`text-xs sm:text-sm px-2.5 py-1.5 rounded-lg ${
+                question.correctOptionIndexes.includes(index)
+                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-semibold"
+                  : "text-muted-foreground"
+              }`}
+            >
+              {String.fromCharCode(65 + index)}. <MathText text={option} />
+            </div>
+          ))}
+        </div>
 
-      <QuestionExplanation explanation={question.explanation} />
+        <QuestionExplanation explanation={question.explanation} />
+      </DiagramAssetsProvider>
     </div>
   );
 }

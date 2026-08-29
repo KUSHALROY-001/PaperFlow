@@ -2,6 +2,7 @@ import { memo } from "react";
 import { AlertCircle, GripVertical, ImageIcon, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import MathText from "../shared/MathText";
+import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
 
 function QuestionCard({
   q,
@@ -59,7 +60,9 @@ function QuestionCard({
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-xs sm:text-sm font-bold text-foreground truncate">
-            <MathText text={q.text} />
+            <DiagramAssetsProvider assets={q.diagramAssets}>
+              <MathText text={q.text} />
+            </DiagramAssetsProvider>
           </p>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             <span className="text-xs bg-orange-500/15 text-orange-500 border border-orange-500/20 px-2 py-0.5 rounded-lg font-bold">

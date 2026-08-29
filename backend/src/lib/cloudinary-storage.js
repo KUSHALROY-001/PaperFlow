@@ -88,8 +88,14 @@ configureCloudinary();
 // extracted one live at the same predictable location keyed only by
 // question id, letting either one overwrite the other in place without
 // the DB row's storage_path ever needing to change.
-export function buildDiagramPublicId(workspaceId, mockTestId, questionId) {
-  return `paperflow/${workspaceId}/${mockTestId}/diagrams/${questionId}`;
+export function buildDiagramPublicId(
+  workspaceId,
+  mockTestId,
+  questionId,
+  slotKey = "default",
+) {
+  const base = `paperflow/${workspaceId}/${mockTestId}/diagrams/${questionId}`;
+  return slotKey === "default" ? base : `${base}/${slotKey}`;
 }
 
 // Guards against stale question_assets.storage_path values from before

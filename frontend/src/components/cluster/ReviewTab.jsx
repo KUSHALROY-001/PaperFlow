@@ -16,6 +16,7 @@ import QuestionContent, {
   QuestionExplanation,
 } from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
+import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
 import QuestionJumpInput from "../shared/QuestionJumpInput";
 import ScrollToTopButton from "../shared/ScrollToTopButton";
 
@@ -264,13 +265,15 @@ export default function ReviewTab({
                     }}
                     className="w-full text-left cursor-pointer"
                   >
-                    <QuestionContent
-                      text={question.text}
-                      passage={question.passage}
-                      diagramUrl={question.diagramUrl}
-                      placement={question.placement}
-                      textClassName="text-base sm:text-lg text-foreground"
-                    />
+                    <DiagramAssetsProvider assets={question.diagramAssets}>
+                      <QuestionContent
+                        text={question.text}
+                        passage={question.passage}
+                        diagramUrl={question.diagramUrl}
+                        placement={question.placement}
+                        textClassName="text-base sm:text-lg text-foreground"
+                      />
+                    </DiagramAssetsProvider>
                     <p className="mt-1.5 text-xs text-muted-foreground">
                       Source: {question.sourceLine}
                     </p>
@@ -367,6 +370,7 @@ export default function ReviewTab({
 
               {expanded && (
                 <div className="mt-5 space-y-3 rounded-2xl border border-border bg-muted/40 p-2 sm:p-4">
+                  <DiagramAssetsProvider assets={question.diagramAssets}>
                   {question.options.map((option) => {
                     const correct = option === question.answer;
                     return (
@@ -394,6 +398,7 @@ export default function ReviewTab({
                     <QuestionDiagram diagramUrl={question.diagramUrl} />
                   )}
                   <QuestionExplanation explanation={question.explanation} />
+                  </DiagramAssetsProvider>
                   {question.status === "rejected" && (
                     <div className="inline-flex items-center gap-2 rounded-full bg-red-500/10 border border-red-500/20 px-3 py-1.5 text-xs font-semibold text-red-500">
                       <ShieldAlert className="h-3.5 w-3.5" />

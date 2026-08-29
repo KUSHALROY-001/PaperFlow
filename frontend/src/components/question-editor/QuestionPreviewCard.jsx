@@ -5,6 +5,7 @@ import QuestionContent, {
 } from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
 import DiagramUploadControl from "./DiagramUploadControl";
+import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
 
 export default function QuestionPreviewCard({
   selected,
@@ -44,77 +45,79 @@ export default function QuestionPreviewCard({
             {selected.subtopic}
           </div>
         )}
-        <QuestionContent
-          text={selected.text}
-          passage={selected.passage}
-          explanation={selected.explanation}
-          diagramUrl={selected.diagramUrl}
-          placement={selected.placement}
-          textClassName="text-sm text-foreground"
-          editable={!isViewer}
-          onUpdateText={handleUpdateText}
-        />
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3">
-          {selected.diagramUrl && (
-            <button
-              type="button"
-              disabled={isViewer}
-              onClick={() => !isViewer && onOpenCropModal()}
-              title={
-                isViewer
-                  ? "Editor role is required to edit the crop"
-                  : undefined
-              }
-              className={`flex items-center gap-1.5 text-xs transition-all ${
-                isViewer
-                  ? "text-muted-foreground/40 cursor-not-allowed opacity-50"
-                  : "text-orange-500 hover:underline"
-              }`}
-            >
-              <Crop className="w-3.5 h-3.5" /> Edit Crop
-            </button>
-          )}
-        </div>
-        <DiagramUploadControl
-          questionId={selected.id}
-          mockTestId={mockTestId}
-          diagramUrl={selected.diagramUrl}
-          placement={selected.placement}
-          source={selected.source}
-          isViewer={isViewer}
-          onError={setDiagramError}
-        />
-        {diagramError && (
-          <p className="mt-2 text-xs text-red-500">{diagramError}</p>
-        )}
-        <div className="grid grid-cols-1 gap-2 mt-4">
-          {(selected.options || []).map((opt, i) => (
-            <div
-              key={i}
-              className={`px-3 py-2.5 rounded-md text-xs sm:text-sm whitespace-pre-wrap wrap-break-word ${
-                (selected.correctOptionIndexes || []).includes(i)
-                  ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20"
-                  : "bg-card text-foreground border border-border"
-              }`}
-            >
-              <span className="mr-2">{String.fromCharCode(65 + i)}.</span>
-              <MathText text={opt} />
-            </div>
-          ))}
-        </div>
-        {selected.placement === "below_options" && (
-          <div className="mt-4">
-            <QuestionDiagram
-              key={selected.diagramUrl}
-              diagramUrl={selected.diagramUrl}
-            />
+        <DiagramAssetsProvider assets={selected.diagramAssets}>
+          <QuestionContent
+            text={selected.text}
+            passage={selected.passage}
+            explanation={selected.explanation}
+            diagramUrl={selected.diagramUrl}
+            placement={selected.placement}
+            textClassName="text-sm text-foreground"
+            editable={!isViewer}
+            onUpdateText={handleUpdateText}
+          />
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3">
+            {selected.diagramUrl && (
+              <button
+                type="button"
+                disabled={isViewer}
+                onClick={() => !isViewer && onOpenCropModal()}
+                title={
+                  isViewer
+                    ? "Editor role is required to edit the crop"
+                    : undefined
+                }
+                className={`flex items-center gap-1.5 text-xs transition-all ${
+                  isViewer
+                    ? "text-muted-foreground/40 cursor-not-allowed opacity-50"
+                    : "text-orange-500 hover:underline"
+                }`}
+              >
+                <Crop className="w-3.5 h-3.5" /> Edit Crop
+              </button>
+            )}
           </div>
-        )}
-        <QuestionExplanation
-          explanation={selected.explanation}
-          editable={!isViewer}
-          onUpdateExplanation={handleUpdateExplanation}
-        />
+          <DiagramUploadControl
+            questionId={selected.id}
+            mockTestId={mockTestId}
+            diagramUrl={selected.diagramUrl}
+            placement={selected.placement}
+            source={selected.source}
+            isViewer={isViewer}
+            onError={setDiagramError}
+          />
+          {diagramError && (
+            <p className="mt-2 text-xs text-red-500">{diagramError}</p>
+          )}
+          <div className="grid grid-cols-1 gap-2 mt-4">
+            {(selected.options || []).map((opt, i) => (
+              <div
+                key={i}
+                className={`px-3 py-2.5 rounded-md text-xs sm:text-sm whitespace-pre-wrap wrap-break-word ${
+                  (selected.correctOptionIndexes || []).includes(i)
+                    ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20"
+                    : "bg-card text-foreground border border-border"
+                }`}
+              >
+                <span className="mr-2">{String.fromCharCode(65 + i)}.</span>
+                <MathText text={opt} />
+              </div>
+            ))}
+          </div>
+          {selected.placement === "below_options" && (
+            <div className="mt-4">
+              <QuestionDiagram
+                key={selected.diagramUrl}
+                diagramUrl={selected.diagramUrl}
+              />
+            </div>
+          )}
+          <QuestionExplanation
+            explanation={selected.explanation}
+            editable={!isViewer}
+            onUpdateExplanation={handleUpdateExplanation}
+          />
+        </DiagramAssetsProvider>
       </div>
     </div>
   );

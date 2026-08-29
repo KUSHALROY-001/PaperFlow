@@ -7,7 +7,7 @@ Run this directly, from inside backend/:
     python -m worker.diagnose_page_matching "C:\\path\\to\\your\\full.pdf"
 
 Runs the REAL vision extraction across every page needing it (same as a
-real job), and for every question the model flags has_diagram=true on,
+real job), and for every diagram the model reports,
 prints its reported source_page against the actual page numbers present
 in that chunk. This tells us definitively whether noMatchingPageImage is
 caused by: the model misreporting source_page (and how, e.g. off-by-N
@@ -60,7 +60,7 @@ if __name__ == "__main__":
             print(f"  Failed to parse: {e}\n")
             continue
 
-        flagged = [q for q in ai_questions if q["has_diagram"]]
+        flagged = [q for q in ai_questions if q["diagrams"]]
         if not flagged:
             print("  (no diagrams flagged in this chunk)\n")
             continue
@@ -74,12 +74,12 @@ if __name__ == "__main__":
         # real job would.
         chunk_stats = _attach_diagram_crops(ai_questions, result.get("page_images") or {})
         for q in flagged:
-            total_flagged += 1
-            crop_attempted = "_diagram_crop_bytes" in q
+            total_flagged += len(q["diagrams"])
+            crop_attempted = bool(q.get("_diagram_crops"))
             if not crop_attempted:
                 total_mismatched += 1
             status = "OK (crop attempted)" if crop_attempted else "*** STILL NO MATCH ***"
             print(f"  q{q['question_no']}: source_page={q['source_page']} {status}")
         print(f"  chunk diagram_stats: {chunk_stats}\n")
 
-    print(f"--- Summary: {total_flagged} diagrams flagged, {total_mismatched} had no matching page_image ---")
+    print(f"--- Summary: {total_flagged} diagrams flagged, {total_mismatched} questions had no matching page_image ---")

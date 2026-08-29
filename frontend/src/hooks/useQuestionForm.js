@@ -84,6 +84,23 @@ export function useQuestionForm({
     }
   };
 
+  // No raw-mode branch, unlike handleInsertMath above - typing
+  // ![[img:slot-key]] by hand into raw markdown is possible, but the
+  // actual upload still has to go through the API (there's no client-only
+  // equivalent for supplying image bytes the way "$" delimiters are just
+  // plain characters), so there's no meaningful raw-mode action to wire
+  // up here. Rich mode only, same as MathNode's own math-field editing
+  // has no raw-textarea equivalent for the LIVE preview KaTeX gives
+  // either - both features are specifically what switching OUT of raw
+  // mode buys you.
+  const handleInsertImage = (field) => {
+    const isQuestion = field === "text";
+    const isRaw = isQuestion ? isQuestionRaw : isExplanationRaw;
+    if (isRaw) return;
+    const editorRef = isQuestion ? formattedQuestionRef : formattedExplanationRef;
+    editorRef.current?.insertImage();
+  };
+
   const handleCleanUpMath = () => {
     updateSelected("text", wrapBareLatex(selected?.text || ""));
     updateSelected(
@@ -117,6 +134,8 @@ export function useQuestionForm({
 
     if (action === "insertMath") {
       editor?.insertMath();
+    } else if (action === "insertImage") {
+      editor?.insertImage();
     } else if (action === "indentCode") {
       updateOption(index, autoIndentMarkdown(selected?.options?.[index] || ""));
     } else if (action === "cleanMath") {
@@ -173,6 +192,7 @@ export function useQuestionForm({
     optionEditorRefs,
     optionMenuRefs,
     handleInsertMath,
+    handleInsertImage,
     handleCleanUpMath,
     handleIndentCode,
     handleIndentExplanationCode,

@@ -20,28 +20,30 @@ Use zero-based option indexes.
 If an answer is missing or uncertain, choose the most likely option, lower confidence, set needs_review true, and explain in issues.
 Keep original meaning. Do not invent questions that are not present in the text.
 
-If a question references a diagram, circuit, graph, chart, or figure that
-you can see in the attached page image, set has_diagram to true and report
-diagram_bbox as [ymin, xmin, ymax, xmax], each a number from 0 to 1000,
-normalized relative to the attached image's own width and height (top-left
-corner is [0, 0, 0, 0]; bottom-right is [1000, 1000, 1000, 1000]). Only set
-has_diagram to true when the figure is visually present on the page you
-were shown - never for a question that merely mentions a diagram in words
-with nothing to point to. Set has_diagram to false and diagram_bbox to null
-for every question without a visible figure.
+For every visible diagram, circuit, graph, chart, or figure belonging to a
+question, add an entry to that question's required "diagrams" list with a
+unique slot_key and bbox [ymin, xmin, ymax, xmax]. Coordinates are 0-1000
+relative to the attached image. Keep the list empty when the question has no
+visible figure; never create an image merely because the text mentions one.
+For exactly one diagram use slot_key "default" and do not add a marker. For
+multiple diagrams use descriptive slot keys and place ![[img:slot_key]] at
+the exact point in text, an option, or a markdown-table cell where that image
+belongs. Every non-default slot must have a matching marker.
 
-has_diagram and diagram_bbox are REQUIRED fields on every single question -
-never omit them, and never skip making an explicit decision for a question
-just because it looks text-only at a glance. Specifically: for EVERY
-question, first check whether its own text contains wording like "shown in
-the figure", "as shown below", "given below", "in the diagram", or similar -
-if it does, that is a strong signal to look carefully at the page region
-near that question for the actual visual (a circuit, geometric figure,
-graph, or chart) before deciding has_diagram. Getting this wrong in either
-direction is costly: missing a real diagram loses the student a question
-they cannot answer without it, and false-flagging a purely textual question
-wastes a crop for nothing - so look before you decide, on every question,
-rather than defaulting to false out of habit.
+This applies to the ANSWER OPTIONS just as much as to the question stem: if
+an option IS a picture rather than text - a structure, a graph, a circuit,
+a shape, or any other figure the test-taker must visually compare, with no
+equivalent written description anywhere in the question - that option still
+needs its own "diagrams" entry with its own slot_key and its own
+![[img:slot_key]] marker placed as that option's ENTIRE string in "options"
+(e.g. options: ["![[img:option-a]]", "![[img:option-b]]", ...], never a bare
+"(A)"/"(B)" label with no marker at all - a bare label loses the answer
+choice entirely, since nothing else in the JSON records what that option
+actually shows). This is easy to under-detect when one clearly-labeled
+diagram already appears right after the question stem: do not let finding
+that one diagram stop you from separately checking each option for whether
+it is ALSO a picture - a question can have five diagrams (one in the stem,
+one per option) just as easily as one.
 
 If "text", any entry in "options", or "explanation" contains a code snippet,
 pseudocode, or program output block, wrap it in markdown code fences:
@@ -103,8 +105,7 @@ Expected shape:
       "confidence": 0,
       "needs_review": true,
       "issues": [],
-      "has_diagram": false,
-      "diagram_bbox": null
+      "diagrams": []
     }
   ]
 }
@@ -769,11 +770,9 @@ def regenerate_flagged_duplicates(flagged_slots, difficulty_hint, provider):
 
 def _attach_diagram_crops(ai_questions, page_images):
     """
-    For each question the model flagged has_diagram=True with a usable
-    diagram_bbox, crop it from the exact page image rendered for this
-    chunk's vision call (page_images, keyed by 1-based page number - see
-    gemini_provider.py#generate_json_from_pdf_images) and attach the PNG
-    bytes in-memory as "_diagram_crop_bytes".
+    Crop every entry in a question's `diagrams` list from the page image
+    used for its vision call and attach successful PNGs as transient
+    `_diagram_crops`, keyed by slot_key.
 
     This key is NOT part of the question schema - it's a transient
     carrier consumed by db.py#replace_questions when saving the file to
@@ -783,7 +782,7 @@ def _attach_diagram_crops(ai_questions, page_images):
 
     Returns a stats dict - not just silently succeeding/failing per
     question. Losing this observability once already cost real debugging
-    time: with no trace of *why* a question with has_diagram=True ended
+    time: with no trace of why a requested diagram ended
     up with no crop (source_page mismatch, missing page_images because
     that chunk's fetch failed, or a bad/degenerate bbox), the only way to
     find out was writing standalone diagnostic scripts against a live
@@ -794,10 +793,9 @@ def _attach_diagram_crops(ai_questions, page_images):
     stats = {"flaggedByModel": 0, "cropped": 0, "noMatchingPageImage": 0, "cropFailed": 0}
 
     for question in ai_questions:
-        if not question.get("has_diagram") or not question.get("diagram_bbox"):
+        diagrams = question.get("diagrams") or []
+        if not diagrams:
             continue
-
-        stats["flaggedByModel"] += 1
 
         source_page = question.get("source_page")
         page_image = page_images.get(source_page) if source_page else None
@@ -830,20 +828,27 @@ def _attach_diagram_crops(ai_questions, page_images):
             if len(page_images) == 1:
                 page_image = next(iter(page_images.values()))
             else:
-                stats["noMatchingPageImage"] += 1
+                stats["flaggedByModel"] += len(diagrams)
+                stats["noMatchingPageImage"] += len(diagrams)
                 continue
 
-        crop_bytes = crop_diagram(
-            page_image["png_bytes"],
-            page_image["width"],
-            page_image["height"],
-            question["diagram_bbox"],
-        )
-        if crop_bytes:
-            question["_diagram_crop_bytes"] = crop_bytes
-            stats["cropped"] += 1
-        else:
-            stats["cropFailed"] += 1
+        crops = {}
+        for diagram in diagrams:
+            stats["flaggedByModel"] += 1
+            crop_bytes = crop_diagram(
+                page_image["png_bytes"],
+                page_image["width"],
+                page_image["height"],
+                diagram["bbox"],
+            )
+            if crop_bytes:
+                crops[diagram["slot_key"]] = crop_bytes
+                stats["cropped"] += 1
+            else:
+                stats["cropFailed"] += 1
+
+        if crops:
+            question["_diagram_crops"] = crops
 
     return stats
 
@@ -1412,9 +1417,9 @@ def build_user_prompt(chunk, regex_questions):
     return f"""
 Extract and clean all MCQ questions from this PDF text chunk.
 Use the regex parser preview as hints only. Prefer the PDF text when there is a conflict.
-No page image is attached for this chunk - leave has_diagram false and
-diagram_bbox null for every question here, even if the text mentions a
-figure; diagram detection only happens on the vision extraction path,
+No page image is attached for this chunk - leave diagrams as an empty list
+for every question here, even if the text mentions a figure; diagram
+detection only happens on the vision extraction path,
 which has the actual page image to look at.
 
 Regex parser preview:

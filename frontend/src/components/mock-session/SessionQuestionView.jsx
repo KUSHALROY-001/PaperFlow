@@ -1,6 +1,7 @@
 import { Flag, ChevronLeft, ChevronRight } from "lucide-react";
 import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
+import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
 
 export default function SessionQuestionView({
   q,
@@ -65,40 +66,48 @@ export default function SessionQuestionView({
           </button>
         </div>
 
-        <div className="mb-8">
-          <QuestionContent
-            text={q.text}
-            passage={q.passage}
-            diagramUrl={q.diagramUrl}
-            placement={q.placement}
-            textClassName="text-base sm:text-lg font-normal text-foreground leading-relaxed"
-          />
-        </div>
-
-        <div className="space-y-3">
-          {q.options.map((opt, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => handleAnswer(i)}
-              className={`w-full text-left px-5 py-4 rounded-md border text-sm transition-all ${
-                selected === i
-                  ? "border-orange-500/40 bg-orange-500/10 text-orange-500 font-medium shadow-2xs"
-                  : "border-border bg-card hover:bg-muted text-foreground font-normal"
-              }`}
-            >
-              <span className="font-semibold text-orange-500 mr-3">
-                {String.fromCharCode(65 + i)}.
-              </span>
-              <MathText text={opt} />
-            </button>
-          ))}
-        </div>
-        {q.placement === "below_options" && (
-          <div className="mt-4">
-            <QuestionDiagram diagramUrl={q.diagramUrl} />
+        {/* Wraps the question's text AND its options together, even
+            though they're rendered as separate sibling trees below - a
+            ![[img:slot_key]] marker inside an option (e.g. a List-I/
+            List-II matching question where each option references a
+            different image) needs the exact same asset lookup the
+            question stem itself uses. See diagramAssetsContext.jsx. */}
+        <DiagramAssetsProvider assets={q.diagramAssets}>
+          <div className="mb-8">
+            <QuestionContent
+              text={q.text}
+              passage={q.passage}
+              diagramUrl={q.diagramUrl}
+              placement={q.placement}
+              textClassName="text-base sm:text-lg font-normal text-foreground leading-relaxed"
+            />
           </div>
-        )}
+
+          <div className="space-y-3">
+            {q.options.map((opt, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => handleAnswer(i)}
+                className={`w-full text-left px-5 py-4 rounded-md border text-sm transition-all ${
+                  selected === i
+                    ? "border-orange-500/40 bg-orange-500/10 text-orange-500 font-medium shadow-2xs"
+                    : "border-border bg-card hover:bg-muted text-foreground font-normal"
+                }`}
+              >
+                <span className="font-semibold text-orange-500 mr-3">
+                  {String.fromCharCode(65 + i)}.
+                </span>
+                <MathText text={opt} />
+              </button>
+            ))}
+          </div>
+          {q.placement === "below_options" && (
+            <div className="mt-4">
+              <QuestionDiagram diagramUrl={q.diagramUrl} />
+            </div>
+          )}
+        </DiagramAssetsProvider>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-8 pt-6 border-t border-border">
           <button

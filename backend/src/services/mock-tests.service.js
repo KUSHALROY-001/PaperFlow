@@ -794,6 +794,7 @@ export async function listQuestions(mockTestId, workspaceId) {
 export async function getPlayableMockTest(mockTestId, workspaceId) {
   const mockTest = await getMockTestOrFail(mockTestId, workspaceId);
   const questions = await mockTestsRepo.listPlayableQuestions(mockTestId);
+  const withDiagrams = await attachDiagramUrls(questions, workspaceId);
 
   return {
     mockTest: {
@@ -811,13 +812,16 @@ export async function getPlayableMockTest(mockTestId, workspaceId) {
     // submitting anything. Grading now happens server-side in
     // attempts.service.js#submitAttempt instead, which is also where the
     // answer key legitimately becomes visible (after submission).
-    questions: questions.map((question) => ({
+    questions: withDiagrams.map((question) => ({
       questionId: question.questionId,
       questionNo: question.questionNo,
       topic: question.topic,
       text: question.text,
       options: question.options,
       questionType: question.questionType,
+      diagramUrl: question.diagramUrl,
+      placement: question.placement,
+      diagramAssets: question.diagramAssets,
     })),
   };
 }

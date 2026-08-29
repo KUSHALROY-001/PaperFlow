@@ -62,6 +62,13 @@ export function toEditorQuestion(question) {
     // treats that the same as "extracted" (nothing to distinguish yet).
     placement: question.placement || "below_text",
     source: question.source,
+    // Multi-image slots (migration 040). attachDiagramUrls puts every
+    // slot on the raw API row as diagramAssets; MathText resolves
+    // ![[img:slot]] from this via DiagramAssetsProvider. Dropping it
+    // here is why the editor showed "Missing image" even when Cloudinary
+    // and question_assets already had the files.
+    diagramAssets: question.diagramAssets || [],
+    diagramSourceBySlot: question.diagramSourceBySlot || {},
   };
 }
 

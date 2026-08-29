@@ -13,6 +13,7 @@ import QuestionContent, {
   QuestionExplanation,
 } from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
+import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
 
 // Same three-tier bucketing ReviewTab.jsx uses (getConfidenceTone) -
 // duplicated rather than imported since ReviewTab doesn't export it, and
@@ -82,43 +83,45 @@ export default function QueueQuestionCard({
         {question.mockTestName}
       </Link>
 
-      <QuestionContent
-        text={question.text}
-        passage={question.passage}
-        diagramUrl={question.diagramUrl}
-        placement={question.placement}
-        textClassName="text-base sm:text-lg font-bold text-foreground"
-      />
+      <DiagramAssetsProvider assets={question.diagramAssets}>
+        <QuestionContent
+          text={question.text}
+          passage={question.passage}
+          diagramUrl={question.diagramUrl}
+          placement={question.placement}
+          textClassName="text-base sm:text-lg font-bold text-foreground"
+        />
 
-      <div className="space-y-2">
-        {question.options.map((option, optionIndex) => {
-          const correct = question.correctOptionIndexes.includes(optionIndex);
-          return (
-            <div
-              key={optionIndex}
-              className={`flex flex-wrap items-center justify-between gap-2 rounded-2xl px-3 py-3 text-xs sm:px-4 sm:text-sm font-medium ${
-                correct
-                  ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20"
-                  : "bg-card text-muted-foreground border border-border"
-              }`}
-            >
-              <span className="whitespace-pre-wrap wrap-break-word">
-                <MathText text={option} />
-              </span>
-              {correct && (
-                <span className="inline-flex items-center gap-1 text-xs font-bold shrink-0">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Correct
+        <div className="space-y-2">
+          {question.options.map((option, optionIndex) => {
+            const correct = question.correctOptionIndexes.includes(optionIndex);
+            return (
+              <div
+                key={optionIndex}
+                className={`flex flex-wrap items-center justify-between gap-2 rounded-2xl px-3 py-3 text-xs sm:px-4 sm:text-sm font-medium ${
+                  correct
+                    ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20"
+                    : "bg-card text-muted-foreground border border-border"
+                }`}
+              >
+                <span className="whitespace-pre-wrap wrap-break-word">
+                  <MathText text={option} />
                 </span>
-              )}
-            </div>
-          );
-        })}
-        {question.placement === "below_options" && (
-          <QuestionDiagram diagramUrl={question.diagramUrl} />
-        )}
-        <QuestionExplanation explanation={question.explanation} />
-      </div>
+                {correct && (
+                  <span className="inline-flex items-center gap-1 text-xs font-bold shrink-0">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Correct
+                  </span>
+                )}
+              </div>
+            );
+          })}
+          {question.placement === "below_options" && (
+            <QuestionDiagram diagramUrl={question.diagramUrl} />
+          )}
+          <QuestionExplanation explanation={question.explanation} />
+        </div>
+      </DiagramAssetsProvider>
 
       {question.aiIssues?.length > 0 && (
         <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-xs text-amber-500">

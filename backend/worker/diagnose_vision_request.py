@@ -65,7 +65,7 @@ if __name__ == "__main__":
     system_prompt = "You are extracting multiple-choice questions from exam page images."
     user_prompt = (
         "Return ONLY a JSON array of objects with fields: question_no, question_text, "
-        "options, has_diagram, diagram_bbox, source_page."
+        "options, diagrams, source_page."
     )
 
     start = time.time()

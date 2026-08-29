@@ -437,7 +437,7 @@ class GeminiProvider:
                 # {"png_bytes": ..., "width": ..., "height": ...}}. This is
                 # the SAME pixmap already rendered for the API call above,
                 # just re-encoded as PNG - not a fresh render - so a
-                # diagram_bbox the model reports is guaranteed to line up
+                # diagram bounding boxes the model reports line up
                 # with these exact pixel dimensions (see asset_extractor.py).
                 # Kept only long enough for the caller to crop any reported
                 # diagrams right after processing this chunk's response,

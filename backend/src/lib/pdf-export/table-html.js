@@ -1,31 +1,29 @@
 import { escapeHtml, renderTextWithMath } from "./math-html.js";
 import { splitIntoTextBlocks } from "./text-blocks.js";
 
-function tableBlockHtml(block) {
+function tableBlockHtml(block, images) {
   const colgroupHtml =
     Array.isArray(block.colWidths) &&
     block.colWidths.length === block.header.length
-      ? `<colgroup>${block.colWidths.map((w) => `<col style="width: ${w};">`).join("")}</colgroup>`
+      ? `<colgroup>${block.colWidths.map((width) => `<col style="width: ${width};">`).join("")}</colgroup>`
       : "";
-
   const headerCells = block.header
-    .map((cell, i) => {
-      const widthStyle = block.colWidths?.[i]
-        ? ` style="width: ${block.colWidths[i]};"`
+    .map((cell, index) => {
+      const widthStyle = block.colWidths?.[index]
+        ? ` style="width: ${block.colWidths[index]};"`
         : "";
-      return `<th${widthStyle}>${renderTextWithMath(cell)}</th>`;
+      return `<th${widthStyle}>${renderTextWithMath(cell, images)}</th>`;
     })
     .join("");
-
   const bodyRows = block.rows
     .map(
       (row) =>
         `<tr>${row
-          .map((cell, i) => {
-            const widthStyle = block.colWidths?.[i]
-              ? ` style="width: ${block.colWidths[i]};"`
+          .map((cell, index) => {
+            const widthStyle = block.colWidths?.[index]
+              ? ` style="width: ${block.colWidths[index]};"`
               : "";
-            return `<td${widthStyle}>${renderTextWithMath(cell)}</td>`;
+            return `<td${widthStyle}>${renderTextWithMath(cell, images)}</td>`;
           })
           .join("")}</tr>`,
     )
@@ -41,7 +39,12 @@ function tableBlockHtml(block) {
 // used to build directly, which is exactly why a List-I/List-II table
 // exported as the same flattened, misaligned paragraph the screen render
 // had before QuestionTable.jsx existed.
-export function renderQuestionTextHtml(text) {
+//
+// images (optional): {slotKey: absoluteUrl} - passed straight through to
+// every renderTextWithMath call below (cells AND prose lines alike), so a
+// ![[img:slot_key]] marker resolves identically whether it's sitting in a
+// table cell or a plain paragraph - see math-html.js#renderTextWithMath.
+export function renderQuestionTextHtml(text, images) {
   // Same literal-\n normalization renderTextWithMath does internally,
   // done here too (redundant-but-harmless on real newlines) so table-row
   // detection below runs against actual line breaks rather than the
@@ -50,14 +53,14 @@ export function renderQuestionTextHtml(text) {
 
   return splitIntoTextBlocks(normalized)
     .map((block) => {
-      if (block.type === "table") return tableBlockHtml(block);
+      if (block.type === "table") return tableBlockHtml(block, images);
 
       const linesHtml = [];
       let proseLines = [];
       const flushProse = () => {
         if (proseLines.length === 0) return;
         linesHtml.push(
-          `<p class="question-text">${renderTextWithMath(proseLines.join("\n")) || "&nbsp;"}</p>`,
+          `<p class="question-text">${renderTextWithMath(proseLines.join("\n"), images) || "&nbsp;"}</p>`,
         );
         proseLines = [];
       };
@@ -69,7 +72,7 @@ export function renderQuestionTextHtml(text) {
             const level = heading[2].length;
             const content = `${heading[1]}${line.slice(heading[0].length)}`;
             linesHtml.push(
-              `<h${level} class="rich-heading rich-heading-${level}">${renderTextWithMath(content)}</h${level}>`,
+              `<h${level} class="rich-heading rich-heading-${level}">${renderTextWithMath(content, images)}</h${level}>`,
             );
             return;
           }

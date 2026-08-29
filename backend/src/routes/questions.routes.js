@@ -58,8 +58,24 @@ questionsRouter.delete(
 // GET /:questionId/diagram, which deliberately sits outside requireAuth -
 // see question-assets.controller.js), so they live behind normal auth and
 // role checks like every other question route.
+//
+// :slotKey is OPTIONAL on every one of these (registered twice, with and
+// without it) rather than a single `/:slotKey?` pattern - explicit routes
+// avoid any Express-version ambiguity around trailing optional params,
+// and every handler already defaults an absent slotKey to "default"
+// internally (see resolveSlotKey in the controller), so both routes hit
+// the exact same code path either way.
+questionsRouter.get(
+  "/:questionId/diagram-assets",
+  asyncHandler(questionAssetsController.listQuestionAssets),
+);
 questionsRouter.put(
   "/:questionId/diagram-crop",
+  requireRole("editor"),
+  asyncHandler(questionAssetsController.updateDiagramCrop),
+);
+questionsRouter.put(
+  "/:questionId/diagram-crop/:slotKey",
   requireRole("editor"),
   asyncHandler(questionAssetsController.updateDiagramCrop),
 );
@@ -74,13 +90,29 @@ questionsRouter.post(
   uploadDiagramImageMiddleware.single("image"),
   asyncHandler(questionAssetsController.uploadDiagramImage),
 );
+questionsRouter.post(
+  "/:questionId/diagram/:slotKey",
+  requireRole("editor"),
+  uploadDiagramImageMiddleware.single("image"),
+  asyncHandler(questionAssetsController.uploadDiagramImage),
+);
 questionsRouter.patch(
   "/:questionId/diagram-placement",
   requireRole("editor"),
   asyncHandler(questionAssetsController.updateDiagramPlacement),
 );
+questionsRouter.patch(
+  "/:questionId/diagram-placement/:slotKey",
+  requireRole("editor"),
+  asyncHandler(questionAssetsController.updateDiagramPlacement),
+);
 questionsRouter.delete(
   "/:questionId/diagram",
+  requireRole("editor"),
+  asyncHandler(questionAssetsController.deleteDiagramImage),
+);
+questionsRouter.delete(
+  "/:questionId/diagram/:slotKey",
   requireRole("editor"),
   asyncHandler(questionAssetsController.deleteDiagramImage),
 );

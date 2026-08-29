@@ -47,6 +47,7 @@ export default function QuestionForm({
     optionEditorRefs,
     optionMenuRefs,
     handleInsertMath,
+    handleInsertImage,
     handleCleanUpMath,
     handleIndentCode,
     handleIndentExplanationCode,
@@ -94,6 +95,9 @@ export default function QuestionForm({
             isCustomTopic={isCustomTopic}
             setIsCustomTopic={setIsCustomTopic}
             text={selected.text}
+            questionId={selected.id}
+            mockTestId={mockTestId}
+            diagramAssets={selected.diagramAssets}
             updateSelected={updateSelected}
             isQuestionRaw={isQuestionRaw}
             setIsQuestionRaw={setIsQuestionRaw}
@@ -103,6 +107,7 @@ export default function QuestionForm({
             questionTextRef={questionTextRef}
             formattedQuestionRef={formattedQuestionRef}
             handleInsertMath={handleInsertMath}
+            handleInsertImage={handleInsertImage}
             handleIndentCode={handleIndentCode}
             handleCleanUpMath={handleCleanUpMath}
             handleKeyDownTextarea={handleKeyDownTextarea}
@@ -111,6 +116,9 @@ export default function QuestionForm({
 
           <QuestionExplanationCard
             explanation={selected.explanation}
+            questionId={selected.id}
+            mockTestId={mockTestId}
+            diagramAssets={selected.diagramAssets}
             updateSelected={updateSelected}
             isExplanationRaw={isExplanationRaw}
             setIsExplanationRaw={setIsExplanationRaw}
@@ -120,6 +128,7 @@ export default function QuestionForm({
             explanationRef={explanationRef}
             formattedExplanationRef={formattedExplanationRef}
             handleInsertMath={handleInsertMath}
+            handleInsertImage={handleInsertImage}
             handleIndentExplanationCode={handleIndentExplanationCode}
             handleKeyDownTextarea={handleKeyDownTextarea}
             isViewer={isViewer}
@@ -129,6 +138,9 @@ export default function QuestionForm({
             options={selected.options}
             correctOptionIndexes={selected.correctOptionIndexes}
             questionType={selected.questionType}
+            questionId={selected.id}
+            mockTestId={mockTestId}
+            diagramAssets={selected.diagramAssets}
             areOptionsRaw={areOptionsRaw}
             setAreOptionsRaw={setAreOptionsRaw}
             handleQuestionTypeChange={handleQuestionTypeChange}
@@ -196,4 +208,3 @@ export default function QuestionForm({
     </main>
   );
 }
-

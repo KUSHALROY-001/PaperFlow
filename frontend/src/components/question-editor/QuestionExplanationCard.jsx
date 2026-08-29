@@ -1,9 +1,13 @@
-import { Code2, FileCode, MoreVertical, Sparkles } from "lucide-react";
+import { Code2, FileCode, ImagePlus, MoreVertical, Sparkles } from "lucide-react";
 import FormattedTextEditor from "../shared/FormattedTextEditor";
 import RichTextToolbar from "./RichTextToolbar";
+import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
 
 export default function QuestionExplanationCard({
   explanation,
+  questionId,
+  mockTestId,
+  diagramAssets,
   updateSelected,
   isExplanationRaw,
   setIsExplanationRaw,
@@ -13,6 +17,7 @@ export default function QuestionExplanationCard({
   explanationRef,
   formattedExplanationRef,
   handleInsertMath,
+  handleInsertImage,
   handleIndentExplanationCode,
   handleKeyDownTextarea,
   isViewer,
@@ -80,6 +85,19 @@ export default function QuestionExplanationCard({
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => {
                   setIsExplanationMenuOpen(false);
+                  handleInsertImage("explanation");
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted hover:text-orange-500 rounded-lg transition-colors text-left"
+              >
+                <ImagePlus className="w-3.5 h-3.5 text-orange-500" />
+                Insert image
+              </button>
+              <button
+                type="button"
+                disabled={isViewer}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  setIsExplanationMenuOpen(false);
                   handleIndentExplanationCode();
                 }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted hover:text-orange-500 rounded-lg transition-colors text-left"
@@ -93,13 +111,17 @@ export default function QuestionExplanationCard({
       </div>
 
       {!isExplanationRaw ? (
-        <FormattedTextEditor
-          ref={formattedExplanationRef}
-          value={explanation || ""}
-          onChange={(val) => updateSelected("explanation", val)}
-          disabled={isViewer}
-          placeholder="Add explanation for the correct answer..."
-        />
+        <DiagramAssetsProvider assets={diagramAssets}>
+          <FormattedTextEditor
+            ref={formattedExplanationRef}
+            value={explanation || ""}
+            onChange={(val) => updateSelected("explanation", val)}
+            disabled={isViewer}
+            placeholder="Add explanation for the correct answer..."
+            questionId={questionId}
+            mockTestId={mockTestId}
+          />
+        </DiagramAssetsProvider>
       ) : (
         <>
           <div className="mb-2">

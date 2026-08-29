@@ -8,11 +8,30 @@ import {
   diagramUrlForPublicId,
   fetchDiagramBuffer,
   isCloudinaryConfigured,
+  isValidDiagramPublicId,
   uploadDiagramBuffer,
 } from "../lib/cloudinary-storage.js";
 import * as questionAssetsRepo from "../repositories/question-assets.repository.js";
+import * as questionAssetsService from "../services/question-assets.service.js";
 import * as questionsRepo from "../repositories/questions.repository.js";
 import * as sharedService from "../services/shared.service.js";
+
+// Same shape as migration 038's own DB-level CHECK constraint
+// (question_assets_slot_key_format) - validated here too so a bad slot
+// key in a URL gets a real 400 with an explanation instead of a raw
+// Postgres constraint-violation error bubbling up.
+const SLOT_KEY_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
+
+function resolveSlotKey(rawSlotKey) {
+  const slotKey = rawSlotKey || "default";
+  if (!SLOT_KEY_RE.test(slotKey)) {
+    throw httpError(
+      400,
+      "slotKey must be lowercase letters, digits, and hyphens only",
+    );
+  }
+  return slotKey;
+}
 
 async function streamDiagram(req, res, { questionId, workspaceId }) {
   const token = req.query.access_token;
@@ -34,6 +53,8 @@ async function streamDiagram(req, res, { questionId, workspaceId }) {
     throw httpError(403, "This image link is invalid or has expired");
   }
 
+  const slotKey = resolveSlotKey(req.params.slotKey);
+  const asset = await questionAssetsRepo.findAssetForSlot(questionId, slotKey);
   if (!isCloudinaryConfigured()) {
     throw httpError(
       503,
@@ -41,29 +62,35 @@ async function streamDiagram(req, res, { questionId, workspaceId }) {
     );
   }
 
-  const asset = await questionAssetsRepo.findAssetForQuestion(questionId);
-  if (!asset || !asset.storagePath) {
-    // A valid, unexpired token for a question that has no (or no longer
-    // has) a saved diagram - treat exactly like "not found", not a server
-    // error. Can legitimately happen if a mock test was reprocessed
-    // between the page loading and the image request landing.
+  if (!asset?.storagePath) {
+    // A valid, unexpired token for a question/slot that has no (or no
+    // longer has) a saved diagram - treat exactly like "not found", not a
+    // server error. Can legitimately happen if a mock test was
+    // reprocessed between the page loading and the image request landing.
     throw httpError(404, "No diagram found for this question");
   }
+  if (!isValidDiagramPublicId(asset.storagePath)) {
+    throw httpError(404, "No usable diagram found for this question");
+  }
 
-  // asset.storagePath holds a Cloudinary public_id (see worker/asset_extractor.py
-  // and uploadDiagramImage). Redirect to a VERSIONED Cloudinary URL so a
-  // replace/crop (same public_id, new bytes) is not served from CDN/browser
-  // cache of the previous PNG. The ?v= on our own /diagram URL is the
-  // matching browser-cache key (see attachDiagramUrls).
-  const deliveryUrl = diagramUrlForPublicId(
-    asset.storagePath,
-    assetCacheVersion(asset.createdAt),
-  );
-  // private, no-cache: this 302's Location includes the version, but a
-  // long-lived cached redirect to an unversioned (or old-version) URL is
-  // exactly how a successful replace used to keep showing the old image.
+  // asset.storagePath holds a Cloudinary public_id, not a filesystem path
+  // (see worker/cloudinary_storage.py and this file's uploadDiagramImage
+  // below, which both write the same kind of value into that column - the
+  // name stuck around across the storage migration rather than renaming
+  // the DB column, since it's still, structurally, "where this asset is
+  // stored"). The access_token check above is this endpoint's entire
+  // authorization; once it passes, a redirect straight to Cloudinary's
+  // CDN is strictly better than proxying the bytes back through this
+  // server - one less hop, and Cloudinary's own caching/CDN edge serves
+  // the actual image.
   res.setHeader("Cache-Control", "private, no-cache");
-  res.redirect(302, deliveryUrl);
+  res.redirect(
+    302,
+    diagramUrlForPublicId(
+      asset.storagePath,
+      assetCacheVersion(asset.createdAt),
+    ),
+  );
 }
 
 // Authenticated path - this route deliberately sits OUTSIDE requireAuth
@@ -98,8 +125,8 @@ export async function serveSharedDiagram(req, res) {
 // source image's own pixel space, not the on-screen scaled preview's).
 // "Current image" means whatever storage_path already holds - the
 // previous crop, if there was one, or the original extraction if not
-// (see migration 022_diagram_single_image.sql: there's only ever one
-// stored image per diagram now, so a second crop necessarily starts from
+// (see migration 029_diagram_single_image.sql: there's only ever one
+// stored image per SLOT now, so a second crop necessarily starts from
 // the first crop's result, not a separately preserved original).
 function parseCropRect(body = {}) {
   const rect = {};
@@ -123,10 +150,11 @@ function parseCropRect(body = {}) {
 
 // Shared by every asset-mutating endpoint below: confirms the question is
 // in the caller's workspace (same check every other question route
-// makes), then loads the asset row. Any diagram can be cropped now -
-// there's no longer a separate "no original to crop against" state (that
-// was specific to the two-file design this reverses).
-async function loadAsset(questionId, workspaceId) {
+// makes), then loads the asset row for ONE specific slot. Any diagram can
+// be cropped now - there's no longer a separate "no original to crop
+// against" state (that was specific to the two-file design migration 029
+// reversed).
+async function loadAsset(questionId, workspaceId, slotKey) {
   const question = await questionsRepo.findQuestionById(
     questionId,
     workspaceId,
@@ -135,17 +163,55 @@ async function loadAsset(questionId, workspaceId) {
     throw httpError(404, "Question not found");
   }
 
-  const asset = await questionAssetsRepo.findAssetForQuestion(questionId);
+  const asset = await questionAssetsRepo.findAssetForSlot(questionId, slotKey);
   if (!asset) {
-    throw httpError(404, "No diagram found for this question");
+    throw httpError(404, "No diagram found for this question/slot");
   }
 
-  return asset;
+  return { question, asset };
+}
+
+// Lists every slot this question has - the data source for the editor's
+// "Manage Images" panel (see the ImageSlotManager component): which slot
+// keys exist, what each one's current image looks like, and whether it
+// was extracted or manually uploaded, so an editor can review/replace/
+// delete any of them, or see at a glance which slot key is still free to
+// reference from a new ![[img:slot-key]] marker.
+export async function listQuestionAssets(req, res) {
+  const question = await questionsRepo.findQuestionById(
+    req.params.questionId,
+    req.workspaceId,
+  );
+  if (!question) {
+    throw httpError(404, "Question not found");
+  }
+
+  const assets = (
+    await questionAssetsRepo.findAssetsForQuestion(question.id)
+  ).filter((asset) => isValidDiagramPublicId(asset.storagePath));
+  res.json({
+    assets: assets.map((asset) => ({
+      slotKey: asset.slotKey,
+      url: questionAssetsService.buildDiagramUrl(
+        question.id,
+        asset.slotKey,
+        req.workspaceId,
+        { version: assetCacheVersion(asset.createdAt) },
+      ),
+      source: asset.source,
+      placement: asset.placement,
+    })),
+  });
 }
 
 export async function updateDiagramCrop(req, res) {
+  const slotKey = resolveSlotKey(req.params.slotKey);
   const rect = parseCropRect(req.body);
-  const asset = await loadAsset(req.params.questionId, req.workspaceId);
+  const { asset } = await loadAsset(
+    req.params.questionId,
+    req.workspaceId,
+    slotKey,
+  );
 
   const currentImage = await fetchDiagramBuffer(
     asset.storagePath,
@@ -171,38 +237,38 @@ export async function updateDiagramCrop(req, res) {
   }
 
   // overwrite: true (see cloudinary-storage.js#uploadDiagramBuffer) means
-  // this re-uploads under the SAME public_id the asset already has. The
-  // DB row's storage_path stays put; created_at is bumped so the next
-  // diagramUrl / Cloudinary /v<version>/ actually points at these bytes.
+  // this re-uploads under the SAME public_id the asset already has - no
+  // DB row change needed, exactly mirroring the old write-to-the-same-path
+  // behavior this replaces.
   await uploadDiagramBuffer(cropped, asset.storagePath);
   await questionAssetsRepo.touchAsset(asset.id);
 
   res.json({ success: true });
 }
 
-// Part C: manual image insert. Handles both "this question has no diagram
-// at all" (extraction never found one) and "replace whatever diagram it
-// has now" (extracted or manual, per the plan's decision to allow
-// replacing either) - the same upload does both, since replaceAssetForQuestion
-// deletes any existing row before inserting the new one either way.
+// Part C: manual image insert, now for one specific slot. Handles both
+// "this slot has no diagram at all yet" (a brand-new slot key, or
+// extraction never found one for 'default') and "replace whatever image
+// this slot has now" (extracted or manual, per the original plan's
+// decision to allow replacing either) - the same upload does both, since
+// upsertAssetForSlot is an INSERT ... ON CONFLICT DO UPDATE scoped to
+// exactly this (question_id, slot_key) pair, never touching any other
+// slot the question has.
 export async function uploadDiagramImage(req, res) {
   if (!req.file) {
     throw httpError(400, "Missing image file");
   }
-
   if (!req.file.buffer || req.file.buffer.length === 0) {
     throw httpError(400, "Uploaded file is empty");
   }
-
-  // Fail fast with a clear message before any image work when Cloudinary
-  // is missing from the environment — otherwise the user only sees a
-  // generic 502 after sharp has already processed the file.
   if (!isCloudinaryConfigured()) {
     throw httpError(
       503,
       "Cloud image storage (Cloudinary) is not configured on the server",
     );
   }
+
+  const slotKey = resolveSlotKey(req.params.slotKey);
 
   const question = await questionsRepo.findQuestionById(
     req.params.questionId,
@@ -214,9 +280,11 @@ export async function uploadDiagramImage(req, res) {
 
   // Read before replace, purely so the new row can carry the placement the
   // user already had chosen forward (a replace shouldn't silently reset it
-  // to the default).
-  const previousAsset = await questionAssetsRepo.findAssetForQuestion(
+  // to the default) - only meaningful for the 'default' slot, but harmless
+  // to preserve for any slot.
+  const previousAsset = await questionAssetsRepo.findAssetForSlot(
     req.params.questionId,
+    slotKey,
   );
 
   let normalizedPng;
@@ -236,22 +304,20 @@ export async function uploadDiagramImage(req, res) {
   }
 
   // Deliberately the SAME public_id an extracted diagram for this exact
-  // question would get (see asset_extractor.py#build_diagram_public_id,
-  // which this mirrors) - a manual upload always overwrites in place at
-  // that one predictable location, extracted or manual, so there's no
-  // separate "clean up the old file" step needed the way the old
-  // local-disk version required (an extracted asset and a manual one used
-  // to live in genuinely different directories).
+  // question+slot would get (see worker/cloudinary_storage.py's
+  // build_diagram_public_id, which this mirrors) - a manual upload always
+  // overwrites in place at that one predictable location, extracted or
+  // manual, so there's no separate "clean up the old file" step needed.
   const publicId = buildDiagramPublicId(
     req.workspaceId,
     question.mock_test_id,
     question.id,
+    slotKey,
   );
 
   try {
     await uploadDiagramBuffer(normalizedPng, publicId);
   } catch (error) {
-    // uploadDiagramBuffer already maps Cloudinary failures to httpError(502).
     console.error(
       `uploadDiagramImage failed for question ${question.id} (publicId=${publicId}):`,
       error,
@@ -260,16 +326,14 @@ export async function uploadDiagramImage(req, res) {
   }
 
   try {
-    await questionAssetsRepo.replaceAssetForQuestion(question.id, {
+    await questionAssetsRepo.upsertAssetForSlot(question.id, slotKey, {
       storagePath: publicId,
       source: "manual",
       placement: previousAsset?.placement || "below_text",
     });
   } catch (error) {
-    // Cloudinary already holds the new bytes under publicId. Log and surface
-    // a clear server error rather than a silent partial success.
     console.error(
-      `Diagram uploaded to Cloudinary but DB replace failed for question ${question.id}:`,
+      `Diagram uploaded to Cloudinary but DB upsert failed for question ${question.id}:`,
       error,
     );
     throw httpError(
@@ -278,14 +342,19 @@ export async function uploadDiagramImage(req, res) {
     );
   }
 
-  res.status(201).json({ success: true });
+  res.status(201).json({ success: true, slotKey });
 }
 
 const DIAGRAM_PLACEMENTS = ["above_text", "below_text", "below_options"];
 
 // Independent of source deliberately - an extracted diagram is exactly as
 // repositionable as a manually uploaded one, so this isn't folded into
-// uploadDiagramImage above.
+// uploadDiagramImage above. Only meaningful for the 'default' slot in
+// practice (a non-default slot's position comes from where its
+// ![[img:slot-key]] marker sits in the text, not this column), but kept
+// generic per-slot rather than hardcoded to 'default' - no harm in
+// letting it be set on any slot, and one less special case in this
+// endpoint's own logic.
 export async function updateDiagramPlacement(req, res) {
   const { placement } = req.body || {};
   if (!DIAGRAM_PLACEMENTS.includes(placement)) {
@@ -295,42 +364,30 @@ export async function updateDiagramPlacement(req, res) {
     );
   }
 
-  const question = await questionsRepo.findQuestionById(
+  const slotKey = resolveSlotKey(req.params.slotKey);
+  const { asset } = await loadAsset(
     req.params.questionId,
     req.workspaceId,
+    slotKey,
   );
-  if (!question) {
-    throw httpError(404, "Question not found");
-  }
-
-  const asset = await questionAssetsRepo.findAssetForQuestion(question.id);
-  if (!asset) {
-    throw httpError(404, "No diagram found for this question");
-  }
 
   await questionAssetsRepo.setPlacement(asset.id, placement);
   res.json({ placement });
 }
 
-// Removes the diagram entirely - the one thing nothing before Part C could
-// do (the old crop DELETE only reset to auto-crop; it never had a way to
-// end up with zero diagrams again). Lets an editor undo an accidental
-// upload, or clear a bad extraction before uploading their own replacement.
+// Removes one slot's diagram entirely. Lets an editor undo an accidental
+// upload, or clear a bad extraction before uploading their own
+// replacement, or remove a slot that's no longer referenced by any
+// ![[img:slot-key]] marker after an edit.
 export async function deleteDiagramImage(req, res) {
-  const question = await questionsRepo.findQuestionById(
+  const slotKey = resolveSlotKey(req.params.slotKey);
+  const { asset } = await loadAsset(
     req.params.questionId,
     req.workspaceId,
+    slotKey,
   );
-  if (!question) {
-    throw httpError(404, "Question not found");
-  }
 
-  const asset = await questionAssetsRepo.findAssetForQuestion(question.id);
-  if (!asset) {
-    throw httpError(404, "No diagram found for this question");
-  }
-
-  await questionAssetsRepo.deleteAsset(asset.id);
+  await questionAssetsRepo.deleteAssetForSlot(req.params.questionId, slotKey);
   await deleteDiagram(asset.storagePath);
 
   res.status(204).send();

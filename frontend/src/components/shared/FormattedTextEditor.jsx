@@ -20,6 +20,7 @@ import {
   Underline,
 } from "lucide-react";
 import { MathNode } from "./MathNode";
+import { ImageNode } from "./ImageNode";
 import { markdownToDoc, docToMarkdown } from "@/utils/richTextDoc";
 
 // The document shape mirrors richTextDoc.js: a sequence of paragraph and
@@ -69,7 +70,7 @@ const sizingClassName =
 // Code fences and GFM tables are plain, unstyled text in this editor for
 // now (not corrupted, just not specially rendered) - see richTextDoc.js.
 function FormattedTextEditor(
-  { value, onChange, disabled, placeholder, showToolbar = true },
+  { value, onChange, disabled, placeholder, showToolbar = true, questionId, mockTestId },
   ref,
 ) {
   // TipTap owns selection state outside React. Re-rendering on its
@@ -135,6 +136,7 @@ function FormattedTextEditor(
         },
       }),
       MathNode,
+      ImageNode,
     ],
     content: markdownToDoc(value),
     editable: !disabled,
@@ -167,6 +169,15 @@ function FormattedTextEditor(
     onSelectionUpdate: () => refreshToolbar(),
     onTransaction: () => refreshToolbar(),
   });
+
+  // Image node views resolve their upload target from editor storage. Keep
+  // this in sync when the persistent editor is reused for another question.
+  useEffect(() => {
+    if (!editor) return;
+    // TipTap extension storage is intentionally mutable shared state.
+    // eslint-disable-next-line react-hooks/immutability
+    editor.storage.image = { questionId, mockTestId };
+  }, [editor, questionId, mockTestId]);
 
   const runWithSelectionPreserved = useCallback(
     (command) => {
@@ -285,6 +296,26 @@ function FormattedTextEditor(
             type: "math",
             attrs: { latex: "", displayMode: false },
           })
+          .setNodeSelection(position)
+          .run();
+      },
+      insertImage() {
+        if (!editor || !editor.isEditable) return;
+
+        const usedSlotKeys = new Set();
+        editor.state.doc.descendants((node) => {
+          if (node.type.name === "image") usedSlotKeys.add(node.attrs.slotKey);
+        });
+        let slotKey;
+        do {
+          slotKey = `img-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+        } while (usedSlotKeys.has(slotKey));
+
+        const position = editor.state.selection.from;
+        editor
+          .chain()
+          .focus()
+          .insertContent({ type: "image", attrs: { slotKey } })
           .setNodeSelection(position)
           .run();
       },

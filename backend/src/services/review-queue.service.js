@@ -78,6 +78,7 @@ function serializeQueueItem(row) {
     correctOptionIndexes: row.correct_option_indexes || [],
     diagramUrl: row.diagramUrl || null,
     placement: row.placement || "below_text",
+    diagramAssets: row.diagramAssets || [],
     aiIssues,
     aiNeedsReview: metadata.aiNeedsReview || false,
     sourceLine: row.source_page ? `Page ${row.source_page}` : "Manual entry",

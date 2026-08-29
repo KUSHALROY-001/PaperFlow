@@ -1,7 +1,8 @@
-import { Code2, FileCode, MoreVertical, Sparkles } from "lucide-react";
+import { Code2, FileCode, ImagePlus, MoreVertical, Sparkles } from "lucide-react";
 import FormattedTextEditor from "../shared/FormattedTextEditor";
 import RichTextToolbar from "./RichTextToolbar";
 import QuestionTopicSelect from "./QuestionTopicSelect";
+import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
 
 export default function QuestionTextCard({
   topic,
@@ -9,6 +10,9 @@ export default function QuestionTextCard({
   isCustomTopic,
   setIsCustomTopic,
   text,
+  questionId,
+  mockTestId,
+  diagramAssets,
   updateSelected,
   isQuestionRaw,
   setIsQuestionRaw,
@@ -18,6 +22,7 @@ export default function QuestionTextCard({
   questionTextRef,
   formattedQuestionRef,
   handleInsertMath,
+  handleInsertImage,
   handleIndentCode,
   handleCleanUpMath,
   handleKeyDownTextarea,
@@ -97,6 +102,19 @@ export default function QuestionTextCard({
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => {
                   setIsQuestionMenuOpen(false);
+                  handleInsertImage("text");
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted hover:text-orange-500 rounded-lg transition-colors text-left"
+              >
+                <ImagePlus className="w-3.5 h-3.5 text-orange-500" />
+                Insert image
+              </button>
+              <button
+                type="button"
+                disabled={isViewer}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  setIsQuestionMenuOpen(false);
                   handleIndentCode();
                 }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted hover:text-orange-500 rounded-lg transition-colors text-left"
@@ -123,13 +141,17 @@ export default function QuestionTextCard({
       </div>
 
       {!isQuestionRaw ? (
-        <FormattedTextEditor
-          ref={formattedQuestionRef}
-          value={text || ""}
-          onChange={(val) => updateSelected("text", val)}
-          disabled={isViewer}
-          placeholder="Type your question text..."
-        />
+        <DiagramAssetsProvider assets={diagramAssets}>
+          <FormattedTextEditor
+            ref={formattedQuestionRef}
+            value={text || ""}
+            onChange={(val) => updateSelected("text", val)}
+            disabled={isViewer}
+            placeholder="Type your question text..."
+            questionId={questionId}
+            mockTestId={mockTestId}
+          />
+        </DiagramAssetsProvider>
       ) : (
         <>
           <div className="mb-2">

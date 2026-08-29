@@ -1,6 +1,6 @@
 import { Schema, Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { MarkdownSerializer } from "prosemirror-markdown";
-import { splitIntoTextBlocks } from "./textBlocks";
+import { splitIntoTextBlocks } from "./textBlocks.js";
 
 // Converts between this app's raw markdown-ish question/explanation text
 // (the format stored in the DB and read everywhere else - MathText.jsx,
@@ -36,7 +36,9 @@ import { splitIntoTextBlocks } from "./textBlocks";
 // is gone from what the user sees and edits from that point on.
 
 const MATH_TOKEN_RE =
-  /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\$[^\n$]+?\$|\\\([\s\S]+?\\\)|(?<!\$)\$\$(?!\$))/g;
+  /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\$[^\n$]+?\$|\\\([\s\S]+?\\\)|(?<!\$)\$\$(?!\$)|!\[\[img:[a-z0-9][a-z0-9-]{0,63}\]\])/g;
+
+const IMAGE_MARKER_RE = /^!\[\[img:([a-z0-9][a-z0-9-]{0,63})\]\]$/;
 
 const INLINE_MARKERS = [
   { open: "***", close: "***", marks: ["bold", "italic"] },
@@ -105,6 +107,12 @@ export const docSchema = new Schema({
       // validation richTextDoc.selftest.js does, and to construct the
       // MarkdownSerializer below.
     },
+    image: {
+      inline: true,
+      group: "inline",
+      atom: true,
+      attrs: { slotKey: { default: "default" } },
+    },
   },
   marks: {
     bold: {},
@@ -128,7 +136,7 @@ const markdownSerializer = new MarkdownSerializer(
     codeBlock(state, node) {
       state.write(`\`\`\`${node.attrs.language || ""}\n`);
       state.write(node.textContent);
-      state.write("\n\`\`\`\n");
+      state.write("\n```\n");
     },
     table(state, node) {
       const renderCell = (cell) => {
@@ -181,6 +189,9 @@ const markdownSerializer = new MarkdownSerializer(
     math(state, node) {
       const { latex, displayMode } = node.attrs;
       state.write(displayMode ? `$$${latex}$$` : `$${latex}$`);
+    },
+    image(state, node) {
+      state.write(`![[img:${node.attrs.slotKey}]]`);
     },
     text(state, node) {
       // escape=false: this app's parser (below) has no concept of
@@ -301,7 +312,9 @@ function parseSegment(text, tokens) {
   text.split(MATH_TOKEN_RE).forEach((chunk, index) => {
     if (!chunk) return;
     if (index % 2 === 1) {
-      tokens.push({ math: true, ...mathAttrsFromToken(chunk) });
+      const image = chunk.match(IMAGE_MARKER_RE);
+      if (image) tokens.push({ image: true, slotKey: image[1] });
+      else tokens.push({ math: true, ...mathAttrsFromToken(chunk) });
     } else {
       parseInline(chunk, [], tokens);
     }
@@ -318,6 +331,9 @@ function inlineContent(text) {
         type: "math",
         attrs: { latex: token.latex, displayMode: token.displayMode },
       };
+    }
+    if (token.image) {
+      return { type: "image", attrs: { slotKey: token.slotKey } };
     }
     return {
       type: "text",

@@ -17,33 +17,17 @@ dependency at all (see the docstring on crop_diagram).
 
 This module never raises on malformed input - a bad bounding box from the
 model means "skip this crop", not "crash extraction".
+
+Cropped bytes are handed back to the caller (ai/provider.py#
+_attach_diagram_crops) as plain PNG bytes in memory - this module has no
+opinion about where they end up stored. That's cloudinary_storage.py's
+job (uploaded by worker.py after the question rows themselves commit -
+see worker.py's own comment on that ordering).
 """
 
 import io
 
 from PIL import Image
-
-
-def build_diagram_public_id(workspace_id, mock_test_id, question_id):
-    """
-    Cloudinary public_id for this diagram - deliberately a stable,
-    predictable string (not a random/Cloudinary-assigned id), so the
-    resulting delivery URL is knowable before the upload even happens
-    (see db.py#replace_questions, which writes question_assets.storage_path
-    with this id at INSERT time, then storage.upload_diagram uploads the
-    actual bytes to it afterward - same "predetermined location, deferred
-    write" shape the old local-disk version used, just with a Cloudinary
-    id standing in for a filesystem path).
-
-    Replaces build_diagram_storage_path's old pdf-relative sibling-
-    directory convention entirely - there's no longer a permanent "next
-    to the PDF" location to be relative to, since the PDF is now a
-    temp file downloaded from B2 for the duration of one job and deleted
-    afterward (see worker.py#process_job). workspace_id/mock_test_id take
-    over as the organizing structure instead, mirroring the old
-    uploads/{workspace}/{mockTestId}/... layout in spirit.
-    """
-    return f"paperflow/{workspace_id}/{mock_test_id}/diagrams/{question_id}"
 
 
 def normalized_bbox_to_pixels(bbox_normalized, pixel_width, pixel_height):

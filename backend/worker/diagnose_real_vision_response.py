@@ -9,8 +9,8 @@ Run this directly on the Windows machine, from inside backend/:
 Calls the REAL provider.py extraction path (build_pdf_prompt + SYSTEM_PROMPT
 + GeminiProvider.generate_json_from_pdf_images) against your actual PDF and
 prints the raw response text plus normalized question count, so we can see
-exactly what the model returned - specifically whether has_diagram ever
-came back true for any question - instead of only seeing the post-merge
+exactly what the model returned - specifically whether it returned any
+diagram entries - instead of only seeing the post-merge
 summary.
 """
 
@@ -59,8 +59,8 @@ if __name__ == "__main__":
             print(f"Normalized questions: {len(ai_questions)}")
             for q in ai_questions:
                 print(
-                    f"  q{q['question_no']}: has_diagram={q['has_diagram']} "
-                    f"diagram_bbox={q['diagram_bbox']} source_page={q['source_page']}"
+                    f"  q{q['question_no']}: diagrams={q['diagrams']} "
+                    f"source_page={q['source_page']}"
                 )
             stats = _attach_diagram_crops(ai_questions, result.get("page_images") or {})
             print(f"diagram_stats for this chunk: {stats}")

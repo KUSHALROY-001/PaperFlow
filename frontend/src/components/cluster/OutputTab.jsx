@@ -9,6 +9,7 @@ import MathText from "../shared/MathText";
 import QuestionJumpInput from "../shared/QuestionJumpInput";
 import { api } from "@/lib/api";
 import ScrollToTopButton from "../shared/ScrollToTopButton";
+import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
 
 const viewTabs = ["Visual", "JSON", "Metadata"];
 
@@ -207,37 +208,44 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
                 </Link>
               </div>
 
-              <QuestionContent
-                text={question.text}
-                passage={question.passage}
-                diagramUrl={question.diagramUrl}
-                placement={question.placement}
-                textClassName="text-base sm:text-lg text-foreground break-words"
-              />
+              {/* Without this provider, MathText always sees an empty
+                  slot map and renders "Missing image" for every
+                  ![[img:…]] marker even when question.diagramAssets is
+                  populated from the API. This is the Output Visual view
+                  matching the Q34 screenshot. */}
+              <DiagramAssetsProvider assets={question.diagramAssets}>
+                <QuestionContent
+                  text={question.text}
+                  passage={question.passage}
+                  diagramUrl={question.diagramUrl}
+                  placement={question.placement}
+                  textClassName="text-base sm:text-lg text-foreground break-words"
+                />
 
-              <div className="mt-5 grid gap-3 md:grid-cols-2 w-full min-w-0">
-                {question.options.map((option) => {
-                  const correct = option === question.answer;
-                  return (
-                    <div
-                      key={option}
-                      className={`rounded-md border px-4 py-3 text-sm whitespace-pre-wrap wrap-break-word min-w-0 overflow-x-auto scrollbar-hidden ${
-                        correct
-                          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
-                          : "border-border bg-card text-muted-foreground"
-                      }`}
-                    >
-                      <MathText text={option} />
-                    </div>
-                  );
-                })}
-              </div>
-              {question.placement === "below_options" && (
-                <div className="mt-4">
-                  <QuestionDiagram diagramUrl={question.diagramUrl} />
+                <div className="mt-5 grid gap-3 md:grid-cols-2 w-full min-w-0">
+                  {question.options.map((option) => {
+                    const correct = option === question.answer;
+                    return (
+                      <div
+                        key={option}
+                        className={`rounded-md border px-4 py-3 text-sm whitespace-pre-wrap wrap-break-word min-w-0 overflow-x-auto scrollbar-hidden ${
+                          correct
+                            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
+                            : "border-border bg-card text-muted-foreground"
+                        }`}
+                      >
+                        <MathText text={option} />
+                      </div>
+                    );
+                  })}
                 </div>
-              )}
-              <QuestionExplanation explanation={question.explanation} />
+                {question.placement === "below_options" && (
+                  <div className="mt-4">
+                    <QuestionDiagram diagramUrl={question.diagramUrl} />
+                  </div>
+                )}
+                <QuestionExplanation explanation={question.explanation} />
+              </DiagramAssetsProvider>
             </div>
           ))}
         </div>

@@ -92,6 +92,9 @@ export function mapQuestion(question) {
     // Part C: where the diagram renders relative to text/options - see
     // attachDiagramUrls, which sets this whenever any asset exists.
     placement: question.placement || "below_text",
+    // Inline ![[img:slot]] markers (Review/Output tabs) need the full
+    // slot map, not just the legacy single diagramUrl.
+    diagramAssets: question.diagramAssets || [],
   };
 }
 

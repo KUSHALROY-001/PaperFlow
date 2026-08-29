@@ -6,6 +6,7 @@ import QuestionContent, {
   QuestionExplanation,
 } from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
+import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
 
 export default function SessionResultsView({
   review,
@@ -136,41 +137,43 @@ export default function SessionResultsView({
                           )}
                         </div>
                       )}
-                      <QuestionContent
-                        text={rq.text}
-                        passage={rq.passage}
-                        diagramUrl={rq.diagramUrl}
-                        placement={rq.placement}
-                        textClassName="text-sm font-normal text-foreground leading-relaxed"
-                      />
-                      {!correct && !skipped && (
-                        <p className="text-xs text-red-500 font-normal mt-1">
-                          Your answer:{" "}
-                          <MathText
-                            text={getOptionText(
-                              rq.options,
-                              rq.selectedOptionIndexes[0],
-                            )}
-                          />
-                        </p>
-                      )}
-                      {!correct && rq.correctOptionIndexes?.length > 0 && (
-                        <p className="text-xs text-emerald-500 font-normal mt-0.5">
-                          Correct:{" "}
-                          {rq.correctOptionIndexes.map((i, idx) => (
-                            <span key={i}>
-                              {idx > 0 && ", "}
-                              <MathText text={getOptionText(rq.options, i)} />
-                            </span>
-                          ))}
-                        </p>
-                      )}
-                      {rq.placement === "below_options" && (
-                        <div className="mt-2">
-                          <QuestionDiagram diagramUrl={rq.diagramUrl} />
-                        </div>
-                      )}
-                      <QuestionExplanation explanation={rq.explanation} />
+                      <DiagramAssetsProvider assets={rq.diagramAssets}>
+                        <QuestionContent
+                          text={rq.text}
+                          passage={rq.passage}
+                          diagramUrl={rq.diagramUrl}
+                          placement={rq.placement}
+                          textClassName="text-sm font-normal text-foreground leading-relaxed"
+                        />
+                        {!correct && !skipped && (
+                          <p className="text-xs text-red-500 font-normal mt-1">
+                            Your answer:{" "}
+                            <MathText
+                              text={getOptionText(
+                                rq.options,
+                                rq.selectedOptionIndexes[0],
+                              )}
+                            />
+                          </p>
+                        )}
+                        {!correct && rq.correctOptionIndexes?.length > 0 && (
+                          <p className="text-xs text-emerald-500 font-normal mt-0.5">
+                            Correct:{" "}
+                            {rq.correctOptionIndexes.map((i, idx) => (
+                              <span key={i}>
+                                {idx > 0 && ", "}
+                                <MathText text={getOptionText(rq.options, i)} />
+                              </span>
+                            ))}
+                          </p>
+                        )}
+                        {rq.placement === "below_options" && (
+                          <div className="mt-2">
+                            <QuestionDiagram diagramUrl={rq.diagramUrl} />
+                          </div>
+                        )}
+                        <QuestionExplanation explanation={rq.explanation} />
+                      </DiagramAssetsProvider>
                     </div>
                   </div>
                 </div>
