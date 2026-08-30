@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ImagePlus, Loader2, Trash2 } from "lucide-react";
+import { FileImage, ImagePlus, Loader2, Trash2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { ConfirmDialog } from "../design-system/ConfirmDialog";
+import PdfPageFetchModal from "./PdfPageFetchModal";
 
 const MAX_FILE_SIZE_BYTES = 6 * 1024 * 1024;
 const ACCEPTED_TYPES = "image/png,image/jpeg,image/webp";
@@ -26,6 +27,7 @@ export default function DiagramUploadControl({
   diagramUrl,
   placement,
   source,
+  sourcePage,
   isViewer,
   onError,
 }) {
@@ -36,6 +38,7 @@ export default function DiagramUploadControl({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isPlacementSaving, setIsPlacementSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showPdfFetchModal, setShowPdfFetchModal] = useState(false);
   const [localError, setLocalError] = useState("");
 
   const hasDiagram = Boolean(diagramUrl);
@@ -63,6 +66,17 @@ export default function DiagramUploadControl({
       return;
     }
 
+    acceptFile(file);
+  };
+
+  // Shared by handleFileChange above (a real file input) and
+  // handlePdfCropped below (a File synthesized from a canvas crop of a
+  // fetched PDF page) - once something is a File, both origins should be
+  // treated identically: same destructive-replace confirmation, same
+  // doUpload call. Size-checked only in handleFileChange since a
+  // client-side crop of a single PDF page can't realistically produce
+  // anything close to MAX_FILE_SIZE_BYTES.
+  const acceptFile = (file) => {
     // Replacing an existing diagram is destructive (it permanently
     // discards whatever was extracted or previously uploaded, along with
     // any manual crop on it) - confirm first, with wording that names
@@ -73,6 +87,11 @@ export default function DiagramUploadControl({
     } else {
       void doUpload(file);
     }
+  };
+
+  const handlePdfCropped = (file) => {
+    setShowPdfFetchModal(false);
+    acceptFile(file);
   };
 
   const formatUploadError = (error) => {
@@ -226,6 +245,21 @@ export default function DiagramUploadControl({
           {hasDiagram ? "Replace Image" : "Insert Image"}
         </button>
 
+        <button
+          type="button"
+          disabled={isViewer || busy}
+          onClick={() => setShowPdfFetchModal(true)}
+          title="Fetch a page image straight from the original PDF instead of uploading your own file"
+          className={`flex items-center gap-1.5 text-xs font-bold transition-all ${
+            isViewer || busy
+              ? "text-muted-foreground/40 cursor-not-allowed opacity-50"
+              : "text-orange-500 hover:underline"
+          }`}
+        >
+          <FileImage className="w-3.5 h-3.5" />
+          Fetch from PDF
+        </button>
+
         {hasDiagram && (
           <button
             type="button"
@@ -296,6 +330,15 @@ export default function DiagramUploadControl({
             confirmLabel="Remove"
             destructive
             onConfirm={handleDelete}
+          />
+        )}
+
+        {showPdfFetchModal && (
+          <PdfPageFetchModal
+            mockTestId={mockTestId}
+            defaultPage={sourcePage}
+            onClose={() => setShowPdfFetchModal(false)}
+            onCropped={handlePdfCropped}
           />
         )}
       </div>

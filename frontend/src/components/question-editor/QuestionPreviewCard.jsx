@@ -83,6 +83,7 @@ export default function QuestionPreviewCard({
             diagramUrl={selected.diagramUrl}
             placement={selected.placement}
             source={selected.source}
+            sourcePage={selected.sourcePage}
             isViewer={isViewer}
             onError={setDiagramError}
           />

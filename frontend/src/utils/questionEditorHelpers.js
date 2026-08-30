@@ -30,6 +30,15 @@ export function toEditorQuestion(question) {
     options,
     correctOptionIndexes: question.correct_option_indexes || [0],
     topic: question.topic || "General",
+    // Same "already on the raw row, just needs picking up" situation as
+    // subtopic/passage/explanation below - the questions VIEW (migration
+    // 030/032) already selects qs.source_page straight through, this was
+    // just never mapped to camelCase for the frontend to read. Powers
+    // the "fetch this page from the original PDF" feature's default page
+    // number (PdfPageFetchModal.jsx) - independent of whether a diagram
+    // was ever detected for this question, since every question knows
+    // which page it came from regardless.
+    sourcePage: question.source_page ?? null,
     // findQuestionById is a plain `SELECT *`, so subtopic/passage/
     // explanation are already on the raw row same as has_code/
     // code_language below - carried through here so the editor's Live

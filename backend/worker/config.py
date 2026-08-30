@@ -50,6 +50,20 @@ MAX_JOBS_PER_RUN = int(os.environ.get("WORKER_MAX_JOBS_PER_RUN", "8"))
 # the limiter would need to move to shared storage (e.g. a Postgres-backed
 # counter) before that's safe.
 WORKER_CONCURRENCY = int(os.environ.get("WORKER_CONCURRENCY", "4"))
+
+# Separate resource pool from WORKER_CONCURRENCY above, deliberately - that
+# one bounds background JOB PROCESSING threads (each holding a DB
+# connection, doing AI calls, etc.); this one bounds concurrent
+# /render-page requests (http_server.py), a synchronous, interactive path
+# triggered by someone in the editor clicking "Fetch page" - a live
+# request-response call, not a background task. Conflating the two pools
+# would mean an editor session fetching a few PDF pages could starve
+# actual job processing of its own concurrency slots, or vice versa.
+# Small default: each render does a full B2 download + PyMuPDF page
+# render, and unlike job processing there's no queue to fall back on if
+# this is saturated - a request just waits briefly or gets a clear "busy"
+# response instead of failing outright.
+WORKER_RENDER_CONCURRENCY = int(os.environ.get("WORKER_RENDER_CONCURRENCY", "3"))
 AI_PROVIDER = os.environ.get("AI_PROVIDER", "disabled").strip().lower()
 AI_MODEL = os.environ.get("AI_MODEL", "").strip()
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "").strip()

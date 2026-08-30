@@ -132,6 +132,48 @@ export const api = {
 
     return response.blob();
   },
+  // Same reasoning as exportMockTestPdf above (own fetch, not apiRequest -
+  // a successful response is binary, not JSON). Additionally reads
+  // X-Total-Pages off the response (see mock-tests.routes.js's
+  // Access-Control-Expose-Headers - without that, this header would be
+  // silently invisible here on a cross-origin deployment even though the
+  // backend sets it) so the page-picker UI knows how far "next page" can
+  // go without a second request just to ask.
+  async fetchPdfPage(mockTestId, page) {
+    const { token, workspaceId } = getStoredAuth();
+    let response;
+    try {
+      response = await fetch(
+        `${API_BASE_URL}/api/mock-tests/${mockTestId}/pdf-page?page=${encodeURIComponent(page)}`,
+        {
+          headers: {
+            ...(token ? { authorization: `Bearer ${token}` } : {}),
+            ...(workspaceId ? { "x-workspace-id": workspaceId } : {}),
+          },
+        },
+      );
+    } catch {
+      throw new Error(
+        `Cannot connect to the backend at ${API_BASE_URL}. Start the backend with: cd backend && npm run dev`,
+      );
+    }
+
+    if (!response.ok) {
+      const text = await response.text();
+      let data = null;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch {
+        // Same reasoning as apiRequest above - a non-JSON error body
+        // shouldn't surface as a raw parse error.
+      }
+      throw new Error(data?.error?.message || "Could not fetch this page");
+    }
+
+    const totalPages = Number(response.headers.get("x-total-pages")) || null;
+    const blob = await response.blob();
+    return { blob, totalPages };
+  },
   signup(payload) {
     return apiRequest("/api/auth/signup", {
       method: "POST",
@@ -374,10 +416,13 @@ export const api = {
   },
   updateDiagramPlacement(questionId, placement, slotKey = "default") {
     const suffix = slotKey === "default" ? "" : `/${slotKey}`;
-    return apiRequest(`/api/questions/${questionId}/diagram-placement${suffix}`, {
-      method: "PATCH",
-      body: JSON.stringify({ placement }),
-    });
+    return apiRequest(
+      `/api/questions/${questionId}/diagram-placement${suffix}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ placement }),
+      },
+    );
   },
   deleteDiagramImage(questionId, slotKey = "default") {
     const suffix = slotKey === "default" ? "" : `/${slotKey}`;

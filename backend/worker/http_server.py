@@ -2,12 +2,23 @@
 Lets the worker run as a Render Web Service instead of a Background
 Worker - Background Workers have no free tier on Render (nor do Cron
 Jobs), but Web Services do, because they hold a port a free instance can
-be spun down/woken by. This module's only job is to give the worker
-something on that port: an HTTP endpoint that kicks off job processing
-in the background and returns immediately, triggered by
-worker-runner.js#kickWorker right when a job is queued (an external
-pinger like cron-job.org is an optional backstop, not required - see
-kickWorker's own comment).
+be spun down/woken by. This module gives the worker two things on that
+port:
+
+  - POST /run - kicks off background job processing and returns
+    immediately, triggered by worker-runner.js#kickWorker right when a
+    job is queued (an external pinger like cron-job.org is an optional
+    backstop, not required - see kickWorker's own comment).
+  - GET /render-page - a SYNCHRONOUS, interactive path: given a PDF's B2
+    storage key and a page number, downloads the PDF and returns that one
+    page rendered to PNG, waiting for the actual result rather than
+    kicking off background work. Used by the question editor's "fetch
+    this page from the original PDF" feature (for questions where
+    extraction found no diagram to crop) - Node calls this directly and
+    proxies the bytes back to the browser. This is a materially different
+    usage pattern from /run's fire-and-forget kick, which is why it has
+    its own separate concurrency pool (WORKER_RENDER_CONCURRENCY) rather
+    than sharing /run's.
 
 Deploy this instead of worker.py as the service's start command:
     python -m worker.http_server
@@ -50,7 +61,10 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-from .config import WORKER_CONCURRENCY
+import fitz
+
+from .config import AI_PDF_RENDER_SCALE, WORKER_CONCURRENCY, WORKER_RENDER_CONCURRENCY
+from .storage import download_pdf_to_temp_file
 from .worker import process_next_job
 
 WORKER_TRIGGER_SECRET = os.environ.get("WORKER_TRIGGER_SECRET", "").strip()
@@ -61,6 +75,11 @@ _slot_semaphore = threading.Semaphore(WORKER_CONCURRENCY)
 # already atomic on their own, so no separate lock is needed around this
 # despite multiple threads touching it.
 _recheck_requested = threading.Event()
+
+# A wholly separate pool from _slot_semaphore above - see
+# WORKER_RENDER_CONCURRENCY's own comment in config.py for why this isn't
+# just reusing the job-processing semaphore.
+_render_semaphore = threading.Semaphore(WORKER_RENDER_CONCURRENCY)
 
 
 def _hold_slot_and_drain():
@@ -95,6 +114,46 @@ def trigger_processing():
     return False
 
 
+def render_page(storage_key, page_number):
+    """
+    Downloads the PDF at `storage_key` from B2 and renders ONE page to
+    PNG bytes, at the exact same AI_PDF_RENDER_SCALE the extraction
+    pipeline itself renders pages at (gemini_provider.py) - so a page a
+    user manually fetches to crop a diagram from looks the same
+    resolution/quality as what the AI extractor already saw for that
+    same page, not a mismatched second rendering convention.
+
+    page_number is 1-indexed (matching question_slots.source_page's own
+    convention - see migrations/001_initial_schema.sql's
+    `source_page > 0` check), converted to fitz's 0-indexed page access
+    here rather than asking every caller to remember to do that
+    conversion themselves.
+
+    Returns (png_bytes, total_page_count). Raises ValueError for a
+    page_number outside the PDF's actual range - callers turn that into a
+    400 with total_page_count so the client can correct itself, not a
+    generic 500.
+    """
+    local_path = download_pdf_to_temp_file(storage_key)
+    try:
+        with fitz.open(local_path) as document:
+            total_pages = document.page_count
+            if page_number < 1 or page_number > total_pages:
+                raise ValueError(
+                    f"page {page_number} is out of range - this PDF has {total_pages} page(s)"
+                )
+            page = document.load_page(page_number - 1)
+            pixmap = page.get_pixmap(
+                matrix=fitz.Matrix(AI_PDF_RENDER_SCALE, AI_PDF_RENDER_SCALE)
+            )
+            return pixmap.tobytes("png"), total_pages
+    finally:
+        # Caller-owns-cleanup, same contract download_pdf_to_temp_file's
+        # own docstring documents for worker.py's job-processing path -
+        # this is just a second caller of that same contract.
+        local_path.unlink(missing_ok=True)
+
+
 class Handler(BaseHTTPRequestHandler):
     def _send_json(self, status, payload):
         body = json.dumps(payload).encode("utf-8")
@@ -104,14 +163,85 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _send_png(self, png_bytes, total_pages):
+        self.send_response(200)
+        self.send_header("Content-Type", "image/png")
+        self.send_header("Content-Length", str(len(png_bytes)))
+        # Custom header (not a JSON body) so the frontend learns the PDF's
+        # total page count on the SAME response as the image itself,
+        # rather than needing a separate round trip just to know how far
+        # "next page" navigation can go.
+        self.send_header("X-Total-Pages", str(total_pages))
+        self.end_headers()
+        self.wfile.write(png_bytes)
+
     def do_GET(self):
-        # Render (and most uptime pingers) probe / by default - respond
-        # 200 here so those don't get logged as errors, but don't run
-        # any jobs from a bare GET. Only POST /run actually does work.
-        if urlparse(self.path).path == "/":
+        parsed = urlparse(self.path)
+        if parsed.path == "/":
+            # Render (and most uptime pingers) probe / by default -
+            # respond 200 here so those don't get logged as errors.
             self._send_json(200, {"status": "ok"})
             return
+        if parsed.path == "/render-page":
+            self._handle_render_page(parsed)
+            return
         self._send_json(404, {"error": "not found"})
+
+    def _handle_render_page(self, parsed):
+        if not WORKER_TRIGGER_SECRET:
+            # Same reasoning as do_POST below - a misconfigured deploy
+            # should fail loudly, not silently accept unauthenticated
+            # requests to an endpoint that downloads whatever PDF it's
+            # told to and burns render time on it.
+            self._send_json(
+                500, {"error": "WORKER_TRIGGER_SECRET is not configured"}
+            )
+            return
+
+        query = parse_qs(parsed.query)
+        provided_token = query.get("token", [""])[0]
+        if provided_token != WORKER_TRIGGER_SECRET:
+            self._send_json(403, {"error": "invalid or missing token"})
+            return
+
+        storage_key = query.get("storageKey", [""])[0]
+        if not storage_key:
+            self._send_json(400, {"error": "storageKey is required"})
+            return
+
+        try:
+            page_number = int(query.get("page", [""])[0])
+        except ValueError:
+            self._send_json(400, {"error": "page must be an integer"})
+            return
+
+        # Bounded separately from job-processing concurrency (see
+        # _render_semaphore's own comment) - blocking=False so a request
+        # arriving when every render slot is already busy gets a clear,
+        # immediate "try again shortly" instead of this handler thread
+        # (and the HTTP connection behind it) sitting blocked
+        # indefinitely waiting for a slot.
+        if not _render_semaphore.acquire(blocking=False):
+            self._send_json(
+                429,
+                {
+                    "error": f"all {WORKER_RENDER_CONCURRENCY} render slots are busy - try again shortly"
+                },
+            )
+            return
+
+        try:
+            png_bytes, total_pages = render_page(storage_key, page_number)
+        except ValueError as error:
+            self._send_json(400, {"error": str(error)})
+            return
+        except Exception as error:
+            self._send_json(500, {"error": str(error)})
+            return
+        finally:
+            _render_semaphore.release()
+
+        self._send_png(png_bytes, total_pages)
 
     def do_HEAD(self):
         # BaseHTTPRequestHandler returns 501 for HEAD unless a do_HEAD is

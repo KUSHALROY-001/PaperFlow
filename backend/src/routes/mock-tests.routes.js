@@ -4,6 +4,7 @@ import * as mockTestsController from "../controllers/mock-tests.controller.js";
 import * as questionsController from "../controllers/questions.controller.js";
 import * as attemptsController from "../controllers/attempts.controller.js";
 import * as sharedController from "../controllers/shared.controller.js";
+import * as pdfPageController from "../controllers/pdf-page.controller.js";
 import { asyncHandler } from "../lib/async-handler.js";
 import { httpError } from "../lib/http-error.js";
 import { requireRole } from "../middleware/require-role.js";
@@ -53,6 +54,14 @@ const upload = multer({
 
 mockTestsRouter.get("/", asyncHandler(mockTestsController.list));
 mockTestsRouter.get("/:mockTestId", asyncHandler(mockTestsController.getOne));
+// editor+ (matches the diagram-crop/upload routes on questions.routes.js) -
+// this feeds the same DiagramCropModal.jsx flow, just sourcing the image
+// from the original PDF instead of an uploaded file.
+mockTestsRouter.get(
+  "/:mockTestId/pdf-page",
+  requireRole("editor"),
+  asyncHandler(pdfPageController.getPage),
+);
 mockTestsRouter.get(
   "/:mockTestId/summary",
   asyncHandler(mockTestsController.getSummary),

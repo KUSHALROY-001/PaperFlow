@@ -15,6 +15,7 @@
     "db:backfill-math-validation": "node src/db/backfill-math-validation.js",
     "db:backfill-code": "node src/db/backfill-code-formatting.js",
     "worker:once": "python -m worker.worker --once",
+    "worker:http": "python -m worker.http_server",
     "worker": "python -m worker.worker"
   },
   "dependencies": {
