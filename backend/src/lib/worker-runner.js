@@ -50,9 +50,19 @@ const KICK_TIMEOUT_MS = 90_000;
 // Render free-tier workers often return 502/503/504 HTML while cold-
 // starting (the proxy times out or the instance is not listening yet).
 // A single failed kick then leaves the job "queued" until a manual curl
-// or cron hits /run. Retrying through the cold-start window fixes that.
+// or cron hits /run. Retrying through the cold-start window fixes that -
+// but the window has to actually be wide enough: Render's own docs put
+// cold start at 30-60s, and 60s is a documented TYPICAL worst case, not
+// an absolute ceiling (heavier images/current load can push past it).
+// 6 attempts * 8s = ~40s of coverage - LESS than the documented worst
+// case, with no margin at all - meant every kick landing on a cold start
+// anywhere in the 40-60s range was guaranteed to exhaust every retry and
+// give up before the worker ever finished waking up, exactly matching
+// "queued until I manually curl it" (curl has no timeout, so it simply
+// waits out however long the real cold start takes). 18 attempts * 8s =
+// ~136s gives better than 2x margin over the documented worst case.
 const KICK_RETRYABLE_STATUSES = new Set([502, 503, 504]);
-const KICK_MAX_ATTEMPTS = 6;
+const KICK_MAX_ATTEMPTS = 18;
 const KICK_RETRY_DELAY_MS = 8_000;
 
 function sleep(ms) {
