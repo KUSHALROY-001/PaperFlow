@@ -47,32 +47,85 @@ const WORKER_TRIGGER_SECRET = (process.env.WORKER_TRIGGER_SECRET || "").trim();
 // 90s gives real margin over Render's documented 30-60s worst case.
 const KICK_TIMEOUT_MS = 90_000;
 
-function kickDeployedWorker(jobId) {
-  const url = `${WORKER_SERVICE_URL}/run?token=${encodeURIComponent(WORKER_TRIGGER_SECRET)}`;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), KICK_TIMEOUT_MS);
+// Render free-tier workers often return 502/503/504 HTML while cold-
+// starting (the proxy times out or the instance is not listening yet).
+// A single failed kick then leaves the job "queued" until a manual curl
+// or cron hits /run. Retrying through the cold-start window fixes that.
+const KICK_RETRYABLE_STATUSES = new Set([502, 503, 504]);
+const KICK_MAX_ATTEMPTS = 6;
+const KICK_RETRY_DELAY_MS = 8_000;
 
-  fetch(url, { method: "POST", signal: controller.signal })
-    .then(async (response) => {
-      if (!response.ok) {
-        // A 429 here would mean the worker is unexpectedly still on the
-        // older lock-and-drop behavior - it shouldn't happen with the
-        // current http_server.py, which returns 202 (still a success
-        // status, so this branch isn't even reached) and guarantees an
-        // extra pass instead of dropping the kick. Logged just in case
-        // an older worker build is deployed.
-        const body = await response.text().catch(() => "");
-        console.warn(
-          `[worker-runner] Kick for job ${jobId} got ${response.status}: ${body}`,
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function truncateBody(body) {
+  // Render's 502 page is a huge HTML blob - never dump it into API logs.
+  const text = (body || "").trim();
+  if (!text) return "";
+  if (text.startsWith("<!DOCTYPE") || text.startsWith("<html")) {
+    return "[HTML error page truncated]";
+  }
+  return text.length > 300 ? `${text.slice(0, 300)}…` : text;
+}
+
+async function kickDeployedWorker(jobId) {
+  const url = `${WORKER_SERVICE_URL}/run?token=${encodeURIComponent(WORKER_TRIGGER_SECRET)}`;
+
+  for (let attempt = 1; attempt <= KICK_MAX_ATTEMPTS; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), KICK_TIMEOUT_MS);
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        signal: controller.signal,
+      });
+
+      if (response.ok) {
+        console.info(
+          `[worker-runner] Kick for job ${jobId} accepted (${response.status}) on attempt ${attempt}`,
         );
+        return;
       }
-    })
-    .catch((error) => {
+
+      const body = truncateBody(await response.text().catch(() => ""));
+      const retryable = KICK_RETRYABLE_STATUSES.has(response.status);
+
       console.warn(
-        `[worker-runner] Kick for job ${jobId} failed (worker will still be picked up by the next scheduled ping, if one is configured): ${error.message}`,
+        `[worker-runner] Kick for job ${jobId} got ${response.status} on attempt ${attempt}/${KICK_MAX_ATTEMPTS}` +
+          (body ? `: ${body}` : "") +
+          (retryable && attempt < KICK_MAX_ATTEMPTS
+            ? ` - retrying in ${KICK_RETRY_DELAY_MS / 1000}s (worker may be cold-starting)`
+            : ""),
       );
-    })
-    .finally(() => clearTimeout(timeout));
+
+      if (!retryable || attempt === KICK_MAX_ATTEMPTS) {
+        return;
+      }
+    } catch (error) {
+      const retryable =
+        error?.name === "AbortError" ||
+        /fetch failed|ECONNREFUSED|ENOTFOUND|socket|network/i.test(
+          error?.message || "",
+        );
+
+      console.warn(
+        `[worker-runner] Kick for job ${jobId} failed on attempt ${attempt}/${KICK_MAX_ATTEMPTS}: ${error.message}` +
+          (retryable && attempt < KICK_MAX_ATTEMPTS
+            ? ` - retrying in ${KICK_RETRY_DELAY_MS / 1000}s`
+            : " (job stays queued until a later successful kick)"),
+      );
+
+      if (!retryable || attempt === KICK_MAX_ATTEMPTS) {
+        return;
+      }
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    await sleep(KICK_RETRY_DELAY_MS);
+  }
 }
 
 // Local-dev equivalent of kickDeployedWorker above: there's no separate
@@ -122,18 +175,42 @@ function spawnLocalWorkerOnce(jobId) {
 }
 
 export function kickWorker({ jobId } = {}) {
+  // Render (and most hosts) set one of these when the API is running in
+  // a real deployment. Local spawn cannot reach the separate worker
+  // service there - if we fall through without WORKER_SERVICE_URL, jobs
+  // sit "queued" forever until someone hits /run by hand (curl / cron).
+  // That is exactly the symptom of "upload does nothing until I curl".
+  const isDeployed =
+    process.env.RENDER === "true" ||
+    process.env.NODE_ENV === "production" ||
+    Boolean(process.env.RENDER_SERVICE_ID);
+
   if (WORKER_SERVICE_URL && WORKER_TRIGGER_SECRET) {
-    kickDeployedWorker(jobId);
+    console.info(
+      `[worker-runner] Kicking deployed worker for job ${jobId} at ${WORKER_SERVICE_URL}/run`,
+    );
+    // Fire-and-forget: retries run in the background so the upload
+    // response is not held open for the full cold-start window.
+    void kickDeployedWorker(jobId).catch((error) => {
+      console.warn(
+        `[worker-runner] Kick for job ${jobId} ended with unexpected error: ${error.message}`,
+      );
+    });
     return;
   }
 
-  // Neither configured is the expected local-dev state (no deployed
-  // worker service exists to point WORKER_SERVICE_URL at) - fall back to
-  // spawning one locally instead of silently doing nothing. A partially-
-  // configured state (one var set, the other missing) is a genuine
-  // misconfiguration rather than "this is local dev", so it's called out
-  // instead of also silently falling back, which would otherwise hide a
-  // typo'd env var behind working-by-accident local behavior.
+  if (isDeployed) {
+    // Do NOT spawn local Python on the API box - it has no worker deps
+    // and is not the worker service. Fail loud so Render logs show why
+    // the job is stuck queued.
+    console.error(
+      `[worker-runner] Job ${jobId} queued but WORKER_SERVICE_URL and/or WORKER_TRIGGER_SECRET are missing on this API service. ` +
+        `Set BOTH on the Node backend (same secret as the worker). Until then jobs will stay queued until something else hits the worker /run endpoint.`,
+    );
+    return;
+  }
+
+  // Local-dev only: neither env is set → spawn python -m worker.worker --once
   if (WORKER_SERVICE_URL || WORKER_TRIGGER_SECRET) {
     console.warn(
       `[worker-runner] Job ${jobId} queued, but only one of WORKER_SERVICE_URL/WORKER_TRIGGER_SECRET is set - both are required to kick the deployed worker. Falling back to a local spawn, which is almost certainly not what you want outside local dev.`,
