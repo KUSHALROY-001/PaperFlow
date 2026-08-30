@@ -91,25 +91,18 @@ def crop_diagram(
     pixmap_height,
     bbox_normalized,
     *,
-    # Bumped from 0.03 (3%) -> 0.10 (10%) after real-world review showed
-    # most crops from 3% clipped part of the actual diagram - vision
-    # model bounding boxes are estimates, not pixel-precise detections.
-    # Bumped again from 0.10 -> 0.25 so the crop is deliberately
-    # oversized (final size = original + 2*padding_pct = 1.5x the
-    # detected box in each dimension) rather than just "safely padded" -
-    # the intent is no longer just "don't clip the diagram", it's "leave
-    # enough surrounding room that a user can manually crop the result
-    # down to whatever tighter final size they actually want", per the
-    # manual-crop-tool feature. A crop with generous extra margin is
-    # still useful and now expected; a crop missing part of the actual
-    # figure still usually isn't.
-    padding_pct=0.25,
-    # Flat floor so a small diagram (where padding_pct alone would round
-    # to just 1-2px) still gets a real margin. Chosen relative to a
-    # typical AI_PDF_RENDER_SCALE=1.5 page render (roughly 900-1300px
-    # per dimension) - large enough to matter, small enough not to
-    # noticeably bloat a normal-sized crop.
-    min_padding_px=18,
+    # Model bboxes (especially option diagrams) routinely clip edges.
+    # Expand each axis to 2x the detected box: pad each side by 50% of
+    # the box's own width/height so final crop ≈ 2w × 2h (clamped to the
+    # page). Oversized on purpose - the user can tighten with the
+    # manual crop tool; a crop missing part of the figure is harder to
+    # recover from than one with extra margin.
+    # History: 0.03 → 0.10 → 0.25 (1.5x) → 0.50 (2x).
+    padding_pct=0.60,
+    # Flat floor so tiny option diagrams (where 50% of a 20px box is only
+    # 10px) still get a usable margin on a typical AI_PDF_RENDER_SCALE=1.5
+    # page (~900–1300px per side).
+    min_padding_px=32,
 ):
     """
     pixmap_png_bytes: PNG bytes of the FULL PAGE IMAGE already rendered

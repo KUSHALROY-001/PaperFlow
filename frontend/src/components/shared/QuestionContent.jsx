@@ -139,6 +139,11 @@ export function QuestionExplanation({
 // Every render path (passage, text) passes through CodeText unconditionally.
 // Fenced segments in text/passage are parsed as code blocks;
 // non-fenced segments pass through splitIntoTextBlocks + MathText.
+// Matches the legacy single-diagram marker. When this appears in the
+// stem text, MathText already renders that image — so also mounting
+// QuestionDiagram from diagramUrl would show the same figure twice.
+const DEFAULT_IMG_MARKER_RE = /!\[\[img:default\]\]/i;
+
 export default function QuestionContent({
   text,
   passage,
@@ -148,9 +153,17 @@ export default function QuestionContent({
   editable = false,
   onUpdateText,
 }) {
-  const showAboveText = diagramUrl && placement === "above_text";
+  const textHasDefaultMarker =
+    DEFAULT_IMG_MARKER_RE.test(text || "") ||
+    DEFAULT_IMG_MARKER_RE.test(passage || "");
+  // Prefer the inline marker when present (author intentionally placed
+  // it). Otherwise use the automatic diagramUrl placement path.
+  const effectiveDiagramUrl = textHasDefaultMarker ? null : diagramUrl;
+  const showAboveText = effectiveDiagramUrl && placement === "above_text";
   const showBelowText =
-    diagramUrl && placement !== "above_text" && placement !== "below_options";
+    effectiveDiagramUrl &&
+    placement !== "above_text" &&
+    placement !== "below_options";
 
   return (
     <div className="space-y-3">
@@ -168,7 +181,10 @@ export default function QuestionContent({
         </div>
       )}
       {showAboveText && (
-        <QuestionDiagram key={diagramUrl} diagramUrl={diagramUrl} />
+        <QuestionDiagram
+          key={effectiveDiagramUrl}
+          diagramUrl={effectiveDiagramUrl}
+        />
       )}
       {text && (
         <CodeText
@@ -179,7 +195,10 @@ export default function QuestionContent({
         />
       )}
       {showBelowText && (
-        <QuestionDiagram key={diagramUrl} diagramUrl={diagramUrl} />
+        <QuestionDiagram
+          key={effectiveDiagramUrl}
+          diagramUrl={effectiveDiagramUrl}
+        />
       )}
     </div>
   );

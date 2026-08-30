@@ -1,4 +1,4 @@
-import re
+import fitz
 
 from ..asset_extractor import crop_diagram
 from ..config import (
@@ -20,30 +20,28 @@ Use zero-based option indexes.
 If an answer is missing or uncertain, choose the most likely option, lower confidence, set needs_review true, and explain in issues.
 Keep original meaning. Do not invent questions that are not present in the text.
 
-For every visible diagram, circuit, graph, chart, or figure belonging to a
-question, add an entry to that question's required "diagrams" list with a
-unique slot_key and bbox [ymin, xmin, ymax, xmax]. Coordinates are 0-1000
-relative to the attached image. Keep the list empty when the question has no
-visible figure; never create an image merely because the text mentions one.
-For exactly one diagram use slot_key "default" and do not add a marker. For
-multiple diagrams use descriptive slot keys and place ![[img:slot_key]] at
-the exact point in text, an option, or a markdown-table cell where that image
-belongs. Every non-default slot must have a matching marker.
+If a question references a diagram, circuit, graph, chart, or figure that
+you can see in the attached page image, set has_diagram to true and report
+diagram_bbox as [ymin, xmin, ymax, xmax], each a number from 0 to 1000,
+normalized relative to the attached image's own width and height (top-left
+corner is [0, 0, 0, 0]; bottom-right is [1000, 1000, 1000, 1000]). Only set
+has_diagram to true when the figure is visually present on the page you
+were shown - never for a question that merely mentions a diagram in words
+with nothing to point to. Set has_diagram to false and diagram_bbox to null
+for every question without a visible figure.
 
-This applies to the ANSWER OPTIONS just as much as to the question stem: if
-an option IS a picture rather than text - a structure, a graph, a circuit,
-a shape, or any other figure the test-taker must visually compare, with no
-equivalent written description anywhere in the question - that option still
-needs its own "diagrams" entry with its own slot_key and its own
-![[img:slot_key]] marker placed as that option's ENTIRE string in "options"
-(e.g. options: ["![[img:option-a]]", "![[img:option-b]]", ...], never a bare
-"(A)"/"(B)" label with no marker at all - a bare label loses the answer
-choice entirely, since nothing else in the JSON records what that option
-actually shows). This is easy to under-detect when one clearly-labeled
-diagram already appears right after the question stem: do not let finding
-that one diagram stop you from separately checking each option for whether
-it is ALSO a picture - a question can have five diagrams (one in the stem,
-one per option) just as easily as one.
+has_diagram and diagram_bbox are REQUIRED fields on every single question -
+never omit them, and never skip making an explicit decision for a question
+just because it looks text-only at a glance. Specifically: for EVERY
+question, first check whether its own text contains wording like "shown in
+the figure", "as shown below", "given below", "in the diagram", or similar -
+if it does, that is a strong signal to look carefully at the page region
+near that question for the actual visual (a circuit, geometric figure,
+graph, or chart) before deciding has_diagram. Getting this wrong in either
+direction is costly: missing a real diagram loses the student a question
+they cannot answer without it, and false-flagging a purely textual question
+wastes a crop for nothing - so look before you decide, on every question,
+rather than defaulting to false out of habit.
 
 If "text", any entry in "options", or "explanation" contains a code snippet,
 pseudocode, or program output block, wrap it in markdown code fences:
@@ -105,7 +103,8 @@ Expected shape:
       "confidence": 0,
       "needs_review": true,
       "issues": [],
-      "diagrams": []
+      "has_diagram": false,
+      "diagram_bbox": null
     }
   ]
 }
@@ -157,12 +156,36 @@ Expected shape:
 
 def build_notes_generation_prompt(chunk, count):
     return f"""
-Write approximately {count} multiple-choice questions covering the key
-concepts in this section of notes. Spread the questions across the whole
-section rather than clustering them around one paragraph.
+Generate multiple-choice questions covering EVERY distinct testable fact in
+this section of notes - every date, name, place, number, term, and
+relationship mentioned. Do not stop at a token target; keep going until the
+section's content is genuinely exhausted, up to a maximum of {count}
+questions. A dense section deserves close to the maximum; a sparse one may
+genuinely only support a handful - write as many as the content actually
+supports, never pad with restated or trivial variations of the same fact
+just to hit a number. Spread questions across the whole section rather than
+clustering them around one paragraph.
 
 Notes:
 {chunk}
+""".strip()
+
+
+# Same instruction as build_notes_generation_prompt above, for the vision
+# path (generate_questions_from_notes's pdf_path fallback below) - no
+# `chunk` text to embed since the model is reading the page IMAGES
+# directly here, not a flattened text chunk.
+def build_notes_generation_prompt_vision(count):
+    return f"""
+Generate multiple-choice questions covering EVERY distinct testable fact
+shown in these pages of notes - every date, name, place, number, term, and
+relationship visible. Do not stop at a token target; keep going until the
+pages' content is genuinely exhausted, up to a maximum of {count}
+questions. Dense pages deserve close to the maximum; sparse ones may
+genuinely only support a handful - write as many as the content actually
+supports, never pad with restated or trivial variations of the same fact
+just to hit a number. Spread questions across the whole set of pages rather
+than clustering them around one page.
 """.strip()
 
 
@@ -269,38 +292,100 @@ def _check_template_match(template_context, final_questions):
 # a dict merge would silently overwrite chunk 2's "question_no: 1" over
 # chunk 1's. Instead every chunk's questions are concatenated into a list
 # and renumbered sequentially once, at the end.
-def generate_questions_from_notes(pages, provider):
-    if not AI_GENERATE_FROM_NOTES or not pages:
+def generate_questions_from_notes(pages, provider, pdf_path=None):
+    if not AI_GENERATE_FROM_NOTES:
         return [], {"attempted": False, "questionsGenerated": 0, "errors": []}
 
     all_questions = []
     errors = []
 
-    for chunk_index, chunk in enumerate(chunk_pages(pages), start=1):
-        if len(all_questions) >= AI_NOTES_MAX_QUESTIONS:
-            break
+    if pages:
+        for chunk_index, chunk in enumerate(chunk_pages(pages), start=1):
+            if len(all_questions) >= AI_NOTES_MAX_QUESTIONS:
+                break
 
+            try:
+                response_text = provider.generate_json(
+                    GENERATION_SYSTEM_PROMPT,
+                    build_notes_generation_prompt(chunk, AI_NOTES_QUESTIONS_PER_CHUNK),
+                )
+                payload = extract_json_payload(response_text)
+                chunk_questions = normalize_ai_questions(
+                    payload, source=f"{provider.name}_notes_generated_v1"
+                )
+                all_questions.extend(chunk_questions)
+            except GeminiDailyQuotaExceededError as error:
+                # The day's quota can't come back mid-job the way a per-minute
+                # one can (see gemini_provider.py's rate limiter/retry) - every
+                # remaining chunk would fail identically, so stop here instead
+                # of burning through each one's own retry cycle for nothing.
+                errors.append(
+                    {"chunk": chunk_index, "message": f"Stopped early: {error}"}
+                )
+                break
+            except Exception as error:
+                errors.append({"chunk": chunk_index, "message": str(error)})
+    elif pdf_path and hasattr(provider, "generate_json_from_pdf_images"):
+        # pages came back empty - pdf_extract.extract_pdf_pages only keeps
+        # pages with a real text layer, so this means the document has
+        # NONE at all (a scanned/photographed page image with no
+        # embedded text, exactly what a PDF like a photocopied coaching-
+        # material page looks like). The text-chunk loop above has
+        # nothing to work with in that case, and OCR is not always a
+        # rescue: Render's native (non-Docker) Python runtime has no apt/
+        # sudo access at all, so Tesseract genuinely cannot be installed
+        # there (see worker.py's ocr_summary.skippedReason, which reports
+        # exactly this) - "OCR not installed" is a real, permanent
+        # platform constraint on that deploy, not a fixable
+        # misconfiguration to retry past.
+        #
+        # This was the ONE remaining gap between the two extraction
+        # modes: the "already has questions" path already has a vision-
+        # based last-resort (_enhance_questions_with_ai_inner's final
+        # generate_json_from_pdf call, gated only on pdf_path, never on
+        # pages) that reads page images directly and works fine even
+        # with zero text layer - "generate a quiz from this" had no
+        # equivalent at all, and returned attempted:false outright the
+        # instant `pages` was empty, regardless of how good the model's
+        # vision reading of the actual page images might have been.
+        # Mirrors that same page-image approach here, with a notes-
+        # generation prompt instead of a question-extraction one.
         try:
-            response_text = provider.generate_json(
-                GENERATION_SYSTEM_PROMPT,
-                build_notes_generation_prompt(chunk, AI_NOTES_QUESTIONS_PER_CHUNK),
-            )
-            payload = extract_json_payload(response_text)
-            chunk_questions = normalize_ai_questions(
-                payload, source=f"{provider.name}_notes_generated_v1"
-            )
-            all_questions.extend(chunk_questions)
-        except GeminiDailyQuotaExceededError as error:
-            # The day's quota can't come back mid-job the way a per-minute
-            # one can (see gemini_provider.py's rate limiter/retry) - every
-            # remaining chunk would fail identically, so stop here instead
-            # of burning through each one's own retry cycle for nothing.
-            errors.append(
-                {"chunk": chunk_index, "message": f"Stopped early: {error}"}
-            )
-            break
+            with fitz.open(pdf_path) as document:
+                total_pages = document.page_count
         except Exception as error:
-            errors.append({"chunk": chunk_index, "message": str(error)})
+            errors.append({"chunk": "vision_notes_open_pdf", "message": str(error)})
+            total_pages = 0
+
+        if total_pages:
+            chunk_results = provider.generate_json_from_pdf_images(
+                GENERATION_SYSTEM_PROMPT,
+                build_notes_generation_prompt_vision(AI_NOTES_QUESTIONS_PER_CHUNK),
+                pdf_path,
+                page_numbers=list(range(1, total_pages + 1)),
+            )
+            for result in chunk_results:
+                pages_label = f"vision_notes_pages_{result['start_page']}-{result['end_page']}"
+                if len(all_questions) >= AI_NOTES_MAX_QUESTIONS:
+                    break
+                if result["error"] or not result["response_text"]:
+                    errors.append(
+                        {"chunk": pages_label, "message": result["error"] or "empty response"}
+                    )
+                    continue
+                try:
+                    payload = extract_json_payload(result["response_text"])
+                    chunk_questions = normalize_ai_questions(
+                        payload, source=f"{provider.name}_notes_generated_vision_v1"
+                    )
+                    all_questions.extend(chunk_questions)
+                except GeminiDailyQuotaExceededError as error:
+                    errors.append(
+                        {"chunk": pages_label, "message": f"Stopped early: {error}"}
+                    )
+                    break
+                except Exception as error:
+                    errors.append({"chunk": f"{pages_label}_parse", "message": str(error)})
 
     all_questions = all_questions[:AI_NOTES_MAX_QUESTIONS]
     for index, question in enumerate(all_questions, start=1):
@@ -308,7 +393,7 @@ def generate_questions_from_notes(pages, provider):
         question["metadata"]["generatedFromNotes"] = True
 
     return all_questions, {
-        "attempted": True,
+        "attempted": bool(pages) or bool(pdf_path),
         "questionsGenerated": len(all_questions),
         "errors": errors,
     }
@@ -770,9 +855,11 @@ def regenerate_flagged_duplicates(flagged_slots, difficulty_hint, provider):
 
 def _attach_diagram_crops(ai_questions, page_images):
     """
-    Crop every entry in a question's `diagrams` list from the page image
-    used for its vision call and attach successful PNGs as transient
-    `_diagram_crops`, keyed by slot_key.
+    For each question the model flagged has_diagram=True with a usable
+    diagram_bbox, crop it from the exact page image rendered for this
+    chunk's vision call (page_images, keyed by 1-based page number - see
+    gemini_provider.py#generate_json_from_pdf_images) and attach the PNG
+    bytes in-memory as "_diagram_crop_bytes".
 
     This key is NOT part of the question schema - it's a transient
     carrier consumed by db.py#replace_questions when saving the file to
@@ -782,7 +869,7 @@ def _attach_diagram_crops(ai_questions, page_images):
 
     Returns a stats dict - not just silently succeeding/failing per
     question. Losing this observability once already cost real debugging
-    time: with no trace of why a requested diagram ended
+    time: with no trace of *why* a question with has_diagram=True ended
     up with no crop (source_page mismatch, missing page_images because
     that chunk's fetch failed, or a bad/degenerate bbox), the only way to
     find out was writing standalone diagnostic scripts against a live
@@ -793,9 +880,10 @@ def _attach_diagram_crops(ai_questions, page_images):
     stats = {"flaggedByModel": 0, "cropped": 0, "noMatchingPageImage": 0, "cropFailed": 0}
 
     for question in ai_questions:
-        diagrams = question.get("diagrams") or []
-        if not diagrams:
+        if not question.get("has_diagram") or not question.get("diagram_bbox"):
             continue
+
+        stats["flaggedByModel"] += 1
 
         source_page = question.get("source_page")
         page_image = page_images.get(source_page) if source_page else None
@@ -828,124 +916,47 @@ def _attach_diagram_crops(ai_questions, page_images):
             if len(page_images) == 1:
                 page_image = next(iter(page_images.values()))
             else:
-                stats["flaggedByModel"] += len(diagrams)
-                stats["noMatchingPageImage"] += len(diagrams)
+                stats["noMatchingPageImage"] += 1
                 continue
 
-        crops = {}
-        for diagram in diagrams:
-            stats["flaggedByModel"] += 1
-            crop_bytes = crop_diagram(
-                page_image["png_bytes"],
-                page_image["width"],
-                page_image["height"],
-                diagram["bbox"],
-            )
-            if crop_bytes:
-                crops[diagram["slot_key"]] = crop_bytes
-                stats["cropped"] += 1
-            else:
-                stats["cropFailed"] += 1
-
-        if crops:
-            question["_diagram_crops"] = crops
+        crop_bytes = crop_diagram(
+            page_image["png_bytes"],
+            page_image["width"],
+            page_image["height"],
+            question["diagram_bbox"],
+        )
+        if crop_bytes:
+            question["_diagram_crop_bytes"] = crop_bytes
+            stats["cropped"] += 1
+        else:
+            stats["cropFailed"] += 1
 
     return stats
 
 
-def _question_text_fingerprint(question):
-    """
-    Short normalized prefix of the question body used to decide whether two
-    extractions with the SAME paper question_no are the same question (e.g.
-    overlapping vision chunks of one subject) or different ones (e.g. JEE
-    Advanced Physics Q.1 vs Chemistry Q.1 vs Mathematics Q.1 - each subject
-    restarts numbering at 1).
-    """
-    text = (question.get("text") or "").strip().lower()
-    text = re.sub(r"\s+", " ", text)
-    return text[:160]
-
-
-def _is_same_extracted_question(existing, new):
-    """
-    True when two results with the same paper number are almost certainly
-    the same physical question (chunk overlap / fuller re-extraction), not
-    a subject-boundary restart.
-    """
-    fp_a = _question_text_fingerprint(existing)
-    fp_b = _question_text_fingerprint(new)
-    if not fp_a or not fp_b:
-        # No body to compare - treat as same number collision that should
-        # follow prefer_new, not as a guaranteed subject restart (empty
-        # bodies are more often parse failures than new subjects).
-        return True
-    if fp_a == fp_b:
-        return True
-    # Partial page-split: one extraction has a stub, the other the rest.
-    # Threshold is intentionally low (~24 chars) so short stems still match
-    # a fuller re-extraction of the same question across chunk boundaries.
-    if len(fp_a) >= 24 and fp_a[:80] in fp_b:
-        return True
-    if len(fp_b) >= 24 and fp_b[:80] in fp_a:
-        return True
-    return False
-
-
-def _put_extracted_question(questions_by_no, question, *, prefer_new):
-    """
-    Insert one extracted question into the question_no-keyed pool.
-
-    Same paper number + same/similar body  -> keep one (prefer_new decides
-    which). Same paper number + DIFFERENT body -> subject restart (JEE
-    Advanced Physics/Chemistry/Mathematics each use Q.1..Q.N independently);
-    assign the next free global number and remember the paper-local number
-    in metadata so nothing is silently overwritten.
-
-    This is the fix for the incident where Mathematics was extracted, then
-    Chemistry's Q.1-17 overwrote those keys, and gap-fill padded 18-51 so
-    the job reported 51 questions with Math content gone and Chemistry
-    duplicated.
-    """
-    if not question:
-        return
-    no = question.get("question_no")
-    if no is None:
-        return
-
-    if no not in questions_by_no:
-        questions_by_no[no] = question
-        return
-
-    existing = questions_by_no[no]
-    if _is_same_extracted_question(existing, question):
-        if prefer_new:
-            questions_by_no[no] = question
-        return
-
-    # Different question, same paper number - namespace into a free slot.
-    new_no = max(questions_by_no.keys()) + 1
-    metadata = dict(question.get("metadata") or {})
-    metadata["paper_question_no"] = no
-    metadata["renumbered_due_to_subject_restart"] = True
-    questions_by_no[new_no] = {
-        **question,
-        "question_no": new_no,
-        "metadata": metadata,
-    }
-
-
-def _missing_question_numbers(questions_by_no, regex_questions, expected_count=None):
+def _missing_question_numbers(questions_by_key, regex_questions, expected_count=None):
     # Best-effort "how many questions should there be" estimate: the
-    # highest question_no either extractor has actually detected so far.
-    # This can undershoot if BOTH extractors miss the true last question,
-    # but it's what lets every fallback below target "which numbers are
-    # still missing" instead of the old binary "did we get anything at
-    # all" (`if not questions_by_no`) - which meant a vision pass that
-    # recovered most-but-not-all of the document (a handful of chunks
-    # failed even after their retry) silently skipped every fallback below
-    # for the rest, since the dict was already non-empty.
-    known_numbers = set(questions_by_no) | {q["question_no"] for q in regex_questions}
-    if not known_numbers:
+    # highest question_no either extractor has actually detected so far
+    # - now computed PER SUBJECT, not globally. A multi-subject paper
+    # where each subject restarts its own numbering at 1 makes a single
+    # document-wide expected_count actively harmful here: subject A
+    # topping out at 17 does not mean subject B is missing questions
+    # 18-51, it means subject B's own highest number is whatever IT
+    # actually goes up to. Treating expected_count as a per-subject
+    # search-range extension (only applied within each subject's own
+    # keys) keeps the "keep trying every remaining fallback" behavior
+    # this function exists for, without permanently chasing a Q.18 that
+    # was never going to exist for a 17-question subject.
+    #
+    # questions_by_key/regex_questions entries are keyed/tagged by
+    # (subject, question_no) - see reconcile_questions and the callers
+    # below. A document with no real subject boundaries (the ordinary
+    # single-subject case) has every question tagged "general", which
+    # collapses this right back to the original flat behavior.
+    known_keys = set(questions_by_key) | {
+        (q.get("subject") or "general", q["question_no"]) for q in regex_questions
+    }
+    if not known_keys:
         # Nothing has been found by EITHER source yet - we don't know how
         # many questions this document even has, but that's a stronger
         # "keep trying every remaining fallback" signal than a specific
@@ -954,20 +965,25 @@ def _missing_question_numbers(questions_by_no, regex_questions, expected_count=N
         # caller gates on `if missing:` - returning it directly would
         # silently abandon extraction on total failure instead of trying
         # the next method).
-        return {1}
-    # expected_count (template_context.expectedQuestionCount, when a
-    # template is applied) extends the search range even when what's been
-    # found so far has NO internal gaps - without this, a gapless-but-short
-    # result (e.g. questions 1-16 found with zero holes, because whatever
-    # chunk covered 17+ came back empty) reads as "nothing missing" and
-    # every fallback pass below gets skipped, permanently truncating the
-    # document at 16 instead of retrying the pages that never got covered.
-    # This one incident is exactly what happened on a real JEE Advanced
-    # extraction: a single vision chunk returned an empty response, the
-    # chunks before it happened to be gapless, and the whole rest of the
-    # document (17-54) was silently never attempted.
-    expected_max = max(known_numbers | ({expected_count} if expected_count else set()))
-    return set(range(1, expected_max + 1)) - set(questions_by_no)
+        return {("general", 1)}
+
+    subjects_seen = {subject for subject, _ in known_keys}
+    missing = set()
+    for subject in subjects_seen:
+        subject_known_numbers = {no for subj, no in known_keys if subj == subject}
+        # expected_count only extends a SINGLE-subject document's range
+        # (subjects_seen == {"general"}) - for a genuinely multi-subject
+        # paper it isn't a meaningful per-subject figure (it's the WHOLE
+        # paper's total across every subject), so each subject is judged
+        # only against numbers actually seen for it.
+        extend_with_expected = expected_count if subjects_seen == {"general"} else None
+        expected_max = max(
+            subject_known_numbers | ({extend_with_expected} if extend_with_expected else set())
+        )
+        subject_missing = set(range(1, expected_max + 1)) - subject_known_numbers
+        missing.update((subject, no) for no in subject_missing)
+
+    return missing
 
 
 def get_provider():
@@ -995,6 +1011,7 @@ def _enhance_questions_with_ai_inner(
     was_scanned=False,
     on_progress=None,
     template_context=None,
+    page_subjects=None,
 ):
     def report(message):
         # Best-effort progress checkpoint - never let a progress-reporting
@@ -1013,6 +1030,39 @@ def _enhance_questions_with_ai_inner(
     # than a mutation of that shared constant.
     system_prompt = SYSTEM_PROMPT + _build_syllabus_guidance(template_context)
     expected_count = (template_context or {}).get("expectedQuestionCount")
+    page_subjects = page_subjects or {}
+
+    # Every question is tagged with the subject of the page it actually
+    # came from, not guessed from which chunk/pass produced it - each
+    # normalized question already carries its own source_page (see
+    # ai/schemas.py#normalize_ai_questions), which is the one signal that
+    # stays correct regardless of how pages got batched into chunks.
+    # Falls back to the chunk's own start page only for the rare case a
+    # question comes back with no source_page at all, and to "general"
+    # if even that's unavailable - matching pdf_extract.py
+    # #detect_subject_boundaries's own default for a document with no
+    # declared subjects, so an ordinary single-subject mock test is
+    # completely unaffected by any of this. Defined here, above every
+    # early-return branch below (provider disabled, notes document), so
+    # regex_questions is tagged on every path this function can take -
+    # not just the full AI-extraction path further down.
+    def _tag_subject(ai_questions, fallback_page=None):
+        for question in ai_questions:
+            source_page = question.get("source_page") or fallback_page
+            question["subject"] = page_subjects.get(source_page, "general")
+        return ai_questions
+
+    def _key(question):
+        return (question.get("subject") or "general", question["question_no"])
+
+    # regex_questions comes in from question_parser.py's plain-text pass
+    # in worker.py, which runs before subject boundaries are even known -
+    # tagged here, once, up front, so every downstream use (the merge
+    # dict keys below, reconcile_questions, _missing_question_numbers)
+    # sees the same (subject, question_no) identity AI-extracted
+    # questions do, instead of comparing an untagged regex question
+    # against a tagged AI one and never matching.
+    regex_questions = _tag_subject(regex_questions)
 
     regex_count = len(regex_questions)
     provider = get_provider()
@@ -1029,7 +1079,7 @@ def _enhance_questions_with_ai_inner(
     # extraction attempts entirely instead of paying for 1-3 AI calls that
     # are almost certain to come back empty before falling back anyway.
     if document_type == "notes":
-        generated_questions, generation_summary = generate_questions_from_notes(pages, provider)
+        generated_questions, generation_summary = generate_questions_from_notes(pages, provider, pdf_path=pdf_path)
         return generated_questions or regex_questions, {
             "enabled": True,
             "provider": provider.name,
@@ -1097,18 +1147,22 @@ def _enhance_questions_with_ai_inner(
             try:
                 payload = extract_json_payload(result["response_text"])
                 ai_questions = normalize_ai_questions(payload, source=f"{provider.name}_image_ai_v1")
+                ai_questions = _tag_subject(ai_questions, fallback_page=result.get("start_page"))
                 chunk_diagram_stats = _attach_diagram_crops(ai_questions, result.get("page_images") or {})
                 for key in diagram_stats:
                     diagram_stats[key] += chunk_diagram_stats[key]
-                # Highest-priority pass: same paper number + same body
-                # overwrites (later chunk wins on page splits). Same paper
-                # number + DIFFERENT body is a subject restart (JEE Advanced
-                # Physics/Chemistry/Mathematics each use Q.1..N) and is
-                # kept under a new global number - never silent overwrite.
+                # This is the FIRST (highest-priority) pass to write into
+                # questions_by_no, so unconditional overwrite is fine here
+                # - within this same pass, a later chunk winning over an
+                # earlier one for the same (subject, question_no) (e.g. a
+                # page split oddly across two chunks) is reasonable
+                # last-result-wins behavior. Every pass AFTER this one
+                # uses setdefault instead, specifically so it can never
+                # clobber what this pass already found. Keyed by
+                # (subject, question_no), not question_no alone - see
+                # _tag_subject above for why.
                 for question in ai_questions:
-                    _put_extracted_question(
-                        questions_by_no, question, prefer_new=True
-                    )
+                    questions_by_no[_key(question)] = question
             except Exception as error:
                 errors.append({"chunk": f"{pages_label}_parse", "message": str(error)})
 
@@ -1133,13 +1187,18 @@ def _enhance_questions_with_ai_inner(
                 response_text = provider.generate_json(system_prompt, user_prompt)
                 payload = extract_json_payload(response_text)
                 ai_questions = normalize_ai_questions(payload, source=f"{provider.name}_ai_v1")
-                # Gap-fill only for true overlaps; subject restarts still
-                # get a new global number (prefer_new=False keeps the
-                # earlier vision result when bodies match).
+                ai_questions = _tag_subject(ai_questions)
+                # Only fills (subject, question_no) keys not already found
+                # by an earlier, higher-priority pass (the primary vision
+                # pass above runs first specifically so it wins) - never
+                # overwrites an existing entry, which previously discarded
+                # already-successful diagram crops the moment ANY question
+                # number was still missing elsewhere in the document (see
+                # _attach_diagram_crops / diagram_stats above - a crop
+                # recorded there was being silently thrown away right
+                # here).
                 for question in ai_questions:
-                    _put_extracted_question(
-                        questions_by_no, question, prefer_new=False
-                    )
+                    questions_by_no.setdefault(_key(question), question)
             except Exception as error:
                 errors.append({"chunk": chunk_index, "message": str(error)})
 
@@ -1168,15 +1227,17 @@ def _enhance_questions_with_ai_inner(
             try:
                 payload = extract_json_payload(result["response_text"])
                 ai_questions = normalize_ai_questions(payload, source=f"{provider.name}_image_ai_v1")
+                ai_questions = _tag_subject(ai_questions, fallback_page=result.get("start_page"))
                 chunk_diagram_stats = _attach_diagram_crops(ai_questions, result.get("page_images") or {})
                 for key in diagram_stats:
                     diagram_stats[key] += chunk_diagram_stats[key]
-                # Gap-fill / second opinion only; subject restarts still
-                # preserved under a new global number.
+                # Gap-fill-only rule (setdefault, not overwrite): this is a
+                # "second opinion" retry of specific text-only-routed pages,
+                # never authoritative over a question the primary vision
+                # pass above already found and possibly cropped a diagram
+                # for.
                 for question in ai_questions:
-                    _put_extracted_question(
-                        questions_by_no, question, prefer_new=False
-                    )
+                    questions_by_no.setdefault(_key(question), question)
             except Exception as error:
                 errors.append({"chunk": f"{pages_label}_parse", "message": str(error)})
 
@@ -1190,13 +1251,22 @@ def _enhance_questions_with_ai_inner(
             )
             payload = extract_json_payload(response_text)
             ai_questions = normalize_ai_questions(payload, source=f"{provider.name}_pdf_ai_v1")
-            # Last-resort PDF text pass: never clobber an earlier vision
-            # result for the same body; still keeps subject-restart
-            # collisions under new global numbers.
+            ai_questions = _tag_subject(ai_questions)
+            # This is the LAST-resort, lowest-fidelity pass - it reads the
+            # raw PDF file directly rather than rendered page images, so it
+            # structurally CANNOT crop a diagram (no page_images exist for
+            # it to crop from - _attach_diagram_crops is never called for
+            # this path at all). Previously this loop overwrote every
+            # question_no it returned unconditionally, which meant ANY
+            # remaining gap elsewhere in the document (a completely
+            # unrelated missing question) caused this pass to run and
+            # silently re-clobber EVERY already-successful vision result
+            # with a diagram-crop-incapable duplicate - discarding correct,
+            # already-cropped diagrams for questions that were never
+            # actually missing. setdefault fixes that: this pass can only
+            # ever fill in (subject, question_no) keys no earlier pass found.
             for question in ai_questions:
-                _put_extracted_question(
-                    questions_by_no, question, prefer_new=False
-                )
+                questions_by_no.setdefault(_key(question), question)
         except Exception as error:
             errors.append({"chunk": "pdf", "message": str(error)})
 
@@ -1206,7 +1276,7 @@ def _enhance_questions_with_ai_inner(
     # that combination (not just "AI found nothing") is what tells us this
     # is probably notes, not an exam with a couple of unparseable pages.
     if not ai_questions and regex_count == 0:
-        generated_questions, generation_summary = generate_questions_from_notes(pages, provider)
+        generated_questions, generation_summary = generate_questions_from_notes(pages, provider, pdf_path=pdf_path)
 
         if generated_questions:
             return generated_questions, {
@@ -1227,7 +1297,7 @@ def _enhance_questions_with_ai_inner(
     if not ai_questions:
         final_missing = sorted(
             _missing_question_numbers(
-                {q["question_no"]: q for q in regex_questions}, regex_questions, expected_count
+                {_key(q): q for q in regex_questions}, regex_questions, expected_count
             )
         )
         return regex_questions, {
@@ -1253,7 +1323,7 @@ def _enhance_questions_with_ai_inner(
     # "this job did not recover the whole document" signal, so an
     # incomplete extraction is visible in output_summary instead of
     # completing silently as if nothing were missing.
-    merged_by_no = {q["question_no"]: q for q in merged_questions}
+    merged_by_no = {_key(q): q for q in merged_questions}
     final_missing = sorted(
         _missing_question_numbers(merged_by_no, regex_questions, expected_count)
     )
@@ -1359,6 +1429,7 @@ def enhance_questions_with_ai(
     was_scanned=False,
     on_progress=None,
     template_context=None,
+    page_subjects=None,
 ):
     questions, summary = _enhance_questions_with_ai_inner(
         pages,
@@ -1368,6 +1439,7 @@ def enhance_questions_with_ai(
         was_scanned=was_scanned,
         on_progress=on_progress,
         template_context=template_context,
+        page_subjects=page_subjects,
     )
 
     template_match = _check_template_match(template_context, questions)
@@ -1417,9 +1489,9 @@ def build_user_prompt(chunk, regex_questions):
     return f"""
 Extract and clean all MCQ questions from this PDF text chunk.
 Use the regex parser preview as hints only. Prefer the PDF text when there is a conflict.
-No page image is attached for this chunk - leave diagrams as an empty list
-for every question here, even if the text mentions a figure; diagram
-detection only happens on the vision extraction path,
+No page image is attached for this chunk - leave has_diagram false and
+diagram_bbox null for every question here, even if the text mentions a
+figure; diagram detection only happens on the vision extraction path,
 which has the actual page image to look at.
 
 Regex parser preview:

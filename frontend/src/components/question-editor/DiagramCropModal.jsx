@@ -31,6 +31,10 @@ export default function DiagramCropModal({
   questionId,
   mockTestId,
   diagramUrl,
+  // Per-slot crop (option / multi-image markers). Defaults to the
+  // legacy single-diagram slot so existing stem "Edit Crop" keeps
+  // working without callers having to pass anything.
+  slotKey = "default",
   onClose,
 }) {
   const queryClient = useQueryClient();
@@ -126,12 +130,16 @@ export default function DiagramCropModal({
       // multiplying by naturalWidth/naturalHeight (not img.width/height,
       // which is the on-screen rendered size) is what puts it in the
       // same pixel space as the image on the backend.
-      await api.updateDiagramCrop(questionId, {
-        x: Math.round((completedCrop.x / 100) * img.naturalWidth),
-        y: Math.round((completedCrop.y / 100) * img.naturalHeight),
-        width: Math.round((completedCrop.width / 100) * img.naturalWidth),
-        height: Math.round((completedCrop.height / 100) * img.naturalHeight),
-      });
+      await api.updateDiagramCrop(
+        questionId,
+        {
+          x: Math.round((completedCrop.x / 100) * img.naturalWidth),
+          y: Math.round((completedCrop.y / 100) * img.naturalHeight),
+          width: Math.round((completedCrop.width / 100) * img.naturalWidth),
+          height: Math.round((completedCrop.height / 100) * img.naturalHeight),
+        },
+        slotKey,
+      );
       // Refetch ["questions", mockTestId] so attachDiagramUrls rebuilds
       // diagramUrl with a new ?v=<created_at> (touchAsset bumps it on
       // crop). Same public_id, new version - that's what actually gets
@@ -177,7 +185,9 @@ export default function DiagramCropModal({
             </div>
             <div>
               <h2 className="text-lg font-bold text-foreground">
-                Edit Diagram Crop
+                {slotKey === "default"
+                  ? "Edit Diagram Crop"
+                  : `Edit Image Crop (${slotKey})`}
               </h2>
               <p className="text-xs text-muted-foreground">
                 Drag any edge or corner to crop

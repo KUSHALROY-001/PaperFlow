@@ -431,6 +431,18 @@ def normalize_ai_questions(payload, *, source="ai"):
                 question_text, options, explanation, renamed_slot_keys
             )
 
+        # Single-diagram convention: slot_key "default" is rendered by the
+        # API as diagramUrl + QuestionContent's placement layout — NOT via
+        # an inline marker. Models still sometimes emit ![[img:default]]
+        # in the stem, which then shows the same image twice (once from
+        # diagramUrl, once from MathText). Strip those markers always.
+        question_text, options, explanation = _strip_default_diagram_markers(
+            question_text, options, explanation
+        )
+        passage = clean_optional_text(item.get("passage"))
+        if passage:
+            passage, _, _ = _strip_default_diagram_markers(passage, [], None)
+
         # Safety net for a real failure mode seen on a live job: the model
         # correctly extracts a diagram for the question STEM but, for the
         # answer options themselves, sometimes falls back to a bare label
@@ -466,7 +478,7 @@ def normalize_ai_questions(payload, *, source="ai"):
                 "question_no": question_no,
                 "topic": clean_optional_text(item.get("topic")),
                 "subtopic": clean_optional_text(item.get("subtopic")),
-                "passage": clean_optional_text(item.get("passage")),
+                "passage": passage,
                 "text": question_text,
                 "explanation": explanation,
                 "options": options,
@@ -525,6 +537,49 @@ _SLOT_KEY_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
 # See normalize_ai_questions' own comment at its call site for what this
 # catches and why.
 _BARE_OPTION_LABEL_RE = re.compile(r"^\(?[a-zA-Z]\)?\.?$")
+
+# The legacy single-diagram path renders via diagramUrl + placement, not
+# via an inline marker. Models still emit this despite SYSTEM_PROMPT.
+_DEFAULT_IMG_MARKER_RE = re.compile(r"!\[\[img:default\]\]", re.IGNORECASE)
+
+
+def _strip_default_diagram_markers(question_text, options, explanation):
+    """
+    Remove ![[img:default]] from stem/options/explanation so the same
+    crop is not shown twice (diagramUrl layout + MathText marker).
+    Non-default markers are left untouched.
+    """
+
+    def strip_one(value):
+        if not value:
+            return value
+        cleaned = _DEFAULT_IMG_MARKER_RE.sub("", str(value))
+        # Collapse leftover blank lines from a marker that sat alone on a line
+        cleaned = re.sub(r"[ \t]+\n", "\n", cleaned)
+        cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+        return cleaned.strip() or None
+
+    cleaned_options = []
+    for option in options or []:
+        cleaned = strip_one(option)
+        # Keep a placeholder empty string if stripping wiped a
+        # marker-only option — option count must stay stable for
+        # correct_option_indexes. Callers rarely put default on options,
+        # but if they do, prefer empty over dropping the slot.
+        cleaned_options.append(cleaned if cleaned is not None else "")
+
+    cleaned_text = strip_one(question_text)
+    if cleaned_text is None and question_text:
+        # Marker-only stem → empty string, not None (keeps field present)
+        cleaned_text = ""
+    elif cleaned_text is None:
+        cleaned_text = question_text
+
+    return (
+        cleaned_text,
+        cleaned_options if options is not None else options,
+        strip_one(explanation),
+    )
 
 
 def _rewrite_diagram_markers(question_text, options, explanation, renamed_slot_keys):

@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Node, mergeAttributes } from "@tiptap/core";
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
-import { ImagePlus, Loader2, Trash2 } from "lucide-react";
+import { Crop, ImagePlus, Loader2, Trash2 } from "lucide-react";
 import { api, resolveAssetUrl } from "@/lib/api";
 import { useDiagramAssets } from "@/lib/diagramAssetsContext";
+import DiagramCropModal from "../question-editor/DiagramCropModal";
 
 const MAX_FILE_SIZE_BYTES = 6 * 1024 * 1024;
 const ACCEPTED_TYPES = "image/png,image/jpeg,image/webp";
@@ -34,12 +35,14 @@ function ImageNodeView({ node, editor, getPos, questionId, mockTestId, selected 
   const asset = assets?.[slotKey];
 
   const [isOpen, setIsOpen] = useState(false);
+  const [isCropOpen, setIsCropOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
 
   const busy = isUploading || isDeleting;
+  const canEdit = Boolean(editor.isEditable && questionId);
 
   const invalidateQuestions = () =>
     queryClient.invalidateQueries({ queryKey: ["questions", mockTestId] });
@@ -123,17 +126,17 @@ function ImageNodeView({ node, editor, getPos, questionId, mockTestId, selected 
       {asset && !isOpen ? (
         <span
           role="button"
-          tabIndex={editor.isEditable ? 0 : -1}
-          onClick={() => editor.isEditable && setIsOpen(true)}
+          tabIndex={canEdit ? 0 : -1}
+          onClick={() => canEdit && setIsOpen(true)}
           onKeyDown={(e) => {
-            if (editor.isEditable && (e.key === "Enter" || e.key === " ")) {
+            if (canEdit && (e.key === "Enter" || e.key === " ")) {
               e.preventDefault();
               setIsOpen(true);
             }
           }}
-          title={editor.isEditable ? `Click to manage this image (${slotKey})` : undefined}
+          title={canEdit ? `Click to manage this image (${slotKey})` : undefined}
           className={`inline-block rounded-lg ${
-            editor.isEditable ? "cursor-pointer" : ""
+            canEdit ? "cursor-pointer" : ""
           } ${selected ? "ring-2 ring-orange-500/40" : ""}`}
         >
           <img
@@ -162,21 +165,35 @@ function ImageNodeView({ node, editor, getPos, questionId, mockTestId, selected 
               <span className="font-mono text-[11px] text-muted-foreground">
                 img:{slotKey}
               </span>
-              <span className="flex items-center gap-2">
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex items-center gap-1 font-bold text-orange-500 hover:underline disabled:opacity-50"
-                >
-                  {isUploading ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <ImagePlus className="h-3 w-3" />
-                  )}
-                  {asset ? "Replace" : "Upload"}
-                </button>
-                {asset && (
+              <span className="flex flex-wrap items-center gap-2">
+                {canEdit && (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="inline-flex items-center gap-1 font-bold text-orange-500 hover:underline disabled:opacity-50"
+                  >
+                    {isUploading ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <ImagePlus className="h-3 w-3" />
+                    )}
+                    {asset ? "Replace" : "Upload"}
+                  </button>
+                )}
+                {canEdit && asset && (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => setIsCropOpen(true)}
+                    className="inline-flex items-center gap-1 font-bold text-orange-500 hover:underline disabled:opacity-50"
+                    title="Crop this image"
+                  >
+                    <Crop className="h-3 w-3" />
+                    Crop
+                  </button>
+                )}
+                {canEdit && asset && (
                   <button
                     type="button"
                     disabled={busy}
@@ -191,14 +208,16 @@ function ImageNodeView({ node, editor, getPos, questionId, mockTestId, selected 
                     Clear
                   </button>
                 )}
-                <button
-                  type="button"
-                  onClick={removeNode}
-                  className="font-bold text-muted-foreground hover:text-foreground hover:underline"
-                  title="Remove this image marker from the text entirely"
-                >
-                  Delete marker
-                </button>
+                {canEdit && (
+                  <button
+                    type="button"
+                    onClick={removeNode}
+                    className="font-bold text-muted-foreground hover:text-foreground hover:underline"
+                    title="Remove this image marker from the text entirely"
+                  >
+                    Delete marker
+                  </button>
+                )}
                 {asset && (
                   <button
                     type="button"
@@ -213,6 +232,16 @@ function ImageNodeView({ node, editor, getPos, questionId, mockTestId, selected 
           </span>
           {error && <span className="text-red-500">{error}</span>}
         </span>
+      )}
+
+      {isCropOpen && asset && questionId && (
+        <DiagramCropModal
+          questionId={questionId}
+          mockTestId={mockTestId}
+          diagramUrl={asset.url}
+          slotKey={slotKey}
+          onClose={() => setIsCropOpen(false)}
+        />
       )}
     </NodeViewWrapper>
   );
