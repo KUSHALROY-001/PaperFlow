@@ -30,14 +30,9 @@ export function toEditorQuestion(question) {
     options,
     correctOptionIndexes: question.correct_option_indexes || [0],
     topic: question.topic || "General",
-    // Same "already on the raw row, just needs picking up" situation as
-    // subtopic/passage/explanation below - the questions VIEW (migration
-    // 030/032) already selects qs.source_page straight through, this was
-    // just never mapped to camelCase for the frontend to read. Powers
-    // the "fetch this page from the original PDF" feature's default page
-    // number (PdfPageFetchModal.jsx) - independent of whether a diagram
-    // was ever detected for this question, since every question knows
-    // which page it came from regardless.
+    // Powers the "fetch this page from the original PDF" feature's
+    // default page number (PdfPageFetchModal) - independent of whether
+    // a diagram was ever detected for this question.
     sourcePage: question.source_page ?? null,
     // findQuestionById is a plain `SELECT *`, so subtopic/passage/
     // explanation are already on the raw row same as has_code/
@@ -61,15 +56,14 @@ export function toEditorQuestion(question) {
     // disabled on exactly that absence, not on hasManualCrop.
     diagramOriginalUrl: question.diagramOriginalUrl,
     hasManualCrop: question.hasManualCrop || false,
-    // placement/source: Part C (manual image insert). placement always
-    // has a value (attachDiagramUrls sets it whenever ANY asset exists,
-    // defaulting "below_text" at the DB column level - see migration
-    // 015), but fall back here too in case a question has no asset at all
-    // and the key is simply absent. source only ever arrives via
+    // source: Part C (manual image insert), only ever arrives via
     // attachDiagramOriginalUrls (editor-only), so it's undefined whenever
     // diagramOriginalUrl is - DiagramUploadControl's replace-confirm copy
     // treats that the same as "extracted" (nothing to distinguish yet).
-    placement: question.placement || "below_text",
+    // Position is no longer a stored field at all - a slot's image
+    // renders wherever its own ![[img:slot]] marker sits in the
+    // question's text/options/explanation (see migration 041/042, which
+    // backfilled that marker and dropped the old placement column).
     source: question.source,
     // Multi-image slots (migration 040). attachDiagramUrls puts every
     // slot on the raw API row as diagramAssets; MathText resolves

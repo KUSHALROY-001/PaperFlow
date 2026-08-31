@@ -199,7 +199,6 @@ export async function listQuestionAssets(req, res) {
         { version: assetCacheVersion(asset.createdAt) },
       ),
       source: asset.source,
-      placement: asset.placement,
     })),
   });
 }
@@ -278,15 +277,6 @@ export async function uploadDiagramImage(req, res) {
     throw httpError(404, "Question not found");
   }
 
-  // Read before replace, purely so the new row can carry the placement the
-  // user already had chosen forward (a replace shouldn't silently reset it
-  // to the default) - only meaningful for the 'default' slot, but harmless
-  // to preserve for any slot.
-  const previousAsset = await questionAssetsRepo.findAssetForSlot(
-    req.params.questionId,
-    slotKey,
-  );
-
   let normalizedPng;
   try {
     // Re-encode through sharp rather than trusting the uploaded bytes
@@ -329,7 +319,6 @@ export async function uploadDiagramImage(req, res) {
     await questionAssetsRepo.upsertAssetForSlot(question.id, slotKey, {
       storagePath: publicId,
       source: "manual",
-      placement: previousAsset?.placement || "below_text",
     });
   } catch (error) {
     console.error(
@@ -343,36 +332,6 @@ export async function uploadDiagramImage(req, res) {
   }
 
   res.status(201).json({ success: true, slotKey });
-}
-
-const DIAGRAM_PLACEMENTS = ["above_text", "below_text", "below_options"];
-
-// Independent of source deliberately - an extracted diagram is exactly as
-// repositionable as a manually uploaded one, so this isn't folded into
-// uploadDiagramImage above. Only meaningful for the 'default' slot in
-// practice (a non-default slot's position comes from where its
-// ![[img:slot-key]] marker sits in the text, not this column), but kept
-// generic per-slot rather than hardcoded to 'default' - no harm in
-// letting it be set on any slot, and one less special case in this
-// endpoint's own logic.
-export async function updateDiagramPlacement(req, res) {
-  const { placement } = req.body || {};
-  if (!DIAGRAM_PLACEMENTS.includes(placement)) {
-    throw httpError(
-      400,
-      `placement must be one of: ${DIAGRAM_PLACEMENTS.join(", ")}`,
-    );
-  }
-
-  const slotKey = resolveSlotKey(req.params.slotKey);
-  const { asset } = await loadAsset(
-    req.params.questionId,
-    req.workspaceId,
-    slotKey,
-  );
-
-  await questionAssetsRepo.setPlacement(asset.id, placement);
-  res.json({ placement });
 }
 
 // Removes one slot's diagram entirely. Lets an editor undo an accidental

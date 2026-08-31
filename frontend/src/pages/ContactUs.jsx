@@ -40,7 +40,7 @@ const FAQS = [
   },
   {
     q: "Can I manually crop or edit question diagrams?",
-    a: "Yes! Open any question in the Question Editor and use the Diagram Crop & Upload controls to adjust bounds, replace images, or change placement.",
+    a: "Yes! Open any question in the Question Editor - use the Diagram Crop & Upload controls to adjust bounds or replace images, and the Insert Image button in the text editor to place a diagram anywhere in the question, just like inserting an image in a word processor.",
   },
 ];
 

@@ -8,35 +8,40 @@ import PdfPageFetchModal from "./PdfPageFetchModal";
 const MAX_FILE_SIZE_BYTES = 6 * 1024 * 1024;
 const ACCEPTED_TYPES = "image/png,image/jpeg,image/webp";
 
-const PLACEMENT_OPTIONS = [
-  { value: "above_text", label: "Top" },
-  { value: "below_text", label: "Middle" },
-  { value: "below_options", label: "Bottom" },
-];
-
 // Part C: the manual escape hatch for when extraction never found a
 // diagram (or found the wrong one) - see migration 015. Deliberately a
 // single control that handles both "insert" (no diagram yet) and
 // "replace" (one already exists, extracted or manual) - the backend does
-// the same thing either way (replaceAssetForQuestion deletes-then-inserts),
-// so the UI doesn't need to know which case it's in beyond the button
-// label and confirm copy.
+// the same thing either way (upsertAssetForSlot), so the UI doesn't need
+// to know which case it's in beyond the button label and confirm copy.
+//
+// Position is no longer this control's concern - a 'default' slot image
+// renders wherever its ![[img:default]] marker sits in the question's
+// own text (exactly like every other inline image), so a brand-new
+// upload (no existing marker anywhere) appends that marker to the end of
+// the question text via onInsertDefaultMarker, right after the upload
+// succeeds. From then on, moving the image is just editing the text -
+// cut the marker, paste it wherever it belongs, same as Word.
+//
+// "Fetch from PDF" stays: reviewers can pull a page image from the source
+// PDF in B2 (via the worker render endpoint) and crop it here, without
+// uploading from their device. That path shares acceptFile with the
+// normal file picker so confirm/upload/error behavior is identical.
 export default function DiagramUploadControl({
   questionId,
   mockTestId,
   diagramUrl,
-  placement,
   source,
   sourcePage,
   isViewer,
   onError,
+  onInsertDefaultMarker,
 }) {
   const queryClient = useQueryClient();
   const fileInputRef = useRef(null);
   const [pendingFile, setPendingFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isPlacementSaving, setIsPlacementSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showPdfFetchModal, setShowPdfFetchModal] = useState(false);
   const [localError, setLocalError] = useState("");
@@ -69,19 +74,9 @@ export default function DiagramUploadControl({
     acceptFile(file);
   };
 
-  // Shared by handleFileChange above (a real file input) and
-  // handlePdfCropped below (a File synthesized from a canvas crop of a
-  // fetched PDF page) - once something is a File, both origins should be
-  // treated identically: same destructive-replace confirmation, same
-  // doUpload call. Size-checked only in handleFileChange since a
-  // client-side crop of a single PDF page can't realistically produce
-  // anything close to MAX_FILE_SIZE_BYTES.
+  // Shared by handleFileChange (real file input) and handlePdfCropped
+  // (File synthesized from a canvas crop of a fetched PDF page).
   const acceptFile = (file) => {
-    // Replacing an existing diagram is destructive (it permanently
-    // discards whatever was extracted or previously uploaded, along with
-    // any manual crop on it) - confirm first, with wording that names
-    // what's actually being replaced. Inserting into an empty slot needs
-    // no confirmation - there's nothing to lose yet.
     if (hasDiagram) {
       setPendingFile(file);
     } else {
@@ -97,7 +92,6 @@ export default function DiagramUploadControl({
   const formatUploadError = (error) => {
     if (!error) return "Could not upload image to cloud storage";
 
-    // Network / offline
     if (
       error.name === "TypeError" ||
       error.message === "Failed to fetch" ||
@@ -108,7 +102,6 @@ export default function DiagramUploadControl({
       return "Network error — check your connection and try again";
     }
 
-    // Explicit status from API client (common pattern in this codebase)
     const status = error.status ?? error.statusCode ?? error.response?.status;
     if (status === 413) {
       return "Image is too large for the server to accept";
@@ -141,13 +134,23 @@ export default function DiagramUploadControl({
 
   const doUpload = async (file) => {
     if (!file) return;
+    const isFreshInsert = !hasDiagram;
     setIsUploading(true);
     setLocalError("");
     try {
       await api.uploadDiagramImage(questionId, file);
-      // Invalidate after a successful upload so the versioned diagramUrl
-      // refreshes. A failure here still means the image is stored — surface
-      // a softer message so the user knows to refresh rather than re-upload.
+      // Insert the inline marker BEFORE refetching so the merge logic in
+      // useQuestionEditor sees content as dirty and keeps the marker
+      // instead of overwriting with server text that has no marker yet.
+      if (isFreshInsert) {
+        onInsertDefaultMarker?.();
+        // Let React commit the text update before questions refetch merges
+        // state — otherwise the merge can run against the pre-marker text
+        // and drop the marker.
+        await new Promise((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(resolve));
+        });
+      }
       try {
         await invalidateQuestions();
       } catch (invalidateError) {
@@ -197,21 +200,6 @@ export default function DiagramUploadControl({
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
-    }
-  };
-
-  const handlePlacementChange = async (nextPlacement) => {
-    if (nextPlacement === placement) return;
-    setIsPlacementSaving(true);
-    setLocalError("");
-    try {
-      await api.updateDiagramPlacement(questionId, nextPlacement);
-      await invalidateQuestions();
-    } catch (error) {
-      console.error("Diagram placement update failed:", error);
-      reportError(error.message || "Could not update placement");
-    } finally {
-      setIsPlacementSaving(false);
     }
   };
 
@@ -278,31 +266,6 @@ export default function DiagramUploadControl({
             )}
             Remove
           </button>
-        )}
-
-        {hasDiagram && (
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-              Position
-            </span>
-            <div className="flex items-center rounded-md border border-border p-0.5">
-              {PLACEMENT_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  disabled={isViewer || busy || isPlacementSaving}
-                  onClick={() => handlePlacementChange(option.value)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all disabled:opacity-50 ${
-                    placement === option.value
-                      ? "bg-orange-500/15 text-orange-500"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
         )}
 
         {pendingFile && (

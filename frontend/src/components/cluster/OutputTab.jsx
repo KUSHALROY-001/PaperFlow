@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Copy, Download, Edit2, Loader2 } from "lucide-react";
 import QuestionContent, {
-  QuestionDiagram,
   QuestionExplanation,
 } from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
@@ -217,8 +216,6 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
                 <QuestionContent
                   text={question.text}
                   passage={question.passage}
-                  diagramUrl={question.diagramUrl}
-                  placement={question.placement}
                   textClassName="text-base sm:text-lg text-foreground break-words"
                 />
 
@@ -239,11 +236,6 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
                     );
                   })}
                 </div>
-                {question.placement === "below_options" && (
-                  <div className="mt-4">
-                    <QuestionDiagram diagramUrl={question.diagramUrl} />
-                  </div>
-                )}
                 <QuestionExplanation explanation={question.explanation} />
               </DiagramAssetsProvider>
             </div>

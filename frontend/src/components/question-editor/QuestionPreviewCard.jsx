@@ -1,8 +1,5 @@
 import { Crop } from "lucide-react";
-import QuestionContent, {
-  QuestionDiagram,
-  QuestionExplanation,
-} from "../shared/QuestionContent";
+import QuestionContent, { QuestionExplanation } from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
 import DiagramUploadControl from "./DiagramUploadControl";
 import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
@@ -32,8 +29,21 @@ export default function QuestionPreviewCard({
     updateSelected("explanation", nextExplanation);
   };
 
+  // Passed to DiagramUploadControl: a brand-new default-slot upload has
+  // no ![[img:default]] marker anywhere yet, so append one to the
+  // question text - otherwise the image is stored but invisible (there's
+  // no more top/middle/bottom fallback rendering it automatically).
+  const handleInsertDefaultMarker = () => {
+    if (!updateSelected) return;
+    const trimmed = (selected.text || "").trimEnd();
+    const nextText = trimmed
+      ? `${trimmed}\n\n![[img:default]]`
+      : "![[img:default]]";
+    updateSelected("text", nextText);
+  };
+
   return (
-    <div className="space-y-6 lg:sticky lg:top-10">
+    <div className="space-y-6">
       <div className="surface-card rounded-2xl p-3 sm:p-6 border border-border bg-muted/30 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
@@ -50,8 +60,6 @@ export default function QuestionPreviewCard({
             text={selected.text}
             passage={selected.passage}
             explanation={selected.explanation}
-            diagramUrl={selected.diagramUrl}
-            placement={selected.placement}
             textClassName="text-sm text-foreground"
             editable={!isViewer}
             onUpdateText={handleUpdateText}
@@ -81,11 +89,11 @@ export default function QuestionPreviewCard({
             questionId={selected.id}
             mockTestId={mockTestId}
             diagramUrl={selected.diagramUrl}
-            placement={selected.placement}
             source={selected.source}
             sourcePage={selected.sourcePage}
             isViewer={isViewer}
             onError={setDiagramError}
+            onInsertDefaultMarker={handleInsertDefaultMarker}
           />
           {diagramError && (
             <p className="mt-2 text-xs text-red-500">{diagramError}</p>
@@ -105,14 +113,6 @@ export default function QuestionPreviewCard({
               </div>
             ))}
           </div>
-          {selected.placement === "below_options" && (
-            <div className="mt-4">
-              <QuestionDiagram
-                key={selected.diagramUrl}
-                diagramUrl={selected.diagramUrl}
-              />
-            </div>
-          )}
           <QuestionExplanation
             explanation={selected.explanation}
             editable={!isViewer}

@@ -41,10 +41,11 @@ export function buildDiagramUrl(
 //
 // Two things get attached, deliberately kept alongside each other rather
 // than one replacing the other:
-// - diagramUrl/placement (unchanged shape, 'default' slot only) - every
-//   existing consumer that only ever knew about one image per question
-//   (QuestionContent's diagramUrl prop, DiagramUploadControl, etc.) keeps
-//   working exactly as before, with zero changes on their end.
+// - diagramUrl (unchanged shape, 'default' slot only) - kept only for
+//   DiagramUploadControl's insert/replace/delete/crop UI, which needs to
+//   know whether a default-slot image exists and its URL; QuestionContent
+//   no longer reads it at all (see migration 041/042 - positioning is
+//   purely the ![[img:slot-key]] marker now, same as every other slot).
 // - diagramAssets (new) - EVERY slot this question has, each with its own
 //   resolved URL, for MathText's ![[img:slot-key]] marker resolution
 //   (see MathText.jsx) to pull the right image for a marker anywhere in
@@ -83,21 +84,25 @@ export async function attachDiagramUrls(
       return question;
     }
 
+    // Every slot's IMAGE now renders purely inline, wherever a
+    // ![[img:slot-key]] marker sits in the question's own
+    // text/options/explanation (see MathText.jsx) - there is no more
+    // separate placement column deciding a top-level position (migration
+    // 041 backfilled a marker into every question that used to rely on
+    // it). diagramUrl is kept for the 'default' slot specifically, but
+    // only as "does a default-slot image exist, and what's its URL" for
+    // DiagramUploadControl's insert/replace/delete/crop UI - it is no
+    // longer read for positioning.
     const diagramAssets = assets.map((asset) => ({
       slotKey: asset.slotKey,
       url: buildDiagramUrl(id, asset.slotKey, workspaceId, {
         shareToken,
         version: assetCacheVersion(asset.createdAt),
       }),
-      placement: asset.placement,
     }));
 
     const defaultAsset = assets.find((asset) => asset.slotKey === "default");
     if (!defaultAsset) {
-      // A question with only non-default slots (every image referenced
-      // by an inline marker, none of them the legacy single-image slot) -
-      // no diagramUrl/placement to attach, but diagramAssets still carries
-      // everything MathText needs to resolve those markers.
       return { ...question, diagramAssets };
     }
 
@@ -107,11 +112,6 @@ export async function attachDiagramUrls(
         shareToken,
         version: assetCacheVersion(defaultAsset.createdAt),
       }),
-      // Read by every QuestionContent consumer (exam-play, results,
-      // review, editor alike) to decide above_text/below_text/below_options
-      // rendering - not editor-only like `source` below, so it belongs on
-      // this shared helper rather than the sibling.
-      placement: defaultAsset.placement,
       diagramAssets,
     };
   });
@@ -217,16 +217,18 @@ export async function cloneDiagramAssets({
       );
       await uploadDiagramBuffer(imageBytes, publicId);
 
-      // source/placement carried over as-is - the pixels are identical to
-      // what the source asset already was, so there's nothing to
-      // reclassify here.
+      // source carried over as-is - the pixels are identical to what the
+      // source asset already was, so there's nothing to reclassify here.
+      // The target question's own text already carries whatever
+      // ![[img:slot-key]] marker referenced this slot (question text is
+      // copied verbatim by question-bank.service.js before this runs), so
+      // there's no separate position to carry forward either.
       await questionAssetsRepo.upsertAssetForSlot(
         targetQuestionId,
         sourceAsset.slotKey,
         {
           storagePath: publicId,
           source: sourceAsset.source,
-          placement: sourceAsset.placement,
           pageNumber: null,
         },
       );

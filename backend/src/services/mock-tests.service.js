@@ -820,7 +820,6 @@ export async function getPlayableMockTest(mockTestId, workspaceId) {
       options: question.options,
       questionType: question.questionType,
       diagramUrl: question.diagramUrl,
-      placement: question.placement,
       diagramAssets: question.diagramAssets,
     })),
   };

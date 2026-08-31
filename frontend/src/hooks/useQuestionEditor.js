@@ -47,6 +47,10 @@ export function useQuestionEditor() {
   const [isSaving, setIsSaving] = useState(false);
   // Snapshot of last-loaded / last-saved server state, keyed by question id.
   const initialSnapshotRef = useRef(new Map());
+  const hasLoadedOnceRef = useRef(false);
+  // Tracks which mockTestId hasLoadedOnceRef applies to, so switching
+  // tests re-runs the initial-load path (including ?qId= deep-link).
+  const loadedMockTestIdRef = useRef(null);
 
   const questionsQuery = useQuery({
     queryKey: ["questions", mockTestId],
@@ -57,17 +61,72 @@ export function useQuestionEditor() {
   useEffect(() => {
     if (!questionsQuery.data?.questions) return;
     const loaded = questionsQuery.data.questions.map(toEditorQuestion);
-    setQuestions(loaded);
-    initialSnapshotRef.current = buildInitialSnapshot(loaded);
-    setSelectedId((current) => {
-      if (targetQId && loaded.some((q) => q.id === targetQId)) {
-        return targetQId;
-      }
-      return loaded.some((question) => question.id === current)
-        ? current
-        : loaded[0]?.id || "";
+    const isFirstLoadForMock =
+      loadedMockTestIdRef.current !== mockTestId || !hasLoadedOnceRef.current;
+
+    if (isFirstLoadForMock) {
+      hasLoadedOnceRef.current = true;
+      loadedMockTestIdRef.current = mockTestId;
+      initialSnapshotRef.current = buildInitialSnapshot(loaded);
+      setQuestions(loaded);
+      // Initial open (or switched mock test): honour Review/Output ?qId=
+      // deep-link when present; otherwise first question.
+      setSelectedId((current) => {
+        if (targetQId && loaded.some((q) => q.id === targetQId)) {
+          return targetQId;
+        }
+        if (current && loaded.some((q) => q.id === current)) return current;
+        return loaded[0]?.id || "";
+      });
+      return;
+    }
+
+    // Subsequent refetches (diagram upload, soft-invalidate after save):
+    // keep the user's current selection, keep unsaved content/order, but
+    // always take fresh diagram fields from the server so a PDF-fetch
+    // upload is not wiped by the merge.
+    setQuestions((prev) => {
+      const prevById = new Map(prev.map((q) => [q.id, q]));
+      const snap = initialSnapshotRef.current;
+      return loaded.map((serverQ) => {
+        const local = prevById.get(serverQ.id);
+        if (!local) return serverQ;
+        const entry = snap.get(serverQ.id);
+        const isContentDirty =
+          !entry ||
+          !local.persisted ||
+          contentFingerprint(local) !== entry.content;
+        const isOrderDirty =
+          Boolean(entry) &&
+          Number(local.questionNo) !== Number(entry.questionNo);
+        if (!isContentDirty && !isOrderDirty) return serverQ;
+        return {
+          ...serverQ,
+          ...(isContentDirty
+            ? {
+                text: local.text,
+                options: local.options,
+                correctOptionIndexes: local.correctOptionIndexes,
+                topic: local.topic,
+                subtopic: local.subtopic,
+                passage: local.passage,
+                explanation: local.explanation,
+                questionType: local.questionType,
+              }
+            : {}),
+          ...(isOrderDirty ? { questionNo: local.questionNo } : {}),
+        };
+      });
     });
-  }, [questionsQuery.data, targetQId]);
+
+    // Prefer staying on whatever the user is viewing. Only fall back to
+    // ?qId= / first question when the current selection is gone (deleted).
+    setSelectedId((current) => {
+      if (current && loaded.some((q) => q.id === current)) return current;
+      if (targetQId && loaded.some((q) => q.id === targetQId)) return targetQId;
+      return loaded[0]?.id || "";
+    });
+  }, [questionsQuery.data, targetQId, mockTestId]);
 
   const questionsRef = useRef(questions);
   questionsRef.current = questions;

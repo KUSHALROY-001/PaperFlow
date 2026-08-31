@@ -79,7 +79,7 @@ export default function QuestionForm({
     <main className="flex-1 p-2 w-full min-w-0">
       <div
         ref={containerRef}
-        className="flex flex-col lg:flex-row gap-3 lg:gap-0 items-start w-full relative"
+        className="flex flex-col lg:flex-row gap-3 lg:gap-0 w-full relative lg:items-stretch"
       >
         {/* Left Column: Question Editor Controls */}
         <div
@@ -174,15 +174,23 @@ export default function QuestionForm({
               flexGrow: 1,
             }}
           >
-            <QuestionPreviewCard
-              selected={selected}
-              mockTestId={mockTestId}
-              diagramError={diagramError}
-              setDiagramError={setDiagramError}
-              onOpenCropModal={() => setIsCropModalOpen(true)}
-              updateSelected={updateSelected}
-              isViewer={isViewer}
-            />
+            {/*
+              Stretch this column to the left column's height (lg:items-stretch
+              on the parent), then stick the preview inside it. Without a tall
+              containing block, sticky had nothing to stick within — both
+              columns scrolled away together.
+            */}
+            <div className="lg:sticky lg:top-4 lg:max-h-[calc(100dvh-1.5rem)] lg:overflow-y-auto lg:overscroll-contain">
+              <QuestionPreviewCard
+                selected={selected}
+                mockTestId={mockTestId}
+                diagramError={diagramError}
+                setDiagramError={setDiagramError}
+                onOpenCropModal={() => setIsCropModalOpen(true)}
+                updateSelected={updateSelected}
+                isViewer={isViewer}
+              />
+            </div>
           </div>
         ) : (
           <button

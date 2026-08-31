@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import ReactCrop, { centerCrop, makeAspectCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { useQueryClient } from "@tanstack/react-query";
@@ -175,8 +176,8 @@ export default function DiagramCropModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 py-8 backdrop-blur-xs sm:items-center">
+  return createPortal(
+    <div className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto bg-black/50 p-4 py-8 backdrop-blur-xs sm:items-center">
       <div className="flex max-h-[90dvh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl surface-card border border-border shadow-2xl">
         <div className="flex shrink-0 items-center justify-between border-b border-border p-5 sm:p-6">
           <div className="flex items-center gap-3">
@@ -303,5 +304,5 @@ export default function DiagramCropModal({
         </div>
       </div>
     </div>
-  );
+  , document.body);
 }

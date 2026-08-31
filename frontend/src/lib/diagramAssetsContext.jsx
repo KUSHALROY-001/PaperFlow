@@ -23,7 +23,7 @@ import { createContext, useContext, useMemo } from "react";
 const DiagramAssetsContext = createContext({});
 
 // assets: the diagramAssets array attachDiagramUrls attaches to a question
-// server-side ([{slotKey, url, placement}, ...] - see
+// server-side ([{slotKey, url}, ...] - see
 // question-assets.service.js). Missing/undefined is fine (renders an empty
 // map, same as a question with no images at all) - callers don't need a
 // conditional wrap for questions that happen to have zero diagrams.

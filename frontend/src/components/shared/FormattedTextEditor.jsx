@@ -70,7 +70,15 @@ const sizingClassName =
 // Code fences and GFM tables are plain, unstyled text in this editor for
 // now (not corrupted, just not specially rendered) - see richTextDoc.js.
 function FormattedTextEditor(
-  { value, onChange, disabled, placeholder, showToolbar = true, questionId, mockTestId },
+  {
+    value,
+    onChange,
+    disabled,
+    placeholder,
+    showToolbar = true,
+    questionId,
+    mockTestId,
+  },
   ref,
 ) {
   // TipTap owns selection state outside React. Re-rendering on its
@@ -93,6 +101,10 @@ function FormattedTextEditor(
   }, []);
 
   const editor = useEditor({
+    // React 19 forbids flushSync during render/lifecycle. TipTap's default
+    // immediatelyRender path uses flushSync when mounting the editor (and
+    // again when ReactNodeViewRenderer mounts ImageNode/MathNode views).
+    immediatelyRender: false,
     extensions: [
       FormattedDocument,
       StarterKit.configure({
@@ -343,15 +355,37 @@ function FormattedTextEditor(
   // emitted markdown can produce an equivalent but structurally
   // different document for code-fence text; setContent() then recreates
   // the editor and drops the caret at the final line on every keystroke.
+  //
+  // setContent is deferred with queueMicrotask so it does not run inside
+  // React's passive-effect phase. TipTap's ReactNodeViewRenderer calls
+  // flushSync when mounting ImageNode/MathNode views; doing that while
+  // React is still committing effects triggers:
+  //   "flushSync was called from inside a lifecycle method..."
   useEffect(() => {
     if (!editor) return;
     if (value === lastEmittedValueRef.current) return;
 
     const nextDocument = markdownToDoc(value);
-    if (JSON.stringify(editor.getJSON()) !== JSON.stringify(nextDocument)) {
-      editor.commands.setContent(nextDocument, { emitUpdate: false });
-    }
+    const shouldReplace =
+      JSON.stringify(editor.getJSON()) !== JSON.stringify(nextDocument);
+
+    // Record the value we are applying so onUpdate / a fast re-render
+    // does not treat this same string as a new external write.
     lastEmittedValueRef.current = value;
+
+    if (!shouldReplace) return;
+
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled || editor.isDestroyed) return;
+      // Skip if a newer external value already superseded this one.
+      if (lastEmittedValueRef.current !== value) return;
+      editor.commands.setContent(nextDocument, { emitUpdate: false });
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [value, editor]);
 
   useEffect(() => {

@@ -9,7 +9,6 @@ import {
   SkipForward,
 } from "lucide-react";
 import QuestionContent, {
-  QuestionDiagram,
   QuestionExplanation,
 } from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
@@ -87,8 +86,6 @@ export default function QueueQuestionCard({
         <QuestionContent
           text={question.text}
           passage={question.passage}
-          diagramUrl={question.diagramUrl}
-          placement={question.placement}
           textClassName="text-base sm:text-lg font-bold text-foreground"
         />
 
@@ -116,9 +113,6 @@ export default function QueueQuestionCard({
               </div>
             );
           })}
-          {question.placement === "below_options" && (
-            <QuestionDiagram diagramUrl={question.diagramUrl} />
-          )}
           <QuestionExplanation explanation={question.explanation} />
         </div>
       </DiagramAssetsProvider>

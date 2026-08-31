@@ -1,5 +1,5 @@
 import { Flag, ChevronLeft, ChevronRight } from "lucide-react";
-import QuestionContent, { QuestionDiagram } from "../shared/QuestionContent";
+import QuestionContent from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
 import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
 
@@ -77,8 +77,6 @@ export default function SessionQuestionView({
             <QuestionContent
               text={q.text}
               passage={q.passage}
-              diagramUrl={q.diagramUrl}
-              placement={q.placement}
               textClassName="text-base sm:text-lg font-normal text-foreground leading-relaxed"
             />
           </div>
@@ -102,11 +100,6 @@ export default function SessionQuestionView({
               </button>
             ))}
           </div>
-          {q.placement === "below_options" && (
-            <div className="mt-4">
-              <QuestionDiagram diagramUrl={q.diagramUrl} />
-            </div>
-          )}
         </DiagramAssetsProvider>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-8 pt-6 border-t border-border">

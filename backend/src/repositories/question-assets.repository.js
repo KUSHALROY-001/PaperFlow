@@ -7,17 +7,18 @@ import { pool } from "../db/pool.js";
 //
 // Multi-image (migration 038): a question can now have more than one
 // asset, each keyed by its own slot_key (UNIQUE per question). 'default'
-// is the slot every pre-038 row already has, and the one a question with
-// no ![[img:slot-key]] marker anywhere in its text/options/table cells
-// still uses via the legacy placement column - multi-image is additive on
-// top of that, not a replacement for it. Every function below now returns
+// is the slot every pre-038 row already has - like any other slot, its
+// position comes entirely from wherever its own ![[img:default]] marker
+// sits in the question's text/options/table cells (see migration 041,
+// which backfilled that marker for every question that used to rely on
+// the now-removed placement column). Every function below now returns
 // or accepts a slot_key explicitly; nothing here still assumes "one asset
 // per question."
 
 export async function findAssetsForQuestion(questionId) {
   const result = await pool.query(
     `SELECT id, question_id, slot_key, asset_type, storage_path,
-            source, placement, page_number, created_at
+            source, page_number, created_at
      FROM question_assets
      WHERE question_id = $1
      ORDER BY (slot_key <> 'default'), slot_key ASC`,
@@ -30,29 +31,12 @@ export async function findAssetsForQuestion(questionId) {
 export async function findAssetForSlot(questionId, slotKey) {
   const result = await pool.query(
     `SELECT id, question_id, slot_key, asset_type, storage_path,
-            source, placement, page_number, created_at
+            source, page_number, created_at
      FROM question_assets
      WHERE question_id = $1 AND slot_key = $2`,
     [questionId, slotKey],
   );
 
-  return result.rows[0] ? mapRow(result.rows[0]) : null;
-}
-
-// Placement is independent of source (an extracted diagram is just as
-// repositionable as a manually uploaded one), so this is never called
-// from the same place as the upload/crop endpoints - it's its own PATCH.
-// Per-asset (by id), not per-slot - placement only ever means anything for
-// the 'default' slot's legacy above/below-text positioning; a non-default
-// slot's position is wherever its ![[img:slot-key]] marker sits in the
-// text, which this column has no say over.
-export async function setPlacement(assetId, placement) {
-  const result = await pool.query(
-    `UPDATE question_assets SET placement = $2 WHERE id = $1
-     RETURNING id, question_id, slot_key, asset_type, storage_path,
-               source, placement, page_number, created_at`,
-    [assetId, placement],
-  );
   return result.rows[0] ? mapRow(result.rows[0]) : null;
 }
 
@@ -73,7 +57,7 @@ export async function touchAsset(assetId) {
   const result = await pool.query(
     `UPDATE question_assets SET created_at = now() WHERE id = $1
      RETURNING id, question_id, slot_key, asset_type, storage_path,
-               source, placement, page_number, created_at`,
+               source, page_number, created_at`,
     [assetId],
   );
   return result.rows[0] ? mapRow(result.rows[0]) : null;
@@ -105,20 +89,19 @@ export async function touchAsset(assetId) {
 export async function upsertAssetForSlot(
   questionId,
   slotKey,
-  { storagePath, source, placement, pageNumber = null },
+  { storagePath, source, pageNumber = null },
 ) {
   const result = await pool.query(
     `INSERT INTO question_assets
-       (question_id, slot_key, asset_type, storage_path, source, placement, page_number)
-     VALUES ($1, $2, 'diagram', $3, $4, $5, $6)
+       (question_id, slot_key, asset_type, storage_path, source, page_number)
+     VALUES ($1, $2, 'diagram', $3, $4, $5)
      ON CONFLICT (question_id, slot_key) DO UPDATE
        SET storage_path = EXCLUDED.storage_path,
            source = EXCLUDED.source,
-           placement = EXCLUDED.placement,
            page_number = EXCLUDED.page_number
      RETURNING id, question_id, slot_key, asset_type, storage_path,
-               source, placement, page_number, created_at`,
-    [questionId, slotKey, storagePath, source, placement, pageNumber],
+               source, page_number, created_at`,
+    [questionId, slotKey, storagePath, source, pageNumber],
   );
   return mapRow(result.rows[0]);
 }
@@ -135,7 +118,7 @@ export async function findAssetsForQuestions(questionIds) {
 
   const result = await pool.query(
     `SELECT id, question_id, slot_key, asset_type, storage_path,
-            source, placement, page_number, created_at
+            source, page_number, created_at
      FROM question_assets
      WHERE question_id = ANY($1::uuid[])
      ORDER BY question_id, (slot_key <> 'default'), slot_key ASC`,
@@ -162,7 +145,7 @@ export async function findAssetsForQuestions(questionIds) {
 export async function findAssetsForMockTest(mockTestId) {
   const result = await pool.query(
     `SELECT qa.id, qa.question_id, qa.slot_key, qa.asset_type, qa.storage_path,
-            qa.source, qa.placement, qa.page_number, qa.created_at
+            qa.source, qa.page_number, qa.created_at
      FROM question_assets qa
      INNER JOIN questions q ON q.id = qa.question_id
      WHERE q.mock_test_id = $1
@@ -192,7 +175,6 @@ function mapRow(row) {
     assetType: row.asset_type,
     storagePath: row.storage_path,
     source: row.source,
-    placement: row.placement,
     pageNumber: row.page_number,
     createdAt: row.created_at,
   };

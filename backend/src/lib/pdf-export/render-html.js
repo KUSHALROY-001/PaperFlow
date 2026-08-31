@@ -8,8 +8,8 @@ import { renderQuestionTextHtml } from "./table-html.js";
 // correct_option_indexes, has_code, code_language), NOT the camelCase
 // shape the rest of this file expects. Mirrors frontend's
 // utils/mockTestHelpers.js#mapQuestion, which normalizes the exact same
-// raw row for OutputTab/ReviewTab - diagramUrl and placement are the two
-// exceptions, already camelCase because attachDiagramUrls
+// raw row for OutputTab/ReviewTab - diagramUrl/diagramAssets are the
+// exception, already camelCase because attachDiagramUrls
 // (question-assets.service.js) sets them directly in JS rather than
 // pulling them off a SQL row.
 function normalizeQuestion(question) {
@@ -29,36 +29,23 @@ function normalizeQuestion(question) {
 
 // Builds {slotKey: absoluteUrl} for one question's diagramAssets (see
 // attachDiagramUrls in question-assets.service.js) - resolved to an
-// absolute URL up front, same reasoning diagramHtml below already uses
-// for the single default-slot image: Puppeteer is a separate browser
-// process making a real HTTP request for each <img>, so every URL handed
-// to math-html.js/table-html.js needs to already be reachable on its own,
+// absolute URL up front: Puppeteer is a separate browser process making a
+// real HTTP request for each <img>, so every URL handed to
+// math-html.js/table-html.js needs to already be reachable on its own,
 // not relative to nothing. Returns {} for a question with no assets at
 // all (the common case) rather than undefined, so every renderTextWithMath
 // call downstream can do a plain `images?.[slotKey]` lookup without an
-// extra null check at each call site.
+// extra null check at each call site. Every slot, including 'default',
+// renders through this map now - there's no separate top-level diagram
+// element anymore (see migration 041, which backfilled a
+// ![[img:default]] marker into every question's text/explanation so this
+// map is all any slot ever needs).
 function buildDiagramAssetsMap(question, { baseUrl }) {
   const map = {};
   for (const asset of question.diagramAssets || []) {
     map[asset.slotKey] = `${baseUrl}${asset.url}`;
   }
   return map;
-}
-
-// Mirrors QuestionContent.jsx's placement rule exactly: "above_text"
-// renders before the question body, "below_text" (default) renders
-// after it but before options, "below_options" renders after the
-// options grid. Keeping this logic in one place (rather than three
-// separate if-blocks scattered through the template below) is what
-// makes it easy to confirm it actually matches the frontend's rule.
-function diagramHtml(question, { baseUrl }) {
-  if (!question.diagramUrl) return "";
-  // diagramUrl from attachDiagramUrls is a backend-relative path (see
-  // frontend's resolveAssetUrl) - Puppeteer is a separate browser process
-  // making a real HTTP request for this <img>, so it needs an absolute
-  // URL it can actually reach, not a path relative to nothing.
-  const src = `${baseUrl}${question.diagramUrl}`;
-  return `<img class="diagram" src="${escapeHtml(src)}" alt="Question diagram" />`;
 }
 
 const CODE_FENCE_RE = /```(\w*)\n([\s\S]*?)```/g;
@@ -150,8 +137,6 @@ function explanationHtml(question, images) {
 }
 
 function questionHtml(question, index, { baseUrl }) {
-  const placement = question.placement || "below_text";
-  const diagram = diagramHtml(question, { baseUrl });
   const images = buildDiagramAssetsMap(question, { baseUrl });
 
   return `
@@ -160,11 +145,8 @@ function questionHtml(question, index, { baseUrl }) {
         <span class="question-no">Q${question.questionNo ?? index + 1}</span>
         ${question.topic ? `<span class="question-topic">${escapeHtml(question.topic)}</span>` : ""}
       </div>
-      ${placement === "above_text" ? diagram : ""}
       ${questionBodyHtml(question, images)}
-      ${placement === "below_text" ? diagram : ""}
       ${optionsHtml(question, images)}
-      ${placement === "below_options" ? diagram : ""}
       ${explanationHtml(question, images)}
     </section>
   `;

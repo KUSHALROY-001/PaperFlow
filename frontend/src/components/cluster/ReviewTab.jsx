@@ -12,7 +12,6 @@ import {
 import { useAuth } from "@/lib/AuthContext";
 import { ConfirmDialog } from "../design-system/ConfirmDialog";
 import QuestionContent, {
-  QuestionDiagram,
   QuestionExplanation,
 } from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
@@ -269,8 +268,6 @@ export default function ReviewTab({
                       <QuestionContent
                         text={question.text}
                         passage={question.passage}
-                        diagramUrl={question.diagramUrl}
-                        placement={question.placement}
                         textClassName="text-base sm:text-lg text-foreground"
                       />
                     </DiagramAssetsProvider>
@@ -394,9 +391,6 @@ export default function ReviewTab({
                       </div>
                     );
                   })}
-                  {question.placement === "below_options" && (
-                    <QuestionDiagram diagramUrl={question.diagramUrl} />
-                  )}
                   <QuestionExplanation explanation={question.explanation} />
                   </DiagramAssetsProvider>
                   {question.status === "rejected" && (

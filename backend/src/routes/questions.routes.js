@@ -96,16 +96,6 @@ questionsRouter.post(
   uploadDiagramImageMiddleware.single("image"),
   asyncHandler(questionAssetsController.uploadDiagramImage),
 );
-questionsRouter.patch(
-  "/:questionId/diagram-placement",
-  requireRole("editor"),
-  asyncHandler(questionAssetsController.updateDiagramPlacement),
-);
-questionsRouter.patch(
-  "/:questionId/diagram-placement/:slotKey",
-  requireRole("editor"),
-  asyncHandler(questionAssetsController.updateDiagramPlacement),
-);
 questionsRouter.delete(
   "/:questionId/diagram",
   requireRole("editor"),

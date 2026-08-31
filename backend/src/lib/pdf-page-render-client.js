@@ -37,6 +37,13 @@ export async function renderPdfPage(storageKey, pageNumber) {
     );
   }
 
+  if (!storageKey || typeof storageKey !== "string") {
+    throw httpError(
+      404,
+      "No source PDF storage key available for this mock test",
+    );
+  }
+
   const url = `${WORKER_SERVICE_URL}/render-page?token=${encodeURIComponent(
     WORKER_TRIGGER_SECRET,
   )}&storageKey=${encodeURIComponent(storageKey)}&page=${encodeURIComponent(

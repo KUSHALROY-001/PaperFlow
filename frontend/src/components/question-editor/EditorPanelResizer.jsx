@@ -17,7 +17,7 @@ export default function EditorPanelResizer({
       onPointerDown={onPointerDown}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="hidden lg:flex relative items-center justify-center w-4 -mx-1 shrink-0 cursor-col-resize select-none z-20 group self-stretch"
+      className="hidden lg:flex relative items-center justify-center w-4 -mx-1 shrink-0 cursor-col-resize select-none z-10 group self-stretch"
       title={isCollapsed ? "Expand preview" : undefined}
     >
       {/* Vertical Guideline */}
@@ -55,7 +55,7 @@ export default function EditorPanelResizer({
       {/* Floating Hover Tooltip (Matching reference screenshot UX) */}
       {(isHovered || isDragging) && (
         <div
-          className="absolute left-7 top-1/3 -translate-y-1/2 pointer-events-none z-50 whitespace-nowrap rounded-lg border border-border bg-popover/95 dark:bg-card/95 backdrop-blur-md px-3 py-1.5 shadow-xl transition-all animate-in fade-in zoom-in-95 duration-150"
+          className="absolute left-7 top-1/3 -translate-y-1/2 pointer-events-none z-10 whitespace-nowrap rounded-lg border border-border bg-popover/95 dark:bg-card/95 backdrop-blur-md px-3 py-1.5 shadow-xl transition-all animate-in fade-in zoom-in-95 duration-150"
         >
           <div className="text-[11px] font-bold text-foreground">
             {isCollapsed ? "Click to expand" : "Click to collapse"}

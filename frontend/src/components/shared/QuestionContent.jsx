@@ -1,113 +1,4 @@
-import { useState, useEffect } from "react";
-import {
-  AlertTriangle,
-  RotateCcw,
-  ExternalLink,
-  Loader2,
-} from "lucide-react";
-import { resolveAssetUrl } from "@/lib/api";
 import CodeText from "./CodeText";
-
-// Extracted so QuestionContent consumers can render it
-// themselves after their own options block for placement === "below_options" -
-// QuestionContent only ever renders inline (above or below the text), it
-// never has access to the options list that comes after it.
-export function QuestionDiagram({ diagramUrl, className = "" }) {
-  const [status, setStatus] = useState("loading"); // "loading" | "loaded" | "error"
-  const [retryCount, setRetryCount] = useState(0);
-
-  useEffect(() => {
-    setStatus("loading");
-    setRetryCount(0);
-  }, [diagramUrl]);
-
-  if (!diagramUrl) return null;
-
-  const rawUrl = resolveAssetUrl(diagramUrl);
-  // Cache buster for manual retries. Replace/crop already change
-  // diagramUrl itself (backend attaches ?v=<created_at>), so a new
-  // image does not depend on this - only the Retry button does.
-  const imageUrl =
-    retryCount > 0
-      ? `${rawUrl}${rawUrl.includes("?") ? "&" : "?"}_r=${retryCount}`
-      : rawUrl;
-
-  const handleRetry = () => {
-    setStatus("loading");
-    setRetryCount((prev) => prev + 1);
-  };
-
-  return (
-    <div className={`relative max-w-full my-2 ${className}`}>
-      {status === "loading" && (
-        <div className="flex h-36 w-full max-w-md items-center justify-center rounded-2xl border border-border/80 bg-muted/40 p-4 text-xs font-semibold text-muted-foreground animate-pulse">
-          <div className="flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin text-orange-500" />
-            <span>Loading diagram...</span>
-          </div>
-        </div>
-      )}
-
-      {status === "error" && (
-        <div className="flex flex-col gap-2 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs text-foreground max-w-lg shadow-xs transition-all">
-          <div className="flex items-center gap-2 font-bold text-amber-600 dark:text-amber-400">
-            <AlertTriangle className="h-4 w-4 shrink-0" />
-            <span>Diagram image could not be loaded</span>
-          </div>
-          <p className="text-[11px] text-muted-foreground leading-relaxed">
-            The cloud image could not be retrieved from Cloudinary storage. The
-            link might be expired, cloud storage unconfigured, or blocked by
-            network restrictions.
-          </p>
-          <div className="flex items-center gap-2 pt-1 flex-wrap">
-            <button
-              type="button"
-              onClick={handleRetry}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/15 px-2.5 py-1 text-xs font-bold text-amber-600 dark:text-amber-300 hover:bg-amber-500/25 transition-all"
-            >
-              <RotateCcw className="h-3 w-3" />
-              Retry Loading
-            </button>
-            <a
-              href={rawUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
-            >
-              <ExternalLink className="h-3 w-3" />
-              Open Image Link
-            </a>
-          </div>
-        </div>
-      )}
-
-      <img
-        key={imageUrl}
-        src={imageUrl}
-        alt="Question diagram"
-        onLoad={() => setStatus("loaded")}
-        onError={() => setStatus("error")}
-        // Deliberately never `display:none` (Tailwind `hidden`) while
-        // loading - native `loading="lazy"` decides whether to even
-        // START fetching an image based on its layout box via
-        // IntersectionObserver, and `display:none` elements have no box
-        // at all. That combination silently never fetches the image (no
-        // request, no error, stuck on the loading placeholder forever)
-        // rather than failing loudly - see the bug report this fixes.
-        // `opacity-0` + `absolute` keeps a real, measurable box (so lazy
-        // loading can still trigger) while staying invisible and out of
-        // flow so it doesn't add extra space next to the loading
-        // placeholder above.
-        className={`max-w-full rounded-xl border border-border transition-opacity duration-300 ${
-          status === "loaded"
-            ? "relative opacity-100"
-            : "absolute inset-0 opacity-0 pointer-events-none"
-        }`}
-        loading="lazy"
-      />
-    </div>
-  );
-}
 
 // Extracted so QuestionContent consumers can render it after their options block.
 export function QuestionExplanation({
@@ -137,34 +28,19 @@ export function QuestionExplanation({
 }
 
 // Every render path (passage, text) passes through CodeText unconditionally.
-// Fenced segments in text/passage are parsed as code blocks;
-// non-fenced segments pass through splitIntoTextBlocks + MathText.
-// Matches the legacy single-diagram marker. When this appears in the
-// stem text, MathText already renders that image — so also mounting
-// QuestionDiagram from diagramUrl would show the same figure twice.
-const DEFAULT_IMG_MARKER_RE = /!\[\[img:default\]\]/i;
-
+// Fenced segments in text/passage are parsed as code blocks; non-fenced
+// segments pass through splitIntoTextBlocks + MathText, which resolves
+// any ![[img:slot_key]] marker inline, wherever it sits in the text -
+// that's the diagram's entire position now (see migration 041/042):
+// there's no more separate diagramUrl/placement prop or top-level
+// above/below rendering here.
 export default function QuestionContent({
   text,
   passage,
-  diagramUrl,
-  placement = "below_text",
   textClassName = "text-sm text-foreground",
   editable = false,
   onUpdateText,
 }) {
-  const textHasDefaultMarker =
-    DEFAULT_IMG_MARKER_RE.test(text || "") ||
-    DEFAULT_IMG_MARKER_RE.test(passage || "");
-  // Prefer the inline marker when present (author intentionally placed
-  // it). Otherwise use the automatic diagramUrl placement path.
-  const effectiveDiagramUrl = textHasDefaultMarker ? null : diagramUrl;
-  const showAboveText = effectiveDiagramUrl && placement === "above_text";
-  const showBelowText =
-    effectiveDiagramUrl &&
-    placement !== "above_text" &&
-    placement !== "below_options";
-
   return (
     <div className="space-y-3">
       {passage && (
@@ -180,24 +56,12 @@ export default function QuestionContent({
           </div>
         </div>
       )}
-      {showAboveText && (
-        <QuestionDiagram
-          key={effectiveDiagramUrl}
-          diagramUrl={effectiveDiagramUrl}
-        />
-      )}
       {text && (
         <CodeText
           text={text}
           textClassName={textClassName}
           editable={editable}
           onUpdateText={onUpdateText}
-        />
-      )}
-      {showBelowText && (
-        <QuestionDiagram
-          key={effectiveDiagramUrl}
-          diagramUrl={effectiveDiagramUrl}
         />
       )}
     </div>

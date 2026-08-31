@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { CheckCircle, XCircle, BarChart2, Home, LogIn } from "lucide-react";
 import { getOptionText } from "@/utils/mockTestHelpers";
 import QuestionContent, {
-  QuestionDiagram,
   QuestionExplanation,
 } from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
@@ -141,8 +140,6 @@ export default function SessionResultsView({
                         <QuestionContent
                           text={rq.text}
                           passage={rq.passage}
-                          diagramUrl={rq.diagramUrl}
-                          placement={rq.placement}
                           textClassName="text-sm font-normal text-foreground leading-relaxed"
                         />
                         {!correct && !skipped && (
@@ -166,11 +163,6 @@ export default function SessionResultsView({
                               </span>
                             ))}
                           </p>
-                        )}
-                        {rq.placement === "below_options" && (
-                          <div className="mt-2">
-                            <QuestionDiagram diagramUrl={rq.diagramUrl} />
-                          </div>
                         )}
                         <QuestionExplanation explanation={rq.explanation} />
                       </DiagramAssetsProvider>

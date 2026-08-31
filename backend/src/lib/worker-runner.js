@@ -28,42 +28,53 @@
 // kickWorker's own doc comment for the reasoning on why a lost kick is an
 // acceptable risk to accept in exchange for not needing one at all.
 import { spawn } from "node:child_process";
+import https from "node:https";
 
 const WORKER_SERVICE_URL = (process.env.WORKER_SERVICE_URL || "")
   .trim()
   .replace(/\/+$/, "");
 const WORKER_TRIGGER_SECRET = (process.env.WORKER_TRIGGER_SECRET || "").trim();
 
-// The worker may be asleep (Render's free tier docs put cold start at
-// 30-60s once a service has spun down from 15 min of inactivity - which,
-// by design, is the NORMAL state between uploads here, since we
-// deliberately let it spin down to stay inside the free instance-hour
-// budget) or mid-batch already. The timeout below has to comfortably
-// outlast that cold start, or every kick that arrives while the worker
-// is asleep - which given the above is a routine, expected case, not a
-// rare edge case - aborts before the connection even completes and the
-// job is left stranded until something else (a manual hit, or an
-// external pinger, if one is even configured) wakes the worker instead.
-// 90s gives real margin over Render's documented 30-60s worst case.
-const KICK_TIMEOUT_MS = 90_000;
+// EVERY test across this whole investigation shows the same split:
+// - A single request, sent once and left to wait (curl.exe, and both
+//   .bat test scripts) -> always succeeds, typically in 25-45s.
+// - A burst of many requests fired every 8s (an earlier version of this
+//   loop) -> consistently got an immediate 502 on every single attempt,
+//   with the worker's own Render logs showing no new "Running..." line
+//   at all while that was happening.
+// - Even ONE patient, non-bursty request from Node's fetch() -> STILL
+//   got an immediate 502, with the worker's logs staying just as silent.
+//   That ruled out timing/repetition as the cause entirely: curl.exe
+//   hitting the exact same URL, same method, same moment in the idle
+//   cycle, works every time; fetch() never even triggers a wake attempt.
+//
+// The one real difference left between those two clients is what they
+// send, not how often. Comparing them directly: curl sends a bare
+// User-Agent: curl/x.x.x and Accept: */*, nothing else notable. Node's
+// fetch() sends User-Agent: node AND a bare sec-fetch-mode: cors header
+// with no accompanying Origin/Referer - a combination that normally only
+// comes from an actual browser fetch() call, not a server-to-server
+// request, and exactly the kind of inconsistency a bot-detection layer
+// looks for. fetch()'s sec-fetch-mode is hard-coded into its
+// implementation and can't be removed via the headers option (verified
+// locally - overriding it silently has no effect), so this now uses
+// Node's raw https module instead, specifically because it sends nothing
+// but the headers listed below - no forced fetch-spec headers - which is
+// about as close to curl's own signature as this codebase can get.
+//
+// This is a well-supported hypothesis given everything observed so far,
+// not a confirmed root cause - there's no way to see Render's own edge
+// logic from here to prove it outright. If jobs still get stuck after
+// this change, that will have genuinely ruled it out rather than left it
+// untested.
+const KICK_USER_AGENT = "curl/8.5.0";
 
-// Render free-tier workers often return 502/503/504 HTML while cold-
-// starting (the proxy times out or the instance is not listening yet).
-// A single failed kick then leaves the job "queued" until a manual curl
-// or cron hits /run. Retrying through the cold-start window fixes that -
-// but the window has to actually be wide enough: Render's own docs put
-// cold start at 30-60s, and 60s is a documented TYPICAL worst case, not
-// an absolute ceiling (heavier images/current load can push past it).
-// 6 attempts * 8s = ~40s of coverage - LESS than the documented worst
-// case, with no margin at all - meant every kick landing on a cold start
-// anywhere in the 40-60s range was guaranteed to exhaust every retry and
-// give up before the worker ever finished waking up, exactly matching
-// "queued until I manually curl it" (curl has no timeout, so it simply
-// waits out however long the real cold start takes). 18 attempts * 8s =
-// ~136s gives better than 2x margin over the documented worst case.
+// Kept small and widely spaced (not a rapid burst) for the same reason
+// as before: nothing here should recreate a pattern that hasn't worked.
+const KICK_TIMEOUT_MS = 120_000;
 const KICK_RETRYABLE_STATUSES = new Set([502, 503, 504]);
-const KICK_MAX_ATTEMPTS = 18;
-const KICK_RETRY_DELAY_MS = 8_000;
+const KICK_MAX_ATTEMPTS = 3;
+const KICK_RETRY_DELAY_MS = 120_000;
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -79,34 +90,71 @@ function truncateBody(body) {
   return text.length > 300 ? `${text.slice(0, 300)}…` : text;
 }
 
+// Raw https.request instead of fetch() - see the module comment above
+// for why. Resolves with { statusCode, body } on any completed response
+// (including a 502/503/504 - those are not request failures at this
+// layer), rejects only on an actual network-level failure or the
+// KICK_TIMEOUT_MS timeout.
+function postOnce(url, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const parsed = new URL(url);
+    const req = https.request(
+      {
+        hostname: parsed.hostname,
+        port: parsed.port || 443,
+        path: `${parsed.pathname}${parsed.search}`,
+        method: "POST",
+        headers: {
+          "User-Agent": KICK_USER_AGENT,
+          Accept: "*/*",
+        },
+        timeout: timeoutMs,
+      },
+      (res) => {
+        let body = "";
+        res.on("data", (chunk) => {
+          body += chunk;
+        });
+        res.on("end", () => {
+          resolve({ statusCode: res.statusCode, body });
+        });
+        res.on("error", reject);
+      },
+    );
+
+    req.on("timeout", () => {
+      // Matches AbortController's old role - this rejects via the
+      // subsequent 'error' event, not directly, since destroy() always
+      // emits one.
+      req.destroy(new Error(`request timed out after ${timeoutMs}ms`));
+    });
+    req.on("error", reject);
+    req.end();
+  });
+}
+
 async function kickDeployedWorker(jobId) {
   const url = `${WORKER_SERVICE_URL}/run?token=${encodeURIComponent(WORKER_TRIGGER_SECRET)}`;
 
   for (let attempt = 1; attempt <= KICK_MAX_ATTEMPTS; attempt++) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), KICK_TIMEOUT_MS);
-
     try {
-      const response = await fetch(url, {
-        method: "POST",
-        signal: controller.signal,
-      });
+      const { statusCode, body } = await postOnce(url, KICK_TIMEOUT_MS);
 
-      if (response.ok) {
+      if (statusCode >= 200 && statusCode < 300) {
         console.info(
-          `[worker-runner] Kick for job ${jobId} accepted (${response.status}) on attempt ${attempt}`,
+          `[worker-runner] Kick for job ${jobId} accepted (${statusCode}) on attempt ${attempt}`,
         );
         return;
       }
 
-      const body = truncateBody(await response.text().catch(() => ""));
-      const retryable = KICK_RETRYABLE_STATUSES.has(response.status);
+      const retryable = KICK_RETRYABLE_STATUSES.has(statusCode);
+      const truncated = truncateBody(body);
 
       console.warn(
-        `[worker-runner] Kick for job ${jobId} got ${response.status} on attempt ${attempt}/${KICK_MAX_ATTEMPTS}` +
-          (body ? `: ${body}` : "") +
+        `[worker-runner] Kick for job ${jobId} got ${statusCode} on attempt ${attempt}/${KICK_MAX_ATTEMPTS}` +
+          (truncated ? `: ${truncated}` : "") +
           (retryable && attempt < KICK_MAX_ATTEMPTS
-            ? ` - retrying in ${KICK_RETRY_DELAY_MS / 1000}s (worker may be cold-starting)`
+            ? ` - waiting ${KICK_RETRY_DELAY_MS / 1000}s before trying once more (not retrying quickly on purpose - see this file's module comment)`
             : ""),
       );
 
@@ -115,23 +163,20 @@ async function kickDeployedWorker(jobId) {
       }
     } catch (error) {
       const retryable =
-        error?.name === "AbortError" ||
-        /fetch failed|ECONNREFUSED|ENOTFOUND|socket|network/i.test(
+        /timed out|ECONNREFUSED|ENOTFOUND|ECONNRESET|socket|network/i.test(
           error?.message || "",
         );
 
       console.warn(
         `[worker-runner] Kick for job ${jobId} failed on attempt ${attempt}/${KICK_MAX_ATTEMPTS}: ${error.message}` +
           (retryable && attempt < KICK_MAX_ATTEMPTS
-            ? ` - retrying in ${KICK_RETRY_DELAY_MS / 1000}s`
+            ? ` - waiting ${KICK_RETRY_DELAY_MS / 1000}s before trying once more`
             : " (job stays queued until a later successful kick)"),
       );
 
       if (!retryable || attempt === KICK_MAX_ATTEMPTS) {
         return;
       }
-    } finally {
-      clearTimeout(timeout);
     }
 
     await sleep(KICK_RETRY_DELAY_MS);

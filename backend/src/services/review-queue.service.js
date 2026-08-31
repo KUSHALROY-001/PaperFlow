@@ -77,7 +77,6 @@ function serializeQueueItem(row) {
     options,
     correctOptionIndexes: row.correct_option_indexes || [],
     diagramUrl: row.diagramUrl || null,
-    placement: row.placement || "below_text",
     diagramAssets: row.diagramAssets || [],
     aiIssues,
     aiNeedsReview: metadata.aiNeedsReview || false,

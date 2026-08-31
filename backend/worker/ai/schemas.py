@@ -82,18 +82,17 @@ def _question_item_schema(*, nullable_as_union):
                 "in one of the options. Give each entry its own distinct "
                 "slot_key.\n\n"
                 "If there is exactly ONE diagram for this question, set its "
-                "slot_key to \"default\" and do NOT add any "
-                "![[img:default]] marker anywhere - it renders "
-                "automatically without one, same as it always has.\n\n"
+                "slot_key to \"default\".\n\n"
                 "If there is MORE than one diagram, give each a distinct, "
                 "descriptive slot_key (e.g. \"list-i-1\", \"list-i-2\", "
-                "\"option-c\") and embed a matching ![[img:slot_key]] "
-                "marker - that literal syntax, brackets included - at the "
-                "EXACT point in \"text\", an \"options\" entry, or inside a "
-                "markdown table cell where that specific image belongs. "
-                "Every non-\"default\" slot_key you list here MUST have a "
-                "corresponding marker somewhere in the question's own "
-                "content, or that image has nowhere to render."
+                "\"option-c\").\n\n"
+                "Every slot_key you list here - \"default\" included - MUST "
+                "have a matching ![[img:slot_key]] marker - that literal "
+                "syntax, brackets included - embedded at the EXACT point in "
+                "\"text\", an \"options\" entry, or inside a markdown table "
+                "cell where that specific image belongs, relative to the "
+                "surrounding prose. An image with no marker anywhere has "
+                "nowhere to render."
             ),
         },
         # Only meaningful for generate_questions_from_metadata's multi-group
@@ -431,17 +430,39 @@ def normalize_ai_questions(payload, *, source="ai"):
                 question_text, options, explanation, renamed_slot_keys
             )
 
-        # Single-diagram convention: slot_key "default" is rendered by the
-        # API as diagramUrl + QuestionContent's placement layout — NOT via
-        # an inline marker. Models still sometimes emit ![[img:default]]
-        # in the stem, which then shows the same image twice (once from
-        # diagramUrl, once from MathText). Strip those markers always.
-        question_text, options, explanation = _strip_default_diagram_markers(
-            question_text, options, explanation
-        )
-        passage = clean_optional_text(item.get("passage"))
-        if passage:
-            passage, _, _ = _strip_default_diagram_markers(passage, [], None)
+        # Safety net for the model forgetting the ![[img:slot_key]]
+        # marker SYSTEM_PROMPT/this schema both require for every entry in
+        # "diagrams" now, "default" included (this used to be optional for
+        # a single diagram - see migration 041/042, which removed the old
+        # fallback rendering that used to cover for a missing marker).
+        # Without this, a model that lists a diagram but drops its marker
+        # produces an image that's extracted, uploaded, and then silently
+        # has nowhere to render - worse than a wrong position, since
+        # nothing in the data even hints it's missing. Appending it to the
+        # end of the question text is the same fallback position
+        # migration 041 used for pre-existing "below_text" rows, and
+        # flagging for review surfaces it to a human instead of letting it
+        # stay silently lost.
+        haystack = question_text + " " + " ".join(options) + " " + (explanation or "")
+        missing_marker_slots = [
+            diagram["slot_key"]
+            for diagram in diagrams
+            if f"![[img:{diagram['slot_key']}]]" not in haystack
+        ]
+        if missing_marker_slots:
+            question_text = (
+                question_text.rstrip()
+                + "\n\n"
+                + "\n\n".join(f"![[img:{slot_key}]]" for slot_key in missing_marker_slots)
+            )
+            metadata["aiNeedsReview"] = True
+            metadata["aiIssues"] = list(metadata.get("aiIssues") or []) + [
+                f"Diagram slot(s) {', '.join(missing_marker_slots)} had no "
+                "![[img:...]] marker in the extracted content - placed at "
+                "the end of the question text as a fallback. Move it to "
+                "where it actually belongs."
+            ]
+            confidence = min(confidence, 40)
 
         # Safety net for a real failure mode seen on a live job: the model
         # correctly extracts a diagram for the question STEM but, for the
@@ -478,7 +499,7 @@ def normalize_ai_questions(payload, *, source="ai"):
                 "question_no": question_no,
                 "topic": clean_optional_text(item.get("topic")),
                 "subtopic": clean_optional_text(item.get("subtopic")),
-                "passage": passage,
+                "passage": clean_optional_text(item.get("passage")),
                 "text": question_text,
                 "explanation": explanation,
                 "options": options,
@@ -537,49 +558,6 @@ _SLOT_KEY_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
 # See normalize_ai_questions' own comment at its call site for what this
 # catches and why.
 _BARE_OPTION_LABEL_RE = re.compile(r"^\(?[a-zA-Z]\)?\.?$")
-
-# The legacy single-diagram path renders via diagramUrl + placement, not
-# via an inline marker. Models still emit this despite SYSTEM_PROMPT.
-_DEFAULT_IMG_MARKER_RE = re.compile(r"!\[\[img:default\]\]", re.IGNORECASE)
-
-
-def _strip_default_diagram_markers(question_text, options, explanation):
-    """
-    Remove ![[img:default]] from stem/options/explanation so the same
-    crop is not shown twice (diagramUrl layout + MathText marker).
-    Non-default markers are left untouched.
-    """
-
-    def strip_one(value):
-        if not value:
-            return value
-        cleaned = _DEFAULT_IMG_MARKER_RE.sub("", str(value))
-        # Collapse leftover blank lines from a marker that sat alone on a line
-        cleaned = re.sub(r"[ \t]+\n", "\n", cleaned)
-        cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
-        return cleaned.strip() or None
-
-    cleaned_options = []
-    for option in options or []:
-        cleaned = strip_one(option)
-        # Keep a placeholder empty string if stripping wiped a
-        # marker-only option — option count must stay stable for
-        # correct_option_indexes. Callers rarely put default on options,
-        # but if they do, prefer empty over dropping the slot.
-        cleaned_options.append(cleaned if cleaned is not None else "")
-
-    cleaned_text = strip_one(question_text)
-    if cleaned_text is None and question_text:
-        # Marker-only stem → empty string, not None (keeps field present)
-        cleaned_text = ""
-    elif cleaned_text is None:
-        cleaned_text = question_text
-
-    return (
-        cleaned_text,
-        cleaned_options if options is not None else options,
-        strip_one(explanation),
-    )
 
 
 def _rewrite_diagram_markers(question_text, options, explanation, renamed_slot_keys):

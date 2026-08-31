@@ -132,6 +132,7 @@ export const api = {
 
     return response.blob();
   },
+
   // Same reasoning as exportMockTestPdf above (own fetch, not apiRequest -
   // a successful response is binary, not JSON). Additionally reads
   // X-Total-Pages off the response (see mock-tests.routes.js's
@@ -413,16 +414,6 @@ export const api = {
       method: "POST",
       body: formData,
     });
-  },
-  updateDiagramPlacement(questionId, placement, slotKey = "default") {
-    const suffix = slotKey === "default" ? "" : `/${slotKey}`;
-    return apiRequest(
-      `/api/questions/${questionId}/diagram-placement${suffix}`,
-      {
-        method: "PATCH",
-        body: JSON.stringify({ placement }),
-      },
-    );
   },
   deleteDiagramImage(questionId, slotKey = "default") {
     const suffix = slotKey === "default" ? "" : `/${slotKey}`;

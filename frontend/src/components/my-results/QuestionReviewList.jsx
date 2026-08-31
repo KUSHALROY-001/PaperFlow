@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { CheckCircle, XCircle, ChevronRight, ChevronDown } from "lucide-react";
 import QuestionContent, {
-  QuestionDiagram,
   QuestionExplanation,
 } from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
@@ -152,8 +151,6 @@ export default function QuestionReviewList({ questions }) {
                           <QuestionContent
                             text={q.text}
                             passage={q.passage}
-                            diagramUrl={q.diagramUrl}
-                            placement={q.placement}
                             textClassName="font-bold text-foreground text-xs leading-relaxed"
                           />
 
@@ -212,11 +209,6 @@ export default function QuestionReviewList({ questions }) {
                               );
                             })}
                           </div>
-                          {q.placement === "below_options" && (
-                            <div className="mt-2">
-                              <QuestionDiagram diagramUrl={q.diagramUrl} />
-                            </div>
-                          )}
                           <QuestionExplanation explanation={q.explanation} />
                         </DiagramAssetsProvider>
                       </div>

@@ -15,6 +15,9 @@ import * as mockTestsRepo from "../repositories/mock-tests.repository.js";
 // whether a diagram was ever detected on it (migrations/001_initial_schema.sql).
 // A caller can still request a DIFFERENT page explicitly - useful when a
 // diagram visually spilled onto the page after the question's own text.
+//
+// storage_key lives on uploaded_files (not mock_tests) - same lookup
+// reprocessMockTest already uses via findLatestUploadedFile.
 export async function fetchPdfPage(mockTestId, workspaceId, pageNumber) {
   const mockTest = await mockTestsRepo.findMockTestById(
     mockTestId,
@@ -24,13 +27,24 @@ export async function fetchPdfPage(mockTestId, workspaceId, pageNumber) {
     throw httpError(404, "Mock test not found");
   }
 
+  const latestFile = await mockTestsRepo.findLatestUploadedFile(
+    mockTestId,
+    workspaceId,
+  );
+  if (!latestFile?.storage_key) {
+    throw httpError(
+      404,
+      "No source PDF found for this mock test - upload a PDF before fetching pages",
+    );
+  }
+
   const page = Number(pageNumber);
   if (!Number.isInteger(page) || page < 1) {
     throw httpError(400, "page must be a positive integer");
   }
 
   const { buffer, totalPages } = await renderPdfPage(
-    mockTest.storage_key,
+    latestFile.storage_key,
     page,
   );
 

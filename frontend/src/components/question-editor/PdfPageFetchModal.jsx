@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import ReactCrop, { centerCrop, makeAspectCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import {
@@ -112,8 +113,12 @@ export default function PdfPageFetchModal({ mockTestId, defaultPage, onClose, on
 
   function onImageLoad() {
     setImageLoaded(true);
-    setCrop({ unit: "%", x: 0, y: 0, width: 100, height: 100 });
-    setCompletedCrop(null);
+    const full = { unit: "%", x: 0, y: 0, width: 100, height: 100 };
+    setCrop(full);
+    // Seed completedCrop so "Use This Crop" works without requiring the
+    // user to nudge the crop box first (otherwise the button stays
+    // disabled and nothing is uploaded).
+    setCompletedCrop(full);
   }
 
   function handleAspectChange(nextAspect) {
@@ -143,17 +148,23 @@ export default function PdfPageFetchModal({ mockTestId, defaultPage, onClose, on
     setCropError("");
     setIsPreparingCrop(true);
     try {
-      const scaleX = img.naturalWidth / 100;
-      const scaleY = img.naturalHeight / 100;
-      const cropX = completedCrop.x * scaleX;
-      const cropY = completedCrop.y * scaleY;
-      const cropWidth = completedCrop.width * scaleX;
-      const cropHeight = completedCrop.height * scaleY;
+      // Percent crop → natural-image pixels (same as DiagramCropModal).
+      const cropX = Math.round((completedCrop.x / 100) * img.naturalWidth);
+      const cropY = Math.round((completedCrop.y / 100) * img.naturalHeight);
+      const cropWidth = Math.max(
+        1,
+        Math.round((completedCrop.width / 100) * img.naturalWidth),
+      );
+      const cropHeight = Math.max(
+        1,
+        Math.round((completedCrop.height / 100) * img.naturalHeight),
+      );
 
       const canvas = document.createElement("canvas");
       canvas.width = cropWidth;
       canvas.height = cropHeight;
       const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Could not process the cropped image");
       ctx.drawImage(
         img,
         cropX,
@@ -184,8 +195,8 @@ export default function PdfPageFetchModal({ mockTestId, defaultPage, onClose, on
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 py-8 backdrop-blur-xs sm:items-center">
+  return createPortal(
+    <div className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto bg-black/50 p-4 py-8 backdrop-blur-xs sm:items-center">
       <div className="flex max-h-[90dvh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl surface-card border border-border shadow-2xl">
         <div className="flex shrink-0 items-center justify-between border-b border-border p-5 sm:p-6">
           <div className="flex items-center gap-3">
@@ -340,5 +351,5 @@ export default function PdfPageFetchModal({ mockTestId, defaultPage, onClose, on
         </div>
       </div>
     </div>
-  );
+  , document.body);
 }

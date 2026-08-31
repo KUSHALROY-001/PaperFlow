@@ -13,7 +13,7 @@ const ACCEPTED_TYPES = "image/png,image/jpeg,image/webp";
 // Mirrors MathNode.jsx's two-state shape (a lightweight display vs. an
 // active widget only the node currently being worked on mounts) for the
 // same reason: most images on a page are never being touched at any given
-// moment, so only the one actually open needs upload/delete controls -
+// moment, so only the one actually open needs upload/delete/crop controls -
 // every other slot just shows its resolved thumbnail via
 // DiagramAssetsContext (the SAME context QuestionPreviewCard/MathText
 // already read from - this node isn't a separate image system, it's the
@@ -22,13 +22,19 @@ const ACCEPTED_TYPES = "image/png,image/jpeg,image/webp";
 //
 // Unlike MathNode's math-field, there's no live "editing" of the image
 // itself here - a slot_key's actual pixels only ever change through a
-// real upload round-trip to Cloudinary, not local, in-memory edits. So
-// "open" here means "the small upload/replace/remove control is visible",
-// not "actively typing into this node" - closer to how
-// DiagramUploadControl.jsx already works for the single legacy diagram
-// slot, just inline at the marker's own position instead of pinned below
-// the question text.
-function ImageNodeView({ node, editor, getPos, questionId, mockTestId, selected }) {
+// real upload/crop round-trip to Cloudinary, not local, in-memory edits.
+// So "open" here means "the small upload/replace/crop/remove control is
+// visible", not "actively typing into this node" - closer to how
+// DiagramUploadControl.jsx works for the default diagram slot, just
+// inline at the marker's own position instead of pinned below the text.
+function ImageNodeView({
+  node,
+  editor,
+  getPos,
+  questionId,
+  mockTestId,
+  selected,
+}) {
   const { slotKey } = node.attrs;
   const queryClient = useQueryClient();
   const assets = useDiagramAssets();
@@ -101,11 +107,9 @@ function ImageNodeView({ node, editor, getPos, questionId, mockTestId, selected 
       await invalidateQuestions();
       // The marker text itself is left in place after deleting the
       // asset - same "content and its image are two separate things"
-      // stance the rest of this app takes (a 'default' slot's marker-free
-      // question keeps its placement/text regardless of whether an image
-      // is attached). Removing the MARKER itself is a separate, explicit
-      // action (the trash icon on the collapsed/no-asset state below),
-      // not an automatic side effect of clearing the image.
+      // stance the rest of this app takes. Removing the MARKER itself
+      // is a separate, explicit action (Delete marker below), not an
+      // automatic side effect of clearing the image.
     } catch (deleteError) {
       setError(deleteError.message || "Could not remove image");
     } finally {
@@ -114,7 +118,15 @@ function ImageNodeView({ node, editor, getPos, questionId, mockTestId, selected 
   };
 
   return (
-    <NodeViewWrapper as="span" className="relative inline-block align-middle">
+    <NodeViewWrapper
+      as="span"
+      // data-drag-handle + draggable:true on the Node (below) lets the
+      // user grab this image and drop it elsewhere in the question text -
+      // ProseMirror moves the atom node as a unit and surrounding text
+      // reflows, same model Word uses for an inline picture.
+      data-drag-handle
+      className="relative inline-block align-middle"
+    >
       <input
         ref={fileInputRef}
         type="file"
@@ -134,15 +146,20 @@ function ImageNodeView({ node, editor, getPos, questionId, mockTestId, selected 
               setIsOpen(true);
             }
           }}
-          title={canEdit ? `Click to manage this image (${slotKey})` : undefined}
+          title={
+            canEdit
+              ? `Drag to move · click to manage (${slotKey})`
+              : undefined
+          }
           className={`inline-block rounded-lg ${
-            canEdit ? "cursor-pointer" : ""
+            canEdit ? "cursor-grab active:cursor-grabbing" : ""
           } ${selected ? "ring-2 ring-orange-500/40" : ""}`}
         >
           <img
             src={resolveAssetUrl(asset.url)}
             alt=""
-            className="max-h-40 max-w-full rounded-lg border border-border"
+            draggable={false}
+            className="max-h-40 max-w-full rounded-lg border border-border pointer-events-none"
           />
         </span>
       ) : (
@@ -250,7 +267,7 @@ function ImageNodeView({ node, editor, getPos, questionId, mockTestId, selected 
 // An ATOMIC inline node (atom: true), same reasoning MathNode.jsx uses:
 // ProseMirror treats its contents as opaque, so the surrounding text is
 // edited completely natively while this node's own image is only ever
-// touched through the upload control above - never by typing into it.
+// touched through the upload/crop controls above - never by typing into it.
 //
 // slotKey is the ONLY attribute (no image data lives in the document
 // itself - the actual bytes are in Cloudinary, keyed by questionId+
@@ -264,6 +281,10 @@ export const ImageNode = Node.create({
   group: "inline",
   inline: true,
   atom: true,
+  // Native ProseMirror node drag - drop the image at a new caret
+  // position and the ![[img:slot]] marker moves with it. Text reflows
+  // because the node stays an ordinary inline atom in the doc.
+  draggable: true,
 
   addAttributes() {
     return {
