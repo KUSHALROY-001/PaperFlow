@@ -20,6 +20,8 @@ export default function QuestionForm({
   addOption,
   removeOption,
   isViewer,
+  paperDefaultMarks = null,
+  paperDefaultNegative = null,
 }) {
   const {
     isCropModalOpen,
@@ -112,6 +114,10 @@ export default function QuestionForm({
             handleCleanUpMath={handleCleanUpMath}
             handleKeyDownTextarea={handleKeyDownTextarea}
             isViewer={isViewer}
+            marksPerCorrect={selected.marksPerCorrect}
+            negativeMarksPerWrong={selected.negativeMarksPerWrong}
+            paperDefaultMarks={paperDefaultMarks}
+            paperDefaultNegative={paperDefaultNegative}
           />
 
           <QuestionExplanationCard

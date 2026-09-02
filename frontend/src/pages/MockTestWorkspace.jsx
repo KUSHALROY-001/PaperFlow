@@ -9,6 +9,7 @@ import WorkspaceStatsGrid from "../components/cluster/WorkspaceStatsGrid";
 import WorkspaceTabsBar from "../components/cluster/WorkspaceTabsBar";
 import WorkspaceTabPanels from "../components/cluster/WorkspaceTabPanels";
 import WorkspaceConfirmDialogs from "../components/cluster/WorkspaceConfirmDialogs";
+import MockTestScoringPanel from "../components/cluster/MockTestScoringPanel";
 
 export default function MockTestWorkspace() {
   const { isViewer } = useAuth();
@@ -130,6 +131,7 @@ export default function MockTestWorkspace() {
             lowConfidence={lowConfidence}
             topicsFound={topicsFound}
           />
+          <MockTestScoringPanel mocktest={mocktest} isViewer={isViewer} />
         </div>
       </div>
 

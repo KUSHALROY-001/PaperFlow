@@ -35,6 +35,25 @@ const WORKER_SERVICE_URL = (process.env.WORKER_SERVICE_URL || "")
   .replace(/\/+$/, "");
 const WORKER_TRIGGER_SECRET = (process.env.WORKER_TRIGGER_SECRET || "").trim();
 
+// Relay hop added after confirming (see docs/engineering-log/DEBUG_LOG.md,
+// worker cold-start investigation) that the Node backend's own outbound IP
+// gets a 429 from Render/Cloudflare's edge specifically when it calls the
+// worker directly - before any of our code on either side ever runs, and
+// regardless of the curl-spoofed headers below - while every non-Render
+// origin tested (curl.exe, Hoppscotch, the debug endpoint's own request)
+// succeeded from the same worker hostname at the same moment, with DNS/
+// remoteAddress confirmed identical between Node's container and an
+// outside machine. That rules out headers and routing as the cause and
+// points at the Node backend's own outbound IP specifically. Routing the
+// wake call through a small Cloudflare Worker means the request that
+// actually reaches the worker comes from Cloudflare's network, not
+// Render's - sidestepping the blocked pattern rather than continuing to
+// try to out-guess it. Kept as a second, parallel attempt alongside the
+// direct kick below (not a replacement), since the direct path may
+// recover on its own and costs nothing extra when it works.
+const RELAY_URL = (process.env.WAKE_RELAY_URL || "").trim();
+const RELAY_SHARED_SECRET = (process.env.RELAY_SHARED_SECRET || "").trim();
+
 // EVERY test across this whole investigation shows the same split:
 // - A single request, sent once and left to wait (curl.exe, and both
 //   .bat test scripts) -> always succeeds, typically in 25-45s.
@@ -62,11 +81,17 @@ const WORKER_TRIGGER_SECRET = (process.env.WORKER_TRIGGER_SECRET || "").trim();
 // but the headers listed below - no forced fetch-spec headers - which is
 // about as close to curl's own signature as this codebase can get.
 //
-// This is a well-supported hypothesis given everything observed so far,
-// not a confirmed root cause - there's no way to see Render's own edge
-// logic from here to prove it outright. If jobs still get stuck after
-// this change, that will have genuinely ruled it out rather than left it
-// untested.
+// UPDATE: the header-spoofing change above did NOT fix it - a direct
+// kick with User-Agent: curl/8.5.0 still got an immediate, silent 502/429
+// from the Node backend's own IP, while curl.exe and a third-party
+// origin (Hoppscotch) hitting the exact same URL at the exact same
+// moment succeeded. DNS resolution and remoteAddress from inside the
+// Node container were confirmed identical to an outside machine's, which
+// rules out internal/private-network routing too. So headers were never
+// the actual cause - this file's own KICK_USER_AGENT override is kept
+// only because it's harmless, not because it's load-bearing. The RELAY_*
+// path above is the fix that's actually been evidenced; see its own
+// comment.
 const KICK_USER_AGENT = "curl/8.5.0";
 
 // Kept small and widely spaced (not a rapid burst) for the same reason
@@ -183,6 +208,39 @@ async function kickDeployedWorker(jobId) {
   }
 }
 
+// Second, independent wake attempt - see the RELAY_URL/RELAY_SHARED_SECRET
+// module comment above for why this exists. Fired in parallel with
+// kickDeployedWorker, not as a fallback after it fails: either one
+// landing is enough, and there's no reason to wait out the direct kick's
+// own retry/timeout budget (which can run up to 2 * 120s = 4 minutes
+// before before giving up) before trying the path that's actually been
+// reliable. Uses the relay's own RELAY_SHARED_SECRET, not
+// WORKER_TRIGGER_SECRET - the relay is the only thing that ever holds
+// the real worker secret, so a leaked relay URL alone can't be used to
+// hit the worker directly. Single attempt, no retry loop here - the
+// Cloudflare Worker itself is not expected to be cold/asleep the way the
+// Render worker is, so a failure here is either a real network blip
+// (rare) or the underlying worker call it makes failing for the same
+// reasons kickDeployedWorker already logs and retries independently.
+async function kickViaRelay(jobId) {
+  if (!RELAY_URL || !RELAY_SHARED_SECRET) return;
+
+  try {
+    const res = await fetch(RELAY_URL, {
+      method: "POST",
+      headers: { "x-relay-token": RELAY_SHARED_SECRET },
+    });
+    const responseBody = await res.json().catch(() => ({}));
+    console.info(
+      `[worker-runner] Relay kick for job ${jobId}: relay responded ${res.status}, worker responded ${responseBody.workerStatus}`,
+    );
+  } catch (error) {
+    console.warn(
+      `[worker-runner] Relay kick for job ${jobId} failed: ${error.message}`,
+    );
+  }
+}
+
 // Local-dev equivalent of kickDeployedWorker above: there's no separate
 // deployed HTTP worker to POST /run at when running locally (that's the
 // whole reason WORKER_SERVICE_URL is unset here) - the worker only runs
@@ -242,15 +300,19 @@ export function kickWorker({ jobId } = {}) {
 
   if (WORKER_SERVICE_URL && WORKER_TRIGGER_SECRET) {
     console.info(
-      `[worker-runner] Kicking deployed worker for job ${jobId} at ${WORKER_SERVICE_URL}/run`,
+      `[worker-runner] Kicking deployed worker for job ${jobId} at ${WORKER_SERVICE_URL}/run` +
+        (RELAY_URL && RELAY_SHARED_SECRET ? " (direct + relay, parallel)" : ""),
     );
     // Fire-and-forget: retries run in the background so the upload
-    // response is not held open for the full cold-start window.
+    // response is not held open for the full cold-start window. Both
+    // attempts fire without waiting on each other - see kickViaRelay's
+    // own comment for why this is parallel, not a fallback chain.
     void kickDeployedWorker(jobId).catch((error) => {
       console.warn(
-        `[worker-runner] Kick for job ${jobId} ended with unexpected error: ${error.message}`,
+        `[worker-runner] Direct kick for job ${jobId} ended with unexpected error: ${error.message}`,
       );
     });
+    void kickViaRelay(jobId);
     return;
   }
 

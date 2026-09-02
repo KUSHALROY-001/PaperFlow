@@ -132,6 +132,12 @@ export async function createMockTestInCluster(
   const durationMinutes = Number(body.durationMinutes || 120);
   const marksPerCorrect = Number(body.marksPerCorrect || 1);
   const negativeMarksPerWrong = Number(body.negativeMarksPerWrong ?? 0.25);
+  const settings =
+    body.settings && typeof body.settings === "object" ? body.settings : {};
+  // Student-visible marks default OFF; publisher may enable via settings.
+  if (settings.showMarksToStudents === undefined) {
+    settings.showMarksToStudents = false;
+  }
 
   const cluster = await clustersRepo.findClusterById(clusterId, workspaceId);
 
@@ -150,6 +156,7 @@ export async function createMockTestInCluster(
       durationMinutes,
       marksPerCorrect,
       negativeMarksPerWrong,
+      settings,
     });
   } catch (error) {
     // 23505 = unique_violation, from the (cluster_id, name) constraint -

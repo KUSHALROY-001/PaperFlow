@@ -115,6 +115,7 @@ export async function createMockTestInCluster({
   durationMinutes,
   marksPerCorrect,
   negativeMarksPerWrong,
+  settings = {},
 }) {
   const result = await pool.query(
     `
@@ -127,9 +128,10 @@ export async function createMockTestInCluster({
       exam_year,
       duration_minutes,
       marks_per_correct,
-      negative_marks_per_wrong
+      negative_marks_per_wrong,
+      settings
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb)
     RETURNING *
     `,
     [
@@ -142,6 +144,7 @@ export async function createMockTestInCluster({
       durationMinutes,
       marksPerCorrect,
       negativeMarksPerWrong,
+      JSON.stringify(settings || {}),
     ],
   );
 

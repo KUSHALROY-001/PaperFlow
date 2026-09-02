@@ -170,6 +170,10 @@ export async function startAttempt({
 
     await client.query("COMMIT");
 
+    const showMarksToStudents = Boolean(
+      (mockTest.settings || {}).showMarksToStudents,
+    );
+
     const clientQuestions = await attachDiagramUrls(
       questions.map((question) => ({
         questionId: question.questionId,
@@ -180,6 +184,19 @@ export async function startAttempt({
         text: question.text,
         options: question.options,
         questionType: question.questionType,
+        // Only when publisher opts in — default is hidden during attempt.
+        ...(showMarksToStudents
+          ? {
+              marksPerCorrect:
+                question.marksPerCorrect ??
+                mockTest.marks_per_correct ??
+                null,
+              negativeMarksPerWrong:
+                question.negativeMarksPerWrong ??
+                mockTest.negative_marks_per_wrong ??
+                null,
+            }
+          : {}),
       })),
       workspaceId,
       { shareToken: metadata?.shareToken },
@@ -200,6 +217,7 @@ export async function startAttempt({
         marksPerCorrect: Number(mockTest.marks_per_correct),
         negativeMarking: Number(mockTest.negative_marks_per_wrong),
         totalQuestions: mockTest.total_questions,
+        showMarksToStudents,
       },
       // Deliberately no correct-answer data here. This is the question set
       // shown to the student WHILE taking the test. Answers are graded

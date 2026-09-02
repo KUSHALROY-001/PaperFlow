@@ -18,6 +18,9 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
     name: "",
     description: "",
     durationMinutes: 120,
+    marksPerCorrect: 1,
+    negativeMarksPerWrong: 0.25,
+    showMarksToStudents: false,
   });
   // "blank" - no content attached, same as leaving the file picker empty
   // always used to mean. "upload" / "generate" just swap which panel
@@ -183,6 +186,67 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
               className="w-full rounded-md border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
             />
           </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-foreground">
+                Marks per correct
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={form.marksPerCorrect}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    marksPerCorrect: event.target.value,
+                  }))
+                }
+                className="w-full rounded-md border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-foreground">
+                −ve marks per wrong
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={form.negativeMarksPerWrong}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    negativeMarksPerWrong: event.target.value,
+                  }))
+                }
+                className="w-full rounded-md border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
+              />
+            </div>
+          </div>
+
+          <label className="flex items-start gap-3 rounded-md border border-border bg-muted/30 px-3 py-3 cursor-pointer">
+            <input
+              type="checkbox"
+              className="mt-0.5 rounded border-border"
+              checked={form.showMarksToStudents}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  showMarksToStudents: event.target.checked,
+                }))
+              }
+            />
+            <span>
+              <span className="block text-sm font-semibold text-foreground">
+                Show marking to students
+              </span>
+              <span className="block text-xs text-muted-foreground mt-0.5">
+                Off by default. When on, students see +/− marks on each question during the attempt.
+              </span>
+            </span>
+          </label>
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-foreground">

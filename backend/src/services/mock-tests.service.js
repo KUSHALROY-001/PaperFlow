@@ -92,6 +92,11 @@ export async function updateMockTest(mockTestId, workspaceId, body) {
       status,
       isCatalogListedProvided,
       isCatalogListed,
+      settingsProvided: body.settings !== undefined,
+      settings:
+        body.settings && typeof body.settings === "object"
+          ? body.settings
+          : {},
     });
   } catch (error) {
     // 23505 = unique_violation, from the (cluster_id, name) constraint -

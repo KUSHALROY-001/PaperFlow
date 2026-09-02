@@ -2,6 +2,7 @@ import { Code2, FileCode, ImagePlus, MoreVertical, Sparkles } from "lucide-react
 import FormattedTextEditor from "../shared/FormattedTextEditor";
 import RichTextToolbar from "./RichTextToolbar";
 import QuestionTopicSelect from "./QuestionTopicSelect";
+import QuestionScoringFields from "./QuestionScoringFields";
 import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
 
 export default function QuestionTextCard({
@@ -27,6 +28,10 @@ export default function QuestionTextCard({
   handleCleanUpMath,
   handleKeyDownTextarea,
   isViewer,
+  marksPerCorrect,
+  negativeMarksPerWrong,
+  paperDefaultMarks,
+  paperDefaultNegative,
 }) {
   return (
     <div className="surface-card rounded-2xl p-3 sm:p-6 border border-border">
@@ -37,6 +42,15 @@ export default function QuestionTextCard({
         setIsCustomTopic={setIsCustomTopic}
         updateSelected={updateSelected}
         isViewer={isViewer}
+      />
+
+      <QuestionScoringFields
+        marksPerCorrect={marksPerCorrect}
+        negativeMarksPerWrong={negativeMarksPerWrong}
+        updateSelected={updateSelected}
+        isViewer={isViewer}
+        paperDefaultMarks={paperDefaultMarks}
+        paperDefaultNegative={paperDefaultNegative}
       />
 
       {/* Header row with raw-text control and 3-dot menu */}

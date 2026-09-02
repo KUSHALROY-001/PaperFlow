@@ -122,8 +122,7 @@ export default function SessionResultsView({
                       <XCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
                     )}
                     <div>
-                      {(rq.topic || rq.subtopic) && (
-                        <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
+                      <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
                           {rq.topic && (
                             <span className="text-[11px] font-normal text-muted-foreground bg-muted border border-border px-2 py-0.5 rounded-full">
                               {rq.topic}
@@ -134,8 +133,24 @@ export default function SessionResultsView({
                               {rq.subtopic}
                             </span>
                           )}
+                          {rq.marksAwarded !== undefined &&
+                            rq.marksAwarded !== null && (
+                              <span
+                                className={`text-[11px] font-semibold tabular-nums px-2 py-0.5 rounded-full border ${
+                                  rq.marksAwarded > 0
+                                    ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+                                    : rq.marksAwarded < 0
+                                      ? "text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20"
+                                      : "text-muted-foreground bg-muted border-border"
+                                }`}
+                              >
+                                {rq.marksAwarded > 0
+                                  ? `+${rq.marksAwarded}`
+                                  : `${rq.marksAwarded}`}{" "}
+                                marks
+                              </span>
+                            )}
                         </div>
-                      )}
                       <DiagramAssetsProvider assets={rq.diagramAssets}>
                         <QuestionContent
                           text={rq.text}

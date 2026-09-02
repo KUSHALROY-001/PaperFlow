@@ -19,6 +19,8 @@ function contentFingerprint(question) {
     passage: question.passage ?? "",
     explanation: question.explanation ?? "",
     questionType: question.questionType ?? "single",
+    marksPerCorrect: question.marksPerCorrect ?? null,
+    negativeMarksPerWrong: question.negativeMarksPerWrong ?? null,
   });
 }
 
@@ -57,6 +59,19 @@ export function useQuestionEditor() {
     queryFn: () => api.listQuestions(mockTestId),
     enabled: Boolean(mockTestId),
   });
+
+  const mockTestQuery = useQuery({
+    queryKey: ["mock-test", mockTestId],
+    queryFn: () => api.getMockTest(mockTestId),
+    enabled: Boolean(mockTestId),
+  });
+  const mockTest = mockTestQuery.data?.mockTest || mockTestQuery.data || null;
+  const paperDefaultMarks =
+    mockTest?.marks_per_correct ?? mockTest?.marksPerCorrect ?? null;
+  const paperDefaultNegative =
+    mockTest?.negative_marks_per_wrong ??
+    mockTest?.negativeMarksPerWrong ??
+    null;
 
   useEffect(() => {
     if (!questionsQuery.data?.questions) return;
@@ -112,6 +127,8 @@ export function useQuestionEditor() {
                 passage: local.passage,
                 explanation: local.explanation,
                 questionType: local.questionType,
+                marksPerCorrect: local.marksPerCorrect,
+                negativeMarksPerWrong: local.negativeMarksPerWrong,
               }
             : {}),
           ...(isOrderDirty ? { questionNo: local.questionNo } : {}),
@@ -387,6 +404,8 @@ export function useQuestionEditor() {
         options: question.options,
         correctOptionIndexes: question.correctOptionIndexes,
         questionType: question.questionType,
+        marksPerCorrect: question.marksPerCorrect ?? null,
+        negativeMarksPerWrong: question.negativeMarksPerWrong ?? null,
         status: "approved",
       };
 
@@ -559,5 +578,8 @@ export function useQuestionEditor() {
     deleteQuestion,
     reorderQuestions,
     handleSave,
+    paperDefaultMarks,
+    paperDefaultNegative,
+    mockTest,
   };
 }

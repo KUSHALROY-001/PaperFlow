@@ -2,6 +2,7 @@ import { Flag, ChevronLeft, ChevronRight } from "lucide-react";
 import QuestionContent from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
 import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
+import MarksBadge from "@/components/shared/MarksBadge";
 
 export default function SessionQuestionView({
   q,
@@ -51,6 +52,11 @@ export default function SessionQuestionView({
                 {q.subtopic}
               </span>
             )}
+            {/* Only present when publisher enabled showMarksToStudents */}
+            <MarksBadge
+              marksPerCorrect={q.marksPerCorrect}
+              negativeMarksPerWrong={q.negativeMarksPerWrong}
+            />
           </div>
           <button
             type="button"

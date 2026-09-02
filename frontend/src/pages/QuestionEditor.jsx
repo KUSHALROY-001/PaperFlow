@@ -49,6 +49,8 @@ export default function QuestionEditor() {
     deleteQuestion,
     reorderQuestions,
     handleSave,
+    paperDefaultMarks,
+    paperDefaultNegative,
   } = useQuestionEditor();
 
   const [isCustomTopic, setIsCustomTopic] = useState(false);
@@ -203,6 +205,8 @@ export default function QuestionEditor() {
           <QuestionForm
             selected={selected}
             mockTestId={mockTestId}
+            paperDefaultMarks={paperDefaultMarks}
+            paperDefaultNegative={paperDefaultNegative}
             extractedTopics={extractedTopics}
             isCustomTopic={isCustomTopic}
             setIsCustomTopic={setIsCustomTopic}

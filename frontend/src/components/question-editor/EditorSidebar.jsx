@@ -1,3 +1,4 @@
+import MarksBadge from "@/components/shared/MarksBadge";
 import { useState } from "react";
 import {
   ChevronLeft,

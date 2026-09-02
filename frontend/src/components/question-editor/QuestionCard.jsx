@@ -1,3 +1,4 @@
+import MarksBadge from "@/components/shared/MarksBadge";
 import { memo } from "react";
 import { AlertCircle, GripVertical, ImageIcon, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
@@ -71,6 +72,10 @@ function QuestionCard({
             <span className="text-xs bg-orange-500/15 text-orange-500 border border-orange-500/20 px-2 py-0.5 rounded-lg font-bold truncate max-w-30">
               {q.topic}
             </span>
+            <MarksBadge
+              marksPerCorrect={q.marksPerCorrect}
+              negativeMarksPerWrong={q.negativeMarksPerWrong}
+            />
             {!q.persisted && (
               <span className="text-xs bg-amber-500/15 text-amber-500 border border-amber-500/20 px-2 py-0.5 rounded-lg font-bold">
                 Draft

@@ -259,6 +259,11 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self):
+        print(
+        f"[INCOMING REQUEST] POST {self.path} from {self.client_address}",
+        flush=True
+        )
+        
         parsed = urlparse(self.path)
         if parsed.path != "/run":
             self._send_json(404, {"error": "not found"})

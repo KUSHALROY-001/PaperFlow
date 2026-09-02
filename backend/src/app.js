@@ -20,6 +20,7 @@ import { studentsRouter } from "./routes/students.routes.js";
 import { cohortsRouter } from "./routes/cohorts.routes.js";
 import { catalogRouter } from "./routes/catalog.routes.js";
 import { workspaceCatalogRouter } from "./routes/workspace-catalog.routes.js";
+import { debugRouter } from "./routes/debug.routes.js";
 import { requireAuth } from "./middleware/require-auth.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { asyncHandler } from "./lib/async-handler.js";
@@ -92,6 +93,11 @@ export function createApp() {
   app.get("/health", (_req, res) => {
     res.json({ ok: true, service: "paperflow-api" });
   });
+
+  // TEMPORARY - see debug.routes.js's own comment. Mounted directly
+  // (not under requireAuth) so it can be opened as a plain URL; gated by
+  // its own token check inside the route instead.
+  app.use("/api", debugRouter);
 
   // Serves katex.min.css and its @font-face files (woff2/ttf) for
   // pdf-export/render-html.js's <link>. Deliberately public/unauthenticated

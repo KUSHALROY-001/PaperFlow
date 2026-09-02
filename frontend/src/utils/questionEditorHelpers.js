@@ -72,6 +72,15 @@ export function toEditorQuestion(question) {
     // and question_assets already had the files.
     diagramAssets: question.diagramAssets || [],
     diagramSourceBySlot: question.diagramSourceBySlot || {},
+    // Per-question scoring (nullable = fall back to mock-test defaults
+    // at attempt scoring time). API/listQuestions returns snake_case from
+    // the questions view; create/update paths may already be camelCase.
+    marksPerCorrect:
+      question.marksPerCorrect ?? question.marks_per_correct ?? null,
+    negativeMarksPerWrong:
+      question.negativeMarksPerWrong ??
+      question.negative_marks_per_wrong ??
+      null,
   };
 }
 

@@ -44,6 +44,8 @@ export async function updateMockTest(mockTestId, workspaceId, fields) {
     status,
     isCatalogListedProvided,
     isCatalogListed,
+    settingsProvided,
+    settings,
   } = fields;
 
   const result = await pool.query(
@@ -61,7 +63,11 @@ export async function updateMockTest(mockTestId, workspaceId, fields) {
         WHEN $11 = 'published' THEN COALESCE(published_at, now())
         ELSE published_at
       END,
-      is_catalog_listed = CASE WHEN $12::boolean THEN $13 ELSE is_catalog_listed END
+      is_catalog_listed = CASE WHEN $12::boolean THEN $13 ELSE is_catalog_listed END,
+      settings = CASE
+        WHEN $14::boolean THEN COALESCE(settings, '{}'::jsonb) || $15::jsonb
+        ELSE settings
+      END
     WHERE id = $1
       AND workspace_id = $2
     RETURNING *
@@ -80,6 +86,8 @@ export async function updateMockTest(mockTestId, workspaceId, fields) {
       status,
       isCatalogListedProvided,
       isCatalogListed,
+      Boolean(settingsProvided),
+      settings ? JSON.stringify(settings) : "{}",
     ],
   );
 
@@ -326,7 +334,9 @@ export async function listPlayableQuestions(mockTestId, topics) {
       options,
       "correctOptionIndex",
       "questionType",
-      explanation
+      explanation,
+      "marksPerCorrect",
+      "negativeMarksPerWrong"
     FROM playable_mock_test_questions
     WHERE mock_test_id = $1
       AND ($2::text[] IS NULL OR topic = ANY($2::text[]))

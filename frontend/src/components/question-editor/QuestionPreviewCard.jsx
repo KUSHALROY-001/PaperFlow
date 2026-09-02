@@ -3,6 +3,7 @@ import QuestionContent, { QuestionExplanation } from "../shared/QuestionContent"
 import MathText from "../shared/MathText";
 import DiagramUploadControl from "./DiagramUploadControl";
 import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
+import MarksBadge from "@/components/shared/MarksBadge";
 
 export default function QuestionPreviewCard({
   selected,
@@ -49,6 +50,13 @@ export default function QuestionPreviewCard({
           <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
             Live Preview
           </span>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5 mb-2">
+          <MarksBadge
+            marksPerCorrect={selected.marksPerCorrect}
+            negativeMarksPerWrong={selected.negativeMarksPerWrong}
+            unsetLabel="Marks unset"
+          />
         </div>
         {selected.subtopic && (
           <div className="mb-2 inline-flex items-center rounded-full bg-sky-500/10 border border-sky-500/20 px-3 py-1 text-xs text-sky-600 dark:text-sky-400">

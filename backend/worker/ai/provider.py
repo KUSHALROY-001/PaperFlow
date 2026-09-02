@@ -188,6 +188,11 @@ def _build_syllabus_guidance(template_context):
     sections = template_context.get("sections") or []
     template_name = template_context.get("templateName")
     expected_count = template_context.get("expectedQuestionCount")
+    settings = template_context.get("settings") or {}
+    marking_scheme = settings.get("marking_scheme") or {}
+    question_types = settings.get("question_types") or []
+    default_marks = template_context.get("marksPerCorrect")
+    default_negative = template_context.get("negativeMarksPerWrong")
 
     lines = []
     if template_name:
@@ -212,7 +217,84 @@ def _build_syllabus_guidance(template_context):
             if not name:
                 continue
             topics = section.get("topics") or []
-            lines.append(f"- {name}: {', '.join(topics)}" if topics else f"- {name}")
+            section_line = f"- {name}: {', '.join(topics)}" if topics else f"- {name}"
+            marks = section.get("marksPerCorrect")
+            negative = section.get("negativeMarksPerWrong")
+            score_bits = []
+            if marks is not None:
+                score_bits.append(f"+{marks} for correct")
+            if negative is not None:
+                score_bits.append(f"-{negative} for wrong")
+            if score_bits:
+                section_line += f" (marking: {', '.join(score_bits)})"
+            lines.append(section_line)
+
+    if marking_scheme or question_types or (
+        default_marks is not None
+        and float(default_marks or 0) == 0
+        and default_negative is not None
+        and float(default_negative or 0) == 0
+    ):
+        lines.append("PER-QUESTION MARKING (required for this template):")
+        if marking_scheme:
+            scheme_type = marking_scheme.get("type") or "custom"
+            description = marking_scheme.get("description") or ""
+            lines.append(
+                f'The applied template uses a "{scheme_type}" marking scheme'
+                + (f": {description}" if description else ".")
+            )
+            if marking_scheme.get("partial_marking"):
+                lines.append(
+                    "Partial marking may apply for some question types "
+                    "(e.g. multiple-correct). Still set marks_per_correct to "
+                    "the FULL marks for a completely correct answer, and "
+                    "negative_marks_per_wrong to the deduction for an "
+                    "incorrect response (0 when the type has no negative "
+                    "marking)."
+                )
+            by_type = marking_scheme.get("by_question_type") or marking_scheme.get(
+                "byQuestionType"
+            )
+            if isinstance(by_type, dict) and by_type:
+                lines.append(
+                    "Use these per-question-type marks when the paper's "
+                    "instructions match (prefer the paper if they conflict):"
+                )
+                for qtype, scores in by_type.items():
+                    if not isinstance(scores, dict):
+                        continue
+                    plus = scores.get("marksPerCorrect", scores.get("marks_per_correct"))
+                    minus = scores.get(
+                        "negativeMarksPerWrong", scores.get("negative_marks_per_wrong")
+                    )
+                    lines.append(
+                        f"  - {qtype}: +{plus} correct"
+                        + (f", -{minus} wrong" if minus is not None else "")
+                    )
+        if question_types:
+            lines.append(
+                "Expected question types in this paper: "
+                + ", ".join(str(t) for t in question_types)
+                + ". Identify each question's type from its stem / options / "
+                "section header on the page, then set marks_per_correct and "
+                "negative_marks_per_wrong from the paper's marking "
+                "instructions for that type."
+            )
+        lines.append(
+            "You MUST set marks_per_correct and negative_marks_per_wrong on "
+            "EVERY extracted question when the paper (or the scheme above) "
+            "specifies them. Do not leave both null unless the paper truly "
+            "gives no scoring information for that question."
+        )
+    elif default_marks is not None or default_negative is not None:
+        lines.append(
+            "Default marking for this template (use on every question "
+            "unless a section override or the paper itself states otherwise): "
+            f"+{default_marks if default_marks is not None else '?'} correct, "
+            f"-{default_negative if default_negative is not None else '?'} wrong. "
+            "Still set marks_per_correct and negative_marks_per_wrong on each "
+            "question to these values when the paper is uniform."
+        )
 
     if expected_count:
         lines.append(
@@ -227,6 +309,8 @@ def _build_syllabus_guidance(template_context):
         return ""
 
     return "\n\nExam format context (from the applied template):\n" + "\n".join(lines)
+
+
 
 
 # Called once, in the wrapper below, against whatever final question list
@@ -1305,10 +1389,33 @@ def _enhance_questions_with_ai_inner(
 # (both keys stay absent) rather than being defaulted to something that
 # would shadow that fallback.
 def _apply_section_marks(template_context, questions):
+    """Assign per-question marks from template settings / sections.
+
+    Priority per question:
+      1. Marks the AI already set (from paper instructions / scheme prompt)
+      2. Section-level marksPerCorrect / negativeMarksPerWrong, matched by
+         topic (case-insensitive) to section name
+      3. settings.marking_scheme.by_question_type when present
+      4. Template / mock-test defaults when they are useful (> 0). Zero
+         defaults mean "varies" (e.g. JEE Advanced seed) and are skipped.
+    """
     if not template_context:
-        return {"sectionsWithOverrides": 0, "questionsMatched": 0}
+        return {
+            "sectionsWithOverrides": 0,
+            "questionsMatched": 0,
+            "defaultsApplied": 0,
+            "aiMarksKept": 0,
+        }
 
     sections = template_context.get("sections") or []
+    settings = template_context.get("settings") or {}
+    marking_scheme = settings.get("marking_scheme") or {}
+    by_type = (
+        marking_scheme.get("by_question_type")
+        or marking_scheme.get("byQuestionType")
+        or {}
+    )
+
     overrides_by_name = {}
     for section in sections:
         name = section.get("name")
@@ -1318,29 +1425,91 @@ def _apply_section_marks(template_context, questions):
         negative = section.get("negativeMarksPerWrong")
         if marks is None and negative is None:
             continue
-        overrides_by_name[name] = {
+        overrides_by_name[name.strip().lower()] = {
             "marks_per_correct": marks,
             "negative_marks_per_wrong": negative,
         }
 
-    if not overrides_by_name:
-        return {"sectionsWithOverrides": 0, "questionsMatched": 0}
+    default_marks = template_context.get("marksPerCorrect")
+    default_negative = template_context.get("negativeMarksPerWrong")
+    has_useful_defaults = (
+        (default_marks is not None and float(default_marks) > 0)
+        or (default_negative is not None and float(default_negative) > 0)
+    )
 
     matched = 0
+    defaults_applied = 0
+    ai_kept = 0
+
     for question in questions:
-        override = overrides_by_name.get(question.get("topic"))
-        if not override:
+        has_ai_marks = (
+            question.get("marks_per_correct") is not None
+            or question.get("negative_marks_per_wrong") is not None
+        )
+        if has_ai_marks:
+            ai_kept += 1
+            topic_key = (question.get("topic") or "").strip().lower()
+            override = overrides_by_name.get(topic_key)
+            if override:
+                if (
+                    question.get("marks_per_correct") is None
+                    and override["marks_per_correct"] is not None
+                ):
+                    question["marks_per_correct"] = override["marks_per_correct"]
+                if (
+                    question.get("negative_marks_per_wrong") is None
+                    and override["negative_marks_per_wrong"] is not None
+                ):
+                    question["negative_marks_per_wrong"] = override[
+                        "negative_marks_per_wrong"
+                    ]
             continue
 
-        if override["marks_per_correct"] is not None:
-            question["marks_per_correct"] = override["marks_per_correct"]
-        if override["negative_marks_per_wrong"] is not None:
-            question["negative_marks_per_wrong"] = override["negative_marks_per_wrong"]
-        matched += 1
+        topic_key = (question.get("topic") or "").strip().lower()
+        override = overrides_by_name.get(topic_key)
+        if override:
+            if override["marks_per_correct"] is not None:
+                question["marks_per_correct"] = override["marks_per_correct"]
+            if override["negative_marks_per_wrong"] is not None:
+                question["negative_marks_per_wrong"] = override[
+                    "negative_marks_per_wrong"
+                ]
+            matched += 1
+            continue
+
+        if isinstance(by_type, dict) and by_type:
+            meta = question.get("metadata") or {}
+            qtype = (
+                meta.get("questionType")
+                or meta.get("question_type")
+                or question.get("question_type")
+            )
+            if qtype and qtype in by_type and isinstance(by_type[qtype], dict):
+                scores = by_type[qtype]
+                plus = scores.get("marksPerCorrect", scores.get("marks_per_correct"))
+                minus = scores.get(
+                    "negativeMarksPerWrong", scores.get("negative_marks_per_wrong")
+                )
+                if plus is not None:
+                    question["marks_per_correct"] = plus
+                if minus is not None:
+                    question["negative_marks_per_wrong"] = minus
+                if plus is not None or minus is not None:
+                    matched += 1
+                    continue
+
+        if has_useful_defaults:
+            if default_marks is not None:
+                question["marks_per_correct"] = default_marks
+            if default_negative is not None:
+                question["negative_marks_per_wrong"] = default_negative
+            defaults_applied += 1
 
     return {
         "sectionsWithOverrides": len(overrides_by_name),
         "questionsMatched": matched,
+        "defaultsApplied": defaults_applied,
+        "aiMarksKept": ai_kept,
     }
 
 

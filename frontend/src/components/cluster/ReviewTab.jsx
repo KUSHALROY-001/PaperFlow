@@ -1,3 +1,4 @@
+import MarksBadge from "@/components/shared/MarksBadge";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
@@ -221,6 +222,16 @@ export default function ReviewTab({
                       <span className="rounded-full bg-muted border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
                         {question.topic}
                       </span>
+                      <MarksBadge
+                        marksPerCorrect={
+                          question.marksPerCorrect ?? question.marks_per_correct
+                        }
+                        negativeMarksPerWrong={
+                          question.negativeMarksPerWrong ??
+                          question.negative_marks_per_wrong
+                        }
+                        unsetLabel="Marks unset"
+                      />
                       {question.subtopic && (
                         <span className="rounded-full bg-sky-500/10 border border-sky-500/20 px-3 py-1 text-xs font-semibold text-sky-600 dark:text-sky-400">
                           {question.subtopic}

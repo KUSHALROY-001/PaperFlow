@@ -95,6 +95,31 @@ def _question_item_schema(*, nullable_as_union):
                 "nowhere to render."
             ),
         },
+        # Per-question scoring. Required when the applied template's
+        # settings.marking_scheme (or per-section marks) means different
+        # questions carry different +ve/-ve marks (JEE Advanced, GATE
+        # 1-mark vs 2-mark, etc.). Leave null when every question uses the
+        # same mock-test-level defaults - the scorer falls back to those.
+        "marks_per_correct": {
+            **optional("number"),
+            "description": (
+                "Marks awarded for a fully correct answer on THIS question. "
+                "Read from the paper's own marking instructions / section "
+                "header when they differ by question type or section. "
+                "Leave null only when the paper uses one uniform scheme "
+                "for every question."
+            ),
+        },
+        "negative_marks_per_wrong": {
+            **optional("number"),
+            "description": (
+                "Marks deducted for a wrong answer on THIS question "
+                "(0 when the question type has no negative marking, e.g. "
+                "many numerical-answer questions). Read from the paper's "
+                "marking instructions when they differ by type/section. "
+                "Leave null only when the paper uses one uniform scheme."
+            ),
+        },
         # Only meaningful for generate_questions_from_metadata's multi-group
         # batched requests (see provider.py#build_metadata_generation_prompt)
         # - a single request there can ask for several DIFFERENT topic/
@@ -494,6 +519,17 @@ def normalize_ai_questions(payload, *, source="ai"):
             ]
             confidence = min(confidence, 40)
 
+        marks_per_correct = parse_optional_number(
+            item.get("marks_per_correct")
+            if item.get("marks_per_correct") is not None
+            else item.get("marksPerCorrect")
+        )
+        negative_marks_per_wrong = parse_optional_number(
+            item.get("negative_marks_per_wrong")
+            if item.get("negative_marks_per_wrong") is not None
+            else item.get("negativeMarksPerWrong")
+        )
+
         normalized.append(
             {
                 "question_no": question_no,
@@ -508,6 +544,8 @@ def normalize_ai_questions(payload, *, source="ai"):
                 "confidence": max(0, min(confidence, 100)),
                 "metadata": metadata,
                 "diagrams": diagrams,
+                "marks_per_correct": marks_per_correct,
+                "negative_marks_per_wrong": negative_marks_per_wrong,
                 "topic_group_index": parse_nonnegative_int(
                     item.get("topic_group_index")
                     if item.get("topic_group_index") is not None
@@ -524,6 +562,21 @@ def clean_optional_text(value):
         return None
     value = str(value).strip()
     return value or None
+
+
+def parse_optional_number(value):
+    """Parse a marks value; return None for missing/invalid (do not coerce to 0)."""
+    if value is None or value == "":
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if number != number:  # NaN
+        return None
+    if number < 0:
+        return None
+    return number
 
 
 def parse_positive_int(value):
