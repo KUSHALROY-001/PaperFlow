@@ -179,24 +179,69 @@ export async function getPresignedUploadUrl(
 // DB row / processing job created for an object that isn't really in B2.
 // Also the source of truth for the real ContentLength/ContentType, rather
 // than trusting whatever the browser claims in the completion request.
+//
+// Retries on transient connection-level failures only (DNS/connect
+// timeouts, connection resets - never on a real B2 response like 403/404,
+// which retrying can't fix). This call runs AFTER the browser's own
+// multi-minute direct-to-B2 upload already succeeded (see
+// mock-tests.service.js#completeUpload, which calls this before creating
+// any DB record) - a single bad network moment on this one read-only
+// check shouldn't throw away an otherwise-successful upload and force
+// the user to re-upload the whole file from scratch.
+const HEAD_PDF_MAX_ATTEMPTS = 3;
+const HEAD_PDF_RETRY_DELAY_MS = 2000;
+
+function isTransientConnectionError(error) {
+  const code = error?.code || error?.cause?.code || "";
+  const name = error?.name || "";
+  return (
+    code === "ETIMEDOUT" ||
+    code === "ECONNRESET" ||
+    code === "ECONNREFUSED" ||
+    code === "EAI_AGAIN" ||
+    name === "TimeoutError" ||
+    name === "AggregateError"
+  );
+}
+
 export async function headPdf(storageKey) {
   validatePdfStorageConfig();
-  try {
-    const result = await getClient().send(
-      new HeadObjectCommand({ Bucket: getBucket(), Key: storageKey }),
-    );
-    return {
-      exists: true,
-      sizeBytes: result.ContentLength,
-      mimeType: result.ContentType,
-    };
-  } catch (error) {
-    if (error.name === "NotFound" || error.$metadata?.httpStatusCode === 404) {
-      return { exists: false };
+
+  for (let attempt = 1; attempt <= HEAD_PDF_MAX_ATTEMPTS; attempt++) {
+    try {
+      const result = await getClient().send(
+        new HeadObjectCommand({ Bucket: getBucket(), Key: storageKey }),
+      );
+      return {
+        exists: true,
+        sizeBytes: result.ContentLength,
+        mimeType: result.ContentType,
+      };
+    } catch (error) {
+      if (
+        error.name === "NotFound" ||
+        error.$metadata?.httpStatusCode === 404
+      ) {
+        return { exists: false };
+      }
+
+      const transient = isTransientConnectionError(error);
+      if (!transient || attempt === HEAD_PDF_MAX_ATTEMPTS) {
+        const friendlyMessage = formatB2Error(error, "verify");
+        console.error(
+          `Failed to verify PDF upload (${storageKey}) after ${attempt} attempt(s):`,
+          error,
+        );
+        throw httpError(502, friendlyMessage, { originalError: error.message });
+      }
+
+      console.warn(
+        `Transient error verifying PDF upload (${storageKey}) on attempt ${attempt}/${HEAD_PDF_MAX_ATTEMPTS}, retrying in ${HEAD_PDF_RETRY_DELAY_MS}ms: ${error.message}`,
+      );
+      await new Promise((resolve) =>
+        setTimeout(resolve, HEAD_PDF_RETRY_DELAY_MS),
+      );
     }
-    const friendlyMessage = formatB2Error(error, "verify");
-    console.error(`Failed to verify PDF upload (${storageKey}):`, error);
-    throw httpError(502, friendlyMessage, { originalError: error.message });
   }
 }
 
