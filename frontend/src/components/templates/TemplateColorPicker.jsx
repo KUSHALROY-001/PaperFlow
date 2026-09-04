@@ -3,7 +3,7 @@ import { COLOR_OPTIONS, colorMap, labelClass } from "@/utils/templateHelpers";
 export default function TemplateColorPicker({ color, setColor, isViewer }) {
   return (
     <div>
-      <label className={labelClass}>Color</label>
+      <p className={labelClass}>Color</p>
       <div className="flex flex-wrap gap-2">
         {COLOR_OPTIONS.map((c) => (
           <button

@@ -100,7 +100,7 @@ export default function SessionQuestionView({
                 }`}
               >
                 <span className="font-semibold text-orange-500 mr-3">
-                  {String.fromCharCode(65 + i)}.
+                  {String.fromCodePoint(65 + i)}.
                 </span>
                 <MathText text={opt} />
               </button>

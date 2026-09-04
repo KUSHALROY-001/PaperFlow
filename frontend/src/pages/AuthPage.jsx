@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useId, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, ShieldCheck, Eye, EyeOff, Loader2 } from "lucide-react";
 import ThemeToggle from "../components/ThemeToggle";
@@ -30,6 +30,7 @@ function PaperFlowLogo() {
 }
 
 export default function AuthPage({ mode, title, description }) {
+  const uid = useId();
   const navigate = useNavigate();
   const { login, signup, loginWithGoogle } = useAuth();
   const [form, setForm] = useState({
@@ -164,10 +165,14 @@ export default function AuthPage({ mode, title, description }) {
           <form className="space-y-3.5 sm:space-y-4" onSubmit={handleSubmit}>
             {mode === "signup" && (
               <div>
-                <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-foreground">
+                <label
+                  htmlFor={`${uid}-name`}
+                  className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-foreground"
+                >
                   Name
                 </label>
                 <input
+                  id={`${uid}-name`}
                   required
                   type="text"
                   value={form.name}
@@ -184,10 +189,14 @@ export default function AuthPage({ mode, title, description }) {
             )}
 
             <div>
-              <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-foreground">
+              <label
+                htmlFor={`${uid}-email`}
+                className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-foreground"
+              >
                 Email
               </label>
               <input
+                id={`${uid}-email`}
                 required
                 type="email"
                 value={form.email}
@@ -202,11 +211,15 @@ export default function AuthPage({ mode, title, description }) {
               />
             </div>
             <div>
-              <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-foreground">
+              <label
+                htmlFor={`${uid}-password`}
+                className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-foreground"
+              >
                 Password
               </label>
               <div className="relative">
                 <input
+                  id={`${uid}-password`}
                   required
                   type={showPassword ? "text" : "password"}
                   value={form.password}

@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Lock, Eye, EyeOff, Save } from "lucide-react";
 
 export default function PasswordSection({
@@ -12,6 +13,7 @@ export default function PasswordSection({
   handleSavePassword,
   saved,
 }) {
+  const uid = useId();
   return (
     <form
       onSubmit={handleSavePassword}
@@ -26,11 +28,15 @@ export default function PasswordSection({
 
       <div className="space-y-4">
         <div>
-          <label className="block text-xs sm:text-sm font-bold text-foreground mb-2">
+          <label
+            htmlFor={`${uid}-current-password`}
+            className="block text-xs sm:text-sm font-bold text-foreground mb-2"
+          >
             Current Password
           </label>
           <div className="relative">
             <input
+              id={`${uid}-current-password`}
               required
               type={showCurrentPwd ? "text" : "password"}
               autoComplete="current-password"
@@ -58,11 +64,15 @@ export default function PasswordSection({
           </div>
         </div>
         <div>
-          <label className="block text-xs sm:text-sm font-bold text-foreground mb-2">
+          <label
+            htmlFor={`${uid}-new-password`}
+            className="block text-xs sm:text-sm font-bold text-foreground mb-2"
+          >
             New Password
           </label>
           <div className="relative">
             <input
+              id={`${uid}-new-password`}
               required
               minLength={8}
               type={showNewPwd ? "text" : "password"}
@@ -91,10 +101,14 @@ export default function PasswordSection({
           </div>
         </div>
         <div>
-          <label className="block text-xs sm:text-sm font-bold text-foreground mb-2">
+          <label
+            htmlFor={`${uid}-confirm-password`}
+            className="block text-xs sm:text-sm font-bold text-foreground mb-2"
+          >
             Confirm New Password
           </label>
           <input
+            id={`${uid}-confirm-password`}
             required
             type={showNewPwd ? "text" : "password"}
             autoComplete="new-password"

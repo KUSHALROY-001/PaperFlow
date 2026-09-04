@@ -320,7 +320,10 @@ function FormattedTextEditor(
         });
         let slotKey;
         do {
-          slotKey = `img-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+          // crypto.randomUUID() rather than Math.random() (javascript:S2245) -
+          // Math.random() isn't cryptographically strong; a UUID-derived
+          // suffix keeps this collision-proof without that weakness.
+          slotKey = `img-${Date.now().toString(36)}${crypto.randomUUID().replace(/-/g, "").slice(0, 6)}`;
         } while (usedSlotKeys.has(slotKey));
 
         const position = editor.state.selection.from;

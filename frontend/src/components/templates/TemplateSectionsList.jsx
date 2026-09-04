@@ -12,9 +12,9 @@ export default function TemplateSectionsList({
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5">
-        <label className={labelClass + " mb-0"}>
+        <p className={labelClass + " mb-0"}>
           Sections & syllabus (optional)
-        </label>
+        </p>
         <button
           type="button"
           disabled={isViewer}

@@ -30,6 +30,10 @@ export default function SubscribedPublishersMenu() {
           <div
             className="fixed inset-0 z-40"
             onClick={() => setShowSubscribedMenu(false)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setShowSubscribedMenu(false);
+            }}
+            role="presentation"
           />
           <div className="absolute right-0 top-full mt-2 w-72 surface-card rounded-2xl border border-border shadow-2xl z-50 overflow-hidden animate-in zoom-in-95 duration-150">
             <div className="p-3.5 border-b border-border bg-muted/30 flex items-center justify-between">
@@ -68,6 +72,19 @@ export default function SubscribedPublishersMenu() {
                         "noopener,noreferrer",
                       );
                     }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setShowSubscribedMenu(false);
+                        window.open(
+                          `/catalog/${sub.slug}`,
+                          "_blank",
+                          "noopener,noreferrer",
+                        );
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
                   >
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-bold text-foreground truncate group-hover:text-orange-500 transition-colors">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useId, useState, useEffect } from "react";
 import {
   Mail,
   Clock,
@@ -45,6 +45,7 @@ const FAQS = [
 ];
 
 export default function ContactUs() {
+  const uid = useId();
   const { user } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -121,7 +122,11 @@ Sender Information:
       // Open Gmail in a new tab
       window.open(gmailUrl, "_blank");
 
-      const generatedId = `TKT-${Math.floor(100000 + Math.random() * 900000)}`;
+      // crypto.getRandomValues() rather than Math.random() (javascript:S2245) -
+      // Math.random() isn't cryptographically strong, so avoid it even for a
+      // display-only ticket number.
+      const ticketNumber = 100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000);
+      const generatedId = `TKT-${ticketNumber}`;
       setTicketId(generatedId);
       setIsSubmitted(true);
     } catch (err) {
@@ -262,10 +267,14 @@ Sender Information:
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                    <label
+                      htmlFor={`${uid}-name`}
+                      className="text-xs font-bold text-muted-foreground uppercase tracking-wider"
+                    >
                       Your Name <span className="text-orange-500">*</span>
                     </label>
                     <input
+                      id={`${uid}-name`}
                       type="text"
                       required
                       value={name}
@@ -276,10 +285,14 @@ Sender Information:
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                    <label
+                      htmlFor={`${uid}-email`}
+                      className="text-xs font-bold text-muted-foreground uppercase tracking-wider"
+                    >
                       Email Address <span className="text-orange-500">*</span>
                     </label>
                     <input
+                      id={`${uid}-email`}
                       type="email"
                       required
                       value={email}
@@ -291,10 +304,14 @@ Sender Information:
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  <label
+                    htmlFor={`${uid}-category`}
+                    className="text-xs font-bold text-muted-foreground uppercase tracking-wider"
+                  >
                     Inquiry Topic
                   </label>
                   <select
+                    id={`${uid}-category`}
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
                     className="w-full px-4 py-2.5 rounded-md border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all cursor-pointer"
@@ -308,10 +325,14 @@ Sender Information:
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  <label
+                    htmlFor={`${uid}-subject`}
+                    className="text-xs font-bold text-muted-foreground uppercase tracking-wider"
+                  >
                     Subject
                   </label>
                   <input
+                    id={`${uid}-subject`}
                     type="text"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
@@ -322,7 +343,10 @@ Sender Information:
 
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                    <label
+                      htmlFor={`${uid}-message`}
+                      className="text-xs font-bold text-muted-foreground uppercase tracking-wider"
+                    >
                       Message <span className="text-orange-500">*</span>
                     </label>
                     <span className="text-[11px] text-muted-foreground">
@@ -330,6 +354,7 @@ Sender Information:
                     </span>
                   </div>
                   <textarea
+                    id={`${uid}-message`}
                     required
                     rows={5}
                     value={message}

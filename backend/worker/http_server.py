@@ -57,6 +57,7 @@ Concurrency model - read this before changing anything here:
 
 import json
 import os
+import ssl
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
@@ -69,6 +70,18 @@ from .worker import process_next_job
 
 WORKER_TRIGGER_SECRET = os.environ.get("WORKER_TRIGGER_SECRET", "").strip()
 PORT = int(os.environ.get("PORT", "10000"))
+# Render (and similar PaaS platforms) terminate TLS at their edge and proxy
+# plain HTTP to the container on $PORT - the container itself has no public
+# IP, so that hop never carries plaintext outside Render's own network, and
+# binding this server to HTTPS directly there would break the deployment
+# (Render's proxy speaks HTTP to the app, not HTTPS). If this ever runs
+# somewhere WITHOUT an edge TLS terminator - i.e. exposed to the public
+# internet directly on PORT - set WORKER_TLS_CERT_FILE/WORKER_TLS_KEY_FILE
+# so requests (including the WORKER_TRIGGER_SECRET token) are encrypted
+# in transit (jssecurity/python:S5332: don't serve plain HTTP to the
+# public internet).
+WORKER_TLS_CERT_FILE = os.environ.get("WORKER_TLS_CERT_FILE", "").strip()
+WORKER_TLS_KEY_FILE = os.environ.get("WORKER_TLS_KEY_FILE", "").strip()
 
 _slot_semaphore = threading.Semaphore(WORKER_CONCURRENCY)
 # See the module docstring's last paragraph - set/clear/is_set are each
@@ -310,7 +323,13 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     server = ThreadingHTTPServer(("0.0.0.0", PORT), Handler)
-    print(f"Worker HTTP wrapper listening on 0.0.0.0:{PORT}")
+    scheme = "http"
+    if WORKER_TLS_CERT_FILE and WORKER_TLS_KEY_FILE:
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ctx.load_cert_chain(certfile=WORKER_TLS_CERT_FILE, keyfile=WORKER_TLS_KEY_FILE)
+        server.socket = ctx.wrap_socket(server.socket, server_side=True)
+        scheme = "https"
+    print(f"Worker HTTP wrapper listening on {scheme}://0.0.0.0:{PORT}")
     server.serve_forever()
 
 

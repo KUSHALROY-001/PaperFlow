@@ -208,6 +208,135 @@ function normalizeSections(value, fieldName) {
   });
 }
 
+// settings.marking_scheme.by_question_type is the ONLY place a per-section-
+// AND-per-question-type marking scheme lives (see mock-tests.service.js
+// #buildTemplateContext and worker/ai/provider.py#_apply_section_marks,
+// which is the only code that ever reads it) - a JEE-Advanced-style paper
+// where Physics alone has single-correct +3/-1, multiple-correct +4/-2,
+// numerical +4/0 cannot be expressed with the flat per-section marks
+// above. Previously this key was NEVER actually settable through the app
+// at all - createTemplate/updateTemplate accepted `body.settings` as an
+// unvalidated passthrough object, but no template UI (TemplateSectionRow,
+// useTemplateForm) ever built or sent one, so template_context.markingScheme
+// was always empty for every real template and the by_question_type tier
+// in _apply_section_marks could never fire. Validated explicitly here
+// (rather than left as opaque passthrough JSON) so a malformed
+// marksPerCorrect/negativeMarksPerWrong can't reach the worker as silent
+// garbage the way an unchecked passthrough would allow.
+function normalizeMarkingScheme(value, fieldName) {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+  if (typeof value !== "object" || Array.isArray(value)) {
+    throw httpError(400, `${fieldName} must be an object`);
+  }
+
+  const scheme = {};
+
+  if (value.type !== undefined && value.type !== null && value.type !== "") {
+    scheme.type = requiredString(value.type, `${fieldName}.type`);
+  }
+  if (value.description !== undefined) {
+    const description = optionalString(value.description);
+    if (description) scheme.description = description;
+  }
+  const partialMarking = value.partial_marking ?? value.partialMarking;
+  if (partialMarking !== undefined && partialMarking !== null) {
+    scheme.partial_marking = Boolean(partialMarking);
+  }
+
+  const byTypeRaw = value.by_question_type ?? value.byQuestionType;
+  if (byTypeRaw !== undefined && byTypeRaw !== null) {
+    if (typeof byTypeRaw !== "object" || Array.isArray(byTypeRaw)) {
+      throw httpError(400, `${fieldName}.by_question_type must be an object`);
+    }
+
+    const byType = {};
+    for (const [rawLabel, scores] of Object.entries(byTypeRaw)) {
+      const label = String(rawLabel).trim();
+      if (!label) continue;
+      if (typeof scores !== "object" || scores === null || Array.isArray(scores)) {
+        throw httpError(
+          400,
+          `${fieldName}.by_question_type["${label}"] must be an object`,
+        );
+      }
+
+      const marks = scores.marksPerCorrect ?? scores.marks_per_correct;
+      const negative = scores.negativeMarksPerWrong ?? scores.negative_marks_per_wrong;
+      if (
+        (marks === undefined || marks === null) &&
+        (negative === undefined || negative === null)
+      ) {
+        continue;
+      }
+
+      const entry = {};
+      if (marks !== undefined && marks !== null) {
+        entry.marksPerCorrect = requiredNonNegativeNumber(
+          marks,
+          `${fieldName}.by_question_type["${label}"].marksPerCorrect`,
+        );
+      }
+      if (negative !== undefined && negative !== null) {
+        entry.negativeMarksPerWrong = requiredNonNegativeNumber(
+          negative,
+          `${fieldName}.by_question_type["${label}"].negativeMarksPerWrong`,
+        );
+      }
+      if (Object.keys(entry).length) {
+        byType[label] = entry;
+      }
+    }
+
+    if (Object.keys(byType).length) {
+      scheme.by_question_type = byType;
+    }
+  }
+
+  return Object.keys(scheme).length ? scheme : undefined;
+}
+
+// Builds the final settings JSONB from whatever the caller sent, with
+// marking_scheme/question_types replaced by their VALIDATED forms (see
+// normalizeMarkingScheme above) rather than left as the raw passthrough
+// value - and with any raw/camelCase duplicate of either key stripped out
+// first, so a stale unvalidated `settings.markingScheme` left over from an
+// older client request can never sit alongside the validated
+// `settings.marking_scheme` and shadow it (mock-tests.service.js
+// buildTemplateContext only ever reads the snake_case key).
+function normalizeTemplateSettings(rawSettings) {
+  const base =
+    rawSettings && typeof rawSettings === "object" && !Array.isArray(rawSettings)
+      ? rawSettings
+      : {};
+
+  const {
+    marking_scheme: _rawMarkingScheme,
+    markingScheme: _rawMarkingSchemeCamel,
+    question_types: _rawQuestionTypes,
+    questionTypes: _rawQuestionTypesCamel,
+    ...restSettings
+  } = base;
+
+  const markingScheme = normalizeMarkingScheme(
+    _rawMarkingScheme ?? _rawMarkingSchemeCamel,
+    "settings.marking_scheme",
+  );
+  const questionTypes = normalizeStringArray(
+    _rawQuestionTypes ?? _rawQuestionTypesCamel,
+    "settings.question_types",
+  );
+
+  return {
+    ...restSettings,
+    ...(markingScheme ? { marking_scheme: markingScheme } : {}),
+    ...(questionTypes && questionTypes.length
+      ? { question_types: questionTypes }
+      : {}),
+  };
+}
+
 function handleDuplicateTemplate(error) {
   if (error.code === "23505") {
     throw httpError(409, "A template with this slug already exists");
@@ -318,8 +447,7 @@ export async function createTemplate(workspaceId, userId, body) {
   const tags = normalizeStringArray(body.tags, "tags") ?? [];
   const sections = normalizeSections(body.sections, "sections") ?? [];
   const rating = ratingValue(body.rating);
-  const settings =
-    body.settings && typeof body.settings === "object" ? body.settings : {};
+  const settings = normalizeTemplateSettings(body.settings);
 
   const baseSlug = optionalString(body.slug) || slugify(name);
 
@@ -417,9 +545,16 @@ export async function updateTemplate(templateId, workspaceId, body) {
     isActive: typeof body.isActive === "boolean" ? body.isActive : undefined,
     ratingProvided,
     rating: ratingValue(body.rating),
+    // undefined (not {}) when the caller didn't send `settings` at all -
+    // the repository's COALESCE($20::jsonb, settings) leaves the existing
+    // row untouched in that case (see updateTemplate below). Once settings
+    // IS sent, though, it's validated the same way createTemplate's is
+    // (normalizeTemplateSettings), not passed through raw - see that
+    // function's own comment for why marking_scheme/question_types can't
+    // just be arbitrary passthrough JSON.
     settings:
       body.settings && typeof body.settings === "object"
-        ? body.settings
+        ? normalizeTemplateSettings(body.settings)
         : undefined,
   });
 

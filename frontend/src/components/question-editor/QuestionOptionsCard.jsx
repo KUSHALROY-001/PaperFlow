@@ -25,9 +25,9 @@ export default function QuestionOptionsCard({
   return (
     <div className="surface-card rounded-2xl p-3 sm:p-6 border border-border">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
-        <label className="text-xs sm:text-sm font-bold text-foreground">
+        <span className="text-xs sm:text-sm font-bold text-foreground">
           Answer Options
-        </label>
+        </span>
         <div className="flex items-center gap-2">
           <button
             type="button"

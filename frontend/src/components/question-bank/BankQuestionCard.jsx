@@ -161,7 +161,7 @@ export default function BankQuestionCard({
                   : "text-muted-foreground"
               }`}
             >
-              {String.fromCharCode(65 + index)}. <MathText text={option} />
+              {String.fromCodePoint(65 + index)}. <MathText text={option} />
             </div>
           ))}
         </div>

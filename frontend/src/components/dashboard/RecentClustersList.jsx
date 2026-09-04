@@ -124,6 +124,14 @@ export default function RecentClustersList({ clusters, isLoading }) {
             <div
               key={cluster.id}
               onClick={() => navigate(`/cluster/${cluster.id}`)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate(`/cluster/${cluster.id}`);
+                }
+              }}
+              role="button"
+              tabIndex={0}
               className="surface-card rounded-2xl p-4 sm:p-5 border border-border space-y-4 hover:border-orange-500/40 cursor-pointer transition-all group"
             >
               {/* Cluster Card Header */}

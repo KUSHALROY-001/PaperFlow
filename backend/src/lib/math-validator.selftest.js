@@ -13,35 +13,35 @@ import { findMathErrors, findAllMathErrors } from "./math-validator.js";
 
 const cases = [
   [
-    "the exact bug from the Sandmeyer reaction cell - an extra '}' after \\text{Tollen's reagent} is caught",
-    "The answer is $\\text{Toluene}\\xrightarrow{(iv)} \\text{Tollen's reagent}}{(i)} \\text{Cl}_2$ done.",
+    String.raw`the exact bug from the Sandmeyer reaction cell - an extra '}' after \text{Tollen's reagent} is caught`,
+    String.raw`The answer is $\text{Toluene}\xrightarrow{(iv)} \text{Tollen's reagent}}{(i)} \text{Cl}_2$ done.`,
     1,
   ],
   [
     "the SAME reaction written correctly (balanced) is not flagged",
-    "$\\text{Toluene} \\xrightarrow[(ii)H_3O^+]{(i)CrO_2Cl_2/CS_2} \\text{Benzoic acid}$",
+    String.raw`$\text{Toluene} \xrightarrow[(ii)H_3O^+]{(i)CrO_2Cl_2/CS_2} \text{Benzoic acid}$`,
     0,
   ],
   ["plain text with no math at all", "What is the capital of France?", 0],
   [
     "ordinary balanced math - a fraction",
-    "Simplify $\\frac{1}{2} + \\frac{1}{3}$.",
+    String.raw`Simplify $\frac{1}{2} + \frac{1}{3}$.`,
     0,
   ],
-  ["missing closing brace", "Compute $\\frac{1}{2$ please.", 1],
+  ["missing closing brace", String.raw`Compute $\frac{1}{2$ please.`, 1],
   [
-    "missing closing bracket in \\xrightarrow[...]",
-    "$A \\xrightarrow[B]{C$",
+    String.raw`missing closing bracket in \xrightarrow[...]`,
+    String.raw`$A \xrightarrow[B]{C$`,
     1,
   ],
   [
     "two separate math spans, only the second is broken",
-    "First $x + y = 5$, then $\\frac{1}{2$.",
+    String.raw`First $x + y = 5$, then $\frac{1}{2$.`,
     1,
   ],
   [
     "display math $$...$$ with a genuine imbalance",
-    "$$\\int_0^1 x \\, dx = \\frac{1}{2}}$$",
+    String.raw`$$\int_0^1 x \, dx = \frac{1}{2}}$$`,
     1,
   ],
   [
@@ -51,7 +51,7 @@ const cases = [
   ],
   [
     "nested braces that are still correctly balanced",
-    "$\\sqrt{\\frac{a^2}{b^2 + c^2}}$",
+    String.raw`$\sqrt{\frac{a^2}{b^2 + c^2}}$`,
     0,
   ],
 ];
@@ -74,13 +74,15 @@ console.log("\n--- findAllMathErrors: field tagging ---");
 
 const question = {
   questionText: "Balanced: $x^2$",
-  explanation: "Broken: $\\frac{1}{2$",
+  explanation: String.raw`Broken: $\frac{1}{2$`,
   passage: null,
-  options: ["A. $y = mx + b$", { optionText: "B. $\\text{H}_2\\text{O}}$" }],
+  options: ["A. $y = mx + b$", { optionText: String.raw`B. $\text{H}_2\text{O}}$` }],
 };
 const tagged = findAllMathErrors(question);
-const expectedFields = ["explanation", "options[1]"].sort();
-const foundFields = [...new Set(tagged.map((e) => e.field))].sort();
+const expectedFields = ["explanation", "options[1]"].sort((a, b) => a.localeCompare(b));
+const foundFields = [...new Set(tagged.map((e) => e.field))].sort((a, b) =>
+  a.localeCompare(b),
+);
 const taggingOk = JSON.stringify(foundFields) === JSON.stringify(expectedFields);
 console.log(
   `${taggingOk ? "ok  " : "FAIL"} - flags explanation + options[1] only (found: ${JSON.stringify(foundFields)})`,

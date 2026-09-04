@@ -56,9 +56,9 @@ export default function QuestionTextCard({
       {/* Header row with raw-text control and 3-dot menu */}
       <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
         <div className="flex items-center gap-2.5 flex-wrap">
-          <label className="block text-xs sm:text-sm font-bold text-foreground">
+          <span className="block text-xs sm:text-sm font-bold text-foreground">
             Question Text
-          </label>
+          </span>
 
           <button
             type="button"
@@ -93,10 +93,7 @@ export default function QuestionTextCard({
           </button>
 
           {isQuestionMenuOpen && (
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="absolute right-0 top-8 w-48 bg-card border border-border rounded-xl shadow-lg p-1 z-30 space-y-0.5 animate-in fade-in zoom-in-95 duration-100"
-            >
+            <div className="absolute right-0 top-8 w-48 bg-card border border-border rounded-xl shadow-lg p-1 z-30 space-y-0.5 animate-in fade-in zoom-in-95 duration-100">
               <button
                 type="button"
                 disabled={isViewer}

@@ -4,6 +4,8 @@ import { useAuth } from "@/lib/AuthContext";
 import {
   CATEGORY_OPTIONS,
   buildSectionPayload,
+  buildQuestionTypeMarkPayload,
+  makeEmptyQuestionTypeMark,
   makeEmptySection,
   sectionRowFromTemplateSection,
 } from "@/utils/templateHelpers";
@@ -48,6 +50,12 @@ export function useTemplateForm({ initialTemplate = null, onSaved }) {
   const [sections, setSections] = useState(() =>
     (initialTemplate?.sections || []).map(sectionRowFromTemplateSection),
   );
+  const [markingSchemeDescription, setMarkingSchemeDescription] = useState(
+    initialTemplate?.markingSchemeDescription || "",
+  );
+  const [questionTypeMarks, setQuestionTypeMarks] = useState(
+    () => initialTemplate?.questionTypeMarks || [],
+  );
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -65,6 +73,20 @@ export function useTemplateForm({ initialTemplate = null, onSaved }) {
 
   const addSection = () => {
     setSections((current) => [...current, makeEmptySection()]);
+  };
+
+  const updateQuestionTypeMark = (key, patch) => {
+    setQuestionTypeMarks((current) =>
+      current.map((row) => (row.key === key ? { ...row, ...patch } : row)),
+    );
+  };
+
+  const removeQuestionTypeMark = (key) => {
+    setQuestionTypeMarks((current) => current.filter((row) => row.key !== key));
+  };
+
+  const addQuestionTypeMark = () => {
+    setQuestionTypeMarks((current) => [...current, makeEmptyQuestionTypeMark()]);
   };
 
   const handleSubmit = async (event) => {
@@ -88,6 +110,44 @@ export function useTemplateForm({ initialTemplate = null, onSaved }) {
     const sectionsPayload = sections
       .map(buildSectionPayload)
       .filter(Boolean);
+
+    // by_question_type: { <label>: { marksPerCorrect?, negativeMarksPerWrong? } }
+    // - the only place a per-question-type marking scheme (as opposed to a
+    // flat per-section value) can live. See
+    // extraction-templates.service.js#normalizeMarkingScheme for how this
+    // gets validated server-side and templateHelpers.js#buildQuestionTypeMarkPayload
+    // for the row -> entry shape.
+    const questionTypeMarkEntries = questionTypeMarks
+      .map(buildQuestionTypeMarkPayload)
+      .filter(Boolean);
+    const byQuestionType = questionTypeMarkEntries.length
+      ? Object.fromEntries(
+          questionTypeMarkEntries.map(({ label, entry }) => [label, entry]),
+        )
+      : null;
+    const trimmedMarkingSchemeDescription = markingSchemeDescription.trim();
+
+    // Sent on every save (both create and edit), replacing the whole
+    // settings object each time - same "full replacement, not a deep
+    // merge" pattern sections/tags already use. Only include marking_scheme
+    // at all when there's actually something in it, so a template with no
+    // per-type overrides configured doesn't grow a settings.marking_scheme
+    // key with nothing meaningful inside it.
+    const settings = {
+      ...(byQuestionType || trimmedMarkingSchemeDescription
+        ? {
+            marking_scheme: {
+              ...(trimmedMarkingSchemeDescription
+                ? { description: trimmedMarkingSchemeDescription }
+                : {}),
+              ...(byQuestionType ? { by_question_type: byQuestionType } : {}),
+            },
+          }
+        : {}),
+      ...(byQuestionType
+        ? { question_types: Object.keys(byQuestionType) }
+        : {}),
+    };
 
     const trimmedDescription = description.trim();
     const descriptionValue = trimmedDescription
@@ -119,6 +179,7 @@ export function useTemplateForm({ initialTemplate = null, onSaved }) {
         .map((tag) => tag.trim())
         .filter(Boolean),
       sections: sectionsPayload,
+      settings,
     };
 
     try {
@@ -164,6 +225,12 @@ export function useTemplateForm({ initialTemplate = null, onSaved }) {
     updateSection,
     removeSection,
     addSection,
+    markingSchemeDescription,
+    setMarkingSchemeDescription,
+    questionTypeMarks,
+    updateQuestionTypeMark,
+    removeQuestionTypeMark,
+    addQuestionTypeMark,
     error,
     isSubmitting,
     handleSubmit,

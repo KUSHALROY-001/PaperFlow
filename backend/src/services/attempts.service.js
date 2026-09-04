@@ -4,6 +4,41 @@ import * as attemptsRepo from "../repositories/attempts.repository.js";
 import * as mockTestsRepo from "../repositories/mock-tests.repository.js";
 import { attachDiagramUrls } from "./question-assets.service.js";
 
+// A question with a per-question override for EITHER field is treated as
+// fully opted out of the mock test's own defaults, not half-in/half-out -
+// resolving the still-missing field from mockTest's marks would silently
+// mix two unrelated scoring schemes on one question (e.g. a JEE Advanced
+// numerical question the AI correctly marked +4, wrong-field-missing
+// falling back to the mock test's own top-level default, which for a
+// paper like that is deliberately 0/0 - i.e. treated as if it had NO
+// question-level override at all, when it very much does). The missing
+// half of a genuine question-level override defaults to 0 (no marks /
+// no penalty) instead - explicit and safe, matching the same "0 means
+// no negative marking for this type" convention the extraction pipeline
+// itself uses (see provider.py#_apply_section_marks). Only when NEITHER
+// field has a question-level value does this fall through to the mock
+// test's own paper-wide default.
+function resolveQuestionMarks(question, mockTest) {
+  const hasMarks = question.marksPerCorrect ?? question.marks_per_correct;
+  const hasNegative =
+    question.negativeMarksPerWrong ?? question.negative_marks_per_wrong;
+  const hasQuestionOverride =
+    (hasMarks !== undefined && hasMarks !== null) ||
+    (hasNegative !== undefined && hasNegative !== null);
+
+  if (hasQuestionOverride) {
+    return {
+      marksPerCorrect: hasMarks ?? 0,
+      negativeMarksPerWrong: hasNegative ?? 0,
+    };
+  }
+
+  return {
+    marksPerCorrect: mockTest.marks_per_correct,
+    negativeMarksPerWrong: mockTest.negative_marks_per_wrong,
+  };
+}
+
 // Shared by startAttempt below and attempts.controller.js#start (which
 // hands this whatever shape req.query.topics comes through as - a single
 // string for one repeated query param, an array for two or more, or
@@ -56,7 +91,7 @@ export function normalizeTopics(topics) {
   const list = Array.isArray(topics) ? topics : topics ? [topics] : [];
   const cleaned = [
     ...new Set(list.map((t) => (t || "").trim()).filter(Boolean)),
-  ].sort();
+  ].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
   return cleaned.length ? cleaned : null;
 }
 
@@ -186,16 +221,7 @@ export async function startAttempt({
         questionType: question.questionType,
         // Only when publisher opts in — default is hidden during attempt.
         ...(showMarksToStudents
-          ? {
-              marksPerCorrect:
-                question.marksPerCorrect ??
-                mockTest.marks_per_correct ??
-                null,
-              negativeMarksPerWrong:
-                question.negativeMarksPerWrong ??
-                mockTest.negative_marks_per_wrong ??
-                null,
-            }
+          ? resolveQuestionMarks(question, mockTest)
           : {}),
       })),
       workspaceId,
@@ -354,11 +380,13 @@ export async function submitAttempt({ attemptId, workspaceId }) {
       const correct = row.correct_option_indexes || [];
       const isCorrect = sameNumbersRegardlessOfOrder(selected, correct);
 
-      const marksPerCorrect =
-        row.question_marks_per_correct ?? mockTest.marks_per_correct;
-      const negativeMarksPerWrong =
-        row.question_negative_marks_per_wrong ??
-        mockTest.negative_marks_per_wrong;
+      const { marksPerCorrect, negativeMarksPerWrong } = resolveQuestionMarks(
+        {
+          marks_per_correct: row.question_marks_per_correct,
+          negative_marks_per_wrong: row.question_negative_marks_per_wrong,
+        },
+        mockTest,
+      );
       const marksAwarded = isCorrect
         ? Number(marksPerCorrect)
         : -Number(negativeMarksPerWrong);

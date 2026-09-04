@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 /**
  * Per-question marks controls. Sits under topic in the question editor.
  * Empty fields mean "use mock-test default at score time".
@@ -10,6 +12,7 @@ export default function QuestionScoringFields({
   paperDefaultMarks = null,
   paperDefaultNegative = null,
 }) {
+  const uid = useId();
   const toInput = (value) =>
     value === null || value === undefined ? "" : String(value);
 
@@ -39,10 +42,14 @@ export default function QuestionScoringFields({
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-[11px] font-semibold text-muted-foreground mb-1">
+          <label
+            htmlFor={`${uid}-marks`}
+            className="block text-[11px] font-semibold text-muted-foreground mb-1"
+          >
             Marks
           </label>
           <input
+            id={`${uid}-marks`}
             type="number"
             min="0"
             step="any"
@@ -60,10 +67,14 @@ export default function QuestionScoringFields({
           />
         </div>
         <div>
-          <label className="block text-[11px] font-semibold text-muted-foreground mb-1">
+          <label
+            htmlFor={`${uid}-negative-marks`}
+            className="block text-[11px] font-semibold text-muted-foreground mb-1"
+          >
             −ve marks
           </label>
           <input
+            id={`${uid}-negative-marks`}
             type="number"
             min="0"
             step="any"

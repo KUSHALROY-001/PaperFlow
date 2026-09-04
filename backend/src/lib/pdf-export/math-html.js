@@ -19,10 +19,10 @@ function stripDelimiters(token) {
   if (token.startsWith("$$") && token.endsWith("$$")) {
     return { expr: token.slice(2, -2), displayMode: true };
   }
-  if (token.startsWith("\\[") && token.endsWith("\\]")) {
+  if (token.startsWith(String.raw`\[`) && token.endsWith(String.raw`\]`)) {
     return { expr: token.slice(2, -2), displayMode: true };
   }
-  if (token.startsWith("\\(") && token.endsWith("\\)")) {
+  if (token.startsWith(String.raw`\(`) && token.endsWith(String.raw`\)`)) {
     return { expr: token.slice(2, -2), displayMode: false };
   }
   return { expr: token.slice(1, -1), displayMode: false };

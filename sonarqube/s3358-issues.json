@@ -1,0 +1,4292 @@
+[
+  {
+    "key": "AaBnWnno78DfsSBSR8qc",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/mock-session/SessionResultsView.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 142,
+    "hash": "e31ce43a3f528f739ee5919c4899b75a",
+    "textRange": {
+      "startLine": 142,
+      "endLine": 144,
+      "startOffset": 38,
+      "endOffset": 86
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-09-03T05:25:56+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnqm78DfsSBSR8rH",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/QuestionEditor.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 204,
+    "hash": "d9b0cb8ede2740c0a763674cba4d1648",
+    "textRange": {
+      "startLine": 204,
+      "endLine": 220,
+      "startOffset": 12,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-09-03T05:25:56+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWncr78DfsSBSR8lX",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/PdfPageFetchModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 274,
+    "hash": "07b900cd120ee5faf9b95640f7e51c3c",
+    "textRange": {
+      "startLine": 274,
+      "endLine": 293,
+      "startOffset": 16,
+      "endOffset": 20
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-30T10:56:48+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnmd78DfsSBSR8p_",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/catalog/MockTestDetailModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 136,
+    "hash": "b1f898d3f70cec2265b2b852b55f7807",
+    "textRange": {
+      "startLine": 136,
+      "endLine": 366,
+      "startOffset": 12,
+      "endOffset": 9
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-28T09:40:25+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWne278DfsSBSR8nS",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/shared/UserAvatar.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 19,
+    "hash": "25c3b9ed3601fba4abed03611e67cfd4",
+    "textRange": {
+      "startLine": 19,
+      "endLine": 23,
+      "startOffset": 8,
+      "endOffset": 31
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-28T09:40:25+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWne278DfsSBSR8nT",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/shared/UserAvatar.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 21,
+    "hash": "c7e75227f11b0086b3d66759ef17e0f8",
+    "textRange": {
+      "startLine": 21,
+      "endLine": 23,
+      "startOffset": 10,
+      "endOffset": 31
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-28T09:40:25+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWne278DfsSBSR8nU",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/shared/UserAvatar.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 28,
+    "hash": "fc85a26aeb0e4af5d4cf4e7eba7e5667",
+    "textRange": {
+      "startLine": 28,
+      "endLine": 30,
+      "startOffset": 8,
+      "endOffset": 24
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-28T09:40:25+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWncY78DfsSBSR8lS",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/EditorHeader.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 19,
+    "hash": "aad940614944e8bf86dcdf359c499215",
+    "textRange": {
+      "startLine": 19,
+      "endLine": 19,
+      "startOffset": 45,
+      "endOffset": 69
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-28T05:16:42+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWncY78DfsSBSR8lT",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/EditorHeader.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 90,
+    "hash": "b18bc0f1e546255f2bc2b5fd33a07625",
+    "textRange": {
+      "startLine": 90,
+      "endLine": 94,
+      "startOffset": 16,
+      "endOffset": 53
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-28T05:16:42+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWncY78DfsSBSR8lU",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/EditorHeader.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 92,
+    "hash": "cbd3780dea80768573356baae0bc309e",
+    "textRange": {
+      "startLine": 92,
+      "endLine": 94,
+      "startOffset": 18,
+      "endOffset": 53
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-28T05:16:42+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWni978DfsSBSR8pB",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/ApplyTemplateModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 80,
+    "hash": "7420bc836b69f7a6ad3026083e2012f0",
+    "textRange": {
+      "startLine": 80,
+      "endLine": 100,
+      "startOffset": 12,
+      "endOffset": 9
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-27T06:57:59+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWng778DfsSBSR8oO",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/design-system/ConfirmDialog.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 74,
+    "hash": "3645c6a4fc0cbf3cb0bb6516579a182f",
+    "textRange": {
+      "startLine": 74,
+      "endLine": 78,
+      "startOffset": 16,
+      "endOffset": 13
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnkC78DfsSBSR8pW",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/dashboard/RecentMockTestsList.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 48,
+    "hash": "b4c1a468fae32422962960c9e88b1267",
+    "textRange": {
+      "startLine": 48,
+      "endLine": 131,
+      "startOffset": 12,
+      "endOffset": 9
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-26T03:34:47+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnci78DfsSBSR8lW",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/DiagramCropModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 68,
+    "hash": "07552b4c7272f181d272b49fe31aa75a",
+    "textRange": {
+      "startLine": 68,
+      "endLine": 68,
+      "startOffset": 22,
+      "endOffset": 56
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-26T03:34:47+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWncY78DfsSBSR8lV",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/EditorHeader.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 99,
+    "hash": "c4f981cfe01f80665133ab1c055481ac",
+    "textRange": {
+      "startLine": 99,
+      "endLine": 101,
+      "startOffset": 16,
+      "endOffset": 132
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-26T03:34:47+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndE78DfsSBSR8ld",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/EditorPanelResizer.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 48,
+    "hash": "3b62d47ca421075abcca85385df267fd",
+    "textRange": {
+      "startLine": 48,
+      "endLine": 52,
+      "startOffset": 12,
+      "endOffset": 9
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-26T03:34:47+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnkM78DfsSBSR8pZ",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/dashboard/RecentClustersList.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 103,
+    "hash": "7420bc836b69f7a6ad3026083e2012f0",
+    "textRange": {
+      "startLine": 103,
+      "endLine": 186,
+      "startOffset": 12,
+      "endOffset": 9
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-25T05:49:45+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnq378DfsSBSR8rK",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/ActiveJobs.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 58,
+    "hash": "a25d30e089a5ec14b07a7dd4fdcddb90",
+    "textRange": {
+      "startLine": 58,
+      "endLine": 116,
+      "startOffset": 12,
+      "endOffset": 9
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-25T05:49:45+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnq378DfsSBSR8rL",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/ActiveJobs.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 125,
+    "hash": "0f2fbd202d444e949a1f8e0af2afefad",
+    "textRange": {
+      "startLine": 125,
+      "endLine": 158,
+      "startOffset": 12,
+      "endOffset": 9
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-25T05:49:45+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnfs78DfsSBSR8nn",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/WorkspaceHeader.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 96,
+    "hash": "fb038e4f97e544134d55850488a8f591",
+    "textRange": {
+      "startLine": 96,
+      "endLine": 100,
+      "startOffset": 20,
+      "endOffset": 48
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-24T11:54:34+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnfs78DfsSBSR8no",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/WorkspaceHeader.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 98,
+    "hash": "c1e68e06a9c467760061474183051fac",
+    "textRange": {
+      "startLine": 98,
+      "endLine": 100,
+      "startOffset": 22,
+      "endOffset": 48
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-24T11:54:34+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnfs78DfsSBSR8np",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/WorkspaceHeader.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 125,
+    "hash": "7000c73b38694a153c0c256f1e2a7863",
+    "textRange": {
+      "startLine": 125,
+      "endLine": 127,
+      "startOffset": 18,
+      "endOffset": 106
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-24T11:54:34+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnfs78DfsSBSR8nq",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/WorkspaceHeader.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 132,
+    "hash": "7000c73b38694a153c0c256f1e2a7863",
+    "textRange": {
+      "startLine": 132,
+      "endLine": 134,
+      "startOffset": 18,
+      "endOffset": 54
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-24T11:54:34+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnrg78DfsSBSR8rX",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/hooks/useTemplateForm.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 95,
+    "hash": "7002114b03d8c85902c47bc51c9c3677",
+    "textRange": {
+      "startLine": 95,
+      "endLine": 97,
+      "startOffset": 8,
+      "endOffset": 19
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-24T11:54:34+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnrg78DfsSBSR8rY",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/hooks/useTemplateForm.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 100,
+    "hash": "7002114b03d8c85902c47bc51c9c3677",
+    "textRange": {
+      "startLine": 100,
+      "endLine": 102,
+      "startOffset": 8,
+      "endOffset": 19
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-24T11:54:34+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnr878DfsSBSR8ri",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/utils/mockTestHelpers.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 284,
+    "hash": "5ff0e130e0a9cae68651f4699b8845f4",
+    "textRange": {
+      "startLine": 284,
+      "endLine": 286,
+      "startOffset": 8,
+      "endOffset": 73
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-24T11:54:34+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnd078DfsSBSR8m9",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/QuestionOptionRow.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 53,
+    "hash": "629024b89df0e85054d5bf6f44e1b3a4",
+    "textRange": {
+      "startLine": 53,
+      "endLine": 55,
+      "startOffset": 16,
+      "endOffset": 82
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-24T05:52:57+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnd078DfsSBSR8m-",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/QuestionOptionRow.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 180,
+    "hash": "629024b89df0e85054d5bf6f44e1b3a4",
+    "textRange": {
+      "startLine": 180,
+      "endLine": 182,
+      "startOffset": 16,
+      "endOffset": 57
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-24T05:52:57+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWneS78DfsSBSR8nF",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/shared/FormattedTextEditor.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 240,
+    "hash": "6389a5fcbdc9f9815e48e79910e1586b",
+    "textRange": {
+      "startLine": 240,
+      "endLine": 242,
+      "startOffset": 12,
+      "endOffset": 43
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-24T05:52:57+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWneS78DfsSBSR8nJ",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/shared/FormattedTextEditor.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 405,
+    "hash": "eae99861c5add994d1d25d88ad898428",
+    "textRange": {
+      "startLine": 405,
+      "endLine": 407,
+      "startOffset": 10,
+      "endOffset": 44
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-24T05:52:57+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngS78DfsSBSR8nz",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/OverviewTab.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 90,
+    "hash": "efa643aa5604864cf3b3b1f72f204e64",
+    "textRange": {
+      "startLine": 90,
+      "endLine": 92,
+      "startOffset": 8,
+      "endOffset": 34
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-23T04:53:55+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnfX78DfsSBSR8ne",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/ProcessingTab.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 82,
+    "hash": "163f5eaa16a6e0fc546edfe79adca2e7",
+    "textRange": {
+      "startLine": 82,
+      "endLine": 84,
+      "startOffset": 16,
+      "endOffset": 50
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-23T04:53:55+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnj778DfsSBSR8pT",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/dashboard/ActiveJobsPanel.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 24,
+    "hash": "51845f36b89f3c58517b789724e5acac",
+    "textRange": {
+      "startLine": 24,
+      "endLine": 56,
+      "startOffset": 12,
+      "endOffset": 9
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-21T12:25:52+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnm-78DfsSBSR8qI",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-bank/BankFilters.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 25,
+    "hash": "c551dd00fb8a2737789565df24d9c359",
+    "textRange": {
+      "startLine": 25,
+      "endLine": 25,
+      "startOffset": 46,
+      "endOffset": 76
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-21T11:00:53+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnmT78DfsSBSR8p4",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/catalog/CatalogBrowser.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 163,
+    "hash": "b4c1a468fae32422962960c9e88b1267",
+    "textRange": {
+      "startLine": 163,
+      "endLine": 235,
+      "startOffset": 10,
+      "endOffset": 7
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-19T04:42:05+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnmT78DfsSBSR8p5",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/catalog/CatalogBrowser.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 169,
+    "hash": "65d435dd9b60de51eb965ec8443cf3ee",
+    "textRange": {
+      "startLine": 169,
+      "endLine": 173,
+      "startOffset": 16,
+      "endOffset": 69
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-19T04:42:05+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnmo78DfsSBSR8qG",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/catalog/CatalogSettingsPanel.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 274,
+    "hash": "9b8ba8ca28fb9a4053b11145c95df13c",
+    "textRange": {
+      "startLine": 274,
+      "endLine": 276,
+      "startOffset": 32,
+      "endOffset": 58
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-19T04:42:05+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnmT78DfsSBSR8p6",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/catalog/CatalogBrowser.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 171,
+    "hash": "7b26f7d56f5748182ee3d710b8765db7",
+    "textRange": {
+      "startLine": 171,
+      "endLine": 173,
+      "startOffset": 18,
+      "endOffset": 69
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-18T15:13:33+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnmd78DfsSBSR8qA",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/catalog/MockTestDetailModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 361,
+    "hash": "70d4fce74d01d4695937d2ddab3bd4e6",
+    "textRange": {
+      "startLine": 361,
+      "endLine": 361,
+      "startOffset": 70,
+      "endOffset": 104
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-18T15:13:33+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnmd78DfsSBSR8qB",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/catalog/MockTestDetailModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 361,
+    "hash": "70d4fce74d01d4695937d2ddab3bd4e6",
+    "textRange": {
+      "startLine": 361,
+      "endLine": 361,
+      "startOffset": 143,
+      "endOffset": 180
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-18T15:13:33+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngS78DfsSBSR8n4",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/OverviewTab.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 185,
+    "hash": "7000c73b38694a153c0c256f1e2a7863",
+    "textRange": {
+      "startLine": 185,
+      "endLine": 187,
+      "startOffset": 20,
+      "endOffset": 56
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-18T15:13:33+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnuy78DfsSBSR8sP",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/services/review-queue.service.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 115,
+    "hash": "c29450377c447162b943a5b812c36c74",
+    "textRange": {
+      "startLine": 115,
+      "endLine": 117,
+      "startOffset": 10,
+      "endOffset": 39
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-17T12:36:43+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnnP78DfsSBSR8qR",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-bank/AddToTestModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 152,
+    "hash": "32417003c70cf17576504d35a1640bd8",
+    "textRange": {
+      "startLine": 152,
+      "endLine": 174,
+      "startOffset": 10,
+      "endOffset": 11
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-17T12:36:43+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnnP78DfsSBSR8qS",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-bank/AddToTestModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 168,
+    "hash": "4c2f8270d133d7928177f8b74fae42a8",
+    "textRange": {
+      "startLine": 168,
+      "endLine": 168,
+      "startOffset": 59,
+      "endOffset": 94
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-17T12:36:43+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnnP78DfsSBSR8qT",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-bank/AddToTestModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 169,
+    "hash": "f5e218c2b11ebf0512ce365254f5984f",
+    "textRange": {
+      "startLine": 169,
+      "endLine": 169,
+      "startOffset": 37,
+      "endOffset": 128
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-17T12:36:43+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnnH78DfsSBSR8qJ",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-bank/BankQuestionCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 129,
+    "hash": "9c91fe062c26f5333479fc708e040be8",
+    "textRange": {
+      "startLine": 129,
+      "endLine": 131,
+      "startOffset": 16,
+      "endOffset": 117
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-17T12:36:43+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnk278DfsSBSR8pg",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/students/StudentAttemptRow.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 18,
+    "hash": "098d992d719d5c80311b63161a1b5277",
+    "textRange": {
+      "startLine": 18,
+      "endLine": 20,
+      "startOffset": 14,
+      "endOffset": 69
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-17T12:36:43+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnkn78DfsSBSR8pe",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/students/TopicAccuracyList.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 30,
+    "hash": "b76968d1436a498d7b830825cf8dfab1",
+    "textRange": {
+      "startLine": 30,
+      "endLine": 32,
+      "startOffset": 22,
+      "endOffset": 33
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-17T12:36:43+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnrx78DfsSBSR8rf",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/lib/api.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 609,
+    "hash": "5e1734769208f7a59c6dc4c78233e23d",
+    "textRange": {
+      "startLine": 609,
+      "endLine": 611,
+      "startOffset": 8,
+      "endOffset": 12
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-17T12:36:43+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnrx78DfsSBSR8rh",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/lib/api.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 620,
+    "hash": "5e1734769208f7a59c6dc4c78233e23d",
+    "textRange": {
+      "startLine": 620,
+      "endLine": 622,
+      "startOffset": 8,
+      "endOffset": 12
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-17T12:36:43+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnpr78DfsSBSR8q1",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/QuestionBank.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 122,
+    "hash": "aa15bdeef382e9dfebbc27b38b214713",
+    "textRange": {
+      "startLine": 122,
+      "endLine": 159,
+      "startOffset": 10,
+      "endOffset": 7
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-17T12:36:43+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnqd78DfsSBSR8rF",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/ReviewQueue.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 337,
+    "hash": "b49d29c21f73bccb1b39dff9203bdd48",
+    "textRange": {
+      "startLine": 337,
+      "endLine": 397,
+      "startOffset": 10,
+      "endOffset": 7
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-17T12:36:43+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnqd78DfsSBSR8rG",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/ReviewQueue.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 339,
+    "hash": "7433cdc6d370ddcef2d87482f73f1df9",
+    "textRange": {
+      "startLine": 339,
+      "endLine": 397,
+      "startOffset": 10,
+      "endOffset": 7
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-17T12:36:43+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnv578DfsSBSR8sY",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/services/attempts.service.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 56,
+    "hash": "51339a41cbbc2b27fac74164a23f5b1f",
+    "textRange": {
+      "startLine": 56,
+      "endLine": 56,
+      "startOffset": 48,
+      "endOffset": 70
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-16T12:43:59+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnv578DfsSBSR8sb",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/services/attempts.service.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 97,
+    "hash": "36a0a5eae0077fdd0a4ffec41f7af8eb",
+    "textRange": {
+      "startLine": 97,
+      "endLine": 97,
+      "startOffset": 41,
+      "endOffset": 79
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-16T12:43:59+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngS78DfsSBSR8n5",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/OverviewTab.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 314,
+    "hash": "70d4fce74d01d4695937d2ddab3bd4e6",
+    "textRange": {
+      "startLine": 314,
+      "endLine": 314,
+      "startOffset": 66,
+      "endOffset": 100
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-16T12:43:59+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngS78DfsSBSR8n6",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/OverviewTab.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 314,
+    "hash": "70d4fce74d01d4695937d2ddab3bd4e6",
+    "textRange": {
+      "startLine": 314,
+      "endLine": 314,
+      "startOffset": 139,
+      "endOffset": 176
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-16T12:43:59+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnrx78DfsSBSR8rd",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/lib/api.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 529,
+    "hash": "5e1734769208f7a59c6dc4c78233e23d",
+    "textRange": {
+      "startLine": 529,
+      "endLine": 531,
+      "startOffset": 8,
+      "endOffset": 12
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-16T12:43:59+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnfH78DfsSBSR8nZ",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/ProcessingTimeline.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 60,
+    "hash": "a2ac71a6dece325bb99ba6c202f18e65",
+    "textRange": {
+      "startLine": 60,
+      "endLine": 64,
+      "startOffset": 20,
+      "endOffset": 17
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-16T11:23:30+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnlI78DfsSBSR8pi",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/my-results/QuestionReviewList.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 39,
+    "hash": "af2fbfb8111d6fdc4d9ad8f49382d844",
+    "textRange": {
+      "startLine": 39,
+      "endLine": 41,
+      "startOffset": 8,
+      "endOffset": 19
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-16T11:23:30+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnlI78DfsSBSR8pl",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/my-results/QuestionReviewList.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 186,
+    "hash": "a09f0247f5dc26c616d3301fdf415838",
+    "textRange": {
+      "startLine": 186,
+      "endLine": 188,
+      "startOffset": 40,
+      "endOffset": 87
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-16T11:23:30+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnpF78DfsSBSR8qx",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/MyResults.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 73,
+    "hash": "5139652d4fc525b8621cd895b67baa04",
+    "textRange": {
+      "startLine": 73,
+      "endLine": 75,
+      "startOffset": 16,
+      "endOffset": 57
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-16T11:23:30+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnfP78DfsSBSR8na",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/SubmissionCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 67,
+    "hash": "098d992d719d5c80311b63161a1b5277",
+    "textRange": {
+      "startLine": 67,
+      "endLine": 69,
+      "startOffset": 18,
+      "endOffset": 34
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-12T05:27:07+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWni178DfsSBSR8o6",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/CreateTemplateModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 135,
+    "hash": "9746eec0c3b3df29a140ddb412bad385",
+    "textRange": {
+      "startLine": 135,
+      "endLine": 135,
+      "startOffset": 48,
+      "endOffset": 77
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-12T05:27:07+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWniM78DfsSBSR8ol",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/analytics/RecentClusterPerformance.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 27,
+    "hash": "feee9e4ce0429a132fcf259dc9337fc7",
+    "textRange": {
+      "startLine": 27,
+      "endLine": 27,
+      "startOffset": 90,
+      "endOffset": 144
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWniM78DfsSBSR8om",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/analytics/RecentClusterPerformance.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 41,
+    "hash": "2f1b173634088772157fb23385b5ee02",
+    "textRange": {
+      "startLine": 41,
+      "endLine": 43,
+      "startOffset": 24,
+      "endOffset": 35
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnfX78DfsSBSR8nd",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/ProcessingTab.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 43,
+    "hash": "a336f39e28ce4382f562ba3ac961d6a9",
+    "textRange": {
+      "startLine": 43,
+      "endLine": 45,
+      "startOffset": 18,
+      "endOffset": 75
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnfh78DfsSBSR8ng",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/ReviewTab.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 210,
+    "hash": "d90ba85e13f70ede224720576ea30e07",
+    "textRange": {
+      "startLine": 210,
+      "endLine": 212,
+      "startOffset": 20,
+      "endOffset": 37
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnfh78DfsSBSR8ni",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/ReviewTab.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 305,
+    "hash": "c32215133637c7e31563969a11556a3d",
+    "textRange": {
+      "startLine": 305,
+      "endLine": 307,
+      "startOffset": 26,
+      "endOffset": 99
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnfh78DfsSBSR8nj",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/ReviewTab.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 313,
+    "hash": "c32215133637c7e31563969a11556a3d",
+    "textRange": {
+      "startLine": 313,
+      "endLine": 315,
+      "startOffset": 26,
+      "endOffset": 46
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnfh78DfsSBSR8nk",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/ReviewTab.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 333,
+    "hash": "d90ba85e13f70ede224720576ea30e07",
+    "textRange": {
+      "startLine": 333,
+      "endLine": 335,
+      "startOffset": 26,
+      "endOffset": 93
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnfh78DfsSBSR8nl",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/ReviewTab.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 341,
+    "hash": "d90ba85e13f70ede224720576ea30e07",
+    "textRange": {
+      "startLine": 341,
+      "endLine": 343,
+      "startOffset": 26,
+      "endOffset": 43
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWng778DfsSBSR8oN",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/design-system/ConfirmDialog.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 67,
+    "hash": "dd51a183834f445fd5a0f85a5c1568cf",
+    "textRange": {
+      "startLine": 67,
+      "endLine": 69,
+      "startOffset": 18,
+      "endOffset": 82
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWng778DfsSBSR8oP",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/design-system/ConfirmDialog.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 107,
+    "hash": "dd51a183834f445fd5a0f85a5c1568cf",
+    "textRange": {
+      "startLine": 107,
+      "endLine": 109,
+      "startOffset": 18,
+      "endOffset": 64
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnnY78DfsSBSR8qV",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/mock-session/SessionQuestionNav.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 63,
+    "hash": "d04f0707bd8f58c9c7cd42168fb943e6",
+    "textRange": {
+      "startLine": 63,
+      "endLine": 67,
+      "startOffset": 22,
+      "endOffset": 95
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnnY78DfsSBSR8qW",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/mock-session/SessionQuestionNav.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 65,
+    "hash": "eb23551b2750ec548402822ad4ac2d9b",
+    "textRange": {
+      "startLine": 65,
+      "endLine": 67,
+      "startOffset": 24,
+      "endOffset": 95
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnnf78DfsSBSR8qX",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/mock-session/SessionQuestionView.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 29,
+    "hash": "9660fba11c4bd876521c27c5ced291a0",
+    "textRange": {
+      "startLine": 29,
+      "endLine": 31,
+      "startOffset": 14,
+      "endOffset": 18
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnno78DfsSBSR8qa",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/mock-session/SessionResultsView.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 114,
+    "hash": "e29953d92e6cf48783483646e3445869",
+    "textRange": {
+      "startLine": 114,
+      "endLine": 114,
+      "startOffset": 117,
+      "endOffset": 186
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnno78DfsSBSR8qb",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/mock-session/SessionResultsView.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 119,
+    "hash": "586218288ea2915cf49310dc894e8901",
+    "textRange": {
+      "startLine": 119,
+      "endLine": 123,
+      "startOffset": 24,
+      "endOffset": 21
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnlU78DfsSBSR8po",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/my-results/AttemptCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 80,
+    "hash": "43d0c35766a20389c112203fc679b154",
+    "textRange": {
+      "startLine": 80,
+      "endLine": 84,
+      "startOffset": 16,
+      "endOffset": 73
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnlU78DfsSBSR8pp",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/my-results/AttemptCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 82,
+    "hash": "098d992d719d5c80311b63161a1b5277",
+    "textRange": {
+      "startLine": 82,
+      "endLine": 84,
+      "startOffset": 18,
+      "endOffset": 73
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnlU78DfsSBSR8pq",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/my-results/AttemptCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 120,
+    "hash": "43b5a75b6b7ab3e16dc4cbe332960b55",
+    "textRange": {
+      "startLine": 120,
+      "endLine": 120,
+      "startOffset": 44,
+      "endOffset": 77
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnlI78DfsSBSR8pj",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/my-results/QuestionReviewList.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 101,
+    "hash": "d998f0780838945ad0870748cd0cda2f",
+    "textRange": {
+      "startLine": 101,
+      "endLine": 103,
+      "startOffset": 26,
+      "endOffset": 61
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnlI78DfsSBSR8pk",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/my-results/QuestionReviewList.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 127,
+    "hash": "586218288ea2915cf49310dc894e8901",
+    "textRange": {
+      "startLine": 127,
+      "endLine": 131,
+      "startOffset": 28,
+      "endOffset": 25
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnk_78DfsSBSR8ph",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/my-results/ScoreTrendStrip.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 39,
+    "hash": "43b5a75b6b7ab3e16dc4cbe332960b55",
+    "textRange": {
+      "startLine": 39,
+      "endLine": 39,
+      "startOffset": 46,
+      "endOffset": 79
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnlb78DfsSBSR8pr",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/my-results/TopicBreakdownGrid.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 51,
+    "hash": "7241ffbd2b4a8423a44413e6e79be18f",
+    "textRange": {
+      "startLine": 51,
+      "endLine": 51,
+      "startOffset": 93,
+      "endOffset": 142
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWneG78DfsSBSR8nC",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/QuestionCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 40,
+    "hash": "420bb1620268a6f22ab7bd2f9fb59eaf",
+    "textRange": {
+      "startLine": 40,
+      "endLine": 44,
+      "startOffset": 12,
+      "endOffset": 66
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWneG78DfsSBSR8nD",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/QuestionCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 42,
+    "hash": "f01384510000a5065dc829a50ffde2d3",
+    "textRange": {
+      "startLine": 42,
+      "endLine": 44,
+      "startOffset": 14,
+      "endOffset": 66
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnjr78DfsSBSR8pO",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/settings/PasswordSection.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 127,
+    "hash": "8da10dbbcd5e526b166ab9595d52b3a3",
+    "textRange": {
+      "startLine": 127,
+      "endLine": 129,
+      "startOffset": 14,
+      "endOffset": 33
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnj078DfsSBSR8pS",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/settings/ProfileSection.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 198,
+    "hash": "99cc2cc80c0acf04f514cc182c46cee4",
+    "textRange": {
+      "startLine": 198,
+      "endLine": 200,
+      "startOffset": 14,
+      "endOffset": 30
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnvI78DfsSBSR8sT",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/services/questions.service.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 150,
+    "hash": "54421606c88c7f233cd425e68b466885",
+    "textRange": {
+      "startLine": 150,
+      "endLine": 152,
+      "startOffset": 8,
+      "endOffset": 18
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-07-28T07:11:00+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngS78DfsSBSR8n0",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/OverviewTab.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 97,
+    "hash": "7000c73b38694a153c0c256f1e2a7863",
+    "textRange": {
+      "startLine": 97,
+      "endLine": 99,
+      "startOffset": 6,
+      "endOffset": 9
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-07-28T07:11:00+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngS78DfsSBSR8n1",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/OverviewTab.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 100,
+    "hash": "862b19c46a5a8cd801559c25ed78e859",
+    "textRange": {
+      "startLine": 100,
+      "endLine": 100,
+      "startOffset": 43,
+      "endOffset": 78
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-07-28T07:11:00+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngS78DfsSBSR8n2",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/OverviewTab.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 126,
+    "hash": "07f266790abc58b7ab4a334775fe68e2",
+    "textRange": {
+      "startLine": 126,
+      "endLine": 126,
+      "startOffset": 43,
+      "endOffset": 80
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-07-28T07:11:00+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngS78DfsSBSR8n3",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/OverviewTab.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 131,
+    "hash": "705443eb2c7c3e045e8560d60fc71621",
+    "textRange": {
+      "startLine": 131,
+      "endLine": 133,
+      "startOffset": 20,
+      "endOffset": 34
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-07-28T07:11:00+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnf978DfsSBSR8ns",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/PhaseWaterCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 16,
+    "hash": "bcd7e658de699292266ed21012476c9f",
+    "textRange": {
+      "startLine": 16,
+      "endLine": 18,
+      "startOffset": 8,
+      "endOffset": 37
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-07-28T07:11:00+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnf978DfsSBSR8nt",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/PhaseWaterCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 23,
+    "hash": "bcd7e658de699292266ed21012476c9f",
+    "textRange": {
+      "startLine": 23,
+      "endLine": 25,
+      "startOffset": 8,
+      "endOffset": 42
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-07-28T07:11:00+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnf978DfsSBSR8nu",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/PhaseWaterCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 30,
+    "hash": "bcd7e658de699292266ed21012476c9f",
+    "textRange": {
+      "startLine": 30,
+      "endLine": 32,
+      "startOffset": 8,
+      "endOffset": 33
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-07-28T07:11:00+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnjM78DfsSBSR8pG",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/TemplateCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 84,
+    "hash": "662315ca41a426b21b8cd0458b936752",
+    "textRange": {
+      "startLine": 84,
+      "endLine": 84,
+      "startOffset": 96,
+      "endOffset": 164
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-07-28T07:11:00+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnoY78DfsSBSR8qr",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/HeroAnimation.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 350,
+    "hash": "98e6412e27be4b6758f206ecd5efb449",
+    "textRange": {
+      "startLine": 350,
+      "endLine": 352,
+      "startOffset": 28,
+      "endOffset": 45
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-07-25T12:06:24+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnls78DfsSBSR8pu",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/hero/AIStarBurst.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 136,
+    "hash": "7fdf2b867a73b92a3197cd2e3208c2e6",
+    "textRange": {
+      "startLine": 136,
+      "endLine": 138,
+      "startOffset": 24,
+      "endOffset": 35
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-07-25T12:06:24+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnls78DfsSBSR8pv",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/hero/AIStarBurst.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 142,
+    "hash": "7fdf2b867a73b92a3197cd2e3208c2e6",
+    "textRange": {
+      "startLine": 142,
+      "endLine": 144,
+      "startOffset": 24,
+      "endOffset": 56
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-07-25T12:06:24+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnl478DfsSBSR8pw",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/hero/MockTestScene.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 55,
+    "hash": "49b04c82750e7153be69b15a70fa4b1a",
+    "textRange": {
+      "startLine": 55,
+      "endLine": 57,
+      "startOffset": 14,
+      "endOffset": 29
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-07-25T12:06:24+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnl478DfsSBSR8px",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/hero/MockTestScene.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 60,
+    "hash": "49b04c82750e7153be69b15a70fa4b1a",
+    "textRange": {
+      "startLine": 60,
+      "endLine": 62,
+      "startOffset": 14,
+      "endOffset": 31
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-07-25T12:06:24+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnn_78DfsSBSR8qe",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/howItWorks/StepAnimations.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 144,
+    "hash": "48eef92cea96eda3a833f1ca40402638",
+    "textRange": {
+      "startLine": 144,
+      "endLine": 146,
+      "startOffset": 22,
+      "endOffset": 45
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-07-25T12:06:24+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnn_78DfsSBSR8qf",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/howItWorks/StepAnimations.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 150,
+    "hash": "48eef92cea96eda3a833f1ca40402638",
+    "textRange": {
+      "startLine": 150,
+      "endLine": 152,
+      "startOffset": 22,
+      "endOffset": 40
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-07-25T12:06:24+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnn_78DfsSBSR8qg",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/howItWorks/StepAnimations.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 153,
+    "hash": "4e4956304798ee03678c2db11da6892d",
+    "textRange": {
+      "startLine": 153,
+      "endLine": 153,
+      "startOffset": 75,
+      "endOffset": 134
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-07-25T12:06:24+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnn_78DfsSBSR8qh",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/howItWorks/StepAnimations.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 158,
+    "hash": "48eef92cea96eda3a833f1ca40402638",
+    "textRange": {
+      "startLine": 158,
+      "endLine": 160,
+      "startOffset": 18,
+      "endOffset": 31
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-07-25T12:06:24+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnn_78DfsSBSR8qi",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/howItWorks/StepAnimations.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 439,
+    "hash": "48eef92cea96eda3a833f1ca40402638",
+    "textRange": {
+      "startLine": 439,
+      "endLine": 441,
+      "startOffset": 16,
+      "endOffset": 39
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-07-25T12:06:24+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnhD78DfsSBSR8oQ",
+    "rule": "javascript:S3358",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/design-system/StatTile.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 16,
+    "hash": "15982a888124ae68ad0b83e8d4c6c350",
+    "textRange": {
+      "startLine": 16,
+      "endLine": 16,
+      "startOffset": 27,
+      "endOffset": 53
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Extract this nested ternary operation into an independent statement.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["confusing", "editable-source"],
+    "creationDate": "2026-07-23T09:08:58+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  }
+]

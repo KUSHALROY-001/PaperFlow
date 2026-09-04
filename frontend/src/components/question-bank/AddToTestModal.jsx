@@ -81,12 +81,15 @@ export default function AddToTestModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") onClose();
+      }}
+      role="presentation"
     >
-      <div
-        className="w-full max-w-md max-h-[85vh] overflow-y-auto surface-card border border-border rounded-3xl shadow-2xl p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="w-full max-w-md max-h-[85vh] overflow-y-auto surface-card border border-border rounded-3xl shadow-2xl p-6">
         <div className="flex items-start justify-between mb-1">
           <h2 className="text-lg font-bold text-foreground">Add to Test</h2>
           <button

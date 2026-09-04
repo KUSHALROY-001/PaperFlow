@@ -37,6 +37,19 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: 25 * 1024 * 1024,
+    // Only the "document" file field plus a small "documentType" text
+    // field are ever sent to this route (see mock-tests.controller.js
+    // #upload) - without explicit bounds on the non-file parts of the
+    // multipart body, a client could attach unlimited extra
+    // fields/parts alongside a valid-sized file and exhaust server
+    // resources parsing them (javascript:S5693). These caps are sized
+    // to comfortably fit the one real field with no behavior change for
+    // legitimate requests.
+    fields: 5,
+    fieldNameSize: 100,
+    fieldSize: 1024,
+    files: 1,
+    parts: 6,
   },
   fileFilter(_req, file, callback) {
     const isPdf =

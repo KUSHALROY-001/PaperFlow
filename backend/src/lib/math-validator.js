@@ -22,10 +22,10 @@ function stripDelimiters(token) {
   if (token.startsWith("$$") && token.endsWith("$$")) {
     return token.slice(2, -2);
   }
-  if (token.startsWith("\\[") && token.endsWith("\\]")) {
+  if (token.startsWith(String.raw`\[`) && token.endsWith(String.raw`\]`)) {
     return token.slice(2, -2);
   }
-  if (token.startsWith("\\(") && token.endsWith("\\)")) {
+  if (token.startsWith(String.raw`\(`) && token.endsWith(String.raw`\)`)) {
     return token.slice(2, -2);
   }
   return token.slice(1, -1); // single-$ inline math

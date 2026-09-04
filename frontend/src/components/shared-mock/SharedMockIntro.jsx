@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Sparkles } from "lucide-react";
 
 export default function SharedMockIntro({
@@ -10,6 +11,7 @@ export default function SharedMockIntro({
   startError,
   handleStart,
 }) {
+  const uid = useId();
   const info = mockTestInfo?.mockTest || {};
 
   return (
@@ -53,10 +55,14 @@ export default function SharedMockIntro({
           </div>
 
           <div className="mb-5">
-            <label className="block text-xs sm:text-sm font-bold text-foreground mb-2">
+            <label
+              htmlFor={`${uid}-name`}
+              className="block text-xs sm:text-sm font-bold text-foreground mb-2"
+            >
               Your Name
             </label>
             <input
+              id={`${uid}-name`}
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter your name to start"
@@ -65,10 +71,14 @@ export default function SharedMockIntro({
           </div>
 
           <div className="mb-5">
-            <label className="block text-xs sm:text-sm font-bold text-foreground mb-2">
+            <label
+              htmlFor={`${uid}-email`}
+              className="block text-xs sm:text-sm font-bold text-foreground mb-2"
+            >
               Your Email
             </label>
             <input
+              id={`${uid}-email`}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}

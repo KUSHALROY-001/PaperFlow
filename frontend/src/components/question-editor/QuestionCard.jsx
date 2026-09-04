@@ -30,6 +30,14 @@ function QuestionCard({
       }}
       onMouseEnter={() => !isViewer && onCardMouseEnter(index)}
       onClick={() => onSelect(q.id)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect(q.id);
+        }
+      }}
+      role="button"
+      tabIndex={0}
       className={`relative p-4 rounded-2xl border transition-all duration-150 select-none ${
         isViewer
           ? "cursor-default border-border bg-card"

@@ -9,6 +9,18 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { httpError } from "./http-error.js";
 
+// storageKey is built from user-controlled input (buildPdfStorageKey embeds
+// the extension parsed out of the client-supplied originalFilename) and is
+// logged in several places below when an upload/verify/delete call fails.
+// Logging it raw would let an attacker inject newlines/control characters
+// into the filename and forge extra log lines or corrupt log parsing (CWE
+// log injection - jssecurity:S5145). Strip anything that isn't a printable,
+// single-line character before it ever reaches console.* so the log stays
+// a single well-formed line no matter what the client sends.
+function sanitizeForLog(value) {
+  return String(value ?? "").replace(/[\r\n\t\p{Cc}]/gu, "\uFFFD");
+}
+
 // B2 speaks the S3 API, so the plain AWS SDK works against it unmodified
 // once pointed at B2's own endpoint - no B2-specific SDK needed. This is
 // the Node-side twin of worker/storage.py's _get_b2_client(); PDFs are
@@ -139,7 +151,10 @@ export async function uploadPdf(buffer, storageKey, mimeType) {
       throw error;
     }
     const friendlyMessage = formatB2Error(error, "upload");
-    console.error(`Failed to upload PDF to B2 (${storageKey}):`, error);
+    console.error(
+      `Failed to upload PDF to B2 (${sanitizeForLog(storageKey)}):`,
+      error,
+    );
     throw httpError(502, friendlyMessage, { originalError: error.message });
   }
 }
@@ -169,7 +184,10 @@ export async function getPresignedUploadUrl(
     );
   } catch (error) {
     const friendlyMessage = formatB2Error(error, "presign");
-    console.error(`Failed to presign PDF upload URL (${storageKey}):`, error);
+    console.error(
+      `Failed to presign PDF upload URL (${sanitizeForLog(storageKey)}):`,
+      error,
+    );
     throw httpError(502, friendlyMessage, { originalError: error.message });
   }
 }
@@ -229,14 +247,14 @@ export async function headPdf(storageKey) {
       if (!transient || attempt === HEAD_PDF_MAX_ATTEMPTS) {
         const friendlyMessage = formatB2Error(error, "verify");
         console.error(
-          `Failed to verify PDF upload (${storageKey}) after ${attempt} attempt(s):`,
+          `Failed to verify PDF upload (${sanitizeForLog(storageKey)}) after ${attempt} attempt(s):`,
           error,
         );
         throw httpError(502, friendlyMessage, { originalError: error.message });
       }
 
       console.warn(
-        `Transient error verifying PDF upload (${storageKey}) on attempt ${attempt}/${HEAD_PDF_MAX_ATTEMPTS}, retrying in ${HEAD_PDF_RETRY_DELAY_MS}ms: ${error.message}`,
+        `Transient error verifying PDF upload (${sanitizeForLog(storageKey)}) on attempt ${attempt}/${HEAD_PDF_MAX_ATTEMPTS}, retrying in ${HEAD_PDF_RETRY_DELAY_MS}ms: ${error.message}`,
       );
       await new Promise((resolve) =>
         setTimeout(resolve, HEAD_PDF_RETRY_DELAY_MS),

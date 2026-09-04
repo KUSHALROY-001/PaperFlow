@@ -208,6 +208,12 @@ export default function CatalogSettingsPanel() {
                 <div
                   key={mockTest.id}
                   onClick={() => setDetailMockTestId(mockTest.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setDetailMockTestId(mockTest.id);
+                    }
+                  }}
                   role="button"
                   tabIndex={0}
                   className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-5 py-3.5 sm:py-3 cursor-pointer transition-colors hover:bg-muted/40"
@@ -228,10 +234,7 @@ export default function CatalogSettingsPanel() {
                     </div>
                   </div>
 
-                  <div
-                    className="flex items-center justify-between sm:justify-end gap-2.5 sm:gap-3 w-full sm:w-auto shrink-0"
-                    onClick={(e) => e.stopPropagation()}
-                  >
+                  <div className="flex items-center justify-between sm:justify-end gap-2.5 sm:gap-3 w-full sm:w-auto shrink-0">
                     <span
                       className={`sm:hidden px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                         mockTest.is_catalog_listed
@@ -245,7 +248,10 @@ export default function CatalogSettingsPanel() {
                     <div className="flex items-center gap-2 ml-auto sm:ml-0">
                       <button
                         type="button"
-                        onClick={() => handleStartOwn(mockTest.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStartOwn(mockTest.id);
+                        }}
                         title="Start this test"
                         className="h-8 w-8 rounded-xl border border-border flex items-center justify-center text-muted-foreground opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100 hover:text-emerald-500 hover:border-emerald-500/40 transition-all"
                       >
@@ -267,7 +273,10 @@ export default function CatalogSettingsPanel() {
                           disabled={
                             isViewer || !canList || togglingId === mockTest.id
                           }
-                          onClick={() => handleToggleListed(mockTest)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleListed(mockTest);
+                          }}
                           title={
                             !canList
                               ? "Publish this test before listing it in the catalog"

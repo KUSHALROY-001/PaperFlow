@@ -4,6 +4,8 @@ import TemplateBasicInfoFields from "./TemplateBasicInfoFields";
 import TemplateColorPicker from "./TemplateColorPicker";
 import TemplateScoringFields from "./TemplateScoringFields";
 import TemplateSectionsList from "./TemplateSectionsList";
+import TemplateQuestionTypeMarksList from "./TemplateQuestionTypeMarksList";
+import { fieldClass, labelClass } from "@/utils/templateHelpers";
 
 export default function CreateTemplateModal({
   initialTemplate = null,
@@ -37,6 +39,12 @@ export default function CreateTemplateModal({
     updateSection,
     removeSection,
     addSection,
+    markingSchemeDescription,
+    setMarkingSchemeDescription,
+    questionTypeMarks,
+    updateQuestionTypeMark,
+    removeQuestionTypeMark,
+    addQuestionTypeMark,
     error,
     isSubmitting,
     handleSubmit,
@@ -48,12 +56,17 @@ export default function CreateTemplateModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") onClose();
+      }}
+      role="presentation"
     >
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-2xl max-h-[90vh] overflow-y-auto surface-card border border-border rounded-3xl shadow-2xl p-6"
-        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between mb-4">
           <div>
@@ -115,6 +128,27 @@ export default function CreateTemplateModal({
             onAddSection={addSection}
             isViewer={isViewer}
           />
+
+          <TemplateQuestionTypeMarksList
+            questionTypeMarks={questionTypeMarks}
+            onUpdateRow={updateQuestionTypeMark}
+            onRemoveRow={removeQuestionTypeMark}
+            onAddRow={addQuestionTypeMark}
+            isViewer={isViewer}
+          />
+
+          <div>
+            <label className={labelClass}>
+              Marking scheme note (optional)
+            </label>
+            <input
+              disabled={isViewer}
+              value={markingSchemeDescription}
+              onChange={(e) => setMarkingSchemeDescription(e.target.value)}
+              placeholder='e.g. "JEE Advanced pattern - partial marking on multiple-correct"'
+              className={fieldClass}
+            />
+          </div>
         </div>
 
         {error && <p className="text-xs text-red-500 mt-4">{error}</p>}

@@ -38,7 +38,7 @@ export default function QuestionOptionRow({
   optionEditorRefCallback,
   isViewer,
 }) {
-  const optionLetter = String.fromCharCode(65 + index);
+  const optionLetter = String.fromCodePoint(65 + index);
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-2.5 sm:p-0 rounded-2xl sm:rounded-none bg-card/50 sm:bg-transparent border sm:border-0 border-border/60">

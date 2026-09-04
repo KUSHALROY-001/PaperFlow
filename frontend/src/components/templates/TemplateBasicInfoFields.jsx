@@ -1,3 +1,4 @@
+import { useId } from "react";
 import {
   CATEGORY_OPTIONS,
   DIFFICULTY_OPTIONS,
@@ -16,11 +17,15 @@ export default function TemplateBasicInfoFields({
   setDifficulty,
   isViewer,
 }) {
+  const uid = useId();
   return (
     <>
       <div>
-        <label className={labelClass}>Name</label>
+        <label htmlFor={`${uid}-name`} className={labelClass}>
+          Name
+        </label>
         <input
+          id={`${uid}-name`}
           disabled={isViewer}
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -30,8 +35,11 @@ export default function TemplateBasicInfoFields({
       </div>
 
       <div>
-        <label className={labelClass}>Description</label>
+        <label htmlFor={`${uid}-description`} className={labelClass}>
+          Description
+        </label>
         <textarea
+          id={`${uid}-description`}
           disabled={isViewer}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -43,8 +51,11 @@ export default function TemplateBasicInfoFields({
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className={labelClass}>Category</label>
+          <label htmlFor={`${uid}-category`} className={labelClass}>
+            Category
+          </label>
           <select
+            id={`${uid}-category`}
             disabled={isViewer}
             value={category}
             onChange={(e) => setCategory(e.target.value)}
@@ -58,8 +69,11 @@ export default function TemplateBasicInfoFields({
           </select>
         </div>
         <div>
-          <label className={labelClass}>Difficulty</label>
+          <label htmlFor={`${uid}-difficulty`} className={labelClass}>
+            Difficulty
+          </label>
           <select
+            id={`${uid}-difficulty`}
             disabled={isViewer}
             value={difficulty}
             onChange={(e) => setDifficulty(e.target.value)}

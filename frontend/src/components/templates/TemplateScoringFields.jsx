@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { fieldClass, labelClass } from "@/utils/templateHelpers";
 
 export default function TemplateScoringFields({
@@ -13,12 +14,16 @@ export default function TemplateScoringFields({
   setTagsText,
   isViewer,
 }) {
+  const uid = useId();
   return (
     <>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className={labelClass}>Question count</label>
+          <label htmlFor={`${uid}-question-count`} className={labelClass}>
+            Question count
+          </label>
           <input
+            id={`${uid}-question-count`}
             disabled={isViewer}
             type="number"
             min="1"
@@ -30,8 +35,11 @@ export default function TemplateScoringFields({
           />
         </div>
         <div>
-          <label className={labelClass}>Duration (minutes)</label>
+          <label htmlFor={`${uid}-duration`} className={labelClass}>
+            Duration (minutes)
+          </label>
           <input
+            id={`${uid}-duration`}
             disabled={isViewer}
             type="number"
             min="1"
@@ -46,8 +54,11 @@ export default function TemplateScoringFields({
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className={labelClass}>Marks per correct</label>
+          <label htmlFor={`${uid}-marks-per-correct`} className={labelClass}>
+            Marks per correct
+          </label>
           <input
+            id={`${uid}-marks-per-correct`}
             disabled={isViewer}
             type="number"
             min="0"
@@ -58,8 +69,11 @@ export default function TemplateScoringFields({
           />
         </div>
         <div>
-          <label className={labelClass}>Negative marks per wrong</label>
+          <label htmlFor={`${uid}-negative-marks`} className={labelClass}>
+            Negative marks per wrong
+          </label>
           <input
+            id={`${uid}-negative-marks`}
             disabled={isViewer}
             type="number"
             min="0"
@@ -72,8 +86,11 @@ export default function TemplateScoringFields({
       </div>
 
       <div>
-        <label className={labelClass}>Tags</label>
+        <label htmlFor={`${uid}-tags`} className={labelClass}>
+          Tags
+        </label>
         <input
+          id={`${uid}-tags`}
           disabled={isViewer}
           value={tagsText}
           onChange={(e) => setTagsText(e.target.value)}

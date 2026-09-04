@@ -26,9 +26,9 @@ export default function QuestionExplanationCard({
     <div className="surface-card rounded-2xl p-3 sm:p-6 border border-border">
       <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
         <div className="flex items-center gap-2.5 flex-wrap">
-          <label className="block text-xs sm:text-sm font-bold text-foreground">
+          <span className="block text-xs sm:text-sm font-bold text-foreground">
             Explanation (Optional)
-          </label>
+          </span>
           <button
             type="button"
             disabled={isViewer}
@@ -62,10 +62,7 @@ export default function QuestionExplanationCard({
           </button>
 
           {isExplanationMenuOpen && (
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="absolute right-0 top-8 w-44 bg-card border border-border rounded-xl shadow-lg p-1 z-30 space-y-0.5 animate-in fade-in zoom-in-95 duration-100"
-            >
+            <div className="absolute right-0 top-8 w-44 bg-card border border-border rounded-xl shadow-lg p-1 z-30 space-y-0.5 animate-in fade-in zoom-in-95 duration-100">
               <button
                 type="button"
                 disabled={isViewer}

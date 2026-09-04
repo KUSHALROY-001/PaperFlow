@@ -43,12 +43,15 @@ export default function ShareLinkModal({ isOpen, onClose, mockTestId }) {
   return (
     <div
       className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150"
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") onClose();
+      }}
+      role="presentation"
     >
-      <div
-        className="surface-card w-full max-w-lg rounded-3xl p-6 border border-border shadow-xl space-y-5 animate-in zoom-in-95 duration-150"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="surface-card w-full max-w-lg rounded-3xl p-6 border border-border shadow-xl space-y-5 animate-in zoom-in-95 duration-150">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-2xl bg-orange-500/15 text-orange-500 flex items-center justify-center">

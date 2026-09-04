@@ -31,11 +31,11 @@ const CATEGORIES = [
     icon: Divide,
     accent: "bg-violet-500/15 text-violet-400 border-violet-500/20",
     rows: [
-      { command: "\\frac{3}{4}", description: "Fraction" },
-      { command: "\\dfrac{a}{b}", description: "Display style fraction" },
-      { command: "\\tfrac{x}{y}", description: "Text style fraction" },
-      { command: "\\binom{n}{k}", description: "Binomial coefficient" },
-      { command: "\\cfrac{a}{b+c}", description: "Continued fraction" },
+      { command: String.raw`\frac{3}{4}`, description: "Fraction" },
+      { command: String.raw`\dfrac{a}{b}`, description: "Display style fraction" },
+      { command: String.raw`\tfrac{x}{y}`, description: "Text style fraction" },
+      { command: String.raw`\binom{n}{k}`, description: "Binomial coefficient" },
+      { command: String.raw`\cfrac{a}{b+c}`, description: "Continued fraction" },
     ],
   },
   {
@@ -44,9 +44,9 @@ const CATEGORIES = [
     icon: Calculator,
     accent: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
     rows: [
-      { command: "\\sqrt{x}", description: "Square root" },
-      { command: "\\sqrt[n]{x}", description: "n-th root" },
-      { command: "\\sqrt[3]{27}", description: "Cube root" },
+      { command: String.raw`\sqrt{x}`, description: "Square root" },
+      { command: String.raw`\sqrt[n]{x}`, description: "n-th root" },
+      { command: String.raw`\sqrt[3]{27}`, description: "Cube root" },
     ],
   },
   {
@@ -68,20 +68,20 @@ const CATEGORIES = [
     icon: Pi,
     accent: "bg-amber-500/15 text-amber-400 border-amber-500/20",
     rows: [
-      { command: "\\alpha", description: "Alpha" },
-      { command: "\\beta", description: "Beta" },
-      { command: "\\gamma", description: "Gamma" },
-      { command: "\\delta", description: "Delta" },
-      { command: "\\theta", description: "Theta" },
-      { command: "\\lambda", description: "Lambda" },
-      { command: "\\mu", description: "Mu" },
-      { command: "\\pi", description: "Pi" },
-      { command: "\\sigma", description: "Sigma" },
-      { command: "\\phi", description: "Phi" },
-      { command: "\\omega", description: "Omega" },
-      { command: "\\Delta", description: "Capital Delta" },
-      { command: "\\Sigma", description: "Capital Sigma" },
-      { command: "\\Omega", description: "Capital Omega" },
+      { command: String.raw`\alpha`, description: "Alpha" },
+      { command: String.raw`\beta`, description: "Beta" },
+      { command: String.raw`\gamma`, description: "Gamma" },
+      { command: String.raw`\delta`, description: "Delta" },
+      { command: String.raw`\theta`, description: "Theta" },
+      { command: String.raw`\lambda`, description: "Lambda" },
+      { command: String.raw`\mu`, description: "Mu" },
+      { command: String.raw`\pi`, description: "Pi" },
+      { command: String.raw`\sigma`, description: "Sigma" },
+      { command: String.raw`\phi`, description: "Phi" },
+      { command: String.raw`\omega`, description: "Omega" },
+      { command: String.raw`\Delta`, description: "Capital Delta" },
+      { command: String.raw`\Sigma`, description: "Capital Sigma" },
+      { command: String.raw`\Omega`, description: "Capital Omega" },
     ],
   },
   {
@@ -90,10 +90,10 @@ const CATEGORIES = [
     icon: Sigma,
     accent: "bg-rose-500/15 text-rose-400 border-rose-500/20",
     rows: [
-      { command: "\\sum_{i=1}^{n} i", description: "Summation" },
-      { command: "\\prod_{i=1}^{n} i", description: "Product" },
-      { command: "\\bigcup_{i=1}^{n} A_i", description: "Big union" },
-      { command: "\\bigcap_{i=1}^{n} A_i", description: "Big intersection" },
+      { command: String.raw`\sum_{i=1}^{n} i`, description: "Summation" },
+      { command: String.raw`\prod_{i=1}^{n} i`, description: "Product" },
+      { command: String.raw`\bigcup_{i=1}^{n} A_i`, description: "Big union" },
+      { command: String.raw`\bigcap_{i=1}^{n} A_i`, description: "Big intersection" },
     ],
   },
   {
@@ -102,13 +102,13 @@ const CATEGORIES = [
     icon: InfinityIcon,
     accent: "bg-cyan-500/15 text-cyan-400 border-cyan-500/20",
     rows: [
-      { command: "\\int_0^1 x\\,dx", description: "Definite integral" },
-      { command: "\\int x\\,dx", description: "Indefinite integral" },
-      { command: "\\iint f(x,y)\\,dA", description: "Double integral" },
-      { command: "\\oint", description: "Contour integral" },
-      { command: "\\lim_{x \\to 0} f(x)", description: "Limit" },
-      { command: "\\to", description: "Approaches / maps to" },
-      { command: "\\infty", description: "Infinity" },
+      { command: String.raw`\int_0^1 x\,dx`, description: "Definite integral" },
+      { command: String.raw`\int x\,dx`, description: "Indefinite integral" },
+      { command: String.raw`\iint f(x,y)\,dA`, description: "Double integral" },
+      { command: String.raw`\oint`, description: "Contour integral" },
+      { command: String.raw`\lim_{x \to 0} f(x)`, description: "Limit" },
+      { command: String.raw`\to`, description: "Approaches / maps to" },
+      { command: String.raw`\infty`, description: "Infinity" },
     ],
   },
   {
@@ -117,15 +117,15 @@ const CATEGORIES = [
     icon: Divide,
     accent: "bg-orange-500/15 text-orange-400 border-orange-500/20",
     rows: [
-      { command: "\\times", description: "Multiplication" },
-      { command: "\\div", description: "Division" },
-      { command: "\\cdot", description: "Dot product / multiply" },
-      { command: "\\pm", description: "Plus-minus" },
-      { command: "\\mp", description: "Minus-plus" },
-      { command: "\\left( \\right)", description: "Auto-sized parentheses" },
-      { command: "\\left[ \\right]", description: "Auto-sized brackets" },
-      { command: "\\left\\{ \\right\\}", description: "Auto-sized braces" },
-      { command: "\\left| x \\right|", description: "Absolute value" },
+      { command: String.raw`\times`, description: "Multiplication" },
+      { command: String.raw`\div`, description: "Division" },
+      { command: String.raw`\cdot`, description: "Dot product / multiply" },
+      { command: String.raw`\pm`, description: "Plus-minus" },
+      { command: String.raw`\mp`, description: "Minus-plus" },
+      { command: String.raw`\left( \right)`, description: "Auto-sized parentheses" },
+      { command: String.raw`\left[ \right]`, description: "Auto-sized brackets" },
+      { command: String.raw`\left\{ \right\}`, description: "Auto-sized braces" },
+      { command: String.raw`\left| x \right|`, description: "Absolute value" },
     ],
   },
   {
@@ -134,11 +134,11 @@ const CATEGORIES = [
     icon: Waves,
     accent: "bg-fuchsia-500/15 text-fuchsia-400 border-fuchsia-500/20",
     rows: [
-      { command: "\\sin(x)", description: "Sine" },
-      { command: "\\cos(x)", description: "Cosine" },
-      { command: "\\tan(x)", description: "Tangent" },
-      { command: "\\log_2 x", description: "Log, given base" },
-      { command: "\\ln x", description: "Natural log" },
+      { command: String.raw`\sin(x)`, description: "Sine" },
+      { command: String.raw`\cos(x)`, description: "Cosine" },
+      { command: String.raw`\tan(x)`, description: "Tangent" },
+      { command: String.raw`\log_2 x`, description: "Log, given base" },
+      { command: String.raw`\ln x`, description: "Natural log" },
       { command: "e^x", description: "Exponential function" },
     ],
   },
@@ -148,12 +148,12 @@ const CATEGORIES = [
     icon: Equal,
     accent: "bg-lime-500/15 text-lime-500 border-lime-500/20",
     rows: [
-      { command: "\\neq", description: "Not equal" },
-      { command: "\\leq", description: "Less than or equal" },
-      { command: "\\geq", description: "Greater than or equal" },
-      { command: "\\approx", description: "Approximately equal" },
-      { command: "\\equiv", description: "Equivalent / identical" },
-      { command: "\\propto", description: "Proportional to" },
+      { command: String.raw`\neq`, description: "Not equal" },
+      { command: String.raw`\leq`, description: "Less than or equal" },
+      { command: String.raw`\geq`, description: "Greater than or equal" },
+      { command: String.raw`\approx`, description: "Approximately equal" },
+      { command: String.raw`\equiv`, description: "Equivalent / identical" },
+      { command: String.raw`\propto`, description: "Proportional to" },
     ],
   },
   {
@@ -162,20 +162,20 @@ const CATEGORIES = [
     icon: Layers,
     accent: "bg-teal-500/15 text-teal-400 border-teal-500/20",
     rows: [
-      { command: "\\in", description: "Element of" },
-      { command: "\\notin", description: "Not an element of" },
-      { command: "\\subset", description: "Subset" },
-      { command: "\\subseteq", description: "Subset or equal" },
-      { command: "\\cup", description: "Union" },
-      { command: "\\cap", description: "Intersection" },
-      { command: "\\emptyset", description: "Empty set" },
-      { command: "\\forall", description: "For all" },
-      { command: "\\exists", description: "There exists" },
-      { command: "\\neg", description: "Logical not" },
-      { command: "\\land", description: "Logical and" },
-      { command: "\\lor", description: "Logical or" },
-      { command: "\\implies", description: "Implies" },
-      { command: "\\iff", description: "If and only if" },
+      { command: String.raw`\in`, description: "Element of" },
+      { command: String.raw`\notin`, description: "Not an element of" },
+      { command: String.raw`\subset`, description: "Subset" },
+      { command: String.raw`\subseteq`, description: "Subset or equal" },
+      { command: String.raw`\cup`, description: "Union" },
+      { command: String.raw`\cap`, description: "Intersection" },
+      { command: String.raw`\emptyset`, description: "Empty set" },
+      { command: String.raw`\forall`, description: "For all" },
+      { command: String.raw`\exists`, description: "There exists" },
+      { command: String.raw`\neg`, description: "Logical not" },
+      { command: String.raw`\land`, description: "Logical and" },
+      { command: String.raw`\lor`, description: "Logical or" },
+      { command: String.raw`\implies`, description: "Implies" },
+      { command: String.raw`\iff`, description: "If and only if" },
     ],
   },
   {
@@ -185,15 +185,15 @@ const CATEGORIES = [
     accent: "bg-indigo-500/15 text-indigo-400 border-indigo-500/20",
     rows: [
       {
-        command: "\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}",
+        command: String.raw`\begin{pmatrix} a & b \\ c & d \end{pmatrix}`,
         description: "Matrix, round brackets",
       },
       {
-        command: "\\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}",
+        command: String.raw`\begin{bmatrix} a & b \\ c & d \end{bmatrix}`,
         description: "Matrix, square brackets",
       },
-      { command: "\\vec{v}", description: "Vector" },
-      { command: "\\overrightarrow{AB}", description: "Vector from A to B" },
+      { command: String.raw`\vec{v}`, description: "Vector" },
+      { command: String.raw`\overrightarrow{AB}`, description: "Vector from A to B" },
     ],
   },
   {
@@ -202,11 +202,11 @@ const CATEGORIES = [
     icon: ArrowRight,
     accent: "bg-blue-500/15 text-blue-400 border-blue-500/20",
     rows: [
-      { command: "\\rightarrow", description: "Right arrow" },
-      { command: "\\leftarrow", description: "Left arrow" },
-      { command: "\\Rightarrow", description: "Implies (double arrow)" },
-      { command: "\\Leftrightarrow", description: "If and only if (arrow)" },
-      { command: "\\mapsto", description: "Maps to" },
+      { command: String.raw`\rightarrow`, description: "Right arrow" },
+      { command: String.raw`\leftarrow`, description: "Left arrow" },
+      { command: String.raw`\Rightarrow`, description: "Implies (double arrow)" },
+      { command: String.raw`\Leftrightarrow`, description: "If and only if (arrow)" },
+      { command: String.raw`\mapsto`, description: "Maps to" },
     ],
   },
   {
@@ -215,11 +215,11 @@ const CATEGORIES = [
     icon: Asterisk,
     accent: "bg-pink-500/15 text-pink-400 border-pink-500/20",
     rows: [
-      { command: "\\hat{x}", description: "Hat accent" },
-      { command: "\\bar{x}", description: "Bar accent" },
-      { command: "\\dot{x}", description: "Dot accent (derivative)" },
-      { command: "\\tilde{x}", description: "Tilde accent" },
-      { command: "\\overline{AB}", description: "Overline (line segment)" },
+      { command: String.raw`\hat{x}`, description: "Hat accent" },
+      { command: String.raw`\bar{x}`, description: "Bar accent" },
+      { command: String.raw`\dot{x}`, description: "Dot accent (derivative)" },
+      { command: String.raw`\tilde{x}`, description: "Tilde accent" },
+      { command: String.raw`\overline{AB}`, description: "Overline (line segment)" },
     ],
   },
   {
@@ -228,9 +228,9 @@ const CATEGORIES = [
     icon: Type,
     accent: "bg-slate-500/15 text-slate-400 border-slate-500/20",
     rows: [
-      { command: "\\text{if } x > 0", description: "Plain text inside math" },
-      { command: "a \\quad b", description: "Medium space" },
-      { command: "a \\qquad b", description: "Large space" },
+      { command: String.raw`\text{if } x > 0`, description: "Plain text inside math" },
+      { command: String.raw`a \quad b`, description: "Medium space" },
+      { command: String.raw`a \qquad b`, description: "Large space" },
     ],
   },
 ];
@@ -273,12 +273,15 @@ export default function LatexReferenceModal({ onClose }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 py-8 backdrop-blur-xs sm:items-center"
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") onClose();
+      }}
+      role="presentation"
     >
-      <div
-        className="flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl surface-card border border-border shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl surface-card border border-border shadow-2xl">
         <div className="flex shrink-0 items-center justify-between border-b border-border p-5 sm:p-6">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-400 font-serif italic font-bold">

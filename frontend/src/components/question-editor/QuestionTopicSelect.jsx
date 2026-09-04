@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 export default function QuestionTopicSelect({
   topic,
   extractedTopics = [],
@@ -6,13 +8,18 @@ export default function QuestionTopicSelect({
   updateSelected,
   isViewer,
 }) {
+  const uid = useId();
   return (
     <div className="mb-4">
-      <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wider">
+      <label
+        htmlFor={`${uid}-topic`}
+        className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wider"
+      >
         Topic
       </label>
       <div className="flex flex-col sm:flex-row gap-2">
         <select
+          id={`${uid}-topic`}
           disabled={isViewer}
           value={
             extractedTopics.includes(topic) && !isCustomTopic ? topic : "custom"

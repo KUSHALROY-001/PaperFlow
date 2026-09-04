@@ -94,9 +94,7 @@ export async function updateMockTest(mockTestId, workspaceId, body) {
       isCatalogListed,
       settingsProvided: body.settings !== undefined,
       settings:
-        body.settings && typeof body.settings === "object"
-          ? body.settings
-          : {},
+        body.settings && typeof body.settings === "object" ? body.settings : {},
     });
   } catch (error) {
     // 23505 = unique_violation, from the (cluster_id, name) constraint -
@@ -201,10 +199,7 @@ function buildTemplateContext(mockTest) {
   // extraction-templates.service.js - not the flat topic-name strings this
   // used to be. Keep both shapes usable here: flatten topics across all
   // sections for a plain syllabus list, and pass the structured sections
-  // through too so a per-section marking scheme survives (see Phase 4 -
-  // question-level marks aren't applied from this yet, but the data should
-  // already be there when that lands rather than needing another snapshot
-  // migration).
+  // through too so a per-section marking scheme survives.
   const sections = Array.isArray(settings.sections) ? settings.sections : [];
   const syllabusTopics = [
     ...new Set(
@@ -214,6 +209,26 @@ function buildTemplateContext(mockTest) {
     ),
   ];
 
+  // markingScheme/questionTypes: for a paper where marks vary WITHIN a
+  // section by question type (JEE Advanced: Physics alone has
+  // single-correct +3/-1, multiple-correct +4/-2, numerical +4/0), a
+  // single marksPerCorrect per section (above) can't express that -
+  // settings.marking_scheme.by_question_type is the only place that
+  // distinction lives. This used to not be passed at all (the worker's
+  // _build_syllabus_guidance/_apply_section_marks read
+  // template_context.settings.marking_scheme and got nothing, silently -
+  // every JEE-style question fell through to the flat per-section/paper
+  // default with no way to vary by type). Passed by value, not the whole
+  // settings object, so unrelated template config (syllabus text, PDF
+  // parsing hints, etc.) doesn't ride along into the job payload.
+  const markingScheme =
+    settings.marking_scheme && typeof settings.marking_scheme === "object"
+      ? settings.marking_scheme
+      : null;
+  const questionTypes = Array.isArray(settings.question_types)
+    ? settings.question_types
+    : [];
+
   return {
     templateId: settings.templateId,
     templateName: settings.templateName ?? null,
@@ -222,6 +237,8 @@ function buildTemplateContext(mockTest) {
     expectedQuestionCount: settings.expectedQuestionCount ?? null,
     marksPerCorrect: mockTest.marks_per_correct ?? null,
     negativeMarksPerWrong: mockTest.negative_marks_per_wrong ?? null,
+    markingScheme,
+    questionTypes,
   };
 }
 

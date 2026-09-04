@@ -13,12 +13,15 @@ export default function TemplatePreviewModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") onClose();
+      }}
+      role="presentation"
     >
-      <div
-        className="w-full max-w-xl max-h-[90vh] surface-card border border-border rounded-3xl shadow-2xl p-6 flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="w-full max-w-xl max-h-[90vh] surface-card border border-border rounded-3xl shadow-2xl p-6 flex flex-col">
         <div className="flex items-center justify-between mb-4 shrink-0">
           <div
             className={`w-12 h-12 rounded-2xl ${iconBgMap[template.color] || "bg-orange-500/15 text-orange-500"} flex items-center justify-center`}
@@ -118,6 +121,23 @@ export default function TemplatePreviewModal({
                         {section.topics.join(" · ")}
                       </p>
                     )}
+                    {(section.marksPerCorrect != null ||
+                      section.negativeMarksPerWrong != null) && (
+                      <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-0.5">
+                        +{section.marksPerCorrect ?? "–"} / -
+                        {section.negativeMarksPerWrong ?? "–"} per question
+                      </p>
+                    )}
+                    {section.markingGroups &&
+                      section.markingGroups.length > 0 && (
+                        <ul className="text-[11px] text-muted-foreground mt-1 space-y-0.5">
+                          {section.markingGroups.map((group, gi) => (
+                            <li key={group.id || gi}>
+                              · {formatMarkingGroupSummary(group, section)}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                   </div>
                 </div>
               ))}

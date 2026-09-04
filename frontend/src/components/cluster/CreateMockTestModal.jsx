@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Upload, X, Sparkles, FileText, FilePlus, Loader2 } from "lucide-react";
@@ -11,6 +11,7 @@ const DIFFICULTY_OPTIONS = ["Variable", "Easy", "Medium", "Hard"];
 
 // Promoted from an inline component inside pages/ClusterWorkspace.jsx — no behavior changes.
 export default function CreateMockTestModal({ clusterId, onClose }) {
+  const uid = useId();
   const { isViewer } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -137,10 +138,14 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
           className="min-h-0 flex-1 space-y-4 sm:space-y-5 overflow-y-auto p-4 sm:p-6 overscroll-contain"
         >
           <div>
-            <label className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-foreground">
+            <label
+              htmlFor={`${uid}-name`}
+              className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-foreground"
+            >
               Mock Test Name *
             </label>
             <input
+              id={`${uid}-name`}
               required
               value={form.name}
               onChange={(event) =>
@@ -152,10 +157,14 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-foreground">
+            <label
+              htmlFor={`${uid}-description`}
+              className="mb-2 block text-sm font-semibold text-foreground"
+            >
               Description
             </label>
             <textarea
+              id={`${uid}-description`}
               value={form.description}
               onChange={(event) =>
                 setForm((current) => ({
@@ -170,10 +179,14 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-foreground">
+            <label
+              htmlFor={`${uid}-duration`}
+              className="mb-2 block text-sm font-semibold text-foreground"
+            >
               Duration Minutes
             </label>
             <input
+              id={`${uid}-duration`}
               type="number"
               min="1"
               value={form.durationMinutes}
@@ -189,10 +202,14 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-2 block text-sm font-semibold text-foreground">
+              <label
+                htmlFor={`${uid}-marks-per-correct`}
+                className="mb-2 block text-sm font-semibold text-foreground"
+              >
                 Marks per correct
               </label>
               <input
+                id={`${uid}-marks-per-correct`}
                 type="number"
                 min="0"
                 step="any"
@@ -207,10 +224,14 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-semibold text-foreground">
+              <label
+                htmlFor={`${uid}-negative-marks`}
+                className="mb-2 block text-sm font-semibold text-foreground"
+              >
                 −ve marks per wrong
               </label>
               <input
+                id={`${uid}-negative-marks`}
                 type="number"
                 min="0"
                 step="any"
@@ -226,8 +247,12 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
             </div>
           </div>
 
-          <label className="flex items-start gap-3 rounded-md border border-border bg-muted/30 px-3 py-3 cursor-pointer">
+          <label
+            htmlFor={`${uid}-show-marks`}
+            className="flex items-start gap-3 rounded-md border border-border bg-muted/30 px-3 py-3 cursor-pointer"
+          >
             <input
+              id={`${uid}-show-marks`}
               type="checkbox"
               className="mt-0.5 rounded border-border"
               checked={form.showMarksToStudents}
@@ -249,9 +274,9 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
           </label>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-foreground">
+            <p className="mb-2 block text-sm font-semibold text-foreground">
               How should this test get its questions?
-            </label>
+            </p>
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
@@ -300,9 +325,9 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
 
           {mode === "upload" && (
             <div>
-              <label className="mb-2 block text-sm font-semibold text-foreground">
+              <p className="mb-2 block text-sm font-semibold text-foreground">
                 Upload Document
-              </label>
+              </p>
               <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/40 px-4 py-6 text-center transition-all hover:border-orange-500/40 hover:bg-muted">
                 <Upload className="mb-3 h-6 w-6 text-orange-500" />
                 <span className="max-w-full break-all text-sm font-semibold text-foreground">
@@ -344,9 +369,9 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
 
           {mode === "upload" && selectedFile && (
             <div>
-              <label className="mb-2 block text-sm font-semibold text-foreground">
+              <p className="mb-2 block text-sm font-semibold text-foreground">
                 What's in this PDF?
-              </label>
+              </p>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
@@ -387,9 +412,9 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
           {mode === "generate" && (
             <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-foreground">
+                <p className="mb-2 block text-sm font-semibold text-foreground">
                   Generate from which mock test(s)? *
-                </label>
+                </p>
                 <p className="mb-2 text-xs text-muted-foreground">
                   The AI only sees these tests' topic breakdown and marking
                   scheme — never the actual questions — so it writes a brand-new
@@ -434,10 +459,14 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-foreground">
+                  <label
+                    htmlFor={`${uid}-question-count`}
+                    className="mb-2 block text-sm font-semibold text-foreground"
+                  >
                     Question Count
                   </label>
                   <input
+                    id={`${uid}-question-count`}
                     type="number"
                     min={MIN_GENERATED_QUESTIONS}
                     max={MAX_GENERATED_QUESTIONS}
@@ -452,10 +481,14 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
                   </p>
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-foreground">
+                  <label
+                    htmlFor={`${uid}-difficulty`}
+                    className="mb-2 block text-sm font-semibold text-foreground"
+                  >
                     Difficulty
                   </label>
                   <select
+                    id={`${uid}-difficulty`}
                     value={difficultyHint}
                     onChange={(event) => setDifficultyHint(event.target.value)}
                     className="w-full rounded-md border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"

@@ -1,4 +1,5 @@
 import json
+import math
 import re
 
 
@@ -572,7 +573,7 @@ def parse_optional_number(value):
         number = float(value)
     except (TypeError, ValueError):
         return None
-    if number != number:  # NaN
+    if math.isnan(number):
         return None
     if number < 0:
         return None

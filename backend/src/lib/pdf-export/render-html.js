@@ -95,7 +95,7 @@ function optionsHtml(question, images) {
           // parent .option div, so only the option's actual content -
           // never this function's own formatting - is what gets
           // preserved.
-          return `<div class="option"><span class="option-letter">${String.fromCharCode(65 + index)}.</span><span class="option-text">${renderTextWithMath(option, images)}</span></div>`;
+          return `<div class="option"><span class="option-letter">${String.fromCodePoint(65 + index)}.</span><span class="option-text">${renderTextWithMath(option, images)}</span></div>`;
         })
         .join("")}
     </div>
@@ -115,7 +115,7 @@ function answerKeyHtml(questions) {
           .map((q, index) => {
             const qNo = q.questionNo ?? index + 1;
             const letters = (q.correctOptionIndexes || [])
-              .map((i) => `(${String.fromCharCode(97 + i)})`)
+              .map((i) => `(${String.fromCodePoint(97 + i)})`)
               .join(", ");
             const display = letters || "—";
             return `<div class="answer-item"><span class="ak-num">${qNo}.</span> <span class="ak-val">${escapeHtml(display)}</span></div>`;

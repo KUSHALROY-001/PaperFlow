@@ -44,6 +44,7 @@ export default function QueueListView({
           return (
             <label
               key={question.id}
+              htmlFor={`queue-item-${question.id}`}
               className={`flex items-start gap-3 rounded-xl border px-3 py-2.5 cursor-pointer transition-colors ${
                 checked
                   ? "border-orange-500/40 bg-orange-500/5"
@@ -51,6 +52,7 @@ export default function QueueListView({
               }`}
             >
               <input
+                id={`queue-item-${question.id}`}
                 type="checkbox"
                 checked={checked}
                 onChange={() => onToggle(question.id)}

@@ -258,6 +258,14 @@ export default function ClustersLibrary() {
               <div
                 key={cluster.id}
                 onClick={() => navigate(`/cluster/${cluster.id}`)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    navigate(`/cluster/${cluster.id}`);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
                 className="surface-card rounded-2xl p-5 border border-border hover:border-orange-500/40 cursor-pointer transition-all flex flex-col justify-between group"
               >
                 <div>
@@ -316,6 +324,14 @@ export default function ClustersLibrary() {
               <div
                 key={cluster.id}
                 onClick={() => navigate(`/cluster/${cluster.id}`)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    navigate(`/cluster/${cluster.id}`);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
                 className="grid min-w-160 grid-cols-[2fr_1fr_1fr_auto] gap-4 items-center px-5 py-4 border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors last:border-0 group"
               >
                 <div className="flex items-center gap-3 min-w-0">

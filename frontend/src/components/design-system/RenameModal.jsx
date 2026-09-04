@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { X, Edit2, Loader2 } from "lucide-react";
 
 export default function RenameModal({
@@ -10,6 +10,7 @@ export default function RenameModal({
   onClose,
   onSave,
 }) {
+  const uid = useId();
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState(initialDescription);
   const [submitting, setSubmitting] = useState(false);
@@ -35,12 +36,15 @@ export default function RenameModal({
   return (
     <div
       className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150"
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") onClose();
+      }}
+      role="presentation"
     >
-      <div
-        className="surface-card w-full max-w-md rounded-2xl p-6 border border-border shadow-xl space-y-5 animate-in zoom-in-95 duration-150"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="surface-card w-full max-w-md rounded-2xl p-6 border border-border shadow-xl space-y-5 animate-in zoom-in-95 duration-150">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-md bg-orange-500/15 text-orange-500 flex items-center justify-center">
@@ -58,10 +62,14 @@ export default function RenameModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-foreground mb-1.5 uppercase tracking-wider">
+            <label
+              htmlFor={`${uid}-name`}
+              className="block text-xs font-bold text-foreground mb-1.5 uppercase tracking-wider"
+            >
               Name
             </label>
             <input
+              id={`${uid}-name`}
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -73,10 +81,14 @@ export default function RenameModal({
 
           {showDescription && (
             <div>
-              <label className="block text-xs font-bold text-foreground mb-1.5 uppercase tracking-wider">
+              <label
+                htmlFor={`${uid}-description`}
+                className="block text-xs font-bold text-foreground mb-1.5 uppercase tracking-wider"
+              >
                 Description (Optional)
               </label>
               <textarea
+                id={`${uid}-description`}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Enter description..."

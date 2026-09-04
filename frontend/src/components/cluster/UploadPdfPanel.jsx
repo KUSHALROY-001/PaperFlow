@@ -101,9 +101,9 @@ export default function UploadPdfPanel({ mocktest, isViewer, onUpload }) {
 
         {selectedFile && (
           <div>
-            <label className="mb-2 block text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            <p className="mb-2 block text-xs font-bold text-muted-foreground uppercase tracking-wider">
               What's in this PDF?
-            </label>
+            </p>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"

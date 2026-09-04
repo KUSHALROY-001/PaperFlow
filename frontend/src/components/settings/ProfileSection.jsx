@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { User, Save, Camera, X, Loader2 } from "lucide-react";
 import { accountTypeOptions, accountTypeLabel } from "@/hooks/useSettings";
 
@@ -17,6 +17,7 @@ export default function ProfileSection({
   handleSaveProfile,
   saved,
 }) {
+  const uid = useId();
   const fileInputRef = useRef(null);
   // Client-side only, so the picture the user just chose shows up
   // immediately instead of waiting on the upload round trip - cleared
@@ -131,10 +132,14 @@ export default function ProfileSection({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs sm:text-sm font-bold text-foreground mb-2">
+            <label
+              htmlFor={`${uid}-full-name`}
+              className="block text-xs sm:text-sm font-bold text-foreground mb-2"
+            >
               Full Name
             </label>
             <input
+              id={`${uid}-full-name`}
               required
               type="text"
               autoComplete="name"
@@ -146,10 +151,14 @@ export default function ProfileSection({
             />
           </div>
           <div>
-            <label className="block text-xs sm:text-sm font-bold text-foreground mb-2">
+            <label
+              htmlFor={`${uid}-email`}
+              className="block text-xs sm:text-sm font-bold text-foreground mb-2"
+            >
               Email
             </label>
             <input
+              id={`${uid}-email`}
               disabled
               type="email"
               value={email}
@@ -163,10 +172,14 @@ export default function ProfileSection({
         </div>
 
         <div>
-          <label className="block text-xs sm:text-sm font-bold text-foreground mb-2">
+          <label
+            htmlFor={`${uid}-account-type`}
+            className="block text-xs sm:text-sm font-bold text-foreground mb-2"
+          >
             Account Type
           </label>
           <select
+            id={`${uid}-account-type`}
             value={profileForm.accountType}
             onChange={(e) =>
               setProfileForm((p) => ({ ...p, accountType: e.target.value }))

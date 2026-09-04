@@ -1,0 +1,4331 @@
+[
+  {
+    "key": "AaBnWnxD78DfsSBSR8tF",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/math-validator.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 25,
+    "hash": "6b949a4b43f29e4d1d53e11af804da2b",
+    "textRange": {
+      "startLine": 25,
+      "endLine": 25,
+      "startOffset": 23,
+      "endOffset": 28
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnxD78DfsSBSR8tG",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/math-validator.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 25,
+    "hash": "6b949a4b43f29e4d1d53e11af804da2b",
+    "textRange": {
+      "startLine": 25,
+      "endLine": 25,
+      "startOffset": 48,
+      "endOffset": 53
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnxD78DfsSBSR8tH",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/math-validator.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 28,
+    "hash": "cddcab6b81e60500ec15049483cf9e5f",
+    "textRange": {
+      "startLine": 28,
+      "endLine": 28,
+      "startOffset": 23,
+      "endOffset": 28
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnxD78DfsSBSR8tI",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/math-validator.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 28,
+    "hash": "cddcab6b81e60500ec15049483cf9e5f",
+    "textRange": {
+      "startLine": 28,
+      "endLine": 28,
+      "startOffset": 48,
+      "endOffset": 53
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnww78DfsSBSR8s1",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/math-validator.selftest.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 16,
+    "hash": "d2d667d43f6cd7a3d103a62083c2a202",
+    "textRange": {
+      "startLine": 16,
+      "endLine": 16,
+      "startOffset": 4,
+      "endOffset": 108
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnww78DfsSBSR8s2",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/math-validator.selftest.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 17,
+    "hash": "d05dd4b8cab0928425d5764acd720b21",
+    "textRange": {
+      "startLine": 17,
+      "endLine": 17,
+      "startOffset": 4,
+      "endOffset": 106
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnww78DfsSBSR8s3",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/math-validator.selftest.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 22,
+    "hash": "3cad53465a5b969de6c3c5b896c90146",
+    "textRange": {
+      "startLine": 22,
+      "endLine": 22,
+      "startOffset": 4,
+      "endOffset": 89
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnww78DfsSBSR8s4",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/math-validator.selftest.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 28,
+    "hash": "5f1f41631e8aa51afce9de185480b900",
+    "textRange": {
+      "startLine": 28,
+      "endLine": 28,
+      "startOffset": 4,
+      "endOffset": 45
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnww78DfsSBSR8s5",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/math-validator.selftest.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 31,
+    "hash": "9951b67cbe71dad9bdacf47317cf3939",
+    "textRange": {
+      "startLine": 31,
+      "endLine": 31,
+      "startOffset": 28,
+      "endOffset": 59
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnww78DfsSBSR8s6",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/math-validator.selftest.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 33,
+    "hash": "406cfdf332ab3e7664f8883a923932b6",
+    "textRange": {
+      "startLine": 33,
+      "endLine": 33,
+      "startOffset": 4,
+      "endOffset": 51
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnww78DfsSBSR8s7",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/math-validator.selftest.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 34,
+    "hash": "a07fc14c77a7eaf41f06749c3c24c680",
+    "textRange": {
+      "startLine": 34,
+      "endLine": 34,
+      "startOffset": 4,
+      "endOffset": 28
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnww78DfsSBSR8s8",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/math-validator.selftest.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 39,
+    "hash": "84e4f550f3ce2c32510385187f96e3c4",
+    "textRange": {
+      "startLine": 39,
+      "endLine": 39,
+      "startOffset": 4,
+      "endOffset": 44
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnww78DfsSBSR8s9",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/math-validator.selftest.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 44,
+    "hash": "1a1554e4773a9966bce1c4669ebc45ba",
+    "textRange": {
+      "startLine": 44,
+      "endLine": 44,
+      "startOffset": 4,
+      "endOffset": 44
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnww78DfsSBSR8s-",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/math-validator.selftest.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 54,
+    "hash": "b0401917c7ac873ccfd023d1a414375b",
+    "textRange": {
+      "startLine": 54,
+      "endLine": 54,
+      "startOffset": 4,
+      "endOffset": 38
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnww78DfsSBSR8s_",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/math-validator.selftest.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 77,
+    "hash": "d804882f058043a2006f80b8df97d676",
+    "textRange": {
+      "startLine": 77,
+      "endLine": 77,
+      "startOffset": 15,
+      "endOffset": 38
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnww78DfsSBSR8tA",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/math-validator.selftest.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 79,
+    "hash": "612b7e47bbc15324b936e05e2255a289",
+    "textRange": {
+      "startLine": 79,
+      "endLine": 79,
+      "startOffset": 45,
+      "endOffset": 73
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWns478DfsSBSR8r4",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/utils/richTextDoc.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 244,
+    "hash": "7594a8049bb57974a4b0fb3637015fa2",
+    "textRange": {
+      "startLine": 244,
+      "endLine": 244,
+      "startOffset": 63,
+      "endOffset": 68
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-24T05:52:57+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnsP78DfsSBSR8rm",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/utils/richTextDoc.selftest.mjs",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 23,
+    "hash": "53d753e5116e953d665c40e4b1d372ae",
+    "textRange": {
+      "startLine": 23,
+      "endLine": 23,
+      "startOffset": 2,
+      "endOffset": 84
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-24T05:52:57+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnsP78DfsSBSR8rn",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/utils/richTextDoc.selftest.mjs",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 33,
+    "hash": "85217286ec1b2421af1932f3bc0e4c31",
+    "textRange": {
+      "startLine": 33,
+      "endLine": 33,
+      "startOffset": 2,
+      "endOffset": 61
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-24T05:52:57+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnwn78DfsSBSR8sq",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-export/math-html.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 22,
+    "hash": "6b949a4b43f29e4d1d53e11af804da2b",
+    "textRange": {
+      "startLine": 22,
+      "endLine": 22,
+      "startOffset": 23,
+      "endOffset": 28
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnwn78DfsSBSR8sr",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-export/math-html.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 22,
+    "hash": "6b949a4b43f29e4d1d53e11af804da2b",
+    "textRange": {
+      "startLine": 22,
+      "endLine": 22,
+      "startOffset": 48,
+      "endOffset": 53
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnwn78DfsSBSR8ss",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-export/math-html.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 25,
+    "hash": "cddcab6b81e60500ec15049483cf9e5f",
+    "textRange": {
+      "startLine": 25,
+      "endLine": 25,
+      "startOffset": 23,
+      "endOffset": 28
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnwn78DfsSBSR8st",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-export/math-html.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 25,
+    "hash": "cddcab6b81e60500ec15049483cf9e5f",
+    "textRange": {
+      "startLine": 25,
+      "endLine": 25,
+      "startOffset": 48,
+      "endOffset": 53
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8le",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 34,
+    "hash": "f8c175f494c86a42ece72871b6dfe7c4",
+    "textRange": {
+      "startLine": 34,
+      "endLine": 34,
+      "startOffset": 17,
+      "endOffset": 31
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8lf",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 35,
+    "hash": "a541ce953da26b1b4ebf7f1e5d7f2bf6",
+    "textRange": {
+      "startLine": 35,
+      "endLine": 35,
+      "startOffset": 17,
+      "endOffset": 32
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8lg",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 36,
+    "hash": "1f6b59dffce506032db0cbe9c52a8a1f",
+    "textRange": {
+      "startLine": 36,
+      "endLine": 36,
+      "startOffset": 17,
+      "endOffset": 32
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8lh",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 37,
+    "hash": "01df17febd79938d426af48a24c846f3",
+    "textRange": {
+      "startLine": 37,
+      "endLine": 37,
+      "startOffset": 17,
+      "endOffset": 32
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8li",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 38,
+    "hash": "457031d540ddfdd2e91286042a80c2ea",
+    "textRange": {
+      "startLine": 38,
+      "endLine": 38,
+      "startOffset": 17,
+      "endOffset": 34
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8lj",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 47,
+    "hash": "0f3db5640b8fda6abe87d903c0d46390",
+    "textRange": {
+      "startLine": 47,
+      "endLine": 47,
+      "startOffset": 17,
+      "endOffset": 28
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8lk",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 48,
+    "hash": "3434a8b2dce3ef1b459d8f35848af0da",
+    "textRange": {
+      "startLine": 48,
+      "endLine": 48,
+      "startOffset": 17,
+      "endOffset": 31
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8ll",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 49,
+    "hash": "fb0365fa36206ae2f168bc1ada1ad5e0",
+    "textRange": {
+      "startLine": 49,
+      "endLine": 49,
+      "startOffset": 17,
+      "endOffset": 32
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8lm",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 71,
+    "hash": "16d8cdbe17fa2aec43a27fcf3864f7c2",
+    "textRange": {
+      "startLine": 71,
+      "endLine": 71,
+      "startOffset": 17,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8ln",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 72,
+    "hash": "344f88707802c89d60a0352191f6855a",
+    "textRange": {
+      "startLine": 72,
+      "endLine": 72,
+      "startOffset": 17,
+      "endOffset": 25
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8lo",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 73,
+    "hash": "b3ff8c738127f1bc45673a3dbd51e2c8",
+    "textRange": {
+      "startLine": 73,
+      "endLine": 73,
+      "startOffset": 17,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8lp",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 74,
+    "hash": "1b39e87b7f6690da96e0c46129a54881",
+    "textRange": {
+      "startLine": 74,
+      "endLine": 74,
+      "startOffset": 17,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8lq",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 75,
+    "hash": "036f85231f5a0d4f0af1327660520ca4",
+    "textRange": {
+      "startLine": 75,
+      "endLine": 75,
+      "startOffset": 17,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8lr",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 76,
+    "hash": "acb566cafecf1c4c5a0286efb8c912d4",
+    "textRange": {
+      "startLine": 76,
+      "endLine": 76,
+      "startOffset": 17,
+      "endOffset": 27
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8ls",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 77,
+    "hash": "2098263defcb588192bb53f4cd3bfcb1",
+    "textRange": {
+      "startLine": 77,
+      "endLine": 77,
+      "startOffset": 17,
+      "endOffset": 23
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8lt",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 78,
+    "hash": "7393b7e645df9e8d10381748445fa0ac",
+    "textRange": {
+      "startLine": 78,
+      "endLine": 78,
+      "startOffset": 17,
+      "endOffset": 23
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8lu",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 79,
+    "hash": "d893a7505f0c09ae936f1ad049f1b956",
+    "textRange": {
+      "startLine": 79,
+      "endLine": 79,
+      "startOffset": 17,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8lv",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 80,
+    "hash": "3ed412691e86c8dbf85cf75c5bb5d94d",
+    "textRange": {
+      "startLine": 80,
+      "endLine": 80,
+      "startOffset": 17,
+      "endOffset": 24
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8lw",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 81,
+    "hash": "11f971b0546b412ce007bdb1c43ec399",
+    "textRange": {
+      "startLine": 81,
+      "endLine": 81,
+      "startOffset": 17,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8lx",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 82,
+    "hash": "53b90f9f2fafb7f87c7065139a3233bd",
+    "textRange": {
+      "startLine": 82,
+      "endLine": 82,
+      "startOffset": 17,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8ly",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 83,
+    "hash": "181912deca8bafa80f31bca74795f066",
+    "textRange": {
+      "startLine": 83,
+      "endLine": 83,
+      "startOffset": 17,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8lz",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 84,
+    "hash": "2476a311ffb72c1c5a08943869a79417",
+    "textRange": {
+      "startLine": 84,
+      "endLine": 84,
+      "startOffset": 17,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8l0",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 93,
+    "hash": "58461340c3500d2532942e01e92e21f5",
+    "textRange": {
+      "startLine": 93,
+      "endLine": 93,
+      "startOffset": 17,
+      "endOffset": 36
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8l1",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 94,
+    "hash": "6267db2ff257dd0a1f7472c649ee157a",
+    "textRange": {
+      "startLine": 94,
+      "endLine": 94,
+      "startOffset": 17,
+      "endOffset": 37
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8l2",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 95,
+    "hash": "87c9a7e3c345524b9542f4d89aff7ad2",
+    "textRange": {
+      "startLine": 95,
+      "endLine": 95,
+      "startOffset": 17,
+      "endOffset": 41
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8l3",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 96,
+    "hash": "5798c2dfd6bfd2f4c5aabd076b32bde8",
+    "textRange": {
+      "startLine": 96,
+      "endLine": 96,
+      "startOffset": 17,
+      "endOffset": 41
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8l4",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 105,
+    "hash": "5312b39e357caa51c594b2d8234962cb",
+    "textRange": {
+      "startLine": 105,
+      "endLine": 105,
+      "startOffset": 17,
+      "endOffset": 35
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8l5",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 106,
+    "hash": "ceb90576041e2b0a9f1ba5f60b0e7f3d",
+    "textRange": {
+      "startLine": 106,
+      "endLine": 106,
+      "startOffset": 17,
+      "endOffset": 31
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8l6",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 107,
+    "hash": "081945d1242fa6846b1d09f30e3ae0b2",
+    "textRange": {
+      "startLine": 107,
+      "endLine": 107,
+      "startOffset": 17,
+      "endOffset": 37
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8l7",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 108,
+    "hash": "0daf15ece8f8e9fc223f39616aadfbd1",
+    "textRange": {
+      "startLine": 108,
+      "endLine": 108,
+      "startOffset": 17,
+      "endOffset": 25
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8l8",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 109,
+    "hash": "979cf70240dad55ce9131e9aaccf7621",
+    "textRange": {
+      "startLine": 109,
+      "endLine": 109,
+      "startOffset": 17,
+      "endOffset": 40
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8l9",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 110,
+    "hash": "18026b93b7e30b9b036f3d7de94a8ee0",
+    "textRange": {
+      "startLine": 110,
+      "endLine": 110,
+      "startOffset": 17,
+      "endOffset": 23
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8l-",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 111,
+    "hash": "c8a433c9ff64e91239d8e1fa41375ba1",
+    "textRange": {
+      "startLine": 111,
+      "endLine": 111,
+      "startOffset": 17,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8l_",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 120,
+    "hash": "27c2b7730af2e2a6ca18bf88a468d10f",
+    "textRange": {
+      "startLine": 120,
+      "endLine": 120,
+      "startOffset": 17,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mA",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 121,
+    "hash": "2c3b635ab0f627ab4bd2d9a74fbbef25",
+    "textRange": {
+      "startLine": 121,
+      "endLine": 121,
+      "startOffset": 17,
+      "endOffset": 24
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mB",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 122,
+    "hash": "3d5fa6a020bc4bd8c76417ab7e821c60",
+    "textRange": {
+      "startLine": 122,
+      "endLine": 122,
+      "startOffset": 17,
+      "endOffset": 25
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mC",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 123,
+    "hash": "25d1bab1512969f48871d577734a009a",
+    "textRange": {
+      "startLine": 123,
+      "endLine": 123,
+      "startOffset": 17,
+      "endOffset": 23
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mD",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 124,
+    "hash": "eb6083f04bf0df5f0e0cf2871c4a1abd",
+    "textRange": {
+      "startLine": 124,
+      "endLine": 124,
+      "startOffset": 17,
+      "endOffset": 23
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mE",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 125,
+    "hash": "90db2a1975ef5337c46ace5ca5efdecc",
+    "textRange": {
+      "startLine": 125,
+      "endLine": 125,
+      "startOffset": 17,
+      "endOffset": 35
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mF",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 126,
+    "hash": "bf09d4424896d898f793b017695d8a7a",
+    "textRange": {
+      "startLine": 126,
+      "endLine": 126,
+      "startOffset": 17,
+      "endOffset": 35
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mG",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 127,
+    "hash": "66d0231e6ac4a25a59c147a30716dfbc",
+    "textRange": {
+      "startLine": 127,
+      "endLine": 127,
+      "startOffset": 17,
+      "endOffset": 39
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mH",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 128,
+    "hash": "31d4270624f6c2c20e290aebb07801cc",
+    "textRange": {
+      "startLine": 128,
+      "endLine": 128,
+      "startOffset": 17,
+      "endOffset": 37
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mI",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 137,
+    "hash": "4de4a5f39262a9812e33abddfc284cb4",
+    "textRange": {
+      "startLine": 137,
+      "endLine": 137,
+      "startOffset": 17,
+      "endOffset": 27
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mJ",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 138,
+    "hash": "7388398b13a45116588c432166ea4361",
+    "textRange": {
+      "startLine": 138,
+      "endLine": 138,
+      "startOffset": 17,
+      "endOffset": 27
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mK",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 139,
+    "hash": "53c6381b83c13b4878b5c4d59ae50ac2",
+    "textRange": {
+      "startLine": 139,
+      "endLine": 139,
+      "startOffset": 17,
+      "endOffset": 27
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mL",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 140,
+    "hash": "df0e85f1f69e24a4237f66ae03efb730",
+    "textRange": {
+      "startLine": 140,
+      "endLine": 140,
+      "startOffset": 17,
+      "endOffset": 28
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mM",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 141,
+    "hash": "050c10974cb55af5f58cc18ef2841fee",
+    "textRange": {
+      "startLine": 141,
+      "endLine": 141,
+      "startOffset": 17,
+      "endOffset": 25
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mN",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 151,
+    "hash": "bba35b86d80c3cceef306f09fb3f0129",
+    "textRange": {
+      "startLine": 151,
+      "endLine": 151,
+      "startOffset": 17,
+      "endOffset": 24
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mO",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 152,
+    "hash": "d25516fb2720875beddedd0993e0d865",
+    "textRange": {
+      "startLine": 152,
+      "endLine": 152,
+      "startOffset": 17,
+      "endOffset": 24
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mP",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 153,
+    "hash": "3fc21d75408b64d8895f92f310917b3d",
+    "textRange": {
+      "startLine": 153,
+      "endLine": 153,
+      "startOffset": 17,
+      "endOffset": 24
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mQ",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 154,
+    "hash": "30f380597f290716412122969a39d568",
+    "textRange": {
+      "startLine": 154,
+      "endLine": 154,
+      "startOffset": 17,
+      "endOffset": 27
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mR",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 155,
+    "hash": "644f3aa5f8eb8fb70e4d03485614d334",
+    "textRange": {
+      "startLine": 155,
+      "endLine": 155,
+      "startOffset": 17,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mS",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 156,
+    "hash": "d64df740e15186948940978f2eabbf14",
+    "textRange": {
+      "startLine": 156,
+      "endLine": 156,
+      "startOffset": 17,
+      "endOffset": 27
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mT",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 165,
+    "hash": "84f28af5e009bc218a8a4355be308057",
+    "textRange": {
+      "startLine": 165,
+      "endLine": 165,
+      "startOffset": 17,
+      "endOffset": 23
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mU",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 166,
+    "hash": "4b5eb951e9bbd0254c61a73eafc4e3a9",
+    "textRange": {
+      "startLine": 166,
+      "endLine": 166,
+      "startOffset": 17,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mV",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 167,
+    "hash": "40e28c313c448d9696f0be14311ac7d6",
+    "textRange": {
+      "startLine": 167,
+      "endLine": 167,
+      "startOffset": 17,
+      "endOffset": 27
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mW",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 168,
+    "hash": "d65668a70407d8febe90a46a2aade09a",
+    "textRange": {
+      "startLine": 168,
+      "endLine": 168,
+      "startOffset": 17,
+      "endOffset": 29
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mX",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 169,
+    "hash": "881d0c2e8779f4cbbc33ebf65feac70c",
+    "textRange": {
+      "startLine": 169,
+      "endLine": 169,
+      "startOffset": 17,
+      "endOffset": 24
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mY",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 170,
+    "hash": "784c00f2b80d62ed3ebb73edf154b07a",
+    "textRange": {
+      "startLine": 170,
+      "endLine": 170,
+      "startOffset": 17,
+      "endOffset": 24
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mZ",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 171,
+    "hash": "a0d67d972ce0515afbde417269c7371c",
+    "textRange": {
+      "startLine": 171,
+      "endLine": 171,
+      "startOffset": 17,
+      "endOffset": 29
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8ma",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 172,
+    "hash": "ffb464783f4f24f0975076f301eb5082",
+    "textRange": {
+      "startLine": 172,
+      "endLine": 172,
+      "startOffset": 17,
+      "endOffset": 27
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mb",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 173,
+    "hash": "eaf181ecb88cb88e41639c0fbb886d31",
+    "textRange": {
+      "startLine": 173,
+      "endLine": 173,
+      "startOffset": 17,
+      "endOffset": 27
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mc",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 174,
+    "hash": "67bf65bb0111d957019e8ad235739b9f",
+    "textRange": {
+      "startLine": 174,
+      "endLine": 174,
+      "startOffset": 17,
+      "endOffset": 24
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8md",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 175,
+    "hash": "7e69ffcb2d5db85d8ab429070d05d2fe",
+    "textRange": {
+      "startLine": 175,
+      "endLine": 175,
+      "startOffset": 17,
+      "endOffset": 25
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8me",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 176,
+    "hash": "71083c5f9996bbb79473884c76e805c0",
+    "textRange": {
+      "startLine": 176,
+      "endLine": 176,
+      "startOffset": 17,
+      "endOffset": 24
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mf",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 177,
+    "hash": "0f589e1d0905baeb0664acc833a1a021",
+    "textRange": {
+      "startLine": 177,
+      "endLine": 177,
+      "startOffset": 17,
+      "endOffset": 28
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mg",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 178,
+    "hash": "db4d6db4e00c01289d3367015fd5055a",
+    "textRange": {
+      "startLine": 178,
+      "endLine": 178,
+      "startOffset": 17,
+      "endOffset": 24
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mh",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 188,
+    "hash": "8764e0be78fbfc6e65198e2ed6f15459",
+    "textRange": {
+      "startLine": 188,
+      "endLine": 188,
+      "startOffset": 17,
+      "endOffset": 67
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mi",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 192,
+    "hash": "19ff75efe8971b9af85fc15dd818b6fd",
+    "textRange": {
+      "startLine": 192,
+      "endLine": 192,
+      "startOffset": 17,
+      "endOffset": 67
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mj",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 195,
+    "hash": "836d18c90e67f2ce707426e5166578a3",
+    "textRange": {
+      "startLine": 195,
+      "endLine": 195,
+      "startOffset": 17,
+      "endOffset": 27
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mk",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 196,
+    "hash": "5cf7805d72c06ea028d7f6dbe4efdc5a",
+    "textRange": {
+      "startLine": 196,
+      "endLine": 196,
+      "startOffset": 17,
+      "endOffset": 39
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8ml",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 205,
+    "hash": "2eae2277835b25afcce589cdcc103c1e",
+    "textRange": {
+      "startLine": 205,
+      "endLine": 205,
+      "startOffset": 17,
+      "endOffset": 31
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mm",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 206,
+    "hash": "09cfceaca2cc63eebece858f9a8c0321",
+    "textRange": {
+      "startLine": 206,
+      "endLine": 206,
+      "startOffset": 17,
+      "endOffset": 30
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mn",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 207,
+    "hash": "5148cef7e20eb25b2b6ea990ca96f9b4",
+    "textRange": {
+      "startLine": 207,
+      "endLine": 207,
+      "startOffset": 17,
+      "endOffset": 31
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mo",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 208,
+    "hash": "44ea8aedd25d0a5c9c65f685dff4780b",
+    "textRange": {
+      "startLine": 208,
+      "endLine": 208,
+      "startOffset": 17,
+      "endOffset": 35
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mp",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 209,
+    "hash": "025b4f7d65f23597f81efc413513e6ef",
+    "textRange": {
+      "startLine": 209,
+      "endLine": 209,
+      "startOffset": 17,
+      "endOffset": 27
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mq",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 218,
+    "hash": "7988ef4ecd9cfa6b8b218dc3e1f2b198",
+    "textRange": {
+      "startLine": 218,
+      "endLine": 218,
+      "startOffset": 17,
+      "endOffset": 27
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mr",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 219,
+    "hash": "5dcb771698d22a75fbd82933c2c69d18",
+    "textRange": {
+      "startLine": 219,
+      "endLine": 219,
+      "startOffset": 17,
+      "endOffset": 27
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8ms",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 220,
+    "hash": "2cabf6eaf5ce1aa61ed8e6353058be6e",
+    "textRange": {
+      "startLine": 220,
+      "endLine": 220,
+      "startOffset": 17,
+      "endOffset": 27
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mt",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 221,
+    "hash": "c824633503178adee2aabecb766639be",
+    "textRange": {
+      "startLine": 221,
+      "endLine": 221,
+      "startOffset": 17,
+      "endOffset": 29
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mu",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 222,
+    "hash": "9f38647e049bfb4ab9f81073d692ab40",
+    "textRange": {
+      "startLine": 222,
+      "endLine": 222,
+      "startOffset": 17,
+      "endOffset": 33
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mv",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 231,
+    "hash": "200ba670fb9d94bbd8bbb10f77ba4459",
+    "textRange": {
+      "startLine": 231,
+      "endLine": 231,
+      "startOffset": 17,
+      "endOffset": 36
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mw",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 232,
+    "hash": "b15ed3cab074439f3b30e9a320f21ac0",
+    "textRange": {
+      "startLine": 232,
+      "endLine": 232,
+      "startOffset": 17,
+      "endOffset": 29
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8mx",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 233,
+    "hash": "579a4a2a50870fc27fbe03f689207c47",
+    "textRange": {
+      "startLine": 233,
+      "endLine": 233,
+      "startOffset": 17,
+      "endOffset": 30
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWneb78DfsSBSR8nK",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/shared/MathText.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 25,
+    "hash": "6b949a4b43f29e4d1d53e11af804da2b",
+    "textRange": {
+      "startLine": 25,
+      "endLine": 25,
+      "startOffset": 23,
+      "endOffset": 28
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-14T09:29:36+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWneb78DfsSBSR8nL",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/shared/MathText.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 25,
+    "hash": "6b949a4b43f29e4d1d53e11af804da2b",
+    "textRange": {
+      "startLine": 25,
+      "endLine": 25,
+      "startOffset": 48,
+      "endOffset": 53
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-14T09:29:36+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWneb78DfsSBSR8nM",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/shared/MathText.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 28,
+    "hash": "cddcab6b81e60500ec15049483cf9e5f",
+    "textRange": {
+      "startLine": 28,
+      "endLine": 28,
+      "startOffset": 23,
+      "endOffset": 28
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-14T09:29:36+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWneb78DfsSBSR8nN",
+    "rule": "javascript:S7780",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/shared/MathText.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 28,
+    "hash": "cddcab6b81e60500ec15049483cf9e5f",
+    "textRange": {
+      "startLine": 28,
+      "endLine": 28,
+      "startOffset": 48,
+      "endOffset": 53
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "`String.raw` should be used to avoid escaping `\\`.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["editable-source", "es2015", "readability"],
+    "creationDate": "2026-08-14T09:29:36+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  }
+]

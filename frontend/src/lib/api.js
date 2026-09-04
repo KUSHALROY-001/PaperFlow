@@ -22,7 +22,13 @@ const SUBSCRIBER_KEY = "paperflow_subscriber_key";
 export function getSubscriberKey() {
   let key = localStorage.getItem(SUBSCRIBER_KEY);
   if (!key) {
-    key = `sub_${Math.random().toString(36).substring(2)}${Date.now().toString(36)}`;
+    // This key is sent as the x-subscriber-key header and used server-side
+    // (see subscriptions.controller.js) as the identity that owns a set of
+    // publisher subscriptions - if it were guessable, an attacker could
+    // enumerate keys and read/modify someone else's subscriptions. Use the
+    // crypto RNG rather than Math.random(), which isn't cryptographically
+    // strong and can be predicted (javascript:S2245).
+    key = `sub_${crypto.randomUUID().replace(/-/g, "")}`;
     localStorage.setItem(SUBSCRIBER_KEY, key);
   }
   return key;

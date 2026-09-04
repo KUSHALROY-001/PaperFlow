@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle, Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ApplyTemplateModal({ template, onClose, onApplied }) {
+  const uid = useId();
   const { isViewer } = useAuth();
   const { data, isLoading: clustersLoading } = useQuery({
     queryKey: ["clusters"],
@@ -45,12 +46,17 @@ export default function ApplyTemplateModal({ template, onClose, onApplied }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") onClose();
+      }}
+      role="presentation"
     >
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-md surface-card border border-border rounded-3xl shadow-2xl p-6"
-        onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-bold text-foreground">
           Apply "{template.name}"
@@ -60,10 +66,14 @@ export default function ApplyTemplateModal({ template, onClose, onApplied }) {
           and sections.
         </p>
 
-        <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
+        <label
+          htmlFor={`${uid}-mock-test-name`}
+          className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5"
+        >
           Mock test name
         </label>
         <input
+          id={`${uid}-mock-test-name`}
           disabled={isViewer}
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -72,7 +82,10 @@ export default function ApplyTemplateModal({ template, onClose, onApplied }) {
           }`}
         />
 
-        <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
+        <label
+          htmlFor={`${uid}-cluster`}
+          className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5"
+        >
           Cluster
         </label>
         {clustersLoading ? (
@@ -83,6 +96,7 @@ export default function ApplyTemplateModal({ template, onClose, onApplied }) {
           </p>
         ) : (
           <select
+            id={`${uid}-cluster`}
             disabled={isViewer}
             value={clusterId}
             onChange={(e) => setClusterId(e.target.value)}

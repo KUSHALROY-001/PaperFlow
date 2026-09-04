@@ -461,40 +461,55 @@ export function useQuestionEditor() {
   );
 
   /**
-   * Save ONE: current selection only.
+   * Save ALL dirty questions from anywhere in the editor.
    *
-   * Swap handling: if any questions were reordered (including the selected
-   * one or others), we first send ONLY the changed {id, questionNo} pairs
-   * via reorder. Then we PATCH/create the selected question if its content
-   * (or draft status) is dirty. Other questions' content is left alone.
+   * Selection does not matter: editing Q1 then navigating to Q10 still
+   * leaves Q1 in dirtyContentIds, and Save stays enabled via
+   * hasUnsavedChanges. This handler persists every content-dirty question
+   * plus any pending reorder delta.
+   *
+   * Order: reorder first (minimal {id, questionNo} pairs), then PATCH/create
+   * each dirty question. If any brand-new draft is created, full list
+   * invalidate replaces draft-* ids; otherwise snapshot is marked clean.
    */
   const handleSave = useCallback(async () => {
     setError("");
     setIsSaving(true);
 
     try {
-      const current = questionsRef.current.find((q) => q.id === selectedId);
-      if (!current) {
-        throw new Error("No question selected");
-      }
-
-      if (issuesById.get(current.id) > 0) {
-        throw new Error("Fix issues on this question before saving");
-      }
-
+      const list = questionsRef.current;
+      const dirtyIds = dirtyContentIdsRef.current;
       const orderItems = orderChangedItemsRef.current;
-      const contentDirty = dirtyContentIdsRef.current.has(current.id);
+
+      const toSave = list.filter(
+        (q) => dirtyIds.has(q.id) || !q.persisted,
+      );
+
+      if (toSave.length === 0 && orderItems.length === 0) {
+        throw new Error("No changes to save");
+      }
+
+      // Block save if any dirty question still has validation issues
+      const blocked = toSave.find((q) => (issuesById.get(q.id) || 0) > 0);
+      if (blocked) {
+        const label = blocked.questionNo
+          ? `question ${blocked.questionNo}`
+          : "a question";
+        throw new Error(
+          `Fix issues on ${label} before saving (you can still switch questions freely)`,
+        );
+      }
 
       // 1) Minimal order sync (only ids whose questionNo changed)
       if (orderItems.length > 0) {
         await persistOrderChanges(orderItems);
       }
 
-      // 2) Content for the selected question only (skip if pure reorder)
+      // 2) Content for every dirty / draft question (not only the selection)
       let createdNeedsRefetch = false;
-      if (contentDirty || !current.persisted) {
-        await saveQuestion(current);
-        if (!current.persisted) {
+      for (const q of toSave) {
+        await saveQuestion(q);
+        if (!q.persisted) {
           createdNeedsRefetch = true;
         }
       }
@@ -509,12 +524,7 @@ export function useQuestionEditor() {
           queryKey: ["mock-tests", clusterId],
         });
       } else {
-        markSnapshotClean(
-          contentDirty || orderItems.some((i) => i.id === current.id)
-            ? [current]
-            : [],
-          orderItems,
-        );
+        markSnapshotClean(toSave, orderItems);
         // Soft-invalidate so other views stay fresh without blocking UI
         void queryClient.invalidateQueries({
           queryKey: ["questions", mockTestId],
@@ -529,7 +539,6 @@ export function useQuestionEditor() {
       setIsSaving(false);
     }
   }, [
-    selectedId,
     issuesById,
     saveQuestion,
     persistOrderChanges,

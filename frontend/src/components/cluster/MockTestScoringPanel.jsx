@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 
@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
  * visibility. Publisher/editor only; viewers see read-only values.
  */
 export default function MockTestScoringPanel({ mocktest, isViewer }) {
+  const uid = useId();
   const queryClient = useQueryClient();
   const settings = mocktest?.settings || {};
   const [marks, setMarks] = useState(
@@ -61,10 +62,14 @@ export default function MockTestScoringPanel({ mocktest, isViewer }) {
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 items-end">
         <div>
-          <label className="block text-[11px] font-semibold text-muted-foreground mb-1">
+          <label
+            htmlFor={`${uid}-marks-per-correct`}
+            className="block text-[11px] font-semibold text-muted-foreground mb-1"
+          >
             Marks / correct
           </label>
           <input
+            id={`${uid}-marks-per-correct`}
             type="number"
             min="0"
             step="any"
@@ -75,10 +80,14 @@ export default function MockTestScoringPanel({ mocktest, isViewer }) {
           />
         </div>
         <div>
-          <label className="block text-[11px] font-semibold text-muted-foreground mb-1">
+          <label
+            htmlFor={`${uid}-negative-marks`}
+            className="block text-[11px] font-semibold text-muted-foreground mb-1"
+          >
             −ve / wrong
           </label>
           <input
+            id={`${uid}-negative-marks`}
             type="number"
             min="0"
             step="any"

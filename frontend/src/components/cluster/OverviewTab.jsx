@@ -54,7 +54,7 @@ export default function OverviewTab({
     map.set(topic, (map.get(topic) || 0) + 1);
     return map;
   }, new Map());
-  const topics = [...topicCounts.keys()].sort();
+  const topics = [...topicCounts.keys()].sort((a, b) => a.localeCompare(b));
 
   const toggleTopic = (topic) => {
     setSelectedTopics((current) => {

@@ -7,6 +7,14 @@ export default function PopularTemplateCard({ template, onPreview }) {
     <div
       className="surface-card rounded-2xl p-4 border border-border hover:border-orange-500/30 transition-all cursor-pointer"
       onClick={() => onPreview(template)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onPreview(template);
+        }
+      }}
+      role="button"
+      tabIndex={0}
     >
       <div className="flex items-start justify-between gap-2 mb-3">
         <div

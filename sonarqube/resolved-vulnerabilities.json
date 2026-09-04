@@ -1,0 +1,992 @@
+[
+  {
+    "key": "AaBnWnxV78DfsSBSR8tO",
+    "rule": "jssecurity:S5145",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 231,
+    "hash": "3b21bc06f10a5a288eb6409ab9e2cc41",
+    "textRange": {
+      "startLine": 231,
+      "endLine": 231,
+      "startOffset": 16,
+      "endOffset": 21
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 231,
+              "endLine": 231,
+              "startOffset": 16,
+              "endOffset": 21
+            },
+            "msg": "Sink: this invocation is not safe; a malicious value can be used as argument"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 232,
+              "endLine": 232,
+              "startOffset": 10,
+              "endOffset": 84
+            },
+            "msg": "This concatenation can propagate malicious content to the newly created string"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 232,
+              "endLine": 232,
+              "startOffset": 42,
+              "endOffset": 52
+            },
+            "msg": "A malicious value was previously assigned to field �??storageKey�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 207,
+              "endLine": 207,
+              "startOffset": 30,
+              "endOffset": 40
+            },
+            "msg": "A malicious value can be assigned to field �??storageKey�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/services/mock-tests.service.js",
+            "textRange": {
+              "startLine": 675,
+              "endLine": 675,
+              "startOffset": 21,
+              "endOffset": 28
+            },
+            "msg": "Function call: Control is passed to this function, which is on the path to a security sink"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/services/mock-tests.service.js",
+            "textRange": {
+              "startLine": 675,
+              "endLine": 675,
+              "startOffset": 29,
+              "endOffset": 39
+            },
+            "msg": "A malicious value was previously assigned to field �??storageKey�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/services/mock-tests.service.js",
+            "textRange": {
+              "startLine": 661,
+              "endLine": 661,
+              "startOffset": 2,
+              "endOffset": 12
+            },
+            "msg": "A malicious value can be assigned to field �??storageKey�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/services/mock-tests.service.js",
+            "textRange": {
+              "startLine": 661,
+              "endLine": 661,
+              "startOffset": 2,
+              "endOffset": 12
+            },
+            "msg": "A malicious value was previously assigned to field �??storageKey�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/controllers/mock-tests.controller.js",
+            "textRange": {
+              "startLine": 87,
+              "endLine": 87,
+              "startOffset": 40,
+              "endOffset": 54
+            },
+            "msg": "Function call: Control is passed to this function, which is on the path to a security sink"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/controllers/mock-tests.controller.js",
+            "textRange": {
+              "startLine": 91,
+              "endLine": 91,
+              "startOffset": 4,
+              "endOffset": 35
+            },
+            "msg": "A malicious value can be assigned to field �??storageKey�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/controllers/mock-tests.controller.js",
+            "textRange": {
+              "startLine": 91,
+              "endLine": 91,
+              "startOffset": 25,
+              "endOffset": 35
+            },
+            "msg": "Source: a user can craft an HTTP request with malicious content"
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Change this code to not log user-controlled data.",
+    "effort": "30min",
+    "debt": "30min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["cwe"],
+    "creationDate": "2026-09-03T11:50:38+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "VULNERABILITY",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "SECURITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnxV78DfsSBSR8tR",
+    "rule": "jssecurity:S5145",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 238,
+    "hash": "f12276055a350a34b7d1f517ed2bd5c6",
+    "textRange": {
+      "startLine": 238,
+      "endLine": 238,
+      "startOffset": 14,
+      "endOffset": 18
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 238,
+              "endLine": 238,
+              "startOffset": 14,
+              "endOffset": 18
+            },
+            "msg": "Sink: this invocation is not safe; a malicious value can be used as argument"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 239,
+              "endLine": 239,
+              "startOffset": 8,
+              "endOffset": 169
+            },
+            "msg": "This concatenation can propagate malicious content to the newly created string"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 239,
+              "endLine": 239,
+              "startOffset": 49,
+              "endOffset": 59
+            },
+            "msg": "A malicious value was previously assigned to field �??storageKey�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 207,
+              "endLine": 207,
+              "startOffset": 30,
+              "endOffset": 40
+            },
+            "msg": "A malicious value can be assigned to field �??storageKey�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/services/mock-tests.service.js",
+            "textRange": {
+              "startLine": 675,
+              "endLine": 675,
+              "startOffset": 21,
+              "endOffset": 28
+            },
+            "msg": "Function call: Control is passed to this function, which is on the path to a security sink"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/services/mock-tests.service.js",
+            "textRange": {
+              "startLine": 675,
+              "endLine": 675,
+              "startOffset": 29,
+              "endOffset": 39
+            },
+            "msg": "A malicious value was previously assigned to field �??storageKey�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/services/mock-tests.service.js",
+            "textRange": {
+              "startLine": 661,
+              "endLine": 661,
+              "startOffset": 2,
+              "endOffset": 12
+            },
+            "msg": "A malicious value can be assigned to field �??storageKey�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/services/mock-tests.service.js",
+            "textRange": {
+              "startLine": 661,
+              "endLine": 661,
+              "startOffset": 2,
+              "endOffset": 12
+            },
+            "msg": "A malicious value was previously assigned to field �??storageKey�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/controllers/mock-tests.controller.js",
+            "textRange": {
+              "startLine": 87,
+              "endLine": 87,
+              "startOffset": 40,
+              "endOffset": 54
+            },
+            "msg": "Function call: Control is passed to this function, which is on the path to a security sink"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/controllers/mock-tests.controller.js",
+            "textRange": {
+              "startLine": 91,
+              "endLine": 91,
+              "startOffset": 4,
+              "endOffset": 35
+            },
+            "msg": "A malicious value can be assigned to field �??storageKey�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/controllers/mock-tests.controller.js",
+            "textRange": {
+              "startLine": 91,
+              "endLine": 91,
+              "startOffset": 25,
+              "endOffset": 35
+            },
+            "msg": "Source: a user can craft an HTTP request with malicious content"
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Change this code to not log user-controlled data.",
+    "effort": "30min",
+    "debt": "30min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["cwe"],
+    "creationDate": "2026-09-03T11:50:38+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "VULNERABILITY",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "SECURITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWneS78DfsSBSR8nI",
+    "rule": "javascript:S2245",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/shared/FormattedTextEditor.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 323,
+    "hash": "63d33cbd37f5360e6a344594e8963479",
+    "textRange": {
+      "startLine": 323,
+      "endLine": 323,
+      "startOffset": 53,
+      "endOffset": 66
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Make sure that using this pseudorandom number generator is safe here.",
+    "effort": "10min",
+    "debt": "10min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["cwe", "former-hotspot"],
+    "creationDate": "2026-08-29T12:26:58+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "VULNERABILITY",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "TRUSTWORTHY",
+    "cleanCodeAttributeCategory": "RESPONSIBLE",
+    "impacts": [
+      {
+        "softwareQuality": "SECURITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnzN78DfsSBSR8tr",
+    "rule": "python:S4790",
+    "severity": "CRITICAL",
+    "component": "KUSHALROY-001_PaperFlow:backend/worker/cloudinary_storage.py",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 58,
+    "hash": "5800f358747f280ea4d81642df24de44",
+    "textRange": {
+      "startLine": 58,
+      "endLine": 58,
+      "startOffset": 19,
+      "endOffset": 23
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Make sure that hashing data is safe here.",
+    "effort": "30min",
+    "debt": "30min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["cwe", "former-hotspot"],
+    "creationDate": "2026-08-29T06:34:57+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "VULNERABILITY",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "TRUSTWORTHY",
+    "cleanCodeAttributeCategory": "RESPONSIBLE",
+    "impacts": [
+      {
+        "softwareQuality": "SECURITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnxV78DfsSBSR8tQ",
+    "rule": "jssecurity:S5145",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 172,
+    "hash": "d63241be7bf57c1913bf3ca3c453df0d",
+    "textRange": {
+      "startLine": 172,
+      "endLine": 172,
+      "startOffset": 12,
+      "endOffset": 17
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 172,
+              "endLine": 172,
+              "startOffset": 12,
+              "endOffset": 17
+            },
+            "msg": "Sink: this invocation is not safe; a malicious value can be used as argument"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 172,
+              "endLine": 172,
+              "startOffset": 18,
+              "endOffset": 69
+            },
+            "msg": "This concatenation can propagate malicious content to the newly created string"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 172,
+              "endLine": 172,
+              "startOffset": 55,
+              "endOffset": 65
+            },
+            "msg": "A malicious value was previously assigned to field �??storageKey�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 155,
+              "endLine": 155,
+              "startOffset": 2,
+              "endOffset": 12
+            },
+            "msg": "A malicious value can be assigned to field �??storageKey�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/services/mock-tests.service.js",
+            "textRange": {
+              "startLine": 645,
+              "endLine": 645,
+              "startOffset": 26,
+              "endOffset": 47
+            },
+            "msg": "Function call: Control is passed to this function, which is on the path to a security sink"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/services/mock-tests.service.js",
+            "textRange": {
+              "startLine": 646,
+              "endLine": 646,
+              "startOffset": 4,
+              "endOffset": 14
+            },
+            "msg": "A malicious value was previously assigned to field �??storageKey�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/services/mock-tests.service.js",
+            "textRange": {
+              "startLine": 640,
+              "endLine": 640,
+              "startOffset": 8,
+              "endOffset": 18
+            },
+            "msg": "A malicious value can be assigned to field �??storageKey�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 121,
+              "endLine": 121,
+              "startOffset": 9,
+              "endOffset": 69
+            },
+            "msg": "This concatenation can propagate malicious content to the newly created string"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 121,
+              "endLine": 121,
+              "startOffset": 64,
+              "endOffset": 67
+            },
+            "msg": "A malicious value was previously assigned to field �??ext�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 120,
+              "endLine": 120,
+              "startOffset": 8,
+              "endOffset": 11
+            },
+            "msg": "A malicious value can be assigned to field �??ext�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 120,
+              "endLine": 120,
+              "startOffset": 27,
+              "endOffset": 43
+            },
+            "msg": "A malicious value was previously assigned to field �??originalFilename�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 119,
+              "endLine": 119,
+              "startOffset": 60,
+              "endOffset": 76
+            },
+            "msg": "A malicious value can be assigned to field �??originalFilename�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/services/mock-tests.service.js",
+            "textRange": {
+              "startLine": 640,
+              "endLine": 640,
+              "startOffset": 21,
+              "endOffset": 39
+            },
+            "msg": "Function call: Control is passed to this function, which is on the path to a security sink"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/services/mock-tests.service.js",
+            "textRange": {
+              "startLine": 643,
+              "endLine": 643,
+              "startOffset": 4,
+              "endOffset": 20
+            },
+            "msg": "A malicious value was previously assigned to field �??originalFilename�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/services/mock-tests.service.js",
+            "textRange": {
+              "startLine": 634,
+              "endLine": 634,
+              "startOffset": 2,
+              "endOffset": 18
+            },
+            "msg": "A malicious value can be assigned to field �??originalFilename�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/services/mock-tests.service.js",
+            "textRange": {
+              "startLine": 634,
+              "endLine": 634,
+              "startOffset": 2,
+              "endOffset": 18
+            },
+            "msg": "A malicious value was previously assigned to field �??originalFilename�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/controllers/mock-tests.controller.js",
+            "textRange": {
+              "startLine": 73,
+              "endLine": 73,
+              "startOffset": 40,
+              "endOffset": 55
+            },
+            "msg": "Function call: Control is passed to this function, which is on the path to a security sink"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/controllers/mock-tests.controller.js",
+            "textRange": {
+              "startLine": 76,
+              "endLine": 76,
+              "startOffset": 4,
+              "endOffset": 47
+            },
+            "msg": "A malicious value can be assigned to field �??originalFilename�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/controllers/mock-tests.controller.js",
+            "textRange": {
+              "startLine": 76,
+              "endLine": 76,
+              "startOffset": 31,
+              "endOffset": 47
+            },
+            "msg": "Source: a user can craft an HTTP request with malicious content"
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Change this code to not log user-controlled data.",
+    "effort": "30min",
+    "debt": "30min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["cwe"],
+    "creationDate": "2026-08-27T06:57:59+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "VULNERABILITY",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "SECURITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnz378DfsSBSR8t6",
+    "rule": "python:S5332",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/worker/http_server.py",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 314,
+    "hash": "7de2214f85430c116ae9949ea2b2a4c1",
+    "textRange": {
+      "startLine": 314,
+      "endLine": 314,
+      "startOffset": 4,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Using HTTP protocol is insecure. Use HTTPS instead.",
+    "effort": "30min",
+    "debt": "30min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["cwe", "former-hotspot"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "VULNERABILITY",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "SECURITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnrB78DfsSBSR8rM",
+    "rule": "javascript:S2245",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/ContactUs.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 124,
+    "hash": "feb1baaee2f5d82f12958ee9a76a6d79",
+    "textRange": {
+      "startLine": 124,
+      "endLine": 124,
+      "startOffset": 53,
+      "endOffset": 66
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Make sure that using this pseudorandom number generator is safe here.",
+    "effort": "10min",
+    "debt": "10min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["cwe", "former-hotspot"],
+    "creationDate": "2026-08-26T05:56:02+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "VULNERABILITY",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "TRUSTWORTHY",
+    "cleanCodeAttributeCategory": "RESPONSIBLE",
+    "impacts": [
+      {
+        "softwareQuality": "SECURITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnxV78DfsSBSR8tP",
+    "rule": "jssecurity:S5145",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 142,
+    "hash": "e5c9c18f317bc70d07d273531e42a006",
+    "textRange": {
+      "startLine": 142,
+      "endLine": 142,
+      "startOffset": 12,
+      "endOffset": 17
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 142,
+              "endLine": 142,
+              "startOffset": 12,
+              "endOffset": 17
+            },
+            "msg": "Sink: this invocation is not safe; a malicious value can be used as argument"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 142,
+              "endLine": 142,
+              "startOffset": 18,
+              "endOffset": 63
+            },
+            "msg": "This concatenation can propagate malicious content to the newly created string"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 142,
+              "endLine": 142,
+              "startOffset": 49,
+              "endOffset": 59
+            },
+            "msg": "A malicious value was previously assigned to field �??storageKey�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 124,
+              "endLine": 124,
+              "startOffset": 40,
+              "endOffset": 50
+            },
+            "msg": "A malicious value can be assigned to field �??storageKey�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/services/mock-tests.service.js",
+            "textRange": {
+              "startLine": 613,
+              "endLine": 613,
+              "startOffset": 8,
+              "endOffset": 17
+            },
+            "msg": "Function call: Control is passed to this function, which is on the path to a security sink"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/services/mock-tests.service.js",
+            "textRange": {
+              "startLine": 613,
+              "endLine": 613,
+              "startOffset": 31,
+              "endOffset": 41
+            },
+            "msg": "A malicious value was previously assigned to field �??storageKey�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/services/mock-tests.service.js",
+            "textRange": {
+              "startLine": 603,
+              "endLine": 603,
+              "startOffset": 8,
+              "endOffset": 18
+            },
+            "msg": "A malicious value can be assigned to field �??storageKey�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 121,
+              "endLine": 121,
+              "startOffset": 9,
+              "endOffset": 69
+            },
+            "msg": "This concatenation can propagate malicious content to the newly created string"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 121,
+              "endLine": 121,
+              "startOffset": 64,
+              "endOffset": 67
+            },
+            "msg": "A malicious value was previously assigned to field �??ext�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 120,
+              "endLine": 120,
+              "startOffset": 8,
+              "endOffset": 11
+            },
+            "msg": "A malicious value can be assigned to field �??ext�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 120,
+              "endLine": 120,
+              "startOffset": 27,
+              "endOffset": 43
+            },
+            "msg": "A malicious value was previously assigned to field �??originalFilename�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-storage.js",
+            "textRange": {
+              "startLine": 119,
+              "endLine": 119,
+              "startOffset": 60,
+              "endOffset": 76
+            },
+            "msg": "A malicious value can be assigned to field �??originalFilename�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/services/mock-tests.service.js",
+            "textRange": {
+              "startLine": 603,
+              "endLine": 603,
+              "startOffset": 21,
+              "endOffset": 39
+            },
+            "msg": "Function call: Control is passed to this function, which is on the path to a security sink"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/services/mock-tests.service.js",
+            "textRange": {
+              "startLine": 606,
+              "endLine": 606,
+              "startOffset": 9,
+              "endOffset": 21
+            },
+            "msg": "A malicious value was previously assigned to field �??originalname�??"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/controllers/mock-tests.controller.js",
+            "textRange": {
+              "startLine": 58,
+              "endLine": 58,
+              "startOffset": 40,
+              "endOffset": 54
+            },
+            "msg": "Function call: Control is passed to this function, which is on the path to a security sink"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/lib/async-handler.js",
+            "textRange": {
+              "startLine": 3,
+              "endLine": 3,
+              "startOffset": 20,
+              "endOffset": 27
+            },
+            "msg": "Function call: Control is passed to this function, which is on the path to a security sink"
+          },
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/src/routes/mock-tests.routes.js",
+            "textRange": {
+              "startLine": 89,
+              "endLine": 89,
+              "startOffset": 16,
+              "endOffset": 20
+            },
+            "msg": "Source: a user can craft an HTTP request with malicious content"
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Change this code to not log user-controlled data.",
+    "effort": "30min",
+    "debt": "30min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["cwe"],
+    "creationDate": "2026-08-26T03:34:47+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "VULNERABILITY",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "SECURITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnrx78DfsSBSR8rZ",
+    "rule": "javascript:S2245",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/lib/api.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 25,
+    "hash": "092f918564d181c24bc3e2cf226cece6",
+    "textRange": {
+      "startLine": 25,
+      "endLine": 25,
+      "startOffset": 17,
+      "endOffset": 30
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Make sure that using this pseudorandom number generator is safe here.",
+    "effort": "10min",
+    "debt": "10min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["cwe", "former-hotspot"],
+    "creationDate": "2026-08-19T04:42:05+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "VULNERABILITY",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "TRUSTWORTHY",
+    "cleanCodeAttributeCategory": "RESPONSIBLE",
+    "impacts": [
+      {
+        "softwareQuality": "SECURITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnug78DfsSBSR8sM",
+    "rule": "javascript:S5693",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/routes/mock-tests.routes.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 39,
+    "hash": "a93733ba63dd5dfc2bf2977baf2fdb50",
+    "textRange": {
+      "startLine": 39,
+      "endLine": 39,
+      "startOffset": 4,
+      "endOffset": 30
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Make sure the content length limit is safe here.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["cwe", "express.js", "former-hotspot"],
+    "creationDate": "2026-07-22T15:20:17+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "VULNERABILITY",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "TRUSTWORTHY",
+    "cleanCodeAttributeCategory": "RESPONSIBLE",
+    "impacts": [
+      {
+        "softwareQuality": "SECURITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  }
+]

@@ -50,12 +50,17 @@ def build_diagram_public_id(workspace_id, mock_test_id, question_id, slot_key="d
 
 
 def _sign_params(params, api_secret):
-    # Cloudinary's signing spec: SHA1 of every param EXCEPT file/
+    # Cloudinary's signing spec: hash of every param EXCEPT file/
     # cloud_name/resource_type/api_key, sorted alphabetically by key,
     # joined as "key=value&key=value...", with api_secret appended - a
-    # plain hash over the params-string + secret, not HMAC.
+    # plain hash over the params-string + secret, not HMAC. Cloudinary's
+    # SDKs default to SHA-1 here, but their API accepts and auto-detects
+    # SHA-256 digests too (see "Generating authentication signatures" in
+    # their docs), so we use SHA-256 rather than the weaker SHA-1
+    # (python:S4790) - no signature_algorithm param needs to be sent
+    # since Cloudinary validates based on the digest's length.
     to_sign = "&".join(f"{key}={params[key]}" for key in sorted(params))
-    return hashlib.sha1((to_sign + api_secret).encode("utf-8")).hexdigest()
+    return hashlib.sha256((to_sign + api_secret).encode("utf-8")).hexdigest()
 
 
 def upload_diagram_buffer(image_bytes, public_id):

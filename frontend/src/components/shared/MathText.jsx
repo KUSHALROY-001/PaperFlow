@@ -22,10 +22,10 @@ function stripDelimiters(token) {
   if (token.startsWith("$$") && token.endsWith("$$")) {
     return { expr: token.slice(2, -2), displayMode: true };
   }
-  if (token.startsWith("\\[") && token.endsWith("\\]")) {
+  if (token.startsWith(String.raw`\[`) && token.endsWith(String.raw`\]`)) {
     return { expr: token.slice(2, -2), displayMode: true };
   }
-  if (token.startsWith("\\(") && token.endsWith("\\)")) {
+  if (token.startsWith(String.raw`\(`) && token.endsWith(String.raw`\)`)) {
     return { expr: token.slice(2, -2), displayMode: false };
   }
   // Only the single-`$` form is left by elimination.

@@ -78,10 +78,7 @@ export default function CardActionMenu({
       </button>
 
       {open && (
-        <div
-          onClick={(e) => e.stopPropagation()}
-          className="absolute right-0 top-9 w-36 bg-card border border-border rounded-xl shadow-lg p-1 z-30 space-y-0.5 animate-in fade-in zoom-in-95 duration-100"
-        >
+        <div className="absolute right-0 top-9 w-36 bg-card border border-border rounded-xl shadow-lg p-1 z-30 space-y-0.5 animate-in fade-in zoom-in-95 duration-100">
           <button
             onClick={handleRenameClick}
             className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted hover:text-orange-500 rounded-lg transition-colors text-left"

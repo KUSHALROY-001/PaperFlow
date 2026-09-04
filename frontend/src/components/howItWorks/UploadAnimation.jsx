@@ -348,9 +348,6 @@ export default function UploadAnimation() {
                       or
                     </div>
                     <motion.div
-                      animate={{
-                        color: isDropZoneActive ? "#ea580c" : "#ea580c",
-                      }}
                       style={{
                         fontSize: "9.5px",
                         fontWeight: 600,

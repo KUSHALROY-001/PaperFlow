@@ -116,7 +116,7 @@ export default function QuestionPreviewCard({
                     : "bg-card text-foreground border border-border"
                 }`}
               >
-                <span className="mr-2">{String.fromCharCode(65 + i)}.</span>
+                <span className="mr-2">{String.fromCodePoint(65 + i)}.</span>
                 <MathText text={opt} />
               </div>
             ))}

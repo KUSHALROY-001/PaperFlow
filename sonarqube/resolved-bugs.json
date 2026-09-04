@@ -1,0 +1,1537 @@
+[
+  {
+    "key": "AaBnWny378DfsSBSR8tn",
+    "rule": "python:S1764",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:backend/worker/ai/schemas.py",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 575,
+    "hash": "4d82aa31d3ab0dacbb176d16d8cc3301",
+    "textRange": {
+      "startLine": 575,
+      "endLine": 575,
+      "startOffset": 17,
+      "endOffset": 23
+    },
+    "flows": [
+      {
+        "locations": [
+          {
+            "component": "KUSHALROY-001_PaperFlow:backend/worker/ai/schemas.py",
+            "textRange": {
+              "startLine": 575,
+              "endLine": 575,
+              "startOffset": 7,
+              "endOffset": 13
+            }
+          }
+        ]
+      }
+    ],
+    "status": "OPEN",
+    "message": "Correct one of the identical sub-expressions on both sides of operator \"!=\".",
+    "effort": "2min",
+    "debt": "2min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["suspicious"],
+    "creationDate": "2026-09-03T05:25:56+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnhK78DfsSBSR8oT",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/design-system/RenameModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 40,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 40,
+      "endLine": 43,
+      "startOffset": 6,
+      "endOffset": 7
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-29T06:34:57+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnww78DfsSBSR8tB",
+    "rule": "javascript:S2871",
+    "severity": "CRITICAL",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/math-validator.selftest.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 82,
+    "hash": "ef16b43eb7b3974fbaa29929dffa768c",
+    "textRange": {
+      "startLine": 82,
+      "endLine": 82,
+      "startOffset": 53,
+      "endOffset": 57
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Provide a compare function that depends on \"String.localeCompare\", to reliably sort elements alphabetically.",
+    "effort": "10min",
+    "debt": "10min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["bad-practice", "type-dependent"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnww78DfsSBSR8tC",
+    "rule": "javascript:S2871",
+    "severity": "CRITICAL",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/lib/math-validator.selftest.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 83,
+    "hash": "69fea3d29c3cd6630b69c6caa6ead65f",
+    "textRange": {
+      "startLine": 83,
+      "endLine": 83,
+      "startOffset": 61,
+      "endOffset": 65
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Provide a compare function to avoid sorting elements alphabetically.",
+    "effort": "10min",
+    "debt": "10min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["bad-practice", "type-dependent"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnmo78DfsSBSR8qC",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/catalog/CatalogSettingsPanel.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 208,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 208,
+      "endLine": 214,
+      "startOffset": 16,
+      "endOffset": 17
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnmo78DfsSBSR8qE",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/catalog/CatalogSettingsPanel.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 231,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 231,
+      "endLine": 234,
+      "startOffset": 18,
+      "endOffset": 19
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngH78DfsSBSR8nv",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/MockTestCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 61,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 61,
+      "endLine": 68,
+      "startOffset": 6,
+      "endOffset": 7
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnkC78DfsSBSR8pX",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/dashboard/RecentMockTestsList.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 72,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 72,
+      "endLine": 78,
+      "startOffset": 14,
+      "endOffset": 15
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-26T03:34:47+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnyS78DfsSBSR8ta",
+    "rule": "javascript:S2871",
+    "severity": "CRITICAL",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/repositories/mock-tests.repository.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 447,
+    "hash": "1f7c0a92719d6804ed22b53b81179304",
+    "textRange": {
+      "startLine": 447,
+      "endLine": 447,
+      "startOffset": 49,
+      "endOffset": 53
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Provide a compare function to avoid sorting elements alphabetically.",
+    "effort": "10min",
+    "debt": "10min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["bad-practice", "type-dependent"],
+    "creationDate": "2026-08-24T11:54:34+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndj78DfsSBSR8m4",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/QuestionExplanationCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 65,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 65,
+      "endLine": 68,
+      "startOffset": 12,
+      "endOffset": 13
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-24T05:52:57+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnc078DfsSBSR8lZ",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/QuestionTextCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 96,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 96,
+      "endLine": 99,
+      "startOffset": 12,
+      "endOffset": 13
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-24T05:52:57+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnp178DfsSBSR8q4",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/ClustersLibrary.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 316,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 316,
+      "endLine": 320,
+      "startOffset": 14,
+      "endOffset": 15
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-21T12:25:52+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnil78DfsSBSR8ot",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/TemplatePreviewModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 18,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 18,
+      "endLine": 21,
+      "startOffset": 6,
+      "endOffset": 7
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-20T03:26:34+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnha78DfsSBSR8oZ",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/app-shell/SubscribedPublishersMenu.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 30,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 30,
+      "endLine": 33,
+      "startOffset": 10,
+      "endOffset": 12
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-19T04:42:05+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnha78DfsSBSR8ob",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/app-shell/SubscribedPublishersMenu.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 60,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 60,
+      "endLine": 71,
+      "startOffset": 18,
+      "endOffset": 19
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-19T04:42:05+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnqI78DfsSBSR8q-",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/PublicCatalog.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 95,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 95,
+      "endLine": 98,
+      "startOffset": 18,
+      "endOffset": 20
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-19T04:42:05+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnqI78DfsSBSR8rA",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/PublicCatalog.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 125,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 125,
+      "endLine": 132,
+      "startOffset": 26,
+      "endOffset": 27
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-19T04:42:05+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnmT78DfsSBSR8p7",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/catalog/CatalogBrowser.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 179,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 179,
+      "endLine": 190,
+      "startOffset": 12,
+      "endOffset": 13
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-18T15:13:33+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnnP78DfsSBSR8qN",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-bank/AddToTestModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 82,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 82,
+      "endLine": 85,
+      "startOffset": 4,
+      "endOffset": 5
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-17T12:36:43+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnnP78DfsSBSR8qP",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-bank/AddToTestModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 86,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 86,
+      "endLine": 89,
+      "startOffset": 6,
+      "endOffset": 7
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-17T12:36:43+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWneG78DfsSBSR8nA",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/QuestionCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 25,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 25,
+      "endLine": 46,
+      "startOffset": 4,
+      "endOffset": 5
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-17T12:36:43+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnv578DfsSBSR8sZ",
+    "rule": "javascript:S2871",
+    "severity": "CRITICAL",
+    "component": "KUSHALROY-001_PaperFlow:backend/src/services/attempts.service.js",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 59,
+    "hash": "d541ee11d92daeab60205c833aeed7bb",
+    "textRange": {
+      "startLine": 59,
+      "endLine": 59,
+      "startOffset": 4,
+      "endOffset": 8
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Provide a compare function to avoid sorting elements alphabetically.",
+    "effort": "10min",
+    "debt": "10min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["bad-practice", "type-dependent"],
+    "creationDate": "2026-08-16T12:43:59+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngS78DfsSBSR8ny",
+    "rule": "javascript:S2871",
+    "severity": "CRITICAL",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/OverviewTab.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 57,
+    "hash": "9e7d5588d883438a495265c627b76cda",
+    "textRange": {
+      "startLine": 57,
+      "endLine": 57,
+      "startOffset": 41,
+      "endOffset": 45
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Provide a compare function to avoid sorting elements alphabetically.",
+    "effort": "10min",
+    "debt": "10min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["bad-practice", "type-dependent"],
+    "creationDate": "2026-08-16T04:45:03+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "HIGH"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8my",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 274,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 274,
+      "endLine": 277,
+      "startOffset": 4,
+      "endOffset": 5
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndP78DfsSBSR8m0",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/LatexReferenceModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 278,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 278,
+      "endLine": 281,
+      "startOffset": 6,
+      "endOffset": 7
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-15T08:55:54+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWntD78DfsSBSR8r8",
+    "rule": "css:S8778",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/index.css",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 9,
+    "hash": "cc36605fa84c2c64fed179df2db1bb56",
+    "textRange": {
+      "startLine": 9,
+      "endLine": 9,
+      "startOffset": 0,
+      "endOffset": 34
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Invalid position for @import rule",
+    "effort": "1min",
+    "debt": "1min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": [],
+    "creationDate": "2026-08-14T09:29:36+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWni178DfsSBSR8o2",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/CreateTemplateModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 49,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 49,
+      "endLine": 52,
+      "startOffset": 4,
+      "endOffset": 5
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-12T05:27:07+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWni178DfsSBSR8o4",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/CreateTemplateModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 53,
+    "hash": "99903c8bc802aa4de3a35e4f1d0f8db4",
+    "textRange": {
+      "startLine": 53,
+      "endLine": 57,
+      "startOffset": 6,
+      "endOffset": 7
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-12T05:27:07+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngl78DfsSBSR8n9",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/ShareLinkModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 44,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 44,
+      "endLine": 47,
+      "startOffset": 4,
+      "endOffset": 5
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-10T11:55:58+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngl78DfsSBSR8n_",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/ShareLinkModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 48,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 48,
+      "endLine": 51,
+      "startOffset": 6,
+      "endOffset": 7
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-10T11:55:58+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnkM78DfsSBSR8pa",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/dashboard/RecentClustersList.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 124,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 124,
+      "endLine": 128,
+      "startOffset": 12,
+      "endOffset": 13
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnhS78DfsSBSR8oX",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/design-system/CardActionMenu.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 81,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 81,
+      "endLine": 84,
+      "startOffset": 8,
+      "endOffset": 9
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnhK78DfsSBSR8oR",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/design-system/RenameModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 36,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 36,
+      "endLine": 39,
+      "startOffset": 4,
+      "endOffset": 5
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnp178DfsSBSR8q2",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/ClustersLibrary.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 258,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 258,
+      "endLine": 262,
+      "startOffset": 14,
+      "endOffset": 15
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWni978DfsSBSR8o7",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/ApplyTemplateModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 46,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 46,
+      "endLine": 49,
+      "startOffset": 4,
+      "endOffset": 5
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-07-28T07:11:00+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWni978DfsSBSR8o9",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/ApplyTemplateModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 50,
+    "hash": "99903c8bc802aa4de3a35e4f1d0f8db4",
+    "textRange": {
+      "startLine": 50,
+      "endLine": 54,
+      "startOffset": 6,
+      "endOffset": 7
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-07-28T07:11:00+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnjU78DfsSBSR8pH",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/PopularTemplateCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 7,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 7,
+      "endLine": 10,
+      "startOffset": 4,
+      "endOffset": 5
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-07-28T07:11:00+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnil78DfsSBSR8or",
+    "rule": "javascript:S1082",
+    "severity": "MINOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/TemplatePreviewModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 14,
+    "hash": "d90c26198ff23a5c54f81269ceed5c01",
+    "textRange": {
+      "startLine": 14,
+      "endLine": 17,
+      "startOffset": 4,
+      "endOffset": 5
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-07-28T07:11:00+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "COMPLETE",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "LOW"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnoO78DfsSBSR8ql",
+    "rule": "javascript:S3923",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/howItWorks/UploadAnimation.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 352,
+    "hash": "c7ead15ea772ae85ee28553bc924ddc5",
+    "textRange": {
+      "startLine": 352,
+      "endLine": 352,
+      "startOffset": 31,
+      "endOffset": 71
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "This conditional operation returns the same value whether the condition is \"true\" or \"false\".",
+    "effort": "15min",
+    "debt": "15min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": [],
+    "creationDate": "2026-07-25T12:06:24+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "BUG",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "CLEAR",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  }
+]

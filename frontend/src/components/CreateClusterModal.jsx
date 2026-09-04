@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { FolderOpen, Sparkles, X, Loader2 } from "lucide-react";
@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 
 export default function CreateClusterModal({ onClose, onCreated }) {
+  const uid = useId();
   const { isViewer } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -65,10 +66,14 @@ export default function CreateClusterModal({ onClose, onCreated }) {
           className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5 sm:p-6 overscroll-contain"
         >
           <div>
-            <label className="mb-2 block text-sm font-semibold text-foreground">
+            <label
+              htmlFor={`${uid}-name`}
+              className="mb-2 block text-sm font-semibold text-foreground"
+            >
               Cluster Name *
             </label>
             <input
+              id={`${uid}-name`}
               required
               type="text"
               value={form.name}

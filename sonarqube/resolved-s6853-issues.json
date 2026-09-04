@@ -1,0 +1,2264 @@
+[
+  {
+    "key": "AaBnWngx78DfsSBSR8oE",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/CreateMockTestModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 192,
+    "hash": "56b2697530a95eb29e8923684c40a4c7",
+    "textRange": {
+      "startLine": 192,
+      "endLine": 192,
+      "startOffset": 15,
+      "endOffset": 20
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-09-03T05:25:56+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngx78DfsSBSR8oF",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/CreateMockTestModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 210,
+    "hash": "56b2697530a95eb29e8923684c40a4c7",
+    "textRange": {
+      "startLine": 210,
+      "endLine": 210,
+      "startOffset": 15,
+      "endOffset": 20
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-09-03T05:25:56+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngx78DfsSBSR8oG",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/CreateMockTestModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 229,
+    "hash": "c8a4c25e7748fd25dca09de4b1a0c1c2",
+    "textRange": {
+      "startLine": 229,
+      "endLine": 229,
+      "startOffset": 11,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must have accessible text.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-09-03T05:25:56+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngb78DfsSBSR8n7",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/MockTestScoringPanel.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 64,
+    "hash": "54cf7d485d7b3d275f5b0a3ff3384795",
+    "textRange": {
+      "startLine": 64,
+      "endLine": 64,
+      "startOffset": 11,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-09-03T05:25:56+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngb78DfsSBSR8n8",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/MockTestScoringPanel.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 78,
+    "hash": "54cf7d485d7b3d275f5b0a3ff3384795",
+    "textRange": {
+      "startLine": 78,
+      "endLine": 78,
+      "startOffset": 11,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-09-03T05:25:56+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndr78DfsSBSR8m6",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/QuestionScoringFields.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 42,
+    "hash": "54cf7d485d7b3d275f5b0a3ff3384795",
+    "textRange": {
+      "startLine": 42,
+      "endLine": 42,
+      "startOffset": 11,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-09-03T05:25:56+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndr78DfsSBSR8m7",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/QuestionScoringFields.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 63,
+    "hash": "54cf7d485d7b3d275f5b0a3ff3384795",
+    "textRange": {
+      "startLine": 63,
+      "endLine": 63,
+      "startOffset": 11,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-09-03T05:25:56+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngx78DfsSBSR8oB",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/CreateMockTestModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 140,
+    "hash": "b600c5e80cde09f542ba0d889278169d",
+    "textRange": {
+      "startLine": 140,
+      "endLine": 140,
+      "startOffset": 13,
+      "endOffset": 18
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnqT78DfsSBSR8rC",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/AuthPage.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 167,
+    "hash": "b600c5e80cde09f542ba0d889278169d",
+    "textRange": {
+      "startLine": 167,
+      "endLine": 167,
+      "startOffset": 17,
+      "endOffset": 22
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnqT78DfsSBSR8rD",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/AuthPage.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 187,
+    "hash": "b600c5e80cde09f542ba0d889278169d",
+    "textRange": {
+      "startLine": 187,
+      "endLine": 187,
+      "startOffset": 15,
+      "endOffset": 20
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnqT78DfsSBSR8rE",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/AuthPage.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 205,
+    "hash": "b600c5e80cde09f542ba0d889278169d",
+    "textRange": {
+      "startLine": 205,
+      "endLine": 205,
+      "startOffset": 15,
+      "endOffset": 20
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-26T11:36:16+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnrB78DfsSBSR8rN",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/ContactUs.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 265,
+    "hash": "328155f822f80e2859197f84df548d73",
+    "textRange": {
+      "startLine": 265,
+      "endLine": 265,
+      "startOffset": 21,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-26T05:56:02+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnrB78DfsSBSR8rO",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/ContactUs.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 279,
+    "hash": "328155f822f80e2859197f84df548d73",
+    "textRange": {
+      "startLine": 279,
+      "endLine": 279,
+      "startOffset": 21,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-26T05:56:02+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnrB78DfsSBSR8rP",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/ContactUs.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 294,
+    "hash": "328155f822f80e2859197f84df548d73",
+    "textRange": {
+      "startLine": 294,
+      "endLine": 294,
+      "startOffset": 19,
+      "endOffset": 24
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-26T05:56:02+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnrB78DfsSBSR8rQ",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/ContactUs.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 311,
+    "hash": "328155f822f80e2859197f84df548d73",
+    "textRange": {
+      "startLine": 311,
+      "endLine": 311,
+      "startOffset": 19,
+      "endOffset": 24
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-26T05:56:02+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnrB78DfsSBSR8rR",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/ContactUs.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 325,
+    "hash": "328155f822f80e2859197f84df548d73",
+    "textRange": {
+      "startLine": 325,
+      "endLine": 325,
+      "startOffset": 21,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-26T05:56:02+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnjE78DfsSBSR8pC",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/TemplateBasicInfoFields.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 22,
+    "hash": "faee3f97d72ce5baf43b76570b13f82b",
+    "textRange": {
+      "startLine": 22,
+      "endLine": 22,
+      "startOffset": 9,
+      "endOffset": 14
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-24T11:54:34+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnjE78DfsSBSR8pD",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/TemplateBasicInfoFields.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 33,
+    "hash": "badcf55ae514d4b4861681ce06208e86",
+    "textRange": {
+      "startLine": 33,
+      "endLine": 33,
+      "startOffset": 9,
+      "endOffset": 14
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-24T11:54:34+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnjE78DfsSBSR8pE",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/TemplateBasicInfoFields.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 46,
+    "hash": "99c0f77c3d1feddaafff5e656b1f415a",
+    "textRange": {
+      "startLine": 46,
+      "endLine": 46,
+      "startOffset": 11,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-24T11:54:34+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnjE78DfsSBSR8pF",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/TemplateBasicInfoFields.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 61,
+    "hash": "067abe444b2c2e928fe277efd31e6bfc",
+    "textRange": {
+      "startLine": 61,
+      "endLine": 61,
+      "startOffset": 11,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-24T11:54:34+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnjb78DfsSBSR8pJ",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/TemplateColorPicker.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 6,
+    "hash": "32741258faab6b829ff437e878a6e459",
+    "textRange": {
+      "startLine": 6,
+      "endLine": 6,
+      "startOffset": 7,
+      "endOffset": 12
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-24T11:54:34+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnit78DfsSBSR8ox",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/TemplateScoringFields.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 20,
+    "hash": "c31ba771b314a016a4b0f9331eba5c3b",
+    "textRange": {
+      "startLine": 20,
+      "endLine": 20,
+      "startOffset": 11,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-24T11:54:34+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnit78DfsSBSR8oy",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/TemplateScoringFields.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 33,
+    "hash": "b46f220c0c228cfd8ed408de6d61042d",
+    "textRange": {
+      "startLine": 33,
+      "endLine": 33,
+      "startOffset": 11,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-24T11:54:34+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnit78DfsSBSR8oz",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/TemplateScoringFields.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 49,
+    "hash": "96ab1023e532df2cff4ad937be56d62f",
+    "textRange": {
+      "startLine": 49,
+      "endLine": 49,
+      "startOffset": 11,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-24T11:54:34+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnit78DfsSBSR8o0",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/TemplateScoringFields.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 61,
+    "hash": "2216a5d7f47133c213603f5936772ce5",
+    "textRange": {
+      "startLine": 61,
+      "endLine": 61,
+      "startOffset": 11,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-24T11:54:34+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnit78DfsSBSR8o1",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/TemplateScoringFields.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 75,
+    "hash": "b131c0c9ffcd5dd0fac2ff401a7a0719",
+    "textRange": {
+      "startLine": 75,
+      "endLine": 75,
+      "startOffset": 9,
+      "endOffset": 14
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-24T11:54:34+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnji78DfsSBSR8pK",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/TemplateSectionsList.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 15,
+    "hash": "d596ca2c88de7364d22a8c560e092d18",
+    "textRange": {
+      "startLine": 15,
+      "endLine": 15,
+      "startOffset": 9,
+      "endOffset": 14
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-24T11:54:34+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWndj78DfsSBSR8m3",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/QuestionExplanationCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 29,
+    "hash": "c5c6a25df7d2ce8132e1640ff113e0ec",
+    "textRange": {
+      "startLine": 29,
+      "endLine": 29,
+      "startOffset": 11,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-24T05:52:57+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnaJ78DfsSBSR8lO",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/QuestionOptionsCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 28,
+    "hash": "cbb2358b6a4f2cdda59d9499129cc53d",
+    "textRange": {
+      "startLine": 28,
+      "endLine": 28,
+      "startOffset": 9,
+      "endOffset": 14
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-24T05:52:57+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnc078DfsSBSR8lY",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/QuestionTextCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 59,
+    "hash": "c5c6a25df7d2ce8132e1640ff113e0ec",
+    "textRange": {
+      "startLine": 59,
+      "endLine": 59,
+      "startOffset": 11,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-24T05:52:57+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWncQ78DfsSBSR8lQ",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/QuestionTopicSelect.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 11,
+    "hash": "728cc39b448c95b925e223c1d623a008",
+    "textRange": {
+      "startLine": 11,
+      "endLine": 11,
+      "startOffset": 7,
+      "endOffset": 12
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-24T05:52:57+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngx78DfsSBSR8oI",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/CreateMockTestModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 303,
+    "hash": "56b2697530a95eb29e8923684c40a4c7",
+    "textRange": {
+      "startLine": 303,
+      "endLine": 303,
+      "startOffset": 15,
+      "endOffset": 20
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-23T04:53:55+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngx78DfsSBSR8oK",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/CreateMockTestModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 390,
+    "hash": "56b2697530a95eb29e8923684c40a4c7",
+    "textRange": {
+      "startLine": 390,
+      "endLine": 390,
+      "startOffset": 17,
+      "endOffset": 22
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-23T04:53:55+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngx78DfsSBSR8oL",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/CreateMockTestModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 437,
+    "hash": "56b2697530a95eb29e8923684c40a4c7",
+    "textRange": {
+      "startLine": 437,
+      "endLine": 437,
+      "startOffset": 19,
+      "endOffset": 24
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-23T04:53:55+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngx78DfsSBSR8oM",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/CreateMockTestModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 455,
+    "hash": "56b2697530a95eb29e8923684c40a4c7",
+    "textRange": {
+      "startLine": 455,
+      "endLine": 455,
+      "startOffset": 19,
+      "endOffset": 24
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-23T04:53:55+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnkV78DfsSBSR8pc",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/review-queue/QueueListView.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 45,
+    "hash": "8be788feb26c8751f2190b902ece29d6",
+    "textRange": {
+      "startLine": 45,
+      "endLine": 45,
+      "startOffset": 13,
+      "endOffset": 18
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must have accessible text.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-17T12:36:43+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnlj78DfsSBSR8pt",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/shared-mock/SharedMockIntro.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 68,
+    "hash": "09ad30ba4d73d68ec4cceaeec04cb785",
+    "textRange": {
+      "startLine": 68,
+      "endLine": 68,
+      "startOffset": 13,
+      "endOffset": 18
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-17T12:36:43+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnku78DfsSBSR8pf",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/students/NewCohortModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 48,
+    "hash": "09ad30ba4d73d68ec4cceaeec04cb785",
+    "textRange": {
+      "startLine": 48,
+      "endLine": 48,
+      "startOffset": 13,
+      "endOffset": 18
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-17T12:36:43+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnf178DfsSBSR8nr",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/UploadPdfPanel.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 104,
+    "hash": "48f43baffea0f3230cd8b6c50c1851c7",
+    "textRange": {
+      "startLine": 104,
+      "endLine": 104,
+      "startOffset": 13,
+      "endOffset": 18
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-10T11:55:58+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngx78DfsSBSR8oJ",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/CreateMockTestModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 347,
+    "hash": "56b2697530a95eb29e8923684c40a4c7",
+    "textRange": {
+      "startLine": 347,
+      "endLine": 347,
+      "startOffset": 15,
+      "endOffset": 20
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnhK78DfsSBSR8oV",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/design-system/RenameModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 61,
+    "hash": "43705b7cb2d7fb9cc0afb65698cd85dc",
+    "textRange": {
+      "startLine": 61,
+      "endLine": 61,
+      "startOffset": 13,
+      "endOffset": 18
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnhK78DfsSBSR8oW",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/design-system/RenameModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 76,
+    "hash": "43705b7cb2d7fb9cc0afb65698cd85dc",
+    "textRange": {
+      "startLine": 76,
+      "endLine": 76,
+      "startOffset": 15,
+      "endOffset": 20
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnjr78DfsSBSR8pL",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/settings/PasswordSection.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 29,
+    "hash": "09ad30ba4d73d68ec4cceaeec04cb785",
+    "textRange": {
+      "startLine": 29,
+      "endLine": 29,
+      "startOffset": 11,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnjr78DfsSBSR8pM",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/settings/PasswordSection.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 61,
+    "hash": "09ad30ba4d73d68ec4cceaeec04cb785",
+    "textRange": {
+      "startLine": 61,
+      "endLine": 61,
+      "startOffset": 11,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnjr78DfsSBSR8pN",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/settings/PasswordSection.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 94,
+    "hash": "09ad30ba4d73d68ec4cceaeec04cb785",
+    "textRange": {
+      "startLine": 94,
+      "endLine": 94,
+      "startOffset": 11,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnj078DfsSBSR8pP",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/settings/ProfileSection.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 134,
+    "hash": "09ad30ba4d73d68ec4cceaeec04cb785",
+    "textRange": {
+      "startLine": 134,
+      "endLine": 134,
+      "startOffset": 13,
+      "endOffset": 18
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnj078DfsSBSR8pQ",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/settings/ProfileSection.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 149,
+    "hash": "09ad30ba4d73d68ec4cceaeec04cb785",
+    "textRange": {
+      "startLine": 149,
+      "endLine": 149,
+      "startOffset": 13,
+      "endOffset": 18
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnj078DfsSBSR8pR",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/settings/ProfileSection.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 166,
+    "hash": "09ad30ba4d73d68ec4cceaeec04cb785",
+    "textRange": {
+      "startLine": 166,
+      "endLine": 166,
+      "startOffset": 11,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnlj78DfsSBSR8ps",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/shared-mock/SharedMockIntro.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 56,
+    "hash": "09ad30ba4d73d68ec4cceaeec04cb785",
+    "textRange": {
+      "startLine": 56,
+      "endLine": 56,
+      "startOffset": 13,
+      "endOffset": 18
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnic78DfsSBSR8oo",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/team/InviteMemberModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 42,
+    "hash": "90f3e88cad6289d66c239e24ce0737a3",
+    "textRange": {
+      "startLine": 42,
+      "endLine": 42,
+      "startOffset": 15,
+      "endOffset": 20
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnic78DfsSBSR8op",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/team/InviteMemberModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 79,
+    "hash": "90f3e88cad6289d66c239e24ce0737a3",
+    "textRange": {
+      "startLine": 79,
+      "endLine": 79,
+      "startOffset": 15,
+      "endOffset": 20
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnic78DfsSBSR8oq",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/team/InviteMemberModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 92,
+    "hash": "90f3e88cad6289d66c239e24ce0737a3",
+    "textRange": {
+      "startLine": 92,
+      "endLine": 92,
+      "startOffset": 15,
+      "endOffset": 20
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngx78DfsSBSR8oC",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/CreateMockTestModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 155,
+    "hash": "56b2697530a95eb29e8923684c40a4c7",
+    "textRange": {
+      "startLine": 155,
+      "endLine": 155,
+      "startOffset": 13,
+      "endOffset": 18
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-07-28T07:11:00+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngx78DfsSBSR8oD",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/CreateMockTestModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 173,
+    "hash": "56b2697530a95eb29e8923684c40a4c7",
+    "textRange": {
+      "startLine": 173,
+      "endLine": 173,
+      "startOffset": 13,
+      "endOffset": 18
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-07-28T07:11:00+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWngx78DfsSBSR8oH",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/cluster/CreateMockTestModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 252,
+    "hash": "56b2697530a95eb29e8923684c40a4c7",
+    "textRange": {
+      "startLine": 252,
+      "endLine": 252,
+      "startOffset": 13,
+      "endOffset": 18
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-07-28T07:11:00+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWni978DfsSBSR8o_",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/ApplyTemplateModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 63,
+    "hash": "b7965cd0a438f16f86026c678be266b2",
+    "textRange": {
+      "startLine": 63,
+      "endLine": 63,
+      "startOffset": 9,
+      "endOffset": 14
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-07-28T07:11:00+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWni978DfsSBSR8pA",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/ApplyTemplateModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 75,
+    "hash": "b7965cd0a438f16f86026c678be266b2",
+    "textRange": {
+      "startLine": 75,
+      "endLine": 75,
+      "startOffset": 9,
+      "endOffset": 14
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-07-28T07:11:00+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnm278DfsSBSR8qH",
+    "rule": "javascript:S6853",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/CreateClusterModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 68,
+    "hash": "56b2697530a95eb29e8923684c40a4c7",
+    "textRange": {
+      "startLine": 68,
+      "endLine": 68,
+      "startOffset": 13,
+      "endOffset": 18
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "A form label must be associated with a control.",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["accessibility", "react"],
+    "creationDate": "2026-06-20T09:34:19+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "RELIABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  }
+]

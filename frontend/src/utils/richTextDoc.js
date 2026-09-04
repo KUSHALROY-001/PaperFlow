@@ -241,7 +241,7 @@ function mathAttrsFromToken(token) {
   // the same MathLive editing experience.
   if (token === "$$") return { latex: "", displayMode: false };
 
-  const isDisplay = token.startsWith("$$") || token.startsWith("\\[");
+  const isDisplay = token.startsWith("$$") || token.startsWith(String.raw`\[`);
   const inner = isDisplay ? token.slice(2, -2) : token.slice(1, -1);
   return { latex: inner, displayMode: isDisplay };
 }

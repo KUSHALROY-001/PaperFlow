@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { GraduationCap, X } from "lucide-react";
 
 export default function NewCohortModal({ onClose, onCreate, isCreating }) {
+  const uid = useId();
   const [name, setName] = useState("");
   const [error, setError] = useState("");
 
@@ -45,10 +46,14 @@ export default function NewCohortModal({ onClose, onCreate, isCreating }) {
 
         <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4">
           <div>
-            <label className="block text-xs sm:text-sm font-bold text-foreground mb-2">
+            <label
+              htmlFor={`${uid}-cohort-name`}
+              className="block text-xs sm:text-sm font-bold text-foreground mb-2"
+            >
               Cohort Name
             </label>
             <input
+              id={`${uid}-cohort-name`}
               autoFocus
               value={name}
               onChange={(e) => setName(e.target.value)}

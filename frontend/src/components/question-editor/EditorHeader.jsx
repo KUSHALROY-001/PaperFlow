@@ -82,19 +82,19 @@ export default function EditorHeader({
           type="button"
           onClick={() => !isViewer && handleSave()}
           disabled={
-            isSaving || questionsCount === 0 || isViewer || !selectedIsDirty
+            isSaving || questionsCount === 0 || isViewer || !hasUnsavedChanges
           }
           title={
             isViewer
               ? "Editor role is required to save questions"
-              : !selectedIsDirty
-                ? "No changes on the selected question (or its order)"
-                : orderChangeCount > 0
-                  ? "Saves this question and syncs any swapped positions"
-                  : "Save only the selected question"
+              : !hasUnsavedChanges
+                ? "No unsaved edits or reorders"
+                : dirtyContentCount > 1 || orderChangeCount > 0
+                  ? `Saves all edited questions (${dirtyContentCount || 0}) and any swapped positions`
+                  : "Saves your unsaved question edits (works from any selected question)"
           }
           className={`flex items-center gap-2 px-4 sm:px-5 py-2 font-bold rounded-full text-xs sm:text-sm transition-all ${
-            isViewer || !selectedIsDirty
+            isViewer || !hasUnsavedChanges
               ? "bg-muted text-muted-foreground/40 cursor-not-allowed opacity-50"
               : saved
                 ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30"

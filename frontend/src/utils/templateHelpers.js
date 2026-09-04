@@ -119,6 +119,25 @@ export function mapTemplate(row) {
     durationMinutesRaw: row.durationMinutes,
     marksPerCorrect: row.marksPerCorrect,
     negativeMarksPerWrong: row.negativeMarksPerWrong,
+    // row.settings was previously never read here at all - a template's
+    // settings.marking_scheme.by_question_type (see
+    // extraction-templates.service.js#normalizeMarkingScheme) is the only
+    // place a per-section-AND-per-question-type marking scheme (JEE
+    // Advanced: single-correct +3/-1, multiple-correct +4/-2, numerical
+    // +4/0, all within one section) can be expressed, but with nothing
+    // reading it back out of the row here, CreateTemplateModal's edit mode
+    // had no way to prefill it and a saved scheme was effectively
+    // write-only from the UI's perspective.
+    markingSchemeDescription:
+      row.settings?.marking_scheme?.description ??
+      row.settings?.markingScheme?.description ??
+      "",
+    questionTypeMarks: questionTypeMarksFromByType(
+      row.settings?.marking_scheme?.by_question_type ??
+        row.settings?.marking_scheme?.byQuestionType ??
+        row.settings?.markingScheme?.by_question_type ??
+        row.settings?.markingScheme?.byQuestionType,
+    ),
   };
 }
 
@@ -167,6 +186,68 @@ export function buildSectionPayload(section) {
   }
 
   return payload;
+}
+
+// --- Per-question-type marking scheme (settings.marking_scheme.by_question_type) ---
+// A template's flat marksPerCorrect/negativeMarksPerWrong (above) and even
+// a section's own override (TemplateSectionRow) can only ever express ONE
+// marks value for that whole section - a JEE-Advanced-style paper where
+// Physics alone has single-correct +3/-1, multiple-correct +4/-2, and
+// numerical +4/0 needs a value PER QUESTION TYPE instead. These rows are
+// that: freeform type labels (matched case-insensitively against
+// "single"/"multi" by the worker - see provider.py
+// #_classify_question_type_label) each with their own marks/negative
+// marks, mirroring TemplateSectionRow's shape below so the two lists read
+// as siblings in the form.
+let questionTypeMarkKeySeed = 0;
+
+export function makeEmptyQuestionTypeMark() {
+  questionTypeMarkKeySeed += 1;
+  return {
+    key: `new-qtm-${questionTypeMarkKeySeed}`,
+    label: "",
+    marksPerCorrect: "",
+    negativeMarksPerWrong: "",
+  };
+}
+
+export function buildQuestionTypeMarkPayload(row) {
+  const label = row.label.trim();
+  if (!label) return null;
+  if (row.marksPerCorrect === "" && row.negativeMarksPerWrong === "") {
+    return null;
+  }
+
+  const entry = {};
+  if (row.marksPerCorrect !== "") {
+    entry.marksPerCorrect = Number(row.marksPerCorrect);
+  }
+  if (row.negativeMarksPerWrong !== "") {
+    entry.negativeMarksPerWrong = Number(row.negativeMarksPerWrong);
+  }
+
+  return { label, entry };
+}
+
+export function questionTypeMarksFromByType(byType) {
+  if (!byType || typeof byType !== "object") return [];
+
+  return Object.entries(byType).map(([label, scores]) => {
+    questionTypeMarkKeySeed += 1;
+    return {
+      key: `existing-qtm-${questionTypeMarkKeySeed}`,
+      label,
+      marksPerCorrect:
+        scores?.marksPerCorrect === undefined || scores?.marksPerCorrect === null
+          ? ""
+          : String(scores.marksPerCorrect),
+      negativeMarksPerWrong:
+        scores?.negativeMarksPerWrong === undefined ||
+        scores?.negativeMarksPerWrong === null
+          ? ""
+          : String(scores.negativeMarksPerWrong),
+    };
+  });
 }
 
 export function sectionRowFromTemplateSection(section, index) {

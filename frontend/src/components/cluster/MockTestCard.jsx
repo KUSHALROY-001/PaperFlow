@@ -60,6 +60,14 @@ export default function MockTestCard({ mocktest, clusterId }) {
     <>
       <div
         onClick={handleCardClick}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleCardClick();
+          }
+        }}
+        role="button"
+        tabIndex={0}
         className={`group cursor-pointer transition-all ${
           isProcessing
             ? "relative p-0.5 rounded-2xl overflow-hidden shadow-lg"

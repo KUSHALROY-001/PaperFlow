@@ -184,6 +184,15 @@ export default function CatalogBrowser({
                   slug: isInstituteMode ? slug : mockTest.workspace_slug,
                 })
               }
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setDetailTarget({
+                    id: mockTest.id,
+                    slug: isInstituteMode ? slug : mockTest.workspace_slug,
+                  });
+                }
+              }}
               role="button"
               tabIndex={0}
               className="surface-card rounded-2xl p-4 border border-border flex flex-col cursor-pointer transition-colors hover:border-orange-500/40"

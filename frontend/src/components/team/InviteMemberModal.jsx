@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { CheckCircle, Link as LinkIcon, X } from "lucide-react";
 import { ASSIGNABLE_ROLES } from "@/utils/teamHelpers";
 
@@ -13,6 +14,7 @@ export default function InviteMemberModal({
   onSubmit,
   onClose,
 }) {
+  const uid = useId();
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
       <div className="w-full max-w-md surface-card border border-border rounded-3xl shadow-2xl p-6">
@@ -39,11 +41,15 @@ export default function InviteMemberModal({
               <CheckCircle className="w-4 h-4 shrink-0" /> Invitation created
             </div>
             <div>
-              <label className="text-xs font-bold text-foreground mb-1.5 block">
+              <label
+                htmlFor={`${uid}-invite-link`}
+                className="text-xs font-bold text-foreground mb-1.5 block"
+              >
                 Share this link
               </label>
               <div className="flex gap-2">
                 <input
+                  id={`${uid}-invite-link`}
                   readOnly
                   value={lastInviteLink}
                   onFocus={(e) => e.target.select()}
@@ -76,10 +82,14 @@ export default function InviteMemberModal({
         ) : (
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
-              <label className="text-xs font-bold text-foreground mb-1.5 block">
+              <label
+                htmlFor={`${uid}-email`}
+                className="text-xs font-bold text-foreground mb-1.5 block"
+              >
                 Email Address
               </label>
               <input
+                id={`${uid}-email`}
                 required
                 type="email"
                 value={inviteEmail}
@@ -89,10 +99,14 @@ export default function InviteMemberModal({
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-foreground mb-1.5 block">
+              <label
+                htmlFor={`${uid}-role`}
+                className="text-xs font-bold text-foreground mb-1.5 block"
+              >
                 Role
               </label>
               <select
+                id={`${uid}-role`}
                 value={inviteRole}
                 onChange={(e) => setInviteRole(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-md border border-border bg-card text-foreground text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all"

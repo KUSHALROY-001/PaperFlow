@@ -74,6 +74,16 @@ export default function RecentMockTestsList({ mockTests, isLoading }) {
                 onClick={() =>
                   navigate(`/cluster/${mockTest.cluster_id}/mocktest/${mockTest.id}`)
                 }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    navigate(
+                      `/cluster/${mockTest.cluster_id}/mocktest/${mockTest.id}`,
+                    );
+                  }
+                }}
+                role="button"
+                tabIndex={0}
                 className="group surface-card rounded-2xl p-4 sm:p-5 border border-border hover:border-orange-500/40 cursor-pointer transition-all space-y-3"
               >
                 {/* Header */}

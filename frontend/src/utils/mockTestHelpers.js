@@ -92,6 +92,20 @@ export function mapQuestion(question) {
     // Inline ![[img:slot]] markers (Review/Output tabs) need the full
     // slot map, not just the legacy single diagramUrl.
     diagramAssets: question.diagramAssets || [],
+    // Bug fix: marks were never mapped through either, for the same
+    // reason diagramUrl wasn't above - mapQuestion() just didn't list
+    // them. The raw row always had them (mock-tests.service.js#listQuestions
+    // selects q.* from the `questions` view, which exposes both columns -
+    // see migrations/030_shared_question_content.sql), and
+    // useQuestionEditor.js reads them fine because it uses the raw API
+    // response directly rather than going through mapQuestion. But
+    // OutputTab/ReviewTab both render mapQuestion's output, so every
+    // question there showed "Marks unset" via MarksBadge regardless of
+    // what was actually saved, even right after the question editor
+    // itself showed the correct values.
+    marksPerCorrect: question.marksPerCorrect ?? question.marks_per_correct ?? null,
+    negativeMarksPerWrong:
+      question.negativeMarksPerWrong ?? question.negative_marks_per_wrong ?? null,
   };
 }
 

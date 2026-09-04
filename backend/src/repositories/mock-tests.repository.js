@@ -444,7 +444,12 @@ export async function findMockTestsGeneratedFromSameSourceSet(
 ) {
   if (sourceMockTestIds.length === 0) return [];
 
-  const sortedSourceIds = [...sourceMockTestIds].sort();
+  // Ordinal (code-point) comparison, NOT localeCompare: this must match
+  // Postgres's byte-wise ORDER BY on the uuid column (line below), and a
+  // locale-aware compare could reorder differently and break the match.
+  const sortedSourceIds = [...sourceMockTestIds].sort((a, b) =>
+    a < b ? -1 : a > b ? 1 : 0,
+  );
 
   const result = await pool.query(
     `
