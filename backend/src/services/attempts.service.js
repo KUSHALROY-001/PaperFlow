@@ -88,10 +88,21 @@ export function computeSessionDurationMinutes({
 }
 
 export function normalizeTopics(topics) {
-  const list = Array.isArray(topics) ? topics : topics ? [topics] : [];
+  let list;
+  if (Array.isArray(topics)) {
+    list = topics;
+  } else if (topics) {
+    list = [topics];
+  } else {
+    list = [];
+  }
   const cleaned = [
     ...new Set(list.map((t) => (t || "").trim()).filter(Boolean)),
-  ].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+  ].sort((a, b) => {
+    if (a < b) return -1;
+    if (a > b) return 1;
+    return 0;
+  });
   return cleaned.length ? cleaned : null;
 }
 

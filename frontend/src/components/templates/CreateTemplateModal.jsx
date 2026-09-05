@@ -53,6 +53,14 @@ export default function CreateTemplateModal({
     onSaved,
   });
 
+  let applyButtonTitle;
+  if (isViewer) {
+    const action = isEditing ? "edit" : "create";
+    applyButtonTitle = `Editor role is required to ${action} templates`;
+  } else {
+    applyButtonTitle = undefined;
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
@@ -138,9 +146,7 @@ export default function CreateTemplateModal({
           />
 
           <div>
-            <label className={labelClass}>
-              Marking scheme note (optional)
-            </label>
+            <label className={labelClass}>Marking scheme note (optional)</label>
             <input
               disabled={isViewer}
               value={markingSchemeDescription}
@@ -164,11 +170,7 @@ export default function CreateTemplateModal({
           <button
             type="submit"
             disabled={isSubmitting || isViewer}
-            title={
-              isViewer
-                ? `Editor role is required to ${isEditing ? "edit" : "create"} templates`
-                : undefined
-            }
+            title={applyButtonTitle}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 font-bold text-xs sm:text-sm transition-all ${
               isViewer
                 ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50 border border-border"

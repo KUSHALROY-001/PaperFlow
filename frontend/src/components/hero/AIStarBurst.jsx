@@ -110,6 +110,18 @@ export default function AIStarBurst({ active }) {
           {PARTICLE_ANGLES.map((angle, i) => {
             const rad = (angle * Math.PI) / 180;
             const dist = 50 + (i % 3) * 14;
+            let particleColor;
+            let particleShadow;
+            if (i % 3 === 0) {
+              particleColor = "#ea580c";
+              particleShadow = "0 0 8px rgba(234,88,12,0.8)";
+            } else if (i % 3 === 1) {
+              particleColor = "#f59e0b";
+              particleShadow = "0 0 8px rgba(245,158,11,0.8)";
+            } else {
+              particleColor = "#a855f7";
+              particleShadow = "0 0 8px rgba(168,85,247,0.8)";
+            }
             return (
               <motion.div
                 key={`particle-${angle}`}
@@ -130,18 +142,8 @@ export default function AIStarBurst({ active }) {
                   width: i % 2 === 0 ? 7 : 5,
                   height: i % 2 === 0 ? 7 : 5,
                   borderRadius: "50%",
-                  background:
-                    i % 3 === 0
-                      ? "#ea580c"
-                      : i % 3 === 1
-                        ? "#f59e0b"
-                        : "#a855f7",
-                  boxShadow:
-                    i % 3 === 0
-                      ? "0 0 8px rgba(234,88,12,0.8)"
-                      : i % 3 === 1
-                        ? "0 0 8px rgba(245,158,11,0.8)"
-                        : "0 0 8px rgba(168,85,247,0.8)",
+                  background: particleColor,
+                  boxShadow: particleShadow,
                 }}
               />
             );

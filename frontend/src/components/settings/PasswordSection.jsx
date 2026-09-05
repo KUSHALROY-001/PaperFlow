@@ -14,6 +14,15 @@ export default function PasswordSection({
   saved,
 }) {
   const uid = useId();
+  let passwordSubmitLabel;
+  if (isSavingPassword) {
+    passwordSubmitLabel = "Updating...";
+  } else if (saved === "password") {
+    passwordSubmitLabel = "Saved!";
+  } else {
+    passwordSubmitLabel = "Update Password";
+  }
+
   return (
     <form
       onSubmit={handleSavePassword}
@@ -135,12 +144,7 @@ export default function PasswordSection({
           disabled={isSavingPassword}
           className={`flex items-center gap-2 px-5 py-2.5 font-bold rounded-md transition-all text-xs sm:text-sm disabled:opacity-60 ${saved === "password" ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30" : "bg-orange-500/10 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30 hover:bg-orange-500/20"}`}
         >
-          <Save className="w-4 h-4" />{" "}
-          {isSavingPassword
-            ? "Updating..."
-            : saved === "password"
-              ? "Saved!"
-              : "Update Password"}
+          <Save className="w-4 h-4" /> {passwordSubmitLabel}
         </button>
       </div>
     </form>

@@ -12,6 +12,15 @@ export default function SubmissionCard({ submission }) {
   const isSubmitted = submission.status === "submitted";
   const pct = scorePercent(submission);
 
+  let scoreClass;
+  if (pct >= 80) {
+    scoreClass = "text-emerald-500";
+  } else if (pct >= 60) {
+    scoreClass = "text-amber-500";
+  } else {
+    scoreClass = "text-red-500";
+  }
+
   return (
     <div className="surface-card rounded-2xl border border-border p-4 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
@@ -61,13 +70,7 @@ export default function SubmissionCard({ submission }) {
             <span className="font-medium text-muted-foreground">correct</span>
           </div>
           <div
-            className={`text-sm font-black ${
-              pct >= 80
-                ? "text-emerald-500"
-                : pct >= 60
-                  ? "text-amber-500"
-                  : "text-red-500"
-            }`}
+            className={`text-sm font-black ${scoreClass}`}
           >
             {pct}%
           </div>

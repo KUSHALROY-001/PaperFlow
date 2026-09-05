@@ -10,26 +10,29 @@ export default function PhaseWaterCard({
 }) {
   const waveColor =
     fillTone === "emerald" ? "text-emerald-500/40" : "text-orange-500/40";
-  const gradientClass =
-    fillTone === "emerald"
-      ? "from-emerald-500/20 via-emerald-500/10 to-transparent border-t border-emerald-500/30"
-      : fillTone === "orange"
-        ? "from-orange-500/20 via-orange-500/10 to-transparent border-t border-orange-500/30"
-        : "from-muted/40 to-muted/10";
 
-  const iconBg =
-    fillTone === "emerald"
-      ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
-      : fillTone === "orange"
-        ? "bg-orange-500/20 text-orange-600 dark:text-orange-400"
-        : "bg-muted text-muted-foreground";
-
-  const statusColor =
-    fillTone === "emerald"
-      ? "text-emerald-600 dark:text-emerald-400"
-      : fillTone === "orange"
-        ? "text-orange-600 dark:text-orange-400"
-        : "text-muted-foreground";
+  let gradientClass;
+  let iconBg;
+  let statusColor;
+  switch (fillTone) {
+    case "emerald":
+      gradientClass =
+        "from-emerald-500/20 via-emerald-500/10 to-transparent border-t border-emerald-500/30";
+      iconBg = "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400";
+      statusColor = "text-emerald-600 dark:text-emerald-400";
+      break;
+    case "orange":
+      gradientClass =
+        "from-orange-500/20 via-orange-500/10 to-transparent border-t border-orange-500/30";
+      iconBg = "bg-orange-500/20 text-orange-600 dark:text-orange-400";
+      statusColor = "text-orange-600 dark:text-orange-400";
+      break;
+    default:
+      gradientClass = "from-muted/40 to-muted/10";
+      iconBg = "bg-muted text-muted-foreground";
+      statusColor = "text-muted-foreground";
+      break;
+  }
 
   return (
     <div className="relative min-w-0 overflow-hidden rounded-2xl border border-border surface-card p-3 transition-all sm:p-4">

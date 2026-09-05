@@ -63,6 +63,27 @@ export function OCRAnimation() {
     return () => clearTimeout(t.current);
   }, [scene]);
 
+  let badgeBg;
+  let badgeColor;
+  let badgeBorder;
+  let badgeText;
+  if (scene === 0) {
+    badgeBg = "rgba(239,68,68,0.1)";
+    badgeColor = "rgb(239,68,68)";
+    badgeBorder = "rgba(239,68,68,0.3)";
+    badgeText = "Raw OCR";
+  } else if (scene === 1) {
+    badgeBg = "rgba(234,88,12,0.1)";
+    badgeColor = "#ea580c";
+    badgeBorder = "rgba(234,88,12,0.3)";
+    badgeText = "Correcting…";
+  } else {
+    badgeBg = "rgba(34,197,94,0.1)";
+    badgeColor = "rgb(34,197,94)";
+    badgeBorder = "rgba(34,197,94,0.3)";
+    badgeText = "Cleaned ✓";
+  }
+
   return (
     <div
       key={loopKey}
@@ -138,26 +159,12 @@ export function OCRAnimation() {
                 fontWeight: 700,
                 padding: "2px 8px",
                 borderRadius: "100px",
-                background:
-                  scene === 0
-                    ? "rgba(239,68,68,0.1)"
-                    : scene === 1
-                      ? "rgba(234,88,12,0.1)"
-                      : "rgba(34,197,94,0.1)",
-                color:
-                  scene === 0
-                    ? "rgb(239,68,68)"
-                    : scene === 1
-                      ? "#ea580c"
-                      : "rgb(34,197,94)",
-                border: `1px solid ${scene === 0 ? "rgba(239,68,68,0.3)" : scene === 1 ? "rgba(234,88,12,0.3)" : "rgba(34,197,94,0.3)"}`,
+                background: badgeBg,
+                color: badgeColor,
+                border: `1px solid ${badgeBorder}`,
               }}
             >
-              {scene === 0
-                ? "Raw OCR"
-                : scene === 1
-                  ? "Correcting…"
-                  : "Cleaned ✓"}
+              {badgeText}
             </motion.span>
           </AnimatePresence>
         </div>
@@ -325,6 +332,15 @@ export function ExtractAnimation() {
     return () => clearTimeout(t.current);
   }, [scene]);
 
+  let scanningLabel;
+  if (scene === 0) {
+    scanningLabel = "Scanning document…";
+  } else if (scene === 1) {
+    scanningLabel = "Extracting questions…";
+  } else {
+    scanningLabel = "Extraction complete";
+  }
+
   return (
     <div
       key={loopKey}
@@ -434,11 +450,7 @@ export function ExtractAnimation() {
               marginBottom: "2px",
             }}
           >
-            {scene === 0
-              ? "Scanning document…"
-              : scene === 1
-                ? "Extracting questions…"
-                : "Extraction complete"}
+            {scanningLabel}
           </div>
           {QUESTIONS_DATA.map((q, i) => (
             <AnimatePresence key={i}>

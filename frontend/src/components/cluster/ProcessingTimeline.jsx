@@ -44,6 +44,15 @@ export default function ProcessingTimeline({ steps }) {
           const isLast = index === steps.length - 1;
           const Icon = step.icon;
 
+          let stepIcon;
+          if (step.status === "active") {
+            stepIcon = <Loader2 className="h-4 w-4 animate-spin" />;
+          } else if (step.status === "complete") {
+            stepIcon = <Check className="h-4 w-4" strokeWidth={3} />;
+          } else {
+            stepIcon = <Icon className="h-4 w-4" />;
+          }
+
           return (
             <li key={step.label} className="relative flex gap-4">
               {!isLast && (
@@ -55,13 +64,7 @@ export default function ProcessingTimeline({ steps }) {
               <div
                 className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${style.circle}`}
               >
-                {step.status === "active" ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : step.status === "complete" ? (
-                  <Check className="h-4 w-4" strokeWidth={3} />
-                ) : (
-                  <Icon className="h-4 w-4" />
-                )}
+                {stepIcon}
               </div>
               <div
                 className={`flex flex-1 flex-col gap-2 rounded-2xl px-3 py-2.5 mb-4 sm:flex-row sm:items-center sm:justify-between ${style.row}`}

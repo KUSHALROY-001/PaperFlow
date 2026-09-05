@@ -9,16 +9,19 @@ function scorePercent(attempt) {
 export default function StudentAttemptRow({ attempt }) {
   const pct = scorePercent(attempt);
 
+  let scoreClass;
+  if (pct >= 80) {
+    scoreClass = "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20";
+  } else if (pct >= 60) {
+    scoreClass = "bg-amber-500/15 text-amber-500 border border-amber-500/20";
+  } else {
+    scoreClass = "bg-red-500/15 text-red-500 border border-red-500/20";
+  }
+
   return (
     <div className="surface-card rounded-2xl border border-border p-4 flex items-center gap-4">
       <div
-        className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
-          pct >= 80
-            ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20"
-            : pct >= 60
-              ? "bg-amber-500/15 text-amber-500 border border-amber-500/20"
-              : "bg-red-500/15 text-red-500 border border-red-500/20"
-        }`}
+        className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${scoreClass}`}
       >
         <span className="text-sm font-black">{pct}%</span>
       </div>

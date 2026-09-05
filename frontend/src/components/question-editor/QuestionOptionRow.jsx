@@ -40,6 +40,28 @@ export default function QuestionOptionRow({
 }) {
   const optionLetter = String.fromCodePoint(65 + index);
 
+  let correctButtonClass;
+  if (isViewer) {
+    correctButtonClass =
+      "cursor-not-allowed opacity-50 border-border text-muted-foreground";
+  } else if (isCorrect) {
+    correctButtonClass = "bg-emerald-500 border-emerald-500 text-white";
+  } else {
+    correctButtonClass =
+      "border-border text-muted-foreground hover:border-orange-500/40";
+  }
+
+  let optionFieldClass;
+  if (isViewer) {
+    optionFieldClass =
+      "cursor-not-allowed opacity-60 border-border bg-card text-foreground";
+  } else if (isCorrect) {
+    optionFieldClass =
+      "border-emerald-500/30 bg-emerald-500/10 text-emerald-500 font-bold";
+  } else {
+    optionFieldClass = "border-border bg-card text-foreground";
+  }
+
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-2.5 sm:p-0 rounded-2xl sm:rounded-none bg-card/50 sm:bg-transparent border sm:border-0 border-border/60">
       <div className="flex items-center justify-between sm:contents">
@@ -47,13 +69,7 @@ export default function QuestionOptionRow({
           type="button"
           disabled={isViewer}
           onClick={() => !isViewer && onSetCorrect(index)}
-          className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all font-bold text-xs border-2 ${
-            isViewer
-              ? "cursor-not-allowed opacity-50 border-border text-muted-foreground"
-              : isCorrect
-                ? "bg-emerald-500 border-emerald-500 text-white"
-                : "border-border text-muted-foreground hover:border-orange-500/40"
-          }`}
+          className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all font-bold text-xs border-2 ${correctButtonClass}`}
         >
           {optionLetter}
         </button>
@@ -174,13 +190,7 @@ export default function QuestionOptionRow({
             el.style.height = "auto";
             el.style.height = `${el.scrollHeight}px`;
           }}
-          className={`w-full sm:flex-1 px-4 py-2.5 rounded-xl border text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all resize-none overflow-hidden min-h-10 ${
-            isViewer
-              ? "cursor-not-allowed opacity-60 border-border bg-card text-foreground"
-              : isCorrect
-                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500 font-bold"
-                : "border-border bg-card text-foreground"
-          }`}
+          className={`w-full sm:flex-1 px-4 py-2.5 rounded-xl border text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all resize-none overflow-hidden min-h-10 ${optionFieldClass}`}
         />
       ) : (
         <div className="w-full sm:flex-1 min-w-0">

@@ -33,12 +33,14 @@ export default function QuestionReviewList({ questions }) {
     { id: "untouched", label: "Untouched", count: untouchedQuestions.length },
   ];
 
-  const visibleQuestions =
-    activeFilter === "wrong"
-      ? wrongQuestions
-      : activeFilter === "untouched"
-        ? untouchedQuestions
-        : questions;
+  let visibleQuestions;
+  if (activeFilter === "wrong") {
+    visibleQuestions = wrongQuestions;
+  } else if (activeFilter === "untouched") {
+    visibleQuestions = untouchedQuestions;
+  } else {
+    visibleQuestions = questions;
+  }
 
   return (
     <div className="border border-border/60 rounded-2xl p-3 sm:p-4 bg-card/50">
@@ -92,16 +94,28 @@ export default function QuestionReviewList({ questions }) {
               {visibleQuestions.map((q) => {
                 const correct = q.isCorrect === true;
                 const skipped = q.selectedOptionIndexes.length === 0;
+
+                let cardClass;
+                let statusIcon;
+                if (correct) {
+                  cardClass = "bg-emerald-500/10 border-emerald-500/30";
+                  statusIcon = (
+                    <CheckCircle className="w-4 h-4 text-emerald-500" />
+                  );
+                } else if (skipped) {
+                  cardClass = "bg-card border-border";
+                  statusIcon = (
+                    <span className="w-4 h-4 rounded-full border-2 border-muted-foreground block" />
+                  );
+                } else {
+                  cardClass = "bg-red-500/10 border-red-500/30";
+                  statusIcon = <XCircle className="w-4 h-4 text-red-500" />;
+                }
+
                 return (
                   <div
                     key={q.questionId}
-                    className={`p-3.5 rounded-xl border text-sm ${
-                      correct
-                        ? "bg-emerald-500/10 border-emerald-500/30"
-                        : skipped
-                          ? "bg-card border-border"
-                          : "bg-red-500/10 border-red-500/30"
-                    }`}
+                    className={`p-3.5 rounded-xl border text-sm ${cardClass}`}
                   >
                     {/* On mobile only: Topic badge on top of card */}
                     {(q.topic || q.subtopic) && (
@@ -122,13 +136,7 @@ export default function QuestionReviewList({ questions }) {
                     <div className="flex items-start gap-2">
                       {/* Circle before question: hidden on mobile, visible on desktop */}
                       <div className="hidden sm:block shrink-0 mt-0.5">
-                        {correct ? (
-                          <CheckCircle className="w-4 h-4 text-emerald-500" />
-                        ) : skipped ? (
-                          <span className="w-4 h-4 rounded-full border-2 border-muted-foreground block" />
-                        ) : (
-                          <XCircle className="w-4 h-4 text-red-500" />
-                        )}
+                        {statusIcon}
                       </div>
 
                       <div className="flex-1 min-w-0">
@@ -177,16 +185,22 @@ export default function QuestionReviewList({ questions }) {
                                   normalizedOption.optionIndex,
                                 );
 
+                              let optionClass;
+                              if (isCorrect) {
+                                optionClass =
+                                  "bg-emerald-500/10 border-emerald-500/30 text-emerald-600";
+                              } else if (isYourWrongPick) {
+                                optionClass =
+                                  "bg-red-500/10 border-red-500/30 text-red-600";
+                              } else {
+                                optionClass =
+                                  "bg-card border-border text-muted-foreground";
+                              }
+
                               return (
                                 <div
                                   key={normalizedOption.optionIndex}
-                                  className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-2 text-xs ${
-                                    isCorrect
-                                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600"
-                                      : isYourWrongPick
-                                        ? "bg-red-500/10 border-red-500/30 text-red-600"
-                                        : "bg-card border-border text-muted-foreground"
-                                  }`}
+                                  className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-2 text-xs ${optionClass}`}
                                 >
                                   <span className="flex-1 whitespace-pre-wrap wrap-break-word">
                                     <MathText

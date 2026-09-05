@@ -50,12 +50,13 @@ export default function ActiveJobs() {
             Running Now ({running.length})
           </h2>
         </div>
-        {isLoading ? (
+        {isLoading && (
           <div className="space-y-4">
             <SkeletonCard showIcon={true} lines={2} />
             <SkeletonCard showIcon={true} lines={2} />
           </div>
-        ) : running.length === 0 ? (
+        )}
+        {!isLoading && running.length === 0 && (
           <div className="surface-card rounded-2xl p-12 border border-border text-center">
             <div className="w-12 h-12 rounded-2xl bg-orange-500/10 text-orange-500/60 flex items-center justify-center mx-auto mb-3">
               <Zap className="w-6 h-6" />
@@ -67,7 +68,8 @@ export default function ActiveJobs() {
               All mock-test processing pipelines are currently idle
             </p>
           </div>
-        ) : (
+        )}
+        {!isLoading && running.length > 0 && (
           <div className="space-y-4">
             {running.map((job) => (
               <div
@@ -120,13 +122,13 @@ export default function ActiveJobs() {
         <h2 className="text-lg font-extrabold text-foreground tracking-tight mb-4">
           Recently Completed
         </h2>
-        {isLoading ? (
-          <SkeletonRowList count={3} showAvatar />
-        ) : completed.length === 0 ? (
+        {isLoading && <SkeletonRowList count={3} showAvatar />}
+        {!isLoading && completed.length === 0 && (
           <div className="surface-card rounded-2xl p-8 border border-border text-sm text-muted-foreground">
             No completed processing jobs yet.
           </div>
-        ) : (
+        )}
+        {!isLoading && completed.length > 0 && (
           <div className="space-y-3">
             {completed.map((job) => (
               <div

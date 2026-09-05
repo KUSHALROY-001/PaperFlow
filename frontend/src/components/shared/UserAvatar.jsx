@@ -13,21 +13,25 @@ export default function UserAvatar({
   className = "",
   rounded = "full",
 }) {
-  const sizeClass =
-    size === "sm"
-      ? "w-6 h-6 text-xs"
-      : size === "lg"
-        ? "w-12 h-12 text-base"
-        : size === "xl"
-          ? "w-16 h-16 text-lg"
-          : "w-10 h-10 text-sm";
+  let sizeClass;
+  if (size === "sm") {
+    sizeClass = "w-6 h-6 text-xs";
+  } else if (size === "lg") {
+    sizeClass = "w-12 h-12 text-base";
+  } else if (size === "xl") {
+    sizeClass = "w-16 h-16 text-lg";
+  } else {
+    sizeClass = "w-10 h-10 text-sm";
+  }
 
-  const radiusClass =
-    rounded === "xl"
-      ? "rounded-xl"
-      : rounded === "3xl"
-        ? "rounded-3xl"
-        : "rounded-full";
+  let radiusClass;
+  if (rounded === "xl") {
+    radiusClass = "rounded-xl";
+  } else if (rounded === "3xl") {
+    radiusClass = "rounded-3xl";
+  } else {
+    radiusClass = "rounded-full";
+  }
 
   const colorSeed = seed || name || "?";
   const initials = initialsFor(name);

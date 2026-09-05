@@ -235,11 +235,14 @@ function FormattedTextEditor(
       if (isSinglePartialBlockSelection) {
         const targetIsCurrentHeading =
           level && editor.isActive("heading", { level });
-        const targetType = targetIsCurrentHeading
-          ? editor.schema.nodes.paragraph
-          : level
-            ? editor.schema.nodes.heading
-            : editor.schema.nodes.paragraph;
+        let targetType;
+        if (targetIsCurrentHeading) {
+          targetType = editor.schema.nodes.paragraph;
+        } else if (level) {
+          targetType = editor.schema.nodes.heading;
+        } else {
+          targetType = editor.schema.nodes.paragraph;
+        }
         const selectedContent = $from.parent.content.cut(
           $from.parentOffset,
           $to.parentOffset,
@@ -401,14 +404,17 @@ function FormattedTextEditor(
     runWithSelectionPreserved(command);
   };
 
-  const toolButtonClassName = (isActive) =>
-    `flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
-      disabled
-        ? "cursor-not-allowed text-muted-foreground/40"
-        : isActive
-          ? "bg-orange-500 text-white shadow-sm"
-          : "text-foreground hover:bg-muted"
-    }`;
+  const toolButtonClassName = (isActive) => {
+    let tone;
+    if (disabled) {
+      tone = "cursor-not-allowed text-muted-foreground/40";
+    } else if (isActive) {
+      tone = "bg-orange-500 text-white shadow-sm";
+    } else {
+      tone = "text-foreground hover:bg-muted";
+    }
+    return `flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${tone}`;
+  };
 
   const textStyle = [1, 2, 3].find((level) =>
     editor.isActive("heading", { level }),

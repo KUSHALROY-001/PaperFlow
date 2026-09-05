@@ -103,9 +103,12 @@ export function mapQuestion(question) {
     // question there showed "Marks unset" via MarksBadge regardless of
     // what was actually saved, even right after the question editor
     // itself showed the correct values.
-    marksPerCorrect: question.marksPerCorrect ?? question.marks_per_correct ?? null,
+    marksPerCorrect:
+      question.marksPerCorrect ?? question.marks_per_correct ?? null,
     negativeMarksPerWrong:
-      question.negativeMarksPerWrong ?? question.negative_marks_per_wrong ?? null,
+      question.negativeMarksPerWrong ??
+      question.negative_marks_per_wrong ??
+      null,
   };
 }
 
@@ -291,13 +294,18 @@ export function buildDocumentPreview({
     ].filter(Boolean);
   }
 
+  let ocrLine;
+  if (ocrSummary.error) {
+    ocrLine = `OCR: ${ocrSummary.error}`;
+  } else if (ocrSummary.converted) {
+    ocrLine = `OCR converted ${ocrSummary.pagesOcrd || 0} page(s) into a searchable PDF.`;
+  } else {
+    ocrLine = "OCR summary will appear here when scanned pages are detected.";
+  }
+
   return [
     latestJob?.current_stage || "Waiting for a PDF upload.",
-    ocrSummary.error
-      ? `OCR: ${ocrSummary.error}`
-      : ocrSummary.converted
-        ? `OCR converted ${ocrSummary.pagesOcrd || 0} page(s) into a searchable PDF.`
-        : "OCR summary will appear here when scanned pages are detected.",
+    ocrLine,
     aiSummary.enabled
       ? `AI: ${aiSummary.questionsFromAi || 0} question(s) returned by ${aiSummary.provider}.`
       : "AI processing summary will appear here.",
@@ -312,4 +320,3 @@ export function buildDocumentPreview({
     `${questionsCount} question(s) currently saved.`,
   ].filter(Boolean);
 }
-

@@ -339,22 +339,27 @@ export default function HeroAnimation() {
               <div
                 style={{ display: "flex", gap: "3px", alignItems: "center" }}
               >
-                {SCENE_DURATIONS.map((_, i) => (
-                  <motion.div
-                    key={i}
-                    animate={{
-                      width: scene === i ? "14px" : "4px",
-                      background:
-                        scene === i
-                          ? "#ea580c"
-                          : i < scene
-                            ? "rgba(234,88,12,0.35)"
-                            : "var(--border)",
-                    }}
-                    transition={{ duration: 0.28 }}
-                    style={{ height: "4px", borderRadius: "100px" }}
-                  />
-                ))}
+                {SCENE_DURATIONS.map((_, i) => {
+                  let dotColor;
+                  if (scene === i) {
+                    dotColor = "#ea580c";
+                  } else if (i < scene) {
+                    dotColor = "rgba(234,88,12,0.35)";
+                  } else {
+                    dotColor = "var(--border)";
+                  }
+                  return (
+                    <motion.div
+                      key={i}
+                      animate={{
+                        width: scene === i ? "14px" : "4px",
+                        background: dotColor,
+                      }}
+                      transition={{ duration: 0.28 }}
+                      style={{ height: "4px", borderRadius: "100px" }}
+                    />
+                  );
+                })}
               </div>
             </div>
           </div>

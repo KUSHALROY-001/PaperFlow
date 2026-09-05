@@ -83,24 +83,74 @@ export default function OverviewTab({
   };
   const isGenerated =
     latestJob?.input_config?.documentType === "generate_from_existing";
-  const currentStage =
-    latestJob?.current_stage ||
-    (isReady
-      ? "Questions available"
-      : isGenerated
-        ? "Waiting for generation to start"
-        : "Waiting for PDF upload");
+
+  let defaultStage;
+  if (isReady) {
+    defaultStage = "Questions available";
+  } else if (isGenerated) {
+    defaultStage = "Waiting for generation to start";
+  } else {
+    defaultStage = "Waiting for PDF upload";
+  }
+  const currentStage = latestJob?.current_stage || defaultStage;
   const progress = Number(latestJob?.progress_percent || 0);
 
-  const phase1FillLevel = isReady
-    ? 100
-    : isProcessing
-      ? Math.max(progress || 68, 20)
-      : 0;
-  const phase1Tone = isReady ? "emerald" : isProcessing ? "orange" : "neutral";
+  let phase1FillLevel;
+  if (isReady) {
+    phase1FillLevel = 100;
+  } else if (isProcessing) {
+    phase1FillLevel = Math.max(progress || 68, 20);
+  } else {
+    phase1FillLevel = 0;
+  }
+
+  let phase1Tone;
+  if (isReady) {
+    phase1Tone = "emerald";
+  } else if (isProcessing) {
+    phase1Tone = "orange";
+  } else {
+    phase1Tone = "neutral";
+  }
+
+  let phase1Status;
+  if (isProcessing) {
+    phase1Status = "Running";
+  } else if (isReady) {
+    phase1Status = "Completed";
+  } else {
+    phase1Status = "Not Started";
+  }
+
+  let phase1Substep;
+  if (isProcessing) {
+    phase1Substep = `${currentStage} (${progress}%)`;
+  } else if (isReady) {
+    phase1Substep = "Questions available";
+  } else {
+    phase1Substep = currentStage;
+  }
 
   const phase2FillLevel = isReady ? 100 : 0;
   const phase2Tone = isReady ? "emerald" : "neutral";
+
+  let reprocessTitle;
+  if (isViewer) {
+    reprocessTitle = "Editor role is required";
+  } else if (isProcessing) {
+    reprocessTitle = "Cancel the current processing job";
+  } else {
+    reprocessTitle = "Re-extract from the original PDF";
+  }
+
+  let startPracticeLabel;
+  if (selectedTopicsCount === 0) {
+    startPracticeLabel = "Select topics to start";
+  } else {
+    const topicWord = selectedTopicsCount > 1 ? "s" : "";
+    const questionWord = selectedQuestionsCount > 1 ? "s" : "";
+    startPracticeLabel = `Start Practice — ${selectedTopicsCount} topic${topicWord}, ${selectedQuestionsCount} question${questionWord}`;
+  }
 
   return (
     <div className="grid lg:grid-cols-3 gap-6">
@@ -122,16 +172,8 @@ export default function OverviewTab({
                   ? "Phase 1: AI Generation"
                   : "Phase 1: Upload & AI Extraction"
               }
-              status={
-                isProcessing ? "Running" : isReady ? "Completed" : "Not Started"
-              }
-              substep={
-                isProcessing
-                  ? `${currentStage} (${progress}%)`
-                  : isReady
-                    ? "Questions available"
-                    : currentStage
-              }
+              status={phase1Status}
+              substep={phase1Substep}
               icon={isProcessing ? Zap : CheckCircle}
               fillLevel={phase1FillLevel}
               fillTone={phase1Tone}
@@ -179,13 +221,7 @@ export default function OverviewTab({
             <button
               onClick={isProcessing ? onCancelProcessing : onReprocess}
               disabled={isViewer}
-              title={
-                isViewer
-                  ? "Editor role is required"
-                  : isProcessing
-                    ? "Cancel the current processing job"
-                    : "Re-extract from the original PDF"
-              }
+              title={reprocessTitle}
               className={`flex min-h-12 w-full items-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors disabled:opacity-40 ${
                 isProcessing
                   ? "border-red-500/30 bg-red-500/10 text-red-600 hover:bg-red-500/20 dark:text-red-400"
@@ -309,9 +345,7 @@ export default function OverviewTab({
               className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-orange-500"
             >
               <Play className="w-4 h-4" />
-              {selectedTopicsCount === 0
-                ? "Select topics to start"
-                : `Start Practice — ${selectedTopicsCount} topic${selectedTopicsCount > 1 ? "s" : ""}, ${selectedQuestionsCount} question${selectedQuestionsCount > 1 ? "s" : ""}`}
+              {startPracticeLabel}
             </button>
           </div>
         )}

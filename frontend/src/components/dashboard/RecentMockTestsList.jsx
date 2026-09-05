@@ -23,7 +23,7 @@ export default function RecentMockTestsList({ mockTests, isLoading }) {
       </div>
 
       <div className="space-y-3">
-        {isLoading ? (
+        {isLoading &&
           Array.from({ length: 3 }).map((_, index) => (
             <div
               key={index}
@@ -44,8 +44,8 @@ export default function RecentMockTestsList({ mockTests, isLoading }) {
                 <Skeleton className="h-7 w-16 rounded-md" />
               </div>
             </div>
-          ))
-        ) : mockTests.length === 0 ? (
+          ))}
+        {!isLoading && mockTests.length === 0 && (
           <div className="surface-card rounded-2xl border border-border p-8 text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-500">
               <FileText className="h-7 w-7" />
@@ -61,7 +61,9 @@ export default function RecentMockTestsList({ mockTests, isLoading }) {
               Go to Clusters
             </Link>
           </div>
-        ) : (
+        )}
+        {!isLoading &&
+          mockTests.length > 0 &&
           mockTests.map((mockTest) => {
             const status =
               clusterMockTestStatusConfig[mockTest.status] ||
@@ -137,8 +139,7 @@ export default function RecentMockTestsList({ mockTests, isLoading }) {
                 </div>
               </div>
             );
-          })
-        )}
+          })}
       </div>
     </div>
   );

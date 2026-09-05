@@ -144,12 +144,10 @@ export async function updateQuestion(questionId, workspaceId, body) {
           requiredString(option, `options[${index}]`),
         );
   const correctOptionIndexes = body.correctOptionIndexes?.map(Number);
-  const questionType =
-    body.questionType === undefined
-      ? undefined
-      : body.questionType === "multi"
-        ? "multi"
-        : "single";
+  let questionType;
+  if (body.questionType !== undefined) {
+    questionType = body.questionType === "multi" ? "multi" : "single";
+  }
 
   if (correctOptionIndexes && correctOptionIndexes.length === 0) {
     throw httpError(400, "correctOptionIndexes must not be empty");

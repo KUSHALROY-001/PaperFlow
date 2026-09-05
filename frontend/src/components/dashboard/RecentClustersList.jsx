@@ -74,7 +74,7 @@ export default function RecentClustersList({ clusters, isLoading }) {
       </div>
 
       <div className="space-y-3">
-        {isLoading ? (
+        {isLoading &&
           Array.from({ length: 3 }).map((_, index) => (
             <div
               key={index}
@@ -99,8 +99,8 @@ export default function RecentClustersList({ clusters, isLoading }) {
                 <Skeleton className="h-7 w-16 rounded-lg" />
               </div>
             </div>
-          ))
-        ) : clusters.length === 0 ? (
+          ))}
+        {!isLoading && clusters.length === 0 && (
           <div className="surface-card rounded-md border border-border p-8 text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-500">
               <FolderOpen className="h-7 w-7" />
@@ -119,7 +119,9 @@ export default function RecentClustersList({ clusters, isLoading }) {
               <Plus className="h-4 w-4" /> Create Cluster
             </Link>
           </div>
-        ) : (
+        )}
+        {!isLoading &&
+          clusters.length > 0 &&
           clusters.map((cluster) => (
             <div
               key={cluster.id}
@@ -190,8 +192,7 @@ export default function RecentClustersList({ clusters, isLoading }) {
                 </span>
               </div>
             </div>
-          ))
-        )}
+          ))}
       </div>
 
       {renameTarget && (

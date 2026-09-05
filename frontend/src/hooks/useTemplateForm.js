@@ -86,7 +86,10 @@ export function useTemplateForm({ initialTemplate = null, onSaved }) {
   };
 
   const addQuestionTypeMark = () => {
-    setQuestionTypeMarks((current) => [...current, makeEmptyQuestionTypeMark()]);
+    setQuestionTypeMarks((current) => [
+      ...current,
+      makeEmptyQuestionTypeMark(),
+    ]);
   };
 
   const handleSubmit = async (event) => {
@@ -107,9 +110,7 @@ export function useTemplateForm({ initialTemplate = null, onSaved }) {
       return;
     }
 
-    const sectionsPayload = sections
-      .map(buildSectionPayload)
-      .filter(Boolean);
+    const sectionsPayload = sections.map(buildSectionPayload).filter(Boolean);
 
     // by_question_type: { <label>: { marksPerCorrect?, negativeMarksPerWrong? } }
     // - the only place a per-question-type marking scheme (as opposed to a
@@ -150,16 +151,23 @@ export function useTemplateForm({ initialTemplate = null, onSaved }) {
     };
 
     const trimmedDescription = description.trim();
-    const descriptionValue = trimmedDescription
-      ? trimmedDescription
-      : isEditing
-        ? null
-        : undefined;
-    const durationMinutesValue = durationMinutes
-      ? Number(durationMinutes)
-      : isEditing
-        ? null
-        : undefined;
+    let descriptionValue;
+    if (trimmedDescription) {
+      descriptionValue = trimmedDescription;
+    } else if (isEditing) {
+      descriptionValue = null;
+    } else {
+      descriptionValue = undefined;
+    }
+
+    let durationMinutesValue;
+    if (durationMinutes) {
+      durationMinutesValue = Number(durationMinutes);
+    } else if (isEditing) {
+      durationMinutesValue = null;
+    } else {
+      durationMinutesValue = undefined;
+    }
 
     setError("");
     setIsSubmitting(true);

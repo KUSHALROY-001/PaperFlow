@@ -88,13 +88,13 @@ export default function ApplyTemplateModal({ template, onClose, onApplied }) {
         >
           Cluster
         </label>
-        {clustersLoading ? (
-          <Skeleton className="h-9 w-full rounded-xl mb-4" />
-        ) : clusters.length === 0 ? (
+        {clustersLoading && <Skeleton className="h-9 w-full rounded-xl mb-4" />}
+        {!clustersLoading && clusters.length === 0 && (
           <p className="text-xs text-amber-500 mb-4">
             You need a cluster first — create one from the Clusters page.
           </p>
-        ) : (
+        )}
+        {!clustersLoading && clusters.length > 0 && (
           <select
             id={`${uid}-cluster`}
             disabled={isViewer}

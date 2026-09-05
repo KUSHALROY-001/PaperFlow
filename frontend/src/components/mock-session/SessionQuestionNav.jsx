@@ -51,25 +51,33 @@ export default function SessionQuestionNav({
         {/* Scrollable question buttons grid */}
         <div className="overflow-y-auto scrollbar-hidden flex-1 min-h-0 space-y-2">
           <div className="grid grid-cols-10 lg:grid-cols-5 gap-1.5">
-            {questions.map((question, i) => (
-              <button
-                key={question.questionId}
-                onClick={() =>
-                  onSelectQuestion ? onSelectQuestion(i) : setCurrent(i)
-                }
-                className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all flex items-center justify-center ${
-                  i === current
-                    ? "bg-orange-500/10 text-orange-500 dark:bg-orange-500/15 font-bold border border-orange-500/30"
-                    : answers[question.questionId]?.selected?.length
-                      ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20"
-                      : flagged.has(question.questionId)
-                        ? "bg-amber-500/15 text-amber-500 border border-amber-500/20"
-                        : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
+            {questions.map((question, i) => {
+              let buttonClass;
+              if (i === current) {
+                buttonClass =
+                  "bg-orange-500/10 text-orange-500 dark:bg-orange-500/15 font-bold border border-orange-500/30";
+              } else if (answers[question.questionId]?.selected?.length) {
+                buttonClass =
+                  "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20";
+              } else if (flagged.has(question.questionId)) {
+                buttonClass =
+                  "bg-amber-500/15 text-amber-500 border border-amber-500/20";
+              } else {
+                buttonClass =
+                  "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted";
+              }
+              return (
+                <button
+                  key={question.questionId}
+                  onClick={() =>
+                    onSelectQuestion ? onSelectQuestion(i) : setCurrent(i)
+                  }
+                  className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all flex items-center justify-center ${buttonClass}`}
+                >
+                  {i + 1}
+                </button>
+              );
+            })}
           </div>
         </div>
 

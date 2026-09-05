@@ -113,19 +113,21 @@ export default function QuestionBank() {
         </p>
       )}
 
-      {isLoading ? (
+      {isLoading && (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, index) => (
             <BankQuestionCardSkeleton key={index} />
           ))}
         </div>
-      ) : questions.length === 0 ? (
+      )}
+      {!isLoading && questions.length === 0 && (
         <EmptyState
           icon={BookMarked}
           title="No questions match these filters"
           description="Try clearing a filter or searching a different term - the bank covers every question extracted across every mock test in this workspace."
         />
-      ) : (
+      )}
+      {!isLoading && questions.length > 0 && (
         <div className="space-y-3">
           {questions.map((question) => (
             <BankQuestionCard

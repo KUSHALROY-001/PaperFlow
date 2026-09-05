@@ -18,6 +18,15 @@ export default function ProfileSection({
   saved,
 }) {
   const uid = useId();
+  let profileSubmitLabel;
+  if (isSavingProfile) {
+    profileSubmitLabel = "Saving...";
+  } else if (saved === "profile") {
+    profileSubmitLabel = "Saved!";
+  } else {
+    profileSubmitLabel = "Save Profile";
+  }
+
   const fileInputRef = useRef(null);
   // Client-side only, so the picture the user just chose shows up
   // immediately instead of waiting on the upload round trip - cleared
@@ -205,12 +214,7 @@ export default function ProfileSection({
           disabled={isSavingProfile}
           className={`flex items-center gap-2 px-5 py-2.5 font-bold rounded-full transition-all text-xs sm:text-sm disabled:opacity-60 ${saved === "profile" ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30" : "bg-orange-500/10 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30 hover:bg-orange-500/20"}`}
         >
-          <Save className="w-4 h-4" />{" "}
-          {isSavingProfile
-            ? "Saving..."
-            : saved === "profile"
-              ? "Saved!"
-              : "Save Profile"}
+          <Save className="w-4 h-4" /> {profileSubmitLabel}
         </button>
       </div>
     </form>

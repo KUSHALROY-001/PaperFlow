@@ -91,6 +91,15 @@ export default function MockTestDetailModal({
   const publisherOwnerName = mockTest?.publisherOwnerName;
   const subscribed = isSubscribed(publisherSlug);
 
+  let startPracticeLabel;
+  if (selectedTopicsCount === 0) {
+    startPracticeLabel = "Select topics to start";
+  } else {
+    const topicWord = selectedTopicsCount > 1 ? "s" : "";
+    const questionWord = selectedQuestionsCount > 1 ? "s" : "";
+    startPracticeLabel = `Start Practice — ${selectedTopicsCount} topic${topicWord}, ${selectedQuestionsCount} question${questionWord}`;
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4">
       <div className="w-full sm:max-w-3xl max-h-[90vh] overflow-y-auto surface-card rounded-t-3xl sm:rounded-3xl border border-border shadow-2xl">
@@ -105,7 +114,7 @@ export default function MockTestDetailModal({
           </button>
         </div>
 
-        {isLoading ? (
+        {isLoading && (
           <div className="p-5 space-y-5">
             <div className="space-y-2">
               <Skeleton className="h-6 w-3/4" />
@@ -133,11 +142,13 @@ export default function MockTestDetailModal({
             </div>
             <Skeleton className="h-12 w-full rounded-xl" />
           </div>
-        ) : error || !mockTest ? (
+        )}
+        {!isLoading && (error || !mockTest) && (
           <div className="px-5 py-10 text-center text-sm text-red-500">
             {error?.message || "This test isn't available anymore."}
           </div>
-        ) : (
+        )}
+        {!isLoading && !(error || !mockTest) && (
           <div className="p-5 space-y-5">
             <div>
               <h3 className="text-lg font-extrabold text-foreground leading-snug">
@@ -356,9 +367,7 @@ export default function MockTestDetailModal({
                   className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-orange-500 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-orange-500"
                 >
                   <Play className="w-4 h-4" />
-                  {selectedTopicsCount === 0
-                    ? "Select topics to start"
-                    : `Start Practice — ${selectedTopicsCount} topic${selectedTopicsCount > 1 ? "s" : ""}, ${selectedQuestionsCount} question${selectedQuestionsCount > 1 ? "s" : ""}`}
+                  {startPracticeLabel}
                 </button>
               </div>
             )}

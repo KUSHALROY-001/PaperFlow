@@ -9,6 +9,15 @@ export default function EditorPanelResizer({
 }) {
   const [isHovered, setIsHovered] = useState(false);
 
+  let handleIcon;
+  if (isCollapsed) {
+    handleIcon = <ChevronLeft className="w-3.5 h-3.5" />;
+  } else if (isHovered) {
+    handleIcon = <ChevronRight className="w-3.5 h-3.5" />;
+  } else {
+    handleIcon = <GripVertical className="w-3 h-3" />;
+  }
+
   return (
     <div
       role="separator"
@@ -43,13 +52,7 @@ export default function EditorPanelResizer({
         }`}
         aria-label={isCollapsed ? "Expand live preview" : "Collapse live preview"}
       >
-        {isCollapsed ? (
-          <ChevronLeft className="w-3.5 h-3.5" />
-        ) : isHovered ? (
-          <ChevronRight className="w-3.5 h-3.5" />
-        ) : (
-          <GripVertical className="w-3 h-3" />
-        )}
+        {handleIcon}
       </button>
 
       {/* Floating Hover Tooltip (Matching reference screenshot UX) */}

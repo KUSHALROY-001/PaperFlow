@@ -78,6 +78,45 @@ export default function AddToTestModal({
 
   const selectedMockTest = mockTests.find((mt) => mt.id === selectedId);
 
+  let resultBanner = null;
+  if (result && result.failedCount === 0) {
+    let successMessage;
+    if (result.copiedCount > 1) {
+      successMessage = `Added all ${result.copiedCount} questions to ${selectedMockTest?.name}.`;
+    } else {
+      successMessage = `Added to ${selectedMockTest?.name}.`;
+    }
+    resultBanner = (
+      <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 flex items-center gap-2">
+        <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+        <p className="text-xs sm:text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+          {successMessage} Pick another mock test above, or close this and
+          keep browsing the bank.
+        </p>
+      </div>
+    );
+  } else if (result) {
+    let partialMessage;
+    if (result.copiedCount > 0) {
+      const questionWord = result.copiedCount === 1 ? "" : "s";
+      partialMessage = `Added ${result.copiedCount} question${questionWord}, but ${result.failedCount} couldn't be copied.`;
+    } else if (result.failedCount === 1) {
+      partialMessage = "Couldn't copy this question.";
+    } else {
+      partialMessage = `Couldn't copy any of these ${result.failedCount} questions.`;
+    }
+    resultBanner = (
+      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 flex items-center gap-2">
+        <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+        <p className="text-xs sm:text-sm font-semibold text-amber-700 dark:text-amber-400">
+          {partialMessage} The failed one
+          {result.failedCount === 1 ? "" : "s"} stayed selected - try again,
+          or close this and check them individually.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
@@ -152,29 +191,7 @@ export default function AddToTestModal({
         )}
 
         {result ? (
-          result.failedCount === 0 ? (
-            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 flex items-center gap-2">
-              <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-              <p className="text-xs sm:text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-                {result.copiedCount > 1
-                  ? `Added all ${result.copiedCount} questions to ${selectedMockTest?.name}.`
-                  : `Added to ${selectedMockTest?.name}.`}{" "}
-                Pick another mock test above, or close this and keep browsing
-                the bank.
-              </p>
-            </div>
-          ) : (
-            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
-              <p className="text-xs sm:text-sm font-semibold text-amber-700 dark:text-amber-400">
-                {result.copiedCount > 0
-                  ? `Added ${result.copiedCount} question${result.copiedCount === 1 ? "" : "s"}, but ${result.failedCount} couldn't be copied.`
-                  : `Couldn't copy ${result.failedCount === 1 ? "this question" : `any of these ${result.failedCount} questions`}.`}{" "}
-                The failed one{result.failedCount === 1 ? "" : "s"} stayed
-                selected - try again, or close this and check them individually.
-              </p>
-            </div>
-          )
+          resultBanner
         ) : (
           <div className="flex gap-3">
             <button

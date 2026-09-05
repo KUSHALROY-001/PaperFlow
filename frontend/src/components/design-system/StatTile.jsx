@@ -13,7 +13,14 @@ function StatTile({
   className,
 }) {
   const interactive = Boolean(to || onClick);
-  const Comp = to ? Link : onClick ? "button" : "div";
+  let Comp;
+  if (to) {
+    Comp = Link;
+  } else if (onClick) {
+    Comp = "button";
+  } else {
+    Comp = "div";
+  }
 
   return (
     <Comp

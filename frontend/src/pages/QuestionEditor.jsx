@@ -199,9 +199,10 @@ export default function QuestionEditor() {
           </div>
         )}
 
-        {!selected && !isLoading ? (
+        {!selected && !isLoading && (
           <EmptyEditorView addQuestion={addQuestion} isViewer={isViewer} />
-        ) : selected ? (
+        )}
+        {selected && (
           <QuestionForm
             selected={selected}
             mockTestId={mockTestId}
@@ -217,7 +218,7 @@ export default function QuestionEditor() {
             removeOption={removeOption}
             isViewer={isViewer}
           />
-        ) : null}
+        )}
       </div>
 
       <FloatingDragGhost

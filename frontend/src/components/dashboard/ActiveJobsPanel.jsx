@@ -9,7 +9,7 @@ export default function ActiveJobsPanel({ activeJobs, isLoading }) {
         Active Mock Jobs
       </h2>
       <div className="surface-card rounded-2xl p-4 text-center border border-border flex flex-col items-center justify-center min-h-47.5 sm:p-6">
-        {isLoading ? (
+        {isLoading && (
           <div className="w-full space-y-3">
             {Array.from({ length: 2 }).map((_, index) => (
               <div
@@ -21,7 +21,8 @@ export default function ActiveJobsPanel({ activeJobs, isLoading }) {
               </div>
             ))}
           </div>
-        ) : activeJobs.length === 0 ? (
+        )}
+        {!isLoading && activeJobs.length === 0 && (
           <>
             <div className="w-14 h-14 rounded-full bg-orange-500/10 text-orange-500 flex items-center justify-center relative mb-3">
               <FileText className="w-6 h-6 text-orange-500/80" />
@@ -34,7 +35,8 @@ export default function ActiveJobsPanel({ activeJobs, isLoading }) {
               You&apos;re all caught up! 🎉
             </p>
           </>
-        ) : (
+        )}
+        {!isLoading && activeJobs.length > 0 && (
           <div className="w-full space-y-3">
             {activeJobs.map((job) => (
               <div

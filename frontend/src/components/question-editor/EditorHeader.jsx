@@ -16,7 +16,14 @@ export default function EditorHeader({
   dirtyContentCount,
   orderChangeCount,
 }) {
-  const saveLabel = isSaving ? "Saving..." : saved ? "Saved" : "Save";
+  let saveLabel;
+  if (isSaving) {
+    saveLabel = "Saving...";
+  } else if (saved) {
+    saveLabel = "Saved";
+  } else {
+    saveLabel = "Save";
+  }
 
   const dirtyHint =
     hasUnsavedChanges && (dirtyContentCount > 0 || orderChangeCount > 0)

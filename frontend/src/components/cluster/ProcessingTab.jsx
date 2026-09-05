@@ -18,6 +18,24 @@ export default function ProcessingTab({
   const isProcessing =
     !job?.status || ["queued", "running", "processing"].includes(job?.status);
 
+  let statusBadgeClass;
+  if (job?.status === "completed") {
+    statusBadgeClass = "bg-emerald-500/15 border-emerald-500/30 text-emerald-500";
+  } else if (job?.status === "failed") {
+    statusBadgeClass = "bg-red-500/15 border-red-500/30 text-red-500";
+  } else {
+    statusBadgeClass = "bg-orange-500/15 border-orange-500/30 text-orange-500";
+  }
+
+  let progressLabel;
+  if (!isProcessing) {
+    progressLabel = "Status";
+  } else if (isGenerated) {
+    progressLabel = "Generating questions with AI...";
+  } else {
+    progressLabel = "Extracting & processing PDF...";
+  }
+
   return (
     <div className="space-y-6 font-inter">
       <div className="rounded-3xl p-5 sm:p-6 surface-card border border-border">
@@ -37,13 +55,7 @@ export default function ProcessingTab({
             </p>
           </div>
           <span
-            className={`inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold capitalize border ${
-              job?.status === "completed"
-                ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-500"
-                : job?.status === "failed"
-                  ? "bg-red-500/15 border-red-500/30 text-red-500"
-                  : "bg-orange-500/15 border-orange-500/30 text-orange-500"
-            }`}
+            className={`inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold capitalize border ${statusBadgeClass}`}
           >
             {isProcessing && (
               <Zap className="h-3 w-3 animate-pulse text-orange-500 fill-orange-500" />
@@ -77,13 +89,7 @@ export default function ProcessingTab({
         </div>
 
         <div className="mt-2.5 flex items-center justify-between text-xs font-semibold text-muted-foreground">
-          <span>
-            {isProcessing
-              ? isGenerated
-                ? "Generating questions with AI..."
-                : "Extracting & processing PDF..."
-              : "Status"}
-          </span>
+          <span>{progressLabel}</span>
           <span className="font-bold text-foreground font-mono">
             {progress}%
           </span>

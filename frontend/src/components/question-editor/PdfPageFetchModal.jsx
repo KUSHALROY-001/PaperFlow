@@ -256,7 +256,7 @@ export default function PdfPageFetchModal({ mockTestId, defaultPage, onClose, on
           </div>
 
           <div className="relative flex min-h-64 max-h-72 sm:max-h-96 w-full items-center justify-center overflow-hidden rounded-2xl bg-muted border border-border">
-            {fetchError ? (
+            {fetchError && (
               <div className="flex flex-col items-center justify-center p-6 text-center text-xs">
                 <p className="font-bold text-red-500 mb-1">{fetchError}</p>
                 <p className="text-muted-foreground mb-3 max-w-sm">
@@ -271,7 +271,8 @@ export default function PdfPageFetchModal({ mockTestId, defaultPage, onClose, on
                   Retry
                 </button>
               </div>
-            ) : imageUrl ? (
+            )}
+            {!fetchError && imageUrl && (
               <ReactCrop
                 crop={crop}
                 aspect={aspectPreset}
@@ -290,7 +291,7 @@ export default function PdfPageFetchModal({ mockTestId, defaultPage, onClose, on
                   }`}
                 />
               </ReactCrop>
-            ) : null}
+            )}
             {isFetching && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-xs font-bold text-muted-foreground bg-muted">
                 <Loader2 className="w-4 h-4 animate-spin text-orange-500" />

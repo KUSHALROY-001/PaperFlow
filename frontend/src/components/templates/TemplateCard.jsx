@@ -22,6 +22,15 @@ export default function TemplateCard({
 }) {
   const { isViewer, isAdmin } = useAuth();
 
+  let difficultyClass;
+  if (template.difficulty === "Easy") {
+    difficultyClass = "text-emerald-500";
+  } else if (template.difficulty === "Medium") {
+    difficultyClass = "text-amber-500";
+  } else {
+    difficultyClass = "text-red-500";
+  }
+
   return (
     <div className="surface-card rounded-2xl p-5 border border-border hover:border-orange-500/30 transition-all">
       <div className="flex flex-col sm:flex-row sm:items-start gap-4">
@@ -80,9 +89,7 @@ export default function TemplateCard({
               <Zap className="w-3.5 h-3.5 text-orange-500" />{" "}
               {template.duration}
             </span>
-            <span
-              className={`font-semibold ${template.difficulty === "Easy" ? "text-emerald-500" : template.difficulty === "Medium" ? "text-amber-500" : "text-red-500"}`}
-            >
+            <span className={`font-semibold ${difficultyClass}`}>
               {template.difficulty}
             </span>
           </div>

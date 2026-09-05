@@ -26,6 +26,16 @@ export default function MyResults() {
     removeAttempt,
   } = useMyResults();
 
+  let emptyResultsMessage;
+  if (totalAttempts === 0) {
+    emptyResultsMessage =
+      sessionType === "practice"
+        ? "You haven't done any topic-wise practice yet."
+        : "You haven't taken any mock tests yet.";
+  } else {
+    emptyResultsMessage = "No attempts match this filter.";
+  }
+
   if (loading) {
     return (
       <div className="p-6 max-w-4xl mx-auto flex items-center justify-center gap-2 text-muted-foreground">
@@ -69,11 +79,7 @@ export default function MyResults() {
       <div className="space-y-3">
         {filtered.length === 0 ? (
           <div className="surface-card rounded-2xl p-10 border border-border text-center text-muted-foreground text-sm">
-            {totalAttempts === 0
-              ? sessionType === "practice"
-                ? "You haven't done any topic-wise practice yet."
-                : "You haven't taken any mock tests yet."
-              : "No attempts match this filter."}
+            {emptyResultsMessage}
           </div>
         ) : (
           filtered.map((attempt) => (

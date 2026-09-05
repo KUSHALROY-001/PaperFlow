@@ -26,6 +26,39 @@ export default function WorkspaceHeader({
   onReprocessOrCancel,
   onDelete,
 }) {
+  const publishDisabled =
+    isViewer || questionsCount === 0 || mocktest.status === "processing";
+
+  let publishTitle;
+  if (isViewer) {
+    publishTitle = "Editor role is required to publish";
+  } else if (questionsCount === 0) {
+    publishTitle = "Add or extract at least one question before publishing";
+  } else if (mocktest.status === "processing") {
+    publishTitle = "Wait for extraction to finish before publishing";
+  } else {
+    publishTitle = "Publish this mock test";
+  }
+  const publishClass = publishDisabled
+    ? "border-border bg-muted text-muted-foreground/40 cursor-not-allowed opacity-50"
+    : "border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20";
+
+  let reprocessClass;
+  let reprocessTitle;
+  if (isViewer) {
+    reprocessClass =
+      "border-border text-muted-foreground/30 cursor-not-allowed opacity-50";
+    reprocessTitle = "Editor role is required to reprocess";
+  } else if (isProcessing) {
+    reprocessClass =
+      "border-red-500/30 text-red-500 hover:bg-red-500/10 hover:border-red-500/50";
+    reprocessTitle = "Cancel the current processing job";
+  } else {
+    reprocessClass =
+      "border-border text-muted-foreground hover:text-foreground hover:border-orange-500/40";
+    reprocessTitle = "Re-extract from the original PDF";
+  }
+
   return (
     <>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between mb-4">
@@ -84,28 +117,10 @@ export default function WorkspaceHeader({
           </Link>
           {mocktest.status !== "published" && (
             <button
-              disabled={
-                isViewer ||
-                questionsCount === 0 ||
-                mocktest.status === "processing"
-              }
+              disabled={publishDisabled}
               onClick={() => !isViewer && questionsCount > 0 && onPublish()}
-              title={
-                isViewer
-                  ? "Editor role is required to publish"
-                  : questionsCount === 0
-                    ? "Add or extract at least one question before publishing"
-                    : mocktest.status === "processing"
-                      ? "Wait for extraction to finish before publishing"
-                      : "Publish this mock test"
-              }
-              className={`flex flex-1 items-center justify-center gap-2 px-4 py-2 border font-semibold rounded-md transition-all text-xs sm:text-sm sm:flex-none ${
-                isViewer ||
-                questionsCount === 0 ||
-                mocktest.status === "processing"
-                  ? "border-border bg-muted text-muted-foreground/40 cursor-not-allowed opacity-50"
-                  : "border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20"
-              }`}
+              title={publishTitle}
+              className={`flex flex-1 items-center justify-center gap-2 px-4 py-2 border font-semibold rounded-md transition-all text-xs sm:text-sm sm:flex-none ${publishClass}`}
             >
               <Globe className="w-4 h-4" /> Publish
             </button>
@@ -119,20 +134,8 @@ export default function WorkspaceHeader({
           <button
             disabled={isViewer}
             onClick={() => !isViewer && onReprocessOrCancel()}
-            className={`w-9 h-9 rounded-3xl border flex items-center justify-center transition-all ${
-              isViewer
-                ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-50"
-                : isProcessing
-                  ? "border-red-500/30 text-red-500 hover:bg-red-500/10 hover:border-red-500/50"
-                  : "border-border text-muted-foreground hover:text-foreground hover:border-orange-500/40"
-            }`}
-            title={
-              isViewer
-                ? "Editor role is required to reprocess"
-                : isProcessing
-                  ? "Cancel the current processing job"
-                  : "Re-extract from the original PDF"
-            }
+            className={`w-9 h-9 rounded-3xl border flex items-center justify-center transition-all ${reprocessClass}`}
+            title={reprocessTitle}
           >
             {isProcessing ? (
               <Square className="w-4 h-4 fill-current" />

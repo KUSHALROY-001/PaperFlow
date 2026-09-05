@@ -25,6 +25,22 @@ export default function AttemptCard({ attempt, onDeleteAttempt }) {
   const isSubmitted = attempt.status === "submitted";
   const pct = scorePercent(attempt);
 
+  let scoreIconClass;
+  let scoreBarColor;
+  if (!isSubmitted) {
+    scoreIconClass = "bg-muted text-muted-foreground border border-border";
+    scoreBarColor = null;
+  } else if (pct >= 80) {
+    scoreIconClass = "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20";
+    scoreBarColor = "#10B981";
+  } else if (pct >= 60) {
+    scoreIconClass = "bg-amber-500/15 text-amber-500 border border-amber-500/20";
+    scoreBarColor = "#F59E0B";
+  } else {
+    scoreIconClass = "bg-red-500/15 text-red-500 border border-red-500/20";
+    scoreBarColor = "#EF4444";
+  }
+
   const handleToggle = async () => {
     const next = !expanded;
     setExpanded(next);
@@ -74,15 +90,7 @@ export default function AttemptCard({ attempt, onDeleteAttempt }) {
       {/* Header row */}
       <div className="p-2 sm:p-5 flex items-center gap-4">
         <div
-          className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
-            !isSubmitted
-              ? "bg-muted text-muted-foreground border border-border"
-              : pct >= 80
-                ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20"
-                : pct >= 60
-                  ? "bg-amber-500/15 text-amber-500 border border-amber-500/20"
-                  : "bg-red-500/15 text-red-500 border border-red-500/20"
-          }`}
+          className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${scoreIconClass}`}
         >
           {isSubmitted ? (
             <span className="text-lg font-black">{pct}%</span>
@@ -116,8 +124,7 @@ export default function AttemptCard({ attempt, onDeleteAttempt }) {
                 className="h-full rounded-full"
                 style={{
                   width: `${pct}%`,
-                  background:
-                    pct >= 80 ? "#10B981" : pct >= 60 ? "#F59E0B" : "#EF4444",
+                  background: scoreBarColor,
                 }}
               />
             </div>

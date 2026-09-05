@@ -108,19 +108,44 @@ export default function SessionResultsView({
             {reviewQuestions.map((rq) => {
               const skipped = rq.selectedOptionIndexes.length === 0;
               const correct = rq.isCorrect === true;
+
+              let cardClass;
+              let statusIcon;
+              if (correct) {
+                cardClass = "bg-emerald-500/10 border-emerald-500/30";
+                statusIcon = (
+                  <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                );
+              } else if (skipped) {
+                cardClass = "bg-card border-border";
+                statusIcon = (
+                  <span className="w-4 h-4 rounded-full border-2 border-muted-foreground mt-0.5 shrink-0 block" />
+                );
+              } else {
+                cardClass = "bg-red-500/10 border-red-500/30";
+                statusIcon = (
+                  <XCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
+                );
+              }
+
+              let marksBadgeClass;
+              if (rq.marksAwarded > 0) {
+                marksBadgeClass =
+                  "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+              } else if (rq.marksAwarded < 0) {
+                marksBadgeClass =
+                  "text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20";
+              } else {
+                marksBadgeClass = "text-muted-foreground bg-muted border-border";
+              }
+
               return (
                 <div
                   key={rq.questionId}
-                  className={`p-4 rounded-2xl border text-sm ${correct ? "bg-emerald-500/10 border-emerald-500/30" : skipped ? "bg-card border-border" : "bg-red-500/10 border-red-500/30"}`}
+                  className={`p-4 rounded-2xl border text-sm ${cardClass}`}
                 >
                   <div className="flex items-start gap-2">
-                    {correct ? (
-                      <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
-                    ) : skipped ? (
-                      <span className="w-4 h-4 rounded-full border-2 border-muted-foreground mt-0.5 shrink-0 block" />
-                    ) : (
-                      <XCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
-                    )}
+                    {statusIcon}
                     <div>
                       <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
                           {rq.topic && (
@@ -136,13 +161,7 @@ export default function SessionResultsView({
                           {rq.marksAwarded !== undefined &&
                             rq.marksAwarded !== null && (
                               <span
-                                className={`text-[11px] font-semibold tabular-nums px-2 py-0.5 rounded-full border ${
-                                  rq.marksAwarded > 0
-                                    ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
-                                    : rq.marksAwarded < 0
-                                      ? "text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20"
-                                      : "text-muted-foreground bg-muted border-border"
-                                }`}
+                                className={`text-[11px] font-semibold tabular-nums px-2 py-0.5 rounded-full border ${marksBadgeClass}`}
                               >
                                 {rq.marksAwarded > 0
                                   ? `+${rq.marksAwarded}`

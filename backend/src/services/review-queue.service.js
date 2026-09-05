@@ -109,12 +109,14 @@ export async function getReviewQueue(workspaceId, query) {
   let nextCursor = null;
   if (rows.length === filters.limit) {
     const lastRow = rows[rows.length - 1];
-    const cursorValue =
-      filters.sort === "question_no_asc"
-        ? lastRow.question_no
-        : filters.sort === "created_at_desc"
-          ? lastRow.created_at
-          : (lastRow.confidence ?? 999);
+    let cursorValue;
+    if (filters.sort === "question_no_asc") {
+      cursorValue = lastRow.question_no;
+    } else if (filters.sort === "created_at_desc") {
+      cursorValue = lastRow.created_at;
+    } else {
+      cursorValue = lastRow.confidence ?? 999;
+    }
     nextCursor = encodeCursor(cursorValue, lastRow.id);
   }
 

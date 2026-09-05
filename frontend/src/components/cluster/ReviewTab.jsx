@@ -200,17 +200,52 @@ export default function ReviewTab({
           const isApproved = question.status === "approved";
           const isFlagged = question.status === "rejected";
 
+          let borderClass;
+          if (isApproved) {
+            borderClass = "border-emerald-500/30";
+          } else if (isFlagged) {
+            borderClass = "border-amber-500/30";
+          } else {
+            borderClass = "border-border";
+          }
+
+          let approveClass;
+          let approveTitle;
+          if (isViewer) {
+            approveClass =
+              "opacity-50 cursor-not-allowed border border-emerald-500/20 text-emerald-500";
+            approveTitle = "Editor role is required to approve questions";
+          } else if (isApproved) {
+            approveClass =
+              "bg-emerald-500 text-white border border-emerald-500 shadow-xs hover:bg-emerald-600";
+            approveTitle = "Approved (click to unapprove)";
+          } else {
+            approveClass =
+              "border border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/10";
+            approveTitle = "Approve question";
+          }
+
+          let flagClass;
+          let flagTitle;
+          if (isViewer) {
+            flagClass =
+              "opacity-50 cursor-not-allowed border border-amber-500/20 text-amber-500";
+            flagTitle = "Editor role is required to flag questions";
+          } else if (isFlagged) {
+            flagClass =
+              "bg-amber-500 text-white border border-amber-500 shadow-xs hover:bg-amber-600";
+            flagTitle = "Flagged (click to unflag)";
+          } else {
+            flagClass =
+              "border border-amber-500/20 text-amber-500 hover:bg-amber-500/10";
+            flagTitle = "Flag question";
+          }
+
           return (
             <div
               key={question.id}
               id={`question-${question.questionNo}`}
-              className={`rounded-3xl p-3 sm:p-5 surface-card border transition-all ${
-                isApproved
-                  ? "border-emerald-500/30"
-                  : isFlagged
-                    ? "border-amber-500/30"
-                    : "border-border"
-              }`}
+              className={`rounded-3xl p-3 sm:p-5 surface-card border transition-all ${borderClass}`}
             >
               <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div className="flex-1 min-w-0">
@@ -299,21 +334,9 @@ export default function ReviewTab({
                         isApproved ? "review" : "approved",
                       )
                     }
-                    className={`rounded-xl p-2 transition-all ${
-                      isViewer
-                        ? "opacity-50 cursor-not-allowed border border-emerald-500/20 text-emerald-500"
-                        : isApproved
-                          ? "bg-emerald-500 text-white border border-emerald-500 shadow-xs hover:bg-emerald-600"
-                          : "border border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/10"
-                    }`}
+                    className={`rounded-xl p-2 transition-all ${approveClass}`}
                     aria-label="Approve question"
-                    title={
-                      isViewer
-                        ? "Editor role is required to approve questions"
-                        : isApproved
-                          ? "Approved (click to unapprove)"
-                          : "Approve question"
-                    }
+                    title={approveTitle}
                   >
                     <Check className="h-4 w-4" />
                   </button>
@@ -327,21 +350,9 @@ export default function ReviewTab({
                         isFlagged ? "review" : "rejected",
                       )
                     }
-                    className={`rounded-xl p-2 transition-all ${
-                      isViewer
-                        ? "opacity-50 cursor-not-allowed border border-amber-500/20 text-amber-500"
-                        : isFlagged
-                          ? "bg-amber-500 text-white border border-amber-500 shadow-xs hover:bg-amber-600"
-                          : "border border-amber-500/20 text-amber-500 hover:bg-amber-500/10"
-                    }`}
+                    className={`rounded-xl p-2 transition-all ${flagClass}`}
                     aria-label="Flag question"
-                    title={
-                      isViewer
-                        ? "Editor role is required to flag questions"
-                        : isFlagged
-                          ? "Flagged (click to unflag)"
-                          : "Flag question"
-                    }
+                    title={flagTitle}
                   >
                     <Flag className="h-4 w-4" />
                   </button>

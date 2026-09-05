@@ -87,6 +87,104 @@ export default function CatalogBrowser({
     return null;
   }
 
+  let listingContent;
+  if (listingQuery.isLoading) {
+    listingContent = (
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {Array.from({ length: 8 }).map((_, index) => (
+          <SkeletonCard key={index} showIcon={false} lines={2} />
+        ))}
+      </div>
+    );
+  } else if (mockTests.length === 0) {
+    let emptyMessage;
+    if (selectedSubscriber) {
+      emptyMessage = "No mock tests found for the selected subscription filter.";
+    } else if (search || examYear) {
+      emptyMessage = "No mock tests match your search.";
+    } else if (isInstituteMode) {
+      emptyMessage = "No mock tests are available here yet.";
+    } else {
+      emptyMessage = "No institute has listed a public mock test yet.";
+    }
+    listingContent = (
+      <div className="text-center py-20">
+        <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+        <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+      </div>
+    );
+  } else {
+    listingContent = (
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {mockTests.map((mockTest) => (
+          <div
+            key={mockTest.id}
+            onClick={() =>
+              setDetailTarget({
+                id: mockTest.id,
+                slug: isInstituteMode ? slug : mockTest.workspace_slug,
+              })
+            }
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setDetailTarget({
+                  id: mockTest.id,
+                  slug: isInstituteMode ? slug : mockTest.workspace_slug,
+                });
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            className="surface-card rounded-2xl p-4 border border-border flex flex-col cursor-pointer transition-colors hover:border-orange-500/40"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="text-sm font-bold text-foreground leading-snug">
+                {mockTest.name}
+              </h3>
+              {mockTest.exam_year && (
+                <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500">
+                  {mockTest.exam_year}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {!isInstituteMode && mockTest.workspace_name
+                ? `${mockTest.workspace_name} · ${mockTest.cluster_name}`
+                : mockTest.cluster_name}
+            </p>
+            {mockTest.description && (
+              <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
+                {mockTest.description}
+              </p>
+            )}
+            <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-3">
+              <span className="flex items-center gap-1">
+                <FileText className="w-3 h-3" />
+                {mockTest.total_questions} questions
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {mockTest.duration_minutes} min
+              </span>
+            </div>
+            <button
+              type="button"
+              disabled={startingId === mockTest.id}
+              onClick={(event) => {
+                event.stopPropagation();
+                handleStart(mockTest);
+              }}
+              className="mt-4 w-full py-2 border border-orange-500/40 text-orange-500 hover:bg-[#ea580c] hover:border-[#ea580c] hover:text-white disabled:opacity-60 disabled:hover:bg-transparent disabled:hover:text-orange-500 text-xs font-semibold rounded-xl transition-colors"
+            >
+              {startingId === mockTest.id ? "Starting…" : "Start Test"}
+            </button>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -154,94 +252,7 @@ export default function CatalogBrowser({
         </div>
       )}
 
-      {listingQuery.isLoading ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <SkeletonCard key={index} showIcon={false} lines={2} />
-          ))}
-        </div>
-      ) : mockTests.length === 0 ? (
-        <div className="text-center py-20">
-          <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">
-            {selectedSubscriber
-              ? "No mock tests found for the selected subscription filter."
-              : search || examYear
-                ? "No mock tests match your search."
-                : isInstituteMode
-                  ? "No mock tests are available here yet."
-                  : "No institute has listed a public mock test yet."}
-          </p>
-        </div>
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {mockTests.map((mockTest) => (
-            <div
-              key={mockTest.id}
-              onClick={() =>
-                setDetailTarget({
-                  id: mockTest.id,
-                  slug: isInstituteMode ? slug : mockTest.workspace_slug,
-                })
-              }
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setDetailTarget({
-                    id: mockTest.id,
-                    slug: isInstituteMode ? slug : mockTest.workspace_slug,
-                  });
-                }
-              }}
-              role="button"
-              tabIndex={0}
-              className="surface-card rounded-2xl p-4 border border-border flex flex-col cursor-pointer transition-colors hover:border-orange-500/40"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="text-sm font-bold text-foreground leading-snug">
-                  {mockTest.name}
-                </h3>
-                {mockTest.exam_year && (
-                  <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500">
-                    {mockTest.exam_year}
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {!isInstituteMode && mockTest.workspace_name
-                  ? `${mockTest.workspace_name} · ${mockTest.cluster_name}`
-                  : mockTest.cluster_name}
-              </p>
-              {mockTest.description && (
-                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
-                  {mockTest.description}
-                </p>
-              )}
-              <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-3">
-                <span className="flex items-center gap-1">
-                  <FileText className="w-3 h-3" />
-                  {mockTest.total_questions} questions
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {mockTest.duration_minutes} min
-                </span>
-              </div>
-              <button
-                type="button"
-                disabled={startingId === mockTest.id}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  handleStart(mockTest);
-                }}
-                className="mt-4 w-full py-2 border border-orange-500/40 text-orange-500 hover:bg-[#ea580c] hover:border-[#ea580c] hover:text-white disabled:opacity-60 disabled:hover:bg-transparent disabled:hover:text-orange-500 text-xs font-semibold rounded-xl transition-colors"
-              >
-                {startingId === mockTest.id ? "Starting…" : "Start Test"}
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+      {listingContent}
 
       {detailTarget && (
         <MockTestDetailModal

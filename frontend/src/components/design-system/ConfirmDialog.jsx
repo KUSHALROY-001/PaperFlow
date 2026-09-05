@@ -25,6 +25,23 @@ function ConfirmDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isLoading = Boolean(loading || propIsLoading || isSubmitting);
 
+  let toneIconBg;
+  let ToneIcon;
+  let confirmButtonClass;
+  if (destructive) {
+    toneIconBg = "bg-red-500/15 text-red-500 border border-red-500/20";
+    ToneIcon = Trash2;
+    confirmButtonClass = "bg-red-500 hover:bg-red-600 text-white";
+  } else if (warning) {
+    toneIconBg = "bg-amber-500/15 text-amber-500 border border-amber-500/20";
+    ToneIcon = AlertTriangle;
+    confirmButtonClass = "bg-amber-500 hover:bg-amber-600 text-white";
+  } else {
+    toneIconBg = "bg-orange-500/15 text-orange-500 border border-orange-500/20";
+    ToneIcon = AlertCircle;
+    confirmButtonClass = "bg-[#ea580c] hover:bg-[#c2410c] text-white";
+  }
+
   const handleConfirm = async (e) => {
     e.preventDefault();
     if (isLoading) return;
@@ -61,21 +78,9 @@ function ConfirmDialog({
       <AlertDialogContent className="rounded-2xl border border-border bg-card/95 backdrop-blur-md shadow-2xl p-5 sm:p-6 w-[calc(100%-2rem)] max-w-md">
         <AlertDialogHeader className="space-y-3 sm:space-y-0 sm:flex sm:flex-row sm:items-start sm:gap-4 text-center sm:text-left">
           <div
-            className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 mx-auto sm:mx-0 ${
-              destructive
-                ? "bg-red-500/15 text-red-500 border border-red-500/20"
-                : warning
-                  ? "bg-amber-500/15 text-amber-500 border border-amber-500/20"
-                  : "bg-orange-500/15 text-orange-500 border border-orange-500/20"
-            }`}
+            className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 mx-auto sm:mx-0 ${toneIconBg}`}
           >
-            {destructive ? (
-              <Trash2 className="w-5 h-5" />
-            ) : warning ? (
-              <AlertTriangle className="w-5 h-5" />
-            ) : (
-              <AlertCircle className="w-5 h-5" />
-            )}
+            <ToneIcon className="w-5 h-5" />
           </div>
           <div className="flex-1 min-w-0">
             <AlertDialogTitle className="text-base sm:text-lg font-bold text-foreground">
@@ -101,13 +106,7 @@ function ConfirmDialog({
             type="button"
             disabled={isLoading}
             onClick={handleConfirm}
-            className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-xs sm:text-sm font-bold text-white transition-all shadow-sm disabled:opacity-75 disabled:cursor-not-allowed ${
-              destructive
-                ? "bg-red-500 hover:bg-red-600 text-white"
-                : warning
-                  ? "bg-amber-500 hover:bg-amber-600 text-white"
-                  : "bg-[#ea580c] hover:bg-[#c2410c] text-white"
-            }`}
+            className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-xs sm:text-sm font-bold text-white transition-all shadow-sm disabled:opacity-75 disabled:cursor-not-allowed ${confirmButtonClass}`}
           >
             {isLoading && <Loader2 className="w-4 h-4 animate-spin shrink-0" />}
             <span>{confirmLabel}</span>

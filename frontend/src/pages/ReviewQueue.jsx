@@ -328,37 +328,44 @@ export default function ReviewQueue() {
         </div>
       )}
 
-      {isLoading ? (
+      {isLoading && (
         <div className="space-y-1.5">
           {Array.from({ length: 6 }).map((_, index) => (
             <QueueRowSkeleton key={index} />
           ))}
         </div>
-      ) : isQueueEmpty || (viewMode === "focus" && isAtEnd) ? (
+      )}
+      {!isLoading && (isQueueEmpty || (viewMode === "focus" && isAtEnd)) && (
         <QueueEmptyState hasFilters={hasActiveFilters} />
-      ) : viewMode === "list" ? (
-        <>
-          <div className="flex items-center justify-between px-1 text-xs font-semibold text-muted-foreground">
-            <span>
-              {items.length} loaded{total ? ` of ${total} total` : ""}
-            </span>
-            {filterSummary && <span className="truncate">{filterSummary}</span>}
-          </div>
-          <QueueListView
-            items={items}
-            selectedIds={selectedIds}
-            onToggle={toggleSelection}
-            onToggleAll={toggleSelectAll}
-            onBulkApprove={handleBulkApprove}
-            onBulkReject={handleBulkReject}
-            isBusy={isBusy}
-            isViewer={isViewer}
-            hasMore={hasMore}
-            isFetchingMore={isFetchingMore}
-            onLoadMore={loadMore}
-          />
-        </>
-      ) : (
+      )}
+      {!isLoading &&
+        !(isQueueEmpty || (viewMode === "focus" && isAtEnd)) &&
+        viewMode === "list" && (
+          <>
+            <div className="flex items-center justify-between px-1 text-xs font-semibold text-muted-foreground">
+              <span>
+                {items.length} loaded{total ? ` of ${total} total` : ""}
+              </span>
+              {filterSummary && <span className="truncate">{filterSummary}</span>}
+            </div>
+            <QueueListView
+              items={items}
+              selectedIds={selectedIds}
+              onToggle={toggleSelection}
+              onToggleAll={toggleSelectAll}
+              onBulkApprove={handleBulkApprove}
+              onBulkReject={handleBulkReject}
+              isBusy={isBusy}
+              isViewer={isViewer}
+              hasMore={hasMore}
+              isFetchingMore={isFetchingMore}
+              onLoadMore={loadMore}
+            />
+          </>
+        )}
+      {!isLoading &&
+        !(isQueueEmpty || (viewMode === "focus" && isAtEnd)) &&
+        viewMode !== "list" &&
         current && (
           <>
             <QueueProgressBar
@@ -393,8 +400,7 @@ export default function ReviewQueue() {
               skip
             </p>
           </>
-        )
-      )}
+        )}
     </div>
   );
 }

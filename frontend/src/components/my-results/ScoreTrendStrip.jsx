@@ -23,6 +23,14 @@ export default function ScoreTrendStrip({ submittedAttempts }) {
         <div className="flex items-end gap-2 h-24 min-w-full">
           {attempts.map((a, i) => {
             const pct = scorePercent(a);
+            let barColor;
+            if (pct >= 80) {
+              barColor = "#10B981";
+            } else if (pct >= 60) {
+              barColor = "#F59E0B";
+            } else {
+              barColor = "#EF4444";
+            }
             return (
               <div
                 key={a.id}
@@ -35,8 +43,7 @@ export default function ScoreTrendStrip({ submittedAttempts }) {
                   className="w-full rounded-t-lg transition-all"
                   style={{
                     height: `${(pct / 100) * 56}px`,
-                    background:
-                      pct >= 80 ? "#10B981" : pct >= 60 ? "#F59E0B" : "#EF4444",
+                    background: barColor,
                     opacity: 0.85,
                   }}
                 />

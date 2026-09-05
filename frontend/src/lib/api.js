@@ -530,11 +530,14 @@ export const api = {
     // those the same way. Sends one repeated `topics=` query param per
     // topic rather than a single comma-joined value, so a topic name that
     // happens to contain a comma still round-trips correctly.
-    const list = Array.isArray(topics)
-      ? topics.filter(Boolean)
-      : topics
-        ? [topics]
-        : [];
+    let list;
+    if (Array.isArray(topics)) {
+      list = topics.filter(Boolean);
+    } else if (topics) {
+      list = [topics];
+    } else {
+      list = [];
+    }
     const query = list.length
       ? `?${list.map((t) => `topics=${encodeURIComponent(t)}`).join("&")}`
       : "";
@@ -610,22 +613,28 @@ export const api = {
   getSharedMockTest(token, topics) {
     // Same normalization as startAttempt above - accepts an array, a
     // single string, or nothing.
-    const list = Array.isArray(topics)
-      ? topics.filter(Boolean)
-      : topics
-        ? [topics]
-        : [];
+    let list;
+    if (Array.isArray(topics)) {
+      list = topics.filter(Boolean);
+    } else if (topics) {
+      list = [topics];
+    } else {
+      list = [];
+    }
     const query = list.length
       ? `?${list.map((t) => `topics=${encodeURIComponent(t)}`).join("&")}`
       : "";
     return apiRequest(`/api/shared/${token}${query}`);
   },
   startSharedAttempt(token, guestName, guestEmail, topics) {
-    const list = Array.isArray(topics)
-      ? topics.filter(Boolean)
-      : topics
-        ? [topics]
-        : [];
+    let list;
+    if (Array.isArray(topics)) {
+      list = topics.filter(Boolean);
+    } else if (topics) {
+      list = [topics];
+    } else {
+      list = [];
+    }
     return apiRequest(`/api/shared/${token}/attempts`, {
       method: "POST",
       body: JSON.stringify({ guestName, guestEmail, topics: list }),

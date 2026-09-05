@@ -24,6 +24,18 @@ export default function BankQuestionCard({
   isSelected,
   onToggleSelect,
 }) {
+  let addButtonClass;
+  if (isViewer) {
+    addButtonClass =
+      "border-border bg-muted text-muted-foreground/40 cursor-not-allowed opacity-50";
+  } else if (justCopied) {
+    addButtonClass =
+      "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400";
+  } else {
+    addButtonClass =
+      "border-orange-500/30 bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20";
+  }
+
   return (
     <div
       className={`surface-card rounded-2xl border p-4 sm:p-5 transition-all ${
@@ -123,13 +135,7 @@ export default function BankQuestionCard({
           title={
             isViewer ? "Editor role is required to add questions" : undefined
           }
-          className={`inline-flex shrink-0 items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl border transition-all ${
-            isViewer
-              ? "border-border bg-muted text-muted-foreground/40 cursor-not-allowed opacity-50"
-              : justCopied
-                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                : "border-orange-500/30 bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20"
-          }`}
+          className={`inline-flex shrink-0 items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl border transition-all ${addButtonClass}`}
         >
           {justCopied ? (
             <>

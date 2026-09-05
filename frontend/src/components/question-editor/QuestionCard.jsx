@@ -21,6 +21,19 @@ function QuestionCard({
 
   const hasDiagram = Boolean(q.diagramUrl);
 
+  let stateClass;
+  if (isDragging) {
+    stateClass =
+      "opacity-30 border-2 border-dashed border-orange-500/60 bg-orange-500/10 scale-[0.98]";
+  } else if (isDragOver) {
+    stateClass =
+      "border-2 border-orange-500 bg-orange-500/20 dark:bg-orange-500/25 ring-2 ring-orange-500/40 shadow-md transform translate-y-0.5 scale-[1.01]";
+  } else if (isSelected) {
+    stateClass = "border-orange-500 bg-orange-500/10 dark:bg-orange-500/15";
+  } else {
+    stateClass = "border-border bg-card hover:border-orange-500/40";
+  }
+
   return (
     <div
       onMouseDown={(e) => {
@@ -42,15 +55,7 @@ function QuestionCard({
         isViewer
           ? "cursor-default border-border bg-card"
           : "cursor-grab active:cursor-grabbing"
-      } ${
-        isDragging
-          ? "opacity-30 border-2 border-dashed border-orange-500/60 bg-orange-500/10 scale-[0.98]"
-          : isDragOver
-            ? "border-2 border-orange-500 bg-orange-500/20 dark:bg-orange-500/25 ring-2 ring-orange-500/40 shadow-md transform translate-y-0.5 scale-[1.01]"
-            : isSelected
-              ? "border-orange-500 bg-orange-500/10 dark:bg-orange-500/15"
-              : "border-border bg-card hover:border-orange-500/40"
-      }`}
+      } ${stateClass}`}
     >
       <div className="flex items-start gap-3">
         <div

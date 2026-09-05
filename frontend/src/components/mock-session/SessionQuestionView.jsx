@@ -19,17 +19,20 @@ export default function SessionQuestionView({
 }) {
   if (!q) return null;
 
+  let slideClass;
+  if (slideDirection === "left") {
+    slideClass = "animate-slide-left";
+  } else if (slideDirection === "right") {
+    slideClass = "animate-slide-right";
+  } else {
+    slideClass = "";
+  }
+
   return (
     <main className="flex-1 p-3 sm:p-6 lg:p-8 max-w-3xl mx-auto w-full font-sans">
       <div
         key={q.questionId}
-        className={`surface-card rounded-md sm:rounded-3xl p-4 sm:p-8 border border-border ${
-          slideDirection === "left"
-            ? "animate-slide-left"
-            : slideDirection === "right"
-              ? "animate-slide-right"
-              : ""
-        }`}
+        className={`surface-card rounded-md sm:rounded-3xl p-4 sm:p-8 border border-border ${slideClass}`}
       >
         <div className="flex items-start justify-between gap-2.5 sm:gap-4 mb-5 sm:mb-6">
           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 flex-1 min-w-0">

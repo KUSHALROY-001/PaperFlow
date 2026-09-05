@@ -204,6 +204,14 @@ export default function CatalogSettingsPanel() {
           <div className="divide-y divide-border">
             {ownMockTests.map((mockTest) => {
               const canList = mockTest.status === "published";
+              let toggleTitle;
+              if (!canList) {
+                toggleTitle = "Publish this test before listing it in the catalog";
+              } else if (mockTest.is_catalog_listed) {
+                toggleTitle = "Remove from public catalog";
+              } else {
+                toggleTitle = "List in public catalog";
+              }
               return (
                 <div
                   key={mockTest.id}
@@ -277,13 +285,7 @@ export default function CatalogSettingsPanel() {
                             e.stopPropagation();
                             handleToggleListed(mockTest);
                           }}
-                          title={
-                            !canList
-                              ? "Publish this test before listing it in the catalog"
-                              : mockTest.is_catalog_listed
-                                ? "Remove from public catalog"
-                                : "List in public catalog"
-                          }
+                          title={toggleTitle}
                           className={`absolute inset-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100 inline-flex h-6 w-11 items-center rounded-full transition-opacity disabled:opacity-40 disabled:cursor-not-allowed ${
                             mockTest.is_catalog_listed
                               ? "bg-orange-500"

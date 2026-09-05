@@ -63,10 +63,13 @@ export default function DiagramCropModal({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const currentImageUrl =
-    retryCount > 0
-      ? `${imageUrl}${imageUrl.includes("?") ? "&" : "?"}_r=${retryCount}`
-      : imageUrl;
+  let currentImageUrl;
+  if (retryCount > 0) {
+    const separator = imageUrl.includes("?") ? "&" : "?";
+    currentImageUrl = `${imageUrl}${separator}_r=${retryCount}`;
+  } else {
+    currentImageUrl = imageUrl;
+  }
 
   const busy = isSaving;
 

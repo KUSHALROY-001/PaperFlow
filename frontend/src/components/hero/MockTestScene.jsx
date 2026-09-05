@@ -38,6 +38,19 @@ function MCQOption({ opt, index, clickedIndex, morphDelay }) {
   const showGreen = isClicked && isCorrect;
   const showWrong = isClicked && !isCorrect;
 
+  let optionBackgroundColor;
+  let optionBorderColor;
+  if (showGreen) {
+    optionBackgroundColor = "rgba(34,197,94,0.12)";
+    optionBorderColor = "rgba(34,197,94,0.5)";
+  } else if (showWrong) {
+    optionBackgroundColor = "rgba(239,68,68,0.08)";
+    optionBorderColor = "rgba(239,68,68,0.4)";
+  } else {
+    optionBackgroundColor = "var(--card)";
+    optionBorderColor = "var(--border)";
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 5, filter: "blur(4px)" }}
@@ -50,16 +63,8 @@ function MCQOption({ opt, index, clickedIndex, morphDelay }) {
     >
       <motion.div
         animate={{
-          backgroundColor: showGreen
-            ? "rgba(34,197,94,0.12)"
-            : showWrong
-              ? "rgba(239,68,68,0.08)"
-              : "var(--card)",
-          borderColor: showGreen
-            ? "rgba(34,197,94,0.5)"
-            : showWrong
-              ? "rgba(239,68,68,0.4)"
-              : "var(--border)",
+          backgroundColor: optionBackgroundColor,
+          borderColor: optionBorderColor,
           scale: showGreen ? 1.018 : 1,
         }}
         transition={{ duration: 0.38, ease: SMOOTH }}
