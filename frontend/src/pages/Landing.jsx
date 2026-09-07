@@ -430,9 +430,9 @@ export default function Landing() {
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
-            {features.map((f, i) => (
+            {features.map((f) => (
               <div
-                key={i}
+                key={f.title}
                 className="surface-card rounded-2xl p-6 border border-border hover:border-orange-500/30 transition-all hover:-translate-y-1 group"
               >
                 <div className="w-12 h-12 bg-orange-500/15 text-orange-500 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-[#ea580c] group-hover:text-white transition-colors">
@@ -465,9 +465,9 @@ export default function Landing() {
             </p>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
-            {useCases.map((u, i) => (
+            {useCases.map((u) => (
               <div
-                key={i}
+                key={u.title}
                 className="surface-card rounded-2xl p-6 sm:p-8 border border-border flex gap-5 hover:border-orange-500/30 transition-all"
               >
                 <div className="w-14 h-14 bg-orange-500/15 text-orange-500 rounded-2xl flex items-center justify-center shrink-0">

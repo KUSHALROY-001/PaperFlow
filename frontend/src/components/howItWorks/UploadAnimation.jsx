@@ -378,7 +378,7 @@ export default function UploadAnimation() {
                           { bottom: "6px", right: "6px" },
                         ].map((pos, i) => (
                           <motion.div
-                            key={i}
+                            key={`${pos.top ? "top" : "bottom"}-${pos.left ? "left" : "right"}`}
                             initial={{ opacity: 0, scale: 0 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0 }}
@@ -547,8 +547,8 @@ export default function UploadAnimation() {
                   Checking document…
                 </div>
 
-                {VALIDATION_ITEMS.map((item, i) => (
-                  <ValidationItem key={i} text={item.text} delay={item.delay} />
+                {VALIDATION_ITEMS.map((item) => (
+                  <ValidationItem key={item.text} text={item.text} delay={item.delay} />
                 ))}
               </motion.div>
             )}
@@ -709,11 +709,11 @@ export default function UploadAnimation() {
                       { x: 6, y: 22, w: 56, h: 9, delay: 0.55 },
                       { x: 6, y: 37, w: 66, h: 9, delay: 0.9 },
                       { x: 6, y: 52, w: 44, h: 9, delay: 1.25 },
-                    ].map((b, i) => {
+                    ].map((b) => {
                       const p = 2 * (b.w + b.h);
                       return (
                         <motion.rect
-                          key={i}
+                          key={b.y}
                           x={b.x}
                           y={b.y}
                           width={b.w}

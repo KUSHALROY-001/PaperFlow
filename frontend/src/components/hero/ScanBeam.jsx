@@ -95,7 +95,7 @@ export function OCRBoxes({ active }) {
             const perimeter = 2 * (box.w + box.h);
             const conf = OCR_CONFIDENCE[i];
             return (
-              <g key={i}>
+              <g key={box.label}>
                 {/* Bounding rect draws itself in */}
                 <motion.rect
                   x={box.x}

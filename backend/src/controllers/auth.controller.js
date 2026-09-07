@@ -10,6 +10,21 @@ export async function signup(req, res) {
   res.status(201).json(result);
 }
 
+export async function verifyOtp(req, res) {
+  const email = requiredString(req.body.email, "email").toLowerCase();
+  const otp = requiredString(req.body.otp, "otp");
+
+  const result = await authService.verifyOtp({ email, otp });
+  res.json(result);
+}
+
+export async function resendOtp(req, res) {
+  const email = requiredString(req.body.email, "email").toLowerCase();
+
+  const result = await authService.resendOtp({ email });
+  res.json(result);
+}
+
 export async function login(req, res) {
   const email = requiredString(req.body.email, "email").toLowerCase();
   const password = requiredString(req.body.password, "password");

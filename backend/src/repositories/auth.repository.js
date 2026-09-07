@@ -3,7 +3,7 @@ import { pool } from "../db/pool.js";
 export async function findActiveUserByEmail(email) {
   const result = await pool.query(
     `
-    SELECT id, name, email, password_hash, avatar_url, avatar_public_id, avatar_updated_at
+    SELECT id, name, email, password_hash, avatar_url, avatar_public_id, avatar_updated_at, email_verified
     FROM users
     WHERE email = $1
       AND is_active = TRUE
@@ -36,6 +36,9 @@ export async function findActiveUserByGoogleId(googleId) {
 // (Google-verified) email address, rather than ending up with two
 // separate, disconnected accounts for the same person. Does not touch
 // password_hash - a linked account can still log in either way afterward.
+// Also marks email_verified TRUE - Google verified this exact email
+// address to get here, so any pending password-based OTP verification
+// for it is moot (see migrations/044_email_otp_verification.sql).
 //
 // Backfills avatar_url from Google's photo, but only if the user doesn't
 // already have one (COALESCE) - a password-only account never had a
@@ -44,7 +47,7 @@ export async function findActiveUserByGoogleId(googleId) {
 // assuming that.
 export async function linkGoogleIdToUser(userId, googleId, avatarUrl) {
   await pool.query(
-    "UPDATE users SET google_id = $2, avatar_url = COALESCE(avatar_url, $3) WHERE id = $1",
+    "UPDATE users SET google_id = $2, avatar_url = COALESCE(avatar_url, $3), email_verified = TRUE WHERE id = $1",
     [userId, googleId, avatarUrl ?? null],
   );
 }
@@ -263,7 +266,10 @@ export async function createUserWithWorkspace({ name, email, passwordHash }) {
 // Google-account counterpart to createUserWithWorkspace above - same
 // transaction shape (user row, then their own workspace, then owner
 // membership), just with password_hash left NULL and google_id/avatar_url
-// set instead. Kept as a separate function rather than an optional-param
+// set instead. email_verified is TRUE from creation - Google already
+// verified this email at OAuth time (see auth.service.js#googleAuth's
+// payload.email_verified check), so there's no OTP step for this path.
+// Kept as a separate function rather than an optional-param
 // branch on the original: the two have different required fields
 // (password vs googleId) and mixing them would make it possible to call
 // createUserWithWorkspace with neither a password nor a googleId by
@@ -282,8 +288,8 @@ export async function createUserWithWorkspaceFromGoogle({
 
     const userResult = await client.query(
       `
-      INSERT INTO users (name, email, google_id, avatar_url)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO users (name, email, google_id, avatar_url, email_verified)
+      VALUES ($1, $2, $3, $4, TRUE)
       RETURNING id, name, email, avatar_url, avatar_public_id, avatar_updated_at
       `,
       [name, email, googleId, avatarUrl],

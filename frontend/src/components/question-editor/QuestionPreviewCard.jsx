@@ -109,7 +109,7 @@ export default function QuestionPreviewCard({
           <div className="grid grid-cols-1 gap-2 mt-4">
             {(selected.options || []).map((opt, i) => (
               <div
-                key={i}
+                key={opt}
                 className={`px-3 py-2.5 rounded-md text-xs sm:text-sm whitespace-pre-wrap wrap-break-word ${
                   (selected.correctOptionIndexes || []).includes(i)
                     ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20"

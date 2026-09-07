@@ -629,6 +629,9 @@ npm run worker
 | `NODE_ENV`                                                                     | `development` / `production`                     |
 | `JWT_SECRET`                                                                   | Sign session tokens (set in auth module if used) |
 | `CLOUDINARY_URL`                                                               | Diagram image storage                            |
+| `BREVO_API_KEY`                                                                | Brevo transactional email API key (OTP emails)   |
+| `BREVO_SENDER_EMAIL`                                                           | Verified sender address in Brevo                 |
+| `BREVO_SENDER_NAME`                                                            | Sender display name (defaults to `PaperFlow`)    |
 | `B2_KEY_ID`, `B2_APPLICATION_KEY`, `B2_BUCKET`, `B2_ENDPOINT_URL`, `B2_REGION` | PDF object storage                               |
 | `AI_PROVIDER`                                                                  | `gemini` or `openai`                             |
 | `AI_MODEL`                                                                     | Model id for the chosen provider                 |

@@ -26,9 +26,9 @@ export default function TeamStatsRow({ members, invites }) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      {stats.map((s, i) => (
+      {stats.map((s) => (
         <div
-          key={i}
+          key={s.label}
           className="surface-card rounded-xl p-4 border border-border flex items-center gap-3"
         >
           <div

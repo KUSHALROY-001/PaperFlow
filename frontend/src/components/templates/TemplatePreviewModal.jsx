@@ -81,9 +81,9 @@ export default function TemplatePreviewModal({
               { label: "Questions", value: template.questions },
               { label: "Duration", value: template.duration },
               { label: "Difficulty", value: template.difficulty },
-            ].map((s, i) => (
+            ].map((s) => (
               <div
-                key={i}
+                key={s.label}
                 className="bg-muted/60 border border-border rounded-xl p-3 text-center"
               >
                 <div className="text-sm font-bold text-foreground">
@@ -99,9 +99,9 @@ export default function TemplatePreviewModal({
               Sections
             </div>
             <div className="space-y-2.5">
-              {template.sections.map((section, i) => (
+              {template.sections.map((section) => (
                 <div
-                  key={i}
+                  key={section.name}
                   className="flex items-start gap-2 text-xs sm:text-sm"
                 >
                   <ChevronRight className="w-3.5 h-3.5 text-orange-500 shrink-0 mt-0.5" />

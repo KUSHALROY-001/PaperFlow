@@ -1,8 +1,10 @@
 import bcrypt from "bcryptjs";
+import crypto from "node:crypto";
 import sharp from "sharp";
 import { httpError } from "../lib/http-error.js";
 import { signAccessToken } from "../lib/jwt.js";
 import { verifyGoogleIdToken } from "../lib/google-oauth.js";
+import { sendOtpEmail } from "../lib/brevo-mail.js";
 import { requiredEnum, requiredString } from "../lib/validators.js";
 import {
   buildAvatarPublicId,
@@ -12,6 +14,10 @@ import {
   uploadAvatarBuffer,
 } from "../lib/cloudinary-storage.js";
 import * as authRepo from "../repositories/auth.repository.js";
+import * as otpRepo from "../repositories/email-otp.repository.js";
+
+const OTP_TTL_MINUTES = 10;
+const RESEND_COOLDOWN_SECONDS = 60;
 
 function buildAuthResponse(user, workspaceId) {
   const token = signAccessToken({ sub: user.id, workspaceId });
@@ -32,6 +38,42 @@ function buildAuthResponse(user, workspaceId) {
   };
 }
 
+// --- Email verification (OTP via Brevo) -----------------------------------
+
+// crypto.randomInt rather than Math.random() - a cryptographically
+// predictable OTP would defeat the entire point of the code (same
+// reasoning as api.js#getSubscriberKey on the frontend). padStart keeps
+// a code like "4821" as "004821" instead of silently dropping the
+// leading zeros and shipping a 4-digit code.
+function generateOtp() {
+  return String(crypto.randomInt(0, 1_000_000)).padStart(6, "0");
+}
+
+// Shared by signup, login (when unverified), and resend-otp below - one
+// code path that always hashes before storing, always uses the same TTL,
+// and always sends through the same template, rather than three
+// near-duplicate implementations drifting apart over time.
+async function issueOtp(user) {
+  const otp = generateOtp();
+  const otpHash = await bcrypt.hash(otp, 10);
+  const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60_000);
+  await otpRepo.createOtp(user.id, otpHash, expiresAt);
+  await sendOtpEmail({ to: user.email, name: user.name, otp });
+}
+
+// Seconds remaining before another OTP may be sent to this user, or 0 if
+// they're clear to send. Consulted by both login (to decide whether a
+// fresh code is actually needed) and resendOtp (to reject with 429 when
+// it isn't).
+async function getResendCooldownRemaining(userId) {
+  const latest = await otpRepo.findLatestOtp(userId);
+  if (!latest) return 0;
+
+  const elapsedMs = Date.now() - new Date(latest.created_at).getTime();
+  const remainingMs = RESEND_COOLDOWN_SECONDS * 1000 - elapsedMs;
+  return remainingMs > 0 ? Math.ceil(remainingMs / 1000) : 0;
+}
+
 export async function signup({ name, email, password }) {
   if (password.length < 8) {
     throw httpError(400, "Password must be at least 8 characters");
@@ -39,19 +81,125 @@ export async function signup({ name, email, password }) {
 
   const passwordHash = await bcrypt.hash(password, 12);
 
+  let user;
   try {
-    const { user, workspaceId } = await authRepo.createUserWithWorkspace({
+    ({ user } = await authRepo.createUserWithWorkspace({
       name,
       email,
       passwordHash,
-    });
-    return buildAuthResponse(user, workspaceId);
+    }));
   } catch (error) {
     if (error.code === "23505") {
       throw httpError(409, "An account with this email already exists");
     }
     throw error;
   }
+
+  try {
+    await issueOtp(user);
+  } catch (error) {
+    // An account that can never receive its first code is dead weight -
+    // roll the whole signup back (cascades to the workspace too, see
+    // migrations/001_initial_schema.sql's owner_id ON DELETE CASCADE) so
+    // the person gets a clear error and a clean slate to try again,
+    // rather than a stuck, permanently-unverifiable account.
+    console.error(
+      `Failed to send signup verification email for user ${user.id}:`,
+      error,
+    );
+    await authRepo.deleteUser(user.id);
+    throw httpError(
+      502,
+      "Could not send the verification email. Please try again.",
+    );
+  }
+
+  return { email: user.email, message: "Verification code sent" };
+}
+
+export async function verifyOtp({ email, otp }) {
+  const user = await authRepo.findActiveUserByEmail(email);
+  if (!user) {
+    throw httpError(401, "Invalid email or verification code");
+  }
+
+  if (user.email_verified) {
+    throw httpError(400, "This email is already verified");
+  }
+
+  const latest = await otpRepo.findLatestOtp(user.id);
+  if (!latest || latest.consumed_at || new Date(latest.expires_at) < new Date()) {
+    throw httpError(
+      400,
+      "This code has expired or is no longer valid. Request a new one.",
+    );
+  }
+
+  if (latest.attempt_count >= latest.max_attempts) {
+    throw httpError(
+      429,
+      "Too many incorrect attempts. Please request a new code.",
+    );
+  }
+
+  const matches = await bcrypt.compare(otp, latest.otp_hash);
+  if (!matches) {
+    await otpRepo.incrementAttempt(latest.id);
+    const attemptsLeft = latest.max_attempts - (latest.attempt_count + 1);
+    throw httpError(
+      400,
+      attemptsLeft > 0
+        ? `Incorrect code. ${attemptsLeft} attempt${attemptsLeft === 1 ? "" : "s"} left.`
+        : "Incorrect code. Please request a new one.",
+    );
+  }
+
+  await otpRepo.consumeOtp(latest.id);
+  await otpRepo.markEmailVerified(user.id);
+
+  const workspaceId = await authRepo.findFirstWorkspaceIdForUser(user.id);
+  if (!workspaceId) {
+    throw httpError(500, "User has no workspace");
+  }
+
+  await authRepo.touchLastLogin(user.id);
+
+  return buildAuthResponse(user, workspaceId);
+}
+
+export async function resendOtp({ email }) {
+  const user = await authRepo.findActiveUserByEmail(email);
+  if (!user) {
+    // Same reasoning as login's "Invalid email or password" - a distinct
+    // "no account with that email" response here would let this endpoint
+    // be used to enumerate which addresses have signed up.
+    throw httpError(401, "Invalid email");
+  }
+
+  if (user.email_verified) {
+    throw httpError(400, "This email is already verified");
+  }
+
+  const cooldownRemaining = await getResendCooldownRemaining(user.id);
+  if (cooldownRemaining > 0) {
+    throw httpError(
+      429,
+      `Please wait ${cooldownRemaining}s before requesting another code.`,
+      { retryAfterSeconds: cooldownRemaining },
+    );
+  }
+
+  try {
+    await issueOtp(user);
+  } catch (error) {
+    console.error(`Failed to resend verification email for user ${user.id}:`, error);
+    throw httpError(
+      502,
+      "Could not send the verification email. Please try again.",
+    );
+  }
+
+  return { message: "Verification code resent" };
 }
 
 export async function listWorkspacesForUser(userId) {
@@ -303,6 +451,34 @@ export async function login({ email, password }) {
 
   if (!passwordMatches) {
     throw httpError(401, "Invalid email or password");
+  }
+
+  if (!user.email_verified) {
+    // Only send a fresh code if the last one isn't still within its
+    // resend cooldown - otherwise repeatedly hitting "log in" with a
+    // correct password would spam the inbox faster than resendOtp's own
+    // cooldown would ever allow. Either way, no token: this account
+    // isn't "activated" yet (see migrations/044_email_otp_verification.sql).
+    const cooldownRemaining = await getResendCooldownRemaining(user.id);
+    if (cooldownRemaining <= 0) {
+      try {
+        await issueOtp(user);
+      } catch (error) {
+        console.error(
+          `Failed to send verification email during login for user ${user.id}:`,
+          error,
+        );
+        // Don't fail the whole login attempt over a transient email-send
+        // error here - the person may still have a still-valid code from
+        // an earlier send, and can always hit "resend" on the verify
+        // screen (which surfaces its own send failures directly).
+      }
+    }
+
+    throw httpError(403, "Please verify your email to continue", {
+      emailVerificationRequired: true,
+      email: user.email,
+    });
   }
 
   const workspaceId = await authRepo.findFirstWorkspaceIdForUser(user.id);

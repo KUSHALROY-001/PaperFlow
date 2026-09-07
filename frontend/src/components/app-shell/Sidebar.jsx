@@ -48,8 +48,8 @@ export default function Sidebar({
       </div>
 
       <nav className="flex-1 space-y-4 overflow-y-auto scrollbar-hidden">
-        {navSections.map((section, si) => (
-          <div key={si}>
+        {navSections.map((section) => (
+          <div key={section.items[0]?.to ?? section.label}>
             {section.label && (
               <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-3.5 mb-1.5">
                 {section.label}

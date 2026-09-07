@@ -121,9 +121,9 @@ export function MessyPDF({ scrolled }) {
 
         {/* Messy scrawl lines */}
         <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
-          {MESSY_LINES.map((l, i) => (
+          {MESSY_LINES.map((l) => (
             <div
-              key={i}
+              key={`${l.w}-${l.h}-${l.ml}`}
               style={{
                 width: `${l.w}%`,
                 height: `${l.h}px`,
@@ -234,7 +234,7 @@ export default function PDFScene({ scene, visible }) {
               >
                 {MESSY_LINES.slice(4, 10).map((l, i) => (
                   <div
-                    key={i}
+                    key={`${l.w}-${l.h}-${l.ml}`}
                     style={{
                       width: `${l.w + (i % 2 === 0 ? -10 : 5)}%`,
                       height: `${l.h}px`,

@@ -19,7 +19,7 @@ export default function QuestionStatusChart({ statusData, COLORS }) {
             dataKey="value"
           >
             {statusData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index]} />
+              <Cell key={entry.name} fill={COLORS[index]} />
             ))}
           </Pie>
           <Tooltip formatter={(val) => `${val}%`} />
@@ -28,7 +28,7 @@ export default function QuestionStatusChart({ statusData, COLORS }) {
       <div className="space-y-1.5 mt-2">
         {statusData.map((s, i) => (
           <div
-            key={i}
+            key={s.name}
             className="flex items-center justify-between text-xs"
           >
             <div className="flex items-center gap-2">

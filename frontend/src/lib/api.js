@@ -92,7 +92,10 @@ export async function apiRequest(path, options = {}) {
   }
 
   if (!response.ok) {
-    throw new Error(data?.error?.message || "Request failed");
+    const error = new Error(data?.error?.message || "Request failed");
+    error.status = response.status;
+    error.details = data?.error?.details;
+    throw error;
   }
 
   return data;
@@ -183,6 +186,18 @@ export const api = {
   },
   signup(payload) {
     return apiRequest("/api/auth/signup", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  verifyOtp(payload) {
+    return apiRequest("/api/auth/verify-otp", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  resendOtp(payload) {
+    return apiRequest("/api/auth/resend-otp", {
       method: "POST",
       body: JSON.stringify(payload),
     });

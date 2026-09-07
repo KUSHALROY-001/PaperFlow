@@ -1,0 +1,1328 @@
+[
+  {
+    "key": "AaBnWnrB78DfsSBSR8rT",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/ContactUs.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 430,
+    "hash": "0dfd4962214954d675377d11fe111fba",
+    "textRange": {
+      "startLine": 430,
+      "endLine": 430,
+      "startOffset": 25,
+      "endOffset": 30
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-08-26T05:56:02+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWne_78DfsSBSR8nV",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/shared/QuestionTable.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 106,
+    "hash": "8c19ab7952f22e835b16d0805bc8c050",
+    "textRange": {
+      "startLine": 106,
+      "endLine": 106,
+      "startOffset": 22,
+      "endOffset": 23
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-08-26T03:34:47+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnaJ78DfsSBSR8lP",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/QuestionOptionsCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 64,
+    "hash": "11a4777f86d340962e4cc576573f659a",
+    "textRange": {
+      "startLine": 64,
+      "endLine": 64,
+      "startOffset": 19,
+      "endOffset": 20
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-08-24T05:52:57+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnc978DfsSBSR8lb",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-editor/QuestionPreviewCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 112,
+    "hash": "11a4777f86d340962e4cc576573f659a",
+    "textRange": {
+      "startLine": 112,
+      "endLine": 112,
+      "startOffset": 21,
+      "endOffset": 22
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-08-24T05:52:57+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnoh78DfsSBSR8qs",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/ui/skeleton-row.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 34,
+    "hash": "2f0243645032c44f665f26d1fc3f9ded",
+    "textRange": {
+      "startLine": 34,
+      "endLine": 34,
+      "startOffset": 26,
+      "endOffset": 31
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-08-21T12:25:52+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnoo78DfsSBSR8qt",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/ui/skeleton-text.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 13,
+    "hash": "0dfd4962214954d675377d11fe111fba",
+    "textRange": {
+      "startLine": 13,
+      "endLine": 13,
+      "startOffset": 15,
+      "endOffset": 20
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-08-21T12:25:52+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnhj78DfsSBSR8od",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/app-shell/Sidebar.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 52,
+    "hash": "de3f1d5c86b4da03292969896e0a6f9d",
+    "textRange": {
+      "startLine": 52,
+      "endLine": 52,
+      "startOffset": 20,
+      "endOffset": 22
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-08-19T04:42:05+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnnH78DfsSBSR8qK",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/question-bank/BankQuestionCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 157,
+    "hash": "0dfd4962214954d675377d11fe111fba",
+    "textRange": {
+      "startLine": 157,
+      "endLine": 157,
+      "startOffset": 19,
+      "endOffset": 24
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-08-17T12:36:43+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnke78DfsSBSR8pd",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/review-queue/QueueQuestionCard.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 108,
+    "hash": "733d34da45c17b5ffc0678a1c332373e",
+    "textRange": {
+      "startLine": 108,
+      "endLine": 108,
+      "startOffset": 21,
+      "endOffset": 32
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-08-17T12:36:43+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWno978DfsSBSR8qw",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/StudentDetail.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 82,
+    "hash": "11a4777f86d340962e4cc576573f659a",
+    "textRange": {
+      "startLine": 82,
+      "endLine": 82,
+      "startOffset": 21,
+      "endOffset": 22
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-08-17T12:36:43+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWne_78DfsSBSR8nW",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/shared/QuestionTable.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 118,
+    "hash": "0dfd4962214954d675377d11fe111fba",
+    "textRange": {
+      "startLine": 118,
+      "endLine": 118,
+      "startOffset": 23,
+      "endOffset": 28
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-08-16T04:45:03+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWne_78DfsSBSR8nX",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/shared/QuestionTable.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 162,
+    "hash": "0dafe89b9d9450419ed96124e020f95e",
+    "textRange": {
+      "startLine": 162,
+      "endLine": 162,
+      "startOffset": 19,
+      "endOffset": 27
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-08-16T04:45:03+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWne_78DfsSBSR8nY",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/shared/QuestionTable.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 167,
+    "hash": "db55e45d188ea9c5008f3ce173f2809a",
+    "textRange": {
+      "startLine": 167,
+      "endLine": 167,
+      "startOffset": 23,
+      "endOffset": 32
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-08-16T04:45:03+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnil78DfsSBSR8ow",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/TemplatePreviewModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 101,
+    "hash": "11a4777f86d340962e4cc576573f659a",
+    "textRange": {
+      "startLine": 101,
+      "endLine": 101,
+      "startOffset": 23,
+      "endOffset": 24
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-08-10T11:55:58+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWniE78DfsSBSR8oj",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/analytics/AnalyticsSummaryRow.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 8,
+    "hash": "11a4777f86d340962e4cc576573f659a",
+    "textRange": {
+      "startLine": 8,
+      "endLine": 8,
+      "startOffset": 15,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnh178DfsSBSR8og",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/analytics/CustomTooltip.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 7,
+    "hash": "d27c865e3cca1a4e4a5e420fda5b9b40",
+    "textRange": {
+      "startLine": 7,
+      "endLine": 7,
+      "startOffset": 18,
+      "endOffset": 19
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnh978DfsSBSR8oh",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/analytics/QuestionStatusChart.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 22,
+    "hash": "4f264f336aaf0eba47f54cebf887c550",
+    "textRange": {
+      "startLine": 22,
+      "endLine": 22,
+      "startOffset": 25,
+      "endOffset": 40
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnh978DfsSBSR8oi",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/analytics/QuestionStatusChart.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 31,
+    "hash": "11a4777f86d340962e4cc576573f659a",
+    "textRange": {
+      "startLine": 31,
+      "endLine": 31,
+      "startOffset": 17,
+      "endOffset": 18
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWniM78DfsSBSR8ok",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/analytics/RecentClusterPerformance.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 13,
+    "hash": "7ebcb0b3ae0114bee784b4dd726f17fb",
+    "textRange": {
+      "startLine": 13,
+      "endLine": 13,
+      "startOffset": 20,
+      "endOffset": 21
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnnf78DfsSBSR8qY",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/mock-session/SessionQuestionView.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 93,
+    "hash": "11a4777f86d340962e4cc576573f659a",
+    "textRange": {
+      "startLine": 93,
+      "endLine": 93,
+      "startOffset": 21,
+      "endOffset": 22
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWniU78DfsSBSR8on",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/team/TeamStatsRow.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 31,
+    "hash": "11a4777f86d340962e4cc576573f659a",
+    "textRange": {
+      "startLine": 31,
+      "endLine": 31,
+      "startOffset": 15,
+      "endOffset": 16
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-08-06T04:37:04+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnil78DfsSBSR8ov",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/templates/TemplatePreviewModal.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 83,
+    "hash": "11a4777f86d340962e4cc576573f659a",
+    "textRange": {
+      "startLine": 83,
+      "endLine": 83,
+      "startOffset": 21,
+      "endOffset": 22
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-07-28T07:11:00+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnoY78DfsSBSR8qq",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/HeroAnimation.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 344,
+    "hash": "11a4777f86d340962e4cc576573f659a",
+    "textRange": {
+      "startLine": 344,
+      "endLine": 344,
+      "startOffset": 25,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-07-25T12:06:24+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnmC78DfsSBSR8pz",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/hero/PDFScene.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 126,
+    "hash": "11a4777f86d340962e4cc576573f659a",
+    "textRange": {
+      "startLine": 126,
+      "endLine": 126,
+      "startOffset": 19,
+      "endOffset": 20
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-07-25T12:06:24+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnmC78DfsSBSR8p0",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/hero/PDFScene.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 237,
+    "hash": "11a4777f86d340962e4cc576573f659a",
+    "textRange": {
+      "startLine": 237,
+      "endLine": 237,
+      "startOffset": 25,
+      "endOffset": 26
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-07-25T12:06:24+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnmK78DfsSBSR8p1",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/hero/ScanBeam.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 98,
+    "hash": "5aaaabe0325183a0c75a177cdf25e0ad",
+    "textRange": {
+      "startLine": 98,
+      "endLine": 98,
+      "startOffset": 22,
+      "endOffset": 23
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-07-25T12:06:24+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnnz78DfsSBSR8qd",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/howItWorks/HowItWorksSection.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 145,
+    "hash": "11a4777f86d340962e4cc576573f659a",
+    "textRange": {
+      "startLine": 145,
+      "endLine": 145,
+      "startOffset": 21,
+      "endOffset": 22
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-07-25T12:06:24+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnn_78DfsSBSR8qj",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/howItWorks/StepAnimations.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 444,
+    "hash": "3566d86b7b5eb9a67daba1a18843e990",
+    "textRange": {
+      "startLine": 444,
+      "endLine": 444,
+      "startOffset": 34,
+      "endOffset": 35
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-07-25T12:06:24+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnn_78DfsSBSR8qk",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/howItWorks/StepAnimations.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 712,
+    "hash": "11a4777f86d340962e4cc576573f659a",
+    "textRange": {
+      "startLine": 712,
+      "endLine": 712,
+      "startOffset": 21,
+      "endOffset": 22
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-07-25T12:06:24+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnoO78DfsSBSR8qm",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/howItWorks/UploadAnimation.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 384,
+    "hash": "11a4777f86d340962e4cc576573f659a",
+    "textRange": {
+      "startLine": 384,
+      "endLine": 384,
+      "startOffset": 33,
+      "endOffset": 34
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-07-25T12:06:24+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnoO78DfsSBSR8qn",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/howItWorks/UploadAnimation.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 554,
+    "hash": "7f2ab00de3b91e20dfcbe79931cb0aa5",
+    "textRange": {
+      "startLine": 554,
+      "endLine": 554,
+      "startOffset": 39,
+      "endOffset": 40
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-07-25T12:06:24+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWnoO78DfsSBSR8qo",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/components/howItWorks/UploadAnimation.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 719,
+    "hash": "11a4777f86d340962e4cc576573f659a",
+    "textRange": {
+      "startLine": 719,
+      "endLine": 719,
+      "startOffset": 31,
+      "endOffset": 32
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-07-25T12:06:24+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWno178DfsSBSR8qu",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/Landing.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 435,
+    "hash": "11a4777f86d340962e4cc576573f659a",
+    "textRange": {
+      "startLine": 435,
+      "endLine": 435,
+      "startOffset": 21,
+      "endOffset": 22
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-06-20T09:34:19+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  },
+  {
+    "key": "AaBnWno178DfsSBSR8qv",
+    "rule": "javascript:S6479",
+    "severity": "MAJOR",
+    "component": "KUSHALROY-001_PaperFlow:frontend/src/pages/Landing.jsx",
+    "project": "KUSHALROY-001_PaperFlow",
+    "line": 470,
+    "hash": "11a4777f86d340962e4cc576573f659a",
+    "textRange": {
+      "startLine": 470,
+      "endLine": 470,
+      "startOffset": 21,
+      "endOffset": 22
+    },
+    "flows": [],
+    "status": "OPEN",
+    "message": "Do not use Array index in keys",
+    "effort": "5min",
+    "debt": "5min",
+    "assignee": "KUSHALROY-001-xVxFY@github",
+    "tags": ["jsx", "performance", "react"],
+    "creationDate": "2026-06-20T09:34:19+0000",
+    "updateDate": "2026-09-03T12:55:04+0000",
+    "type": "CODE_SMELL",
+    "organization": "kushalroy-001",
+    "cleanCodeAttribute": "LOGICAL",
+    "cleanCodeAttributeCategory": "INTENTIONAL",
+    "impacts": [
+      {
+        "softwareQuality": "MAINTAINABILITY",
+        "severity": "MEDIUM"
+      }
+    ],
+    "issueStatus": "OPEN",
+    "projectName": "PaperFlow",
+    "internalTags": [],
+    "lastChangeAnalysisUuid": "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+    "lastChangeSource": "ANALYSIS"
+  }
+]

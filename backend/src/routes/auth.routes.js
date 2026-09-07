@@ -4,6 +4,11 @@ import * as authController from "../controllers/auth.controller.js";
 import { asyncHandler } from "../lib/async-handler.js";
 import { httpError } from "../lib/http-error.js";
 import { requireAuth } from "../middleware/require-auth.js";
+import {
+  resendOtpRateLimit,
+  signupRateLimit,
+  verifyOtpRateLimit,
+} from "../middleware/auth-rate-limit.js";
 
 export const authRouter = Router();
 
@@ -26,7 +31,17 @@ const uploadAvatarMiddleware = multer({
   },
 });
 
-authRouter.post("/signup", asyncHandler(authController.signup));
+authRouter.post("/signup", signupRateLimit, asyncHandler(authController.signup));
+authRouter.post(
+  "/verify-otp",
+  verifyOtpRateLimit,
+  asyncHandler(authController.verifyOtp),
+);
+authRouter.post(
+  "/resend-otp",
+  resendOtpRateLimit,
+  asyncHandler(authController.resendOtp),
+);
 authRouter.post("/login", asyncHandler(authController.login));
 authRouter.post("/google", asyncHandler(authController.googleAuth));
 authRouter.get("/me", requireAuth, asyncHandler(authController.me));

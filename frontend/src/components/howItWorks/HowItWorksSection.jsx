@@ -142,7 +142,7 @@ export default function HowItWorksSection() {
 
             return (
               <motion.div
-                key={i}
+                key={step.num}
                 onHoverStart={() => setHoveredStep(i)}
                 onHoverEnd={() => setHoveredStep(null)}
                 animate={{

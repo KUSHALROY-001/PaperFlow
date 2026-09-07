@@ -448,16 +448,16 @@ Sender Information:
             </div>
 
             <div className="space-y-2">
-              {FAQS.map((faq, index) => {
-                const isExpanded = expandedFaq === index;
+              {FAQS.map((faq) => {
+                const isExpanded = expandedFaq === faq.q;
                 return (
                   <div
-                    key={index}
+                    key={faq.q}
                     className="border border-border rounded-md overflow-hidden bg-card transition-all"
                   >
                     <button
                       type="button"
-                      onClick={() => setExpandedFaq(isExpanded ? null : index)}
+                      onClick={() => setExpandedFaq(isExpanded ? null : faq.q)}
                       className="w-full flex items-center justify-between p-3.5 text-left text-xs font-bold text-foreground hover:text-orange-500 transition-colors gap-2"
                     >
                       <span>{faq.q}</span>

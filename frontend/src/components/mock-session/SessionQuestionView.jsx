@@ -93,7 +93,7 @@ export default function SessionQuestionView({
           <div className="space-y-3">
             {q.options.map((opt, i) => (
               <button
-                key={i}
+                key={opt}
                 type="button"
                 onClick={() => handleAnswer(i)}
                 className={`w-full text-left px-5 py-4 rounded-md border text-sm transition-all ${

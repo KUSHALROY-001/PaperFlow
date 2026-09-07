@@ -36,6 +36,7 @@ import PublicCatalog from "./pages/PublicCatalog";
 import SharedMock from "./pages/SharedMock";
 import MyResults from "./pages/MyResults";
 import AuthPage from "./pages/AuthPage";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 import MyInvitations from "./pages/MyInvitations";
 import AcceptInvite from "./pages/AcceptInvite";
 import ContactUs from "./pages/ContactUs";
@@ -45,7 +46,13 @@ const AuthenticatedApp = () => {
     useAuth();
   const location = useLocation();
 
-  const publicPaths = ["/", "/login", "/signup", "/accept-invite"];
+  const publicPaths = [
+    "/",
+    "/login",
+    "/signup",
+    "/verify-email",
+    "/accept-invite",
+  ];
   const isPublicRoute =
     publicPaths.includes(location.pathname) ||
     location.pathname.startsWith("/shared/") ||
@@ -95,6 +102,7 @@ const AuthenticatedApp = () => {
           />
         }
       />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
 
       {/* Public shared mock — no shell */}
       <Route path="/shared/:token" element={<SharedMock />} />

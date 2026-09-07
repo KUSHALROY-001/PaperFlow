@@ -9,7 +9,7 @@ export default function RecentClusterPerformance({ recentClusters }) {
         </h3>
       </div>
       <div className="divide-y divide-border">
-        {recentClusters.map((c, i) => {
+        {recentClusters.map((c) => {
           let confidenceClass;
           let confidenceColor;
           if (c.confidence >= 90) {
@@ -24,7 +24,7 @@ export default function RecentClusterPerformance({ recentClusters }) {
           }
 
           return (
-            <div key={i} className="px-4 sm:px-6 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 hover:bg-muted/40 transition-colors">
+            <div key={c.name} className="px-4 sm:px-6 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 hover:bg-muted/40 transition-colors">
               <div className="w-8 h-8 bg-orange-500/15 text-orange-500 rounded-xl flex items-center justify-center shrink-0">
                 <BarChart2 className="w-4 h-4" />
               </div>

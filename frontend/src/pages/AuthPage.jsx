@@ -4,9 +4,8 @@ import { ArrowRight, ShieldCheck, Eye, EyeOff, Loader2 } from "lucide-react";
 import ThemeToggle from "../components/ThemeToggle";
 import GoogleSignInButton from "../components/GoogleSignInButton";
 import { useAuth } from "@/lib/AuthContext";
-import { api } from "@/lib/api";
-import { PENDING_INVITE_TOKEN_KEY } from "./AcceptInvite";
-import { PENDING_CLAIM_KEY } from "@/hooks/useExamSession";
+import { useRedirectAfterAuth } from "@/hooks/useRedirectAfterAuth";
+import { useAutoDismiss } from "@/hooks/useAutoDismiss";
 
 function PaperFlowLogo() {
   return (
@@ -42,6 +41,10 @@ export default function AuthPage({ mode, title, description }) {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Error banner below auto-clears after 10s instead of sitting on
+  // screen forever - see useAutoDismiss.
+  useAutoDismiss(error, setError);
+
   const ctaLabel = mode === "login" ? "Sign In" : "Create Account";
   const altLabel =
     mode === "login"
@@ -52,43 +55,10 @@ export default function AuthPage({ mode, title, description }) {
   // Shared by the password form (handleSubmit) and the Google button
   // (handleGoogleCredential) - identical redirect logic either way once
   // someone is actually authenticated, since neither the pending-invite
-  // nor pending-claim checks below care HOW they signed in. Wrapped in
-  // useCallback with no dependency on `form` (Google auth never touches
-  // it) so GoogleSignInButton's effect - which intentionally only reruns
-  // when `mode` changes, not on every render - always calls a function
-  // that's actually current instead of a stale closure from first mount.
-  const redirectAfterAuth = useCallback(async () => {
-    // If AcceptInvite.jsx sent them here to log in/sign up first (see its
-    // stash-and-redirect logic), send them back to finish accepting
-    // instead of dropping them on the dashboard and losing the invite.
-    const pendingInviteToken = sessionStorage.getItem(PENDING_INVITE_TOKEN_KEY);
-    if (pendingInviteToken) {
-      navigate(`/accept-invite?token=${pendingInviteToken}`, {
-        replace: true,
-      });
-      return;
-    }
-
-    // Same idea for a guest who just took a shared mock test and chose
-    // "log in to save this result" from the results screen (see
-    // useExamSession's PENDING_CLAIM_KEY) - claim it now that they're
-    // authenticated, then send them straight to My Results.
-    const pendingClaimRaw = sessionStorage.getItem(PENDING_CLAIM_KEY);
-    if (pendingClaimRaw) {
-      sessionStorage.removeItem(PENDING_CLAIM_KEY);
-      try {
-        const { attemptId, shareToken } = JSON.parse(pendingClaimRaw);
-        await api.claimSharedAttempt(shareToken, attemptId);
-      } catch {
-        // Link may have expired between submitting and logging in - not
-        // worth blocking the login itself over, just skip the redirect.
-      }
-      navigate("/my-results", { replace: true });
-      return;
-    }
-
-    navigate("/dashboard", { replace: true });
-  }, [navigate]);
+  // nor pending-claim checks care HOW they signed in. Also used by
+  // VerifyEmailPage.jsx once OTP verification is what actually finishes
+  // authenticating a signup/login.
+  const redirectAfterAuth = useRedirectAfterAuth();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -101,15 +71,20 @@ export default function AuthPage({ mode, title, description }) {
           email: form.email,
           password: form.password,
         });
+        await redirectAfterAuth();
       } else {
         await signup({
           name: form.name,
           email: form.email,
           password: form.password,
         });
+        navigate("/verify-email", { state: { email: form.email } });
       }
-      await redirectAfterAuth();
     } catch (err) {
+      if (err.details?.emailVerificationRequired) {
+        navigate("/verify-email", { state: { email: err.details.email } });
+        return;
+      }
       setError(err.message || "Authentication failed");
     } finally {
       setIsSubmitting(false);

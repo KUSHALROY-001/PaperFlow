@@ -1,0 +1,1177 @@
+[
+    {
+        "key":  "AaBnWnv578DfsSBSR8sd",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:backend/src/services/attempts.service.js",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  174,
+        "hash":  "5fecd508c406a14ff3ec7f16ee050398",
+        "textRange":  {
+                          "startLine":  174,
+                          "endLine":  174,
+                          "startOffset":  6,
+                          "endOffset":  51
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-09-03T05:25:56+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWneS78DfsSBSR8nH",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:frontend/src/components/shared/FormattedTextEditor.jsx",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  315,
+        "hash":  "bd5a6563b76f23be237f8f1652453f20",
+        "textRange":  {
+                          "startLine":  315,
+                          "endLine":  315,
+                          "startOffset":  12,
+                          "endOffset":  41
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-29T12:26:58+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWnvt78DfsSBSR8sX",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:backend/src/services/mock-tests.service.js",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  666,
+        "hash":  "23d6d375ff7bbe48626aa91d55dcf696",
+        "textRange":  {
+                          "startLine":  666,
+                          "endLine":  667,
+                          "startOffset":  4,
+                          "endOffset":  68
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-27T10:59:23+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWnwf78DfsSBSR8so",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-export/render-html.js",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  106,
+        "hash":  "646978a57ded08898e26fe1b2c808c8b",
+        "textRange":  {
+                          "startLine":  106,
+                          "endLine":  106,
+                          "startOffset":  6,
+                          "endOffset":  37
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-26T03:34:47+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWns478DfsSBSR8r3",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:frontend/src/utils/richTextDoc.js",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  165,
+        "hash":  "373621b380f1cbcab7adf1db0539097f",
+        "textRange":  {
+                          "startLine":  165,
+                          "endLine":  165,
+                          "startOffset":  14,
+                          "endOffset":  63
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-26T03:34:47+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWneS78DfsSBSR8nG",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:frontend/src/components/shared/FormattedTextEditor.jsx",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  298,
+        "hash":  "bd5a6563b76f23be237f8f1652453f20",
+        "textRange":  {
+                          "startLine":  298,
+                          "endLine":  298,
+                          "startOffset":  12,
+                          "endOffset":  41
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-24T05:52:57+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWnpZ78DfsSBSR8q0",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:frontend/src/pages/MockSession.jsx",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  106,
+        "hash":  "f08e26f09bcc790e18f3e881af517633",
+        "textRange":  {
+                          "startLine":  106,
+                          "endLine":  106,
+                          "startOffset":  12,
+                          "endOffset":  26
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-18T15:13:33+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWnqA78DfsSBSR8q7",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:frontend/src/pages/SharedMock.jsx",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  106,
+        "hash":  "f08e26f09bcc790e18f3e881af517633",
+        "textRange":  {
+                          "startLine":  106,
+                          "endLine":  106,
+                          "startOffset":  12,
+                          "endOffset":  26
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-18T15:13:33+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWnx578DfsSBSR8tT",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:backend/src/repositories/review-queue.repository.js",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  111,
+        "hash":  "6df70c00000afb9a2b67df784f464793",
+        "textRange":  {
+                          "startLine":  111,
+                          "endLine":  111,
+                          "startOffset":  6,
+                          "endOffset":  42
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-17T12:36:43+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWnv578DfsSBSR8sc",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:backend/src/services/attempts.service.js",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  148,
+        "hash":  "dfe179b53dedae1101d1c2ea6c0ddad7",
+        "textRange":  {
+                          "startLine":  148,
+                          "endLine":  148,
+                          "startOffset":  20,
+                          "endOffset":  51
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-17T12:36:43+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWnvR78DfsSBSR8sV",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:backend/src/services/shared.service.js",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  113,
+        "hash":  "bd3d23ada5f85a930164a995ad16395c",
+        "textRange":  {
+                          "startLine":  113,
+                          "endLine":  113,
+                          "startOffset":  4,
+                          "endOffset":  27
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-17T12:36:43+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWnu878DfsSBSR8sQ",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:backend/src/services/students.service.js",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  112,
+        "hash":  "0a8703041a49f16e54f12e80d6dc144e",
+        "textRange":  {
+                          "startLine":  112,
+                          "endLine":  112,
+                          "startOffset":  24,
+                          "endOffset":  47
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-17T12:36:43+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWnu878DfsSBSR8sR",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:backend/src/services/students.service.js",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  132,
+        "hash":  "393979984de494e8be2c92f82013bf14",
+        "textRange":  {
+                          "startLine":  132,
+                          "endLine":  132,
+                          "startOffset":  26,
+                          "endOffset":  47
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-17T12:36:43+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWnyG78DfsSBSR8tU",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:backend/src/repositories/attempts.repository.js",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  51,
+        "hash":  "bd3d23ada5f85a930164a995ad16395c",
+        "textRange":  {
+                          "startLine":  51,
+                          "endLine":  51,
+                          "startOffset":  6,
+                          "endOffset":  29
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-16T12:43:59+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWnyG78DfsSBSR8tV",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:backend/src/repositories/attempts.repository.js",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  297,
+        "hash":  "d63ac8436ab27c5899729bf22b2c8061",
+        "textRange":  {
+                          "startLine":  297,
+                          "endLine":  297,
+                          "startOffset":  28,
+                          "endOffset":  51
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-16T12:43:59+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWnyG78DfsSBSR8tW",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:backend/src/repositories/attempts.repository.js",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  324,
+        "hash":  "1fc3551a2c867b0ada3bd82c2eff458e",
+        "textRange":  {
+                          "startLine":  324,
+                          "endLine":  324,
+                          "startOffset":  28,
+                          "endOffset":  51
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-16T12:43:59+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWnyG78DfsSBSR8tX",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:backend/src/repositories/attempts.repository.js",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  420,
+        "hash":  "bd3d23ada5f85a930164a995ad16395c",
+        "textRange":  {
+                          "startLine":  420,
+                          "endLine":  420,
+                          "startOffset":  10,
+                          "endOffset":  33
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-16T12:43:59+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWnyG78DfsSBSR8tY",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:backend/src/repositories/attempts.repository.js",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  422,
+        "hash":  "d9d7d4e6701abb005611c53a34e6666b",
+        "textRange":  {
+                          "startLine":  422,
+                          "endLine":  422,
+                          "startOffset":  34,
+                          "endOffset":  57
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-16T12:43:59+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWnyS78DfsSBSR8tZ",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:backend/src/repositories/mock-tests.repository.js",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  345,
+        "hash":  "094b35a3675d0fdf3ef7641d25d6fa02",
+        "textRange":  {
+                          "startLine":  345,
+                          "endLine":  345,
+                          "startOffset":  17,
+                          "endOffset":  40
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-16T12:43:59+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWnwM78DfsSBSR8sh",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:backend/src/lib/pdf-export/browser.js",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  22,
+        "hash":  "f0284ff7d9e424a03cc061317ebc6c49",
+        "textRange":  {
+                          "startLine":  22,
+                          "endLine":  22,
+                          "startOffset":  10,
+                          "endOffset":  28
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-15T08:55:54+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWnh178DfsSBSR8of",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:frontend/src/components/analytics/CustomTooltip.jsx",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  2,
+        "hash":  "53c4208b95b6b4caefa6a69866ccfd2a",
+        "textRange":  {
+                          "startLine":  2,
+                          "endLine":  2,
+                          "startOffset":  16,
+                          "endOffset":  41
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-06T04:37:04+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWnlU78DfsSBSR8pn",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:frontend/src/components/my-results/AttemptCard.jsx",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  48,
+        "hash":  "979a255ea88393f96e98d32ae17ad52c",
+        "textRange":  {
+                          "startLine":  48,
+                          "endLine":  48,
+                          "startOffset":  6,
+                          "endOffset":  32
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-06T04:37:04+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWnrX78DfsSBSR8rV",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:frontend/src/hooks/useMyResults.js",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  5,
+        "hash":  "5397ad1cab87bde5fbe3d9739be346d5",
+        "textRange":  {
+                          "startLine":  5,
+                          "endLine":  5,
+                          "startOffset":  6,
+                          "endOffset":  41
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-06T04:37:04+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWnrP78DfsSBSR8rU",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:frontend/src/hooks/useQuestionEditor.js",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  155,
+        "hash":  "3e0823c5a1bd456f34aa9692d83451d5",
+        "textRange":  {
+                          "startLine":  155,
+                          "endLine":  155,
+                          "startOffset":  10,
+                          "endOffset":  35
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-08-06T04:37:04+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    },
+    {
+        "key":  "AaBnWnvI78DfsSBSR8sU",
+        "rule":  "javascript:S6582",
+        "severity":  "MINOR",
+        "component":  "KUSHALROY-001_PaperFlow:backend/src/services/questions.service.js",
+        "project":  "KUSHALROY-001_PaperFlow",
+        "line":  154,
+        "hash":  "07518d523b86bdb10baa1205edf4b66c",
+        "textRange":  {
+                          "startLine":  154,
+                          "endLine":  154,
+                          "startOffset":  6,
+                          "endOffset":  63
+                      },
+        "flows":  [
+
+                  ],
+        "status":  "OPEN",
+        "message":  "Prefer using an optional chain expression instead, as it\u0027s more concise and easier to read.",
+        "effort":  "5min",
+        "debt":  "5min",
+        "assignee":  "KUSHALROY-001-xVxFY@github",
+        "tags":  [
+                     "editable-source",
+                     "es2020",
+                     "type-dependent"
+                 ],
+        "creationDate":  "2026-07-28T07:11:00+0000",
+        "updateDate":  "2026-09-03T12:55:04+0000",
+        "type":  "CODE_SMELL",
+        "organization":  "kushalroy-001",
+        "cleanCodeAttribute":  "CLEAR",
+        "cleanCodeAttributeCategory":  "INTENTIONAL",
+        "impacts":  [
+                        {
+                            "softwareQuality":  "MAINTAINABILITY",
+                            "severity":  "LOW"
+                        }
+                    ],
+        "issueStatus":  "OPEN",
+        "projectName":  "PaperFlow",
+        "internalTags":  [
+
+                         ],
+        "lastChangeAnalysisUuid":  "e45e0d3a-7402-4037-b41b-f9f6afa8cea9",
+        "lastChangeSource":  "ANALYSIS"
+    }
+]

@@ -81,9 +81,22 @@ export function AuthProvider({ children }) {
     [checkUserAuth],
   );
 
-  const signup = useCallback(
+  // No longer stores a token or marks the session authenticated - the
+  // account isn't "activated" until the OTP is verified (see
+  // auth.service.js#signup, which now returns { email, message } instead
+  // of a token). AuthPage.jsx sends the person to /verify-email with the
+  // returned email next.
+  const signup = useCallback(async (payload) => {
+    return api.signup(payload);
+  }, []);
+
+  // Called from VerifyEmailPage.jsx once the person submits a code. On
+  // success this is the one and only place (besides login/googleAuth)
+  // that actually establishes a session - mirrors login's storeAuth/
+  // setUser/setIsAuthenticated sequence above.
+  const verifyOtp = useCallback(
     async (payload) => {
-      const result = await api.signup(payload);
+      const result = await api.verifyOtp(payload);
       storeAuth(result);
       setUser(result.user);
       setWorkspaceId(result.workspaceId);
@@ -93,6 +106,10 @@ export function AuthProvider({ children }) {
     },
     [checkUserAuth],
   );
+
+  const resendOtp = useCallback(async (payload) => {
+    return api.resendOtp(payload);
+  }, []);
 
   // Shared by both the signup and login Google buttons on AuthPage.jsx -
   // the backend's own googleAuth (auth.service.js) already collapses
@@ -151,6 +168,8 @@ export function AuthProvider({ children }) {
       logout,
       navigateToLogin,
       signup,
+      verifyOtp,
+      resendOtp,
       switchWorkspace,
       user,
       workspaceId,
@@ -169,6 +188,8 @@ export function AuthProvider({ children }) {
       logout,
       navigateToLogin,
       signup,
+      verifyOtp,
+      resendOtp,
       switchWorkspace,
       user,
       workspaceId,

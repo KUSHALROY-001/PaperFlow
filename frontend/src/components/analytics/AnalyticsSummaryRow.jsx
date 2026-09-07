@@ -3,9 +3,9 @@ import { TrendingUp } from "lucide-react";
 export default function AnalyticsSummaryRow({ summaryStats }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-      {summaryStats.map((s, i) => (
+      {summaryStats.map((s) => (
         <div
-          key={i}
+          key={s.label}
           className="surface-card rounded-2xl p-4 border border-border hover:border-orange-500/30 transition-all"
         >
           <div className="flex items-center justify-between mb-3">

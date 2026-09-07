@@ -27,6 +27,21 @@ const showMockTest = (s) => s >= 5;
 const showCursor = (s) => s === 2 || s === 3 || s >= 7;
 const showStarBurst = (s) => s === 3;
 
+// Stable per-dot identity for the progress indicator below — mirrors the
+// scene order/comments in SCENE_DURATIONS without depending on its numeric
+// values (which can repeat) or on the render-time array index.
+const SCENE_LABELS = [
+  "browser-appears",
+  "pdf-scrolls",
+  "cursor-click",
+  "ai-star-burst",
+  "scan-beam",
+  "text-morphs",
+  "slide-transition",
+  "mcq-interaction",
+  "zoom-reset",
+];
+
 export default function HeroAnimation() {
   const [scene, setScene] = useState(0);
   const [loopKey, setLoopKey] = useState(0);
@@ -350,7 +365,7 @@ export default function HeroAnimation() {
                   }
                   return (
                     <motion.div
-                      key={i}
+                      key={SCENE_LABELS[i]}
                       animate={{
                         width: scene === i ? "14px" : "4px",
                         background: dotColor,

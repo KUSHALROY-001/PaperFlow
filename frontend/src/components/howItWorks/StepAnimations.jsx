@@ -453,7 +453,7 @@ export function ExtractAnimation() {
             {scanningLabel}
           </div>
           {QUESTIONS_DATA.map((q, i) => (
-            <AnimatePresence key={i}>
+            <AnimatePresence key={q.num}>
               {scene >= 1 && (
                 <motion.div
                   initial={{ opacity: 0, y: 10, scale: 0.94 }}
@@ -721,7 +721,7 @@ export function ExportAnimation() {
             const showCheck = scene >= 1;
             return (
               <div
-                key={i}
+                key={q.text}
                 style={{
                   display: "flex",
                   alignItems: "center",

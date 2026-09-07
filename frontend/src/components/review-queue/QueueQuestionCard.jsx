@@ -105,7 +105,7 @@ export default function QueueQuestionCard({
             const correct = question.correctOptionIndexes.includes(optionIndex);
             return (
               <div
-                key={optionIndex}
+                key={option}
                 className={`flex flex-wrap items-center justify-between gap-2 rounded-2xl px-3 py-3 text-xs sm:px-4 sm:text-sm font-medium ${
                   correct
                     ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20"

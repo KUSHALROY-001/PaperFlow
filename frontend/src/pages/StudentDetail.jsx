@@ -77,9 +77,9 @@ export default function StudentDetail() {
                 color:
                   "bg-amber-500/15 text-amber-500 border border-amber-500/20",
               },
-            ].map((s, i) => (
+            ].map((s) => (
               <div
-                key={i}
+                key={s.label}
                 className="surface-card rounded-2xl p-4 border border-border flex items-center gap-3"
               >
                 <div
