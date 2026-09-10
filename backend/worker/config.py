@@ -71,6 +71,21 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 AI_MAX_CHARS_PER_CHUNK = int(os.environ.get("AI_MAX_CHARS_PER_CHUNK", "12000"))
 AI_TIMEOUT_SECONDS = int(os.environ.get("AI_TIMEOUT_SECONDS", "90"))
 AI_PDF_PAGES_PER_CHUNK = int(os.environ.get("AI_PDF_PAGES_PER_CHUNK", "3"))
+# How many vision chunks (each AI_PDF_PAGES_PER_CHUNK pages) from the SAME
+# PDF are sent to Gemini concurrently, instead of one chunk's full
+# request+retry cycle finishing before the next one even starts. This does
+# NOT raise how many requests/minute actually reach Gemini - that's still
+# capped by AI_MAX_REQUESTS_PER_MINUTE via the shared _rate_limit_lock in
+# gemini_provider.py, which every chunk-thread still waits on. Raising this
+# just lets more chunks queue up waiting their turn at once, so as soon as
+# the per-minute window has room, the next chunk fires immediately instead
+# of only after the previous chunk's response fully returned.
+#
+# Stacks with WORKER_CONCURRENCY: 4 jobs × 5 chunk-threads can mean up to
+# 20 threads contending for the same 15/min budget. They queue at the
+# limiter; they do not multiply the quota. Set to 1 to force sequential
+# vision (regression-check against the old loop).
+AI_VISION_CHUNK_CONCURRENCY = int(os.environ.get("AI_VISION_CHUNK_CONCURRENCY", "5"))
 AI_PDF_RENDER_SCALE = float(os.environ.get("AI_PDF_RENDER_SCALE", "1.5"))
 AI_GENERATE_FROM_NOTES = os.environ.get("AI_GENERATE_FROM_NOTES", "true").strip().lower() not in (
     "0",

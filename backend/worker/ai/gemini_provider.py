@@ -4,6 +4,7 @@ import json
 import re
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from urllib import request
 from urllib.error import HTTPError, URLError
 
@@ -15,6 +16,7 @@ from ..config import (
     AI_PDF_PAGES_PER_CHUNK,
     AI_PDF_RENDER_SCALE,
     AI_TIMEOUT_SECONDS,
+    AI_VISION_CHUNK_CONCURRENCY,
     GEMINI_API_KEY,
 )
 from .schemas import GEMINI_QUESTION_RESPONSE_SCHEMA
@@ -80,10 +82,10 @@ def _wait_for_rate_limit_capacity():
 
             sleep_for = _recent_call_times[0] + 60 - now
             if sleep_for > 0:
-                # Released while sleeping would let concurrent callers pile
-                # up past capacity - this worker is single-threaded per
-                # process today (one job at a time, see worker.py's main
-                # loop), so this only ever costs a wait, never a deadlock.
+                # Hold the lock while sleeping so concurrent job threads
+                # and vision-chunk threads cannot all wake, re-check, and
+                # burst past capacity. Other waiters block on the lock;
+                # only this thread claims the next freed slot.
                 time.sleep(sleep_for)
             # Loop back around to re-trim and re-check rather than assuming
             # capacity freed up - a generous sleep_for rounding error
@@ -374,7 +376,7 @@ class GeminiProvider:
         # the gap). Labeling every result unconditionally with its real
         # start_page/end_page removes that entire class of mislabeling.
         #
-        # Each chunk also gets one retry (2 attempts total) before being
+        # Each chunk also gets retries (3 attempts total) before being
         # recorded as failed. This targets the two failure modes actually
         # observed: a slow/timed-out response (dense pages can legitimately
         # exceed AI_TIMEOUT_SECONDS under schema-constrained generation) and
@@ -389,9 +391,39 @@ class GeminiProvider:
         # every page in the document. Defaults to "every page" so a fully
         # scanned document (where every page needs vision anyway) doesn't
         # have to change how it calls this.
-        results = []
-        daily_quota_message = None
+        #
+        # Vision chunks run concurrently (AI_VISION_CHUNK_CONCURRENCY) so
+        # wall-clock time is batches of in-flight Gemini calls, not N
+        # sequential round-trips. Merge order is still PAGE order: we
+        # collect via ThreadPoolExecutor.map(), which yields in submission
+        # order. provider.py's _put_extracted_question(..., prefer_new=True)
+        # means "later PAGE chunk wins on a split question", not "whichever
+        # HTTP response arrived last". as_completed() would break that.
+        #
+        # PyMuPDF is not thread-safe per document handle, so rendering is
+        # sequential (phase 1) and only the network+retry work is pooled
+        # (phase 2). Rendering is local CPU; the bottleneck is Gemini.
+        #
+        # Cancellation (job_cancelled_event below) now stops within roughly
+        # one BATCH of AI_VISION_CHUNK_CONCURRENCY chunks, not one chunk -
+        # chunks already mid-flight when the job is cancelled can't be
+        # interrupted (no cancel hook on the underlying HTTP call), but
+        # every chunk that hasn't started yet skips instead of running.
 
+        daily_quota_event = threading.Event()
+        daily_quota_message_holder = {"message": None}
+        # Set the moment ANY chunk's on_progress call detects the job was
+        # cancelled (report_ai_progress -> check_not_cancelled raises
+        # JobCancelled, a BaseException, straight through report()'s
+        # `except Exception: pass`). Checked at the top of every chunk -
+        # same pattern as daily_quota_event - so a chunk that hasn't
+        # started yet skips its Gemini call entirely instead of running it
+        # only to discover afterward the job was already cancelled.
+        job_cancelled_event = threading.Event()
+        progress_lock = threading.Lock()
+        progress_state = {"completed": 0}
+
+        chunk_jobs = []
         with fitz.open(pdf_path) as document:
             if page_numbers is None:
                 selected_pages = list(range(1, document.page_count + 1))
@@ -405,45 +437,79 @@ class GeminiProvider:
                 start_page = chunk_pages[0]
                 end_page = chunk_pages[-1]
 
-                # Once one chunk hits the DAILY quota (as opposed to the
-                # per-minute one - see _parse_gemini_http_error), every
-                # remaining chunk would fail identically: the day's quota
-                # doesn't reset mid-job the way a per-minute window does,
-                # so there's no reason to spend the next N chunks each
-                # doing their own 3-attempt retry cycle only to hit the
-                # same wall N times over. Still appends one result per
-                # remaining chunk with a clear "skipped" error rather than
-                # just stopping short - see the "one result dict PER
-                # CHUNK, always" contract in the comment above this
-                # method, which exists specifically so a caller's
-                # enumerate() never has to guess which physical pages a
-                # gap corresponds to.
-                if daily_quota_message:
-                    results.append(
-                        {
-                            "chunk_number": chunk_number,
-                            "start_page": start_page,
-                            "end_page": end_page,
-                            "response_text": None,
-                            "error": f"Skipped - {daily_quota_message}",
-                            "page_images": {},
-                        }
-                    )
-                    continue
-
-                response_text = None
-                error = None
-                # Populated only on a successful attempt - {page_number:
+                # Populated here, before any API call - {page_number:
                 # {"png_bytes": ..., "width": ..., "height": ...}}. This is
-                # the SAME pixmap already rendered for the API call above,
-                # just re-encoded as PNG - not a fresh render - so a
+                # the SAME pixmap already rendered for the API call,
+                # just re-encoded as PNG - not a fresh render - so
                 # diagram bounding boxes the model reports line up
                 # with these exact pixel dimensions (see asset_extractor.py).
-                # Kept only long enough for the caller to crop any reported
-                # diagrams right after processing this chunk's response,
-                # then discarded - holding full-page PNGs for the whole job
-                # would be wasteful.
+                page_parts = []
                 page_images = {}
+                for page_number in chunk_pages:
+                    page = document[page_number - 1]
+                    pixmap = page.get_pixmap(
+                        matrix=fitz.Matrix(AI_PDF_RENDER_SCALE, AI_PDF_RENDER_SCALE),
+                        alpha=False,
+                    )
+                    page_parts.append(
+                        {
+                            "inline_data": {
+                                "mime_type": "image/jpeg",
+                                "data": base64.b64encode(pixmap.tobytes("jpeg")).decode("ascii"),
+                            }
+                        }
+                    )
+                    page_images[page_number] = {
+                        "png_bytes": pixmap.tobytes("png"),
+                        "width": pixmap.width,
+                        "height": pixmap.height,
+                    }
+
+                pages_description = (
+                    f"{start_page} to {end_page}" if len(chunk_pages) > 1 else str(start_page)
+                )
+                prompt = (
+                    f"{system_prompt}\n\n{user_prompt}\n\n"
+                    f"Attached images are PDF pages {pages_description}, in order. "
+                    "Use these page numbers for source_page."
+                )
+                chunk_jobs.append(
+                    {
+                        "chunk_number": chunk_number,
+                        "start_page": start_page,
+                        "end_page": end_page,
+                        "prompt": prompt,
+                        "page_parts": page_parts,
+                        "page_images": page_images,
+                    }
+                )
+
+        def _process_chunk(job):
+            chunk_number = job["chunk_number"]
+            start_page = job["start_page"]
+            end_page = job["end_page"]
+
+            # Once one chunk hits the DAILY quota (as opposed to the
+            # per-minute one - see _parse_gemini_http_error), every
+            # remaining / in-flight chunk would fail identically: the day's
+            # quota doesn't reset mid-job the way a per-minute window does,
+            # so there's no reason to spend the next N chunks each doing
+            # their own 3-attempt retry cycle only to hit the same wall N
+            # times over. Still returns one result per remaining chunk with
+            # a clear "skipped" error rather than just stopping short - see
+            # the "one result dict PER CHUNK, always" contract above.
+            if job_cancelled_event.is_set():
+                response_text = None
+                error = "Skipped - job cancelled"
+                page_images_out = {}
+            elif daily_quota_event.is_set():
+                response_text = None
+                error = f"Skipped - {daily_quota_message_holder['message']}"
+                page_images_out = {}
+            else:
+                response_text = None
+                error = None
+                page_images_out = {}
 
                 # 3 attempts with exponential backoff (4s, then 8s) rather
                 # than a single flat retry. A connection reset on a large
@@ -451,55 +517,30 @@ class GeminiProvider:
                 # Windows) is a real, if uncommon, transient failure mode
                 # for multi-MB POST bodies - confirmed reproducible-but-rare
                 # via a direct GeminiProvider call outside any job context.
-                # One retry with no real backoff wasn't enough insurance
-                # against it recurring across a real job's dozen-plus
-                # sequential chunk calls.
                 #
                 # A 429 gets its own branch below rather than falling into
                 # the generic Exception catch-all: Gemini's own retryDelay
                 # (when given) is a far better sleep duration than blindly
                 # guessing 4s/8s, and a daily-quota 429 shouldn't be
-                # retried with backoff at all (see the daily_quota_message
-                # check at the top of this loop).
+                # retried with backoff at all.
                 max_attempts = 3
                 for attempt in range(max_attempts):
+                    if job_cancelled_event.is_set():
+                        error = "Skipped - job cancelled"
+                        break
+                    if daily_quota_event.is_set():
+                        error = f"Skipped - {daily_quota_message_holder['message']}"
+                        break
+
                     _wait_for_rate_limit_capacity()
                     custom_sleep_seconds = None
                     try:
-                        page_parts = []
-                        attempt_page_images = {}
-                        for page_number in chunk_pages:
-                            page = document[page_number - 1]
-                            pixmap = page.get_pixmap(
-                                matrix=fitz.Matrix(AI_PDF_RENDER_SCALE, AI_PDF_RENDER_SCALE),
-                                alpha=False,
-                            )
-                            page_parts.append(
-                                {
-                                    "inline_data": {
-                                        "mime_type": "image/jpeg",
-                                        "data": base64.b64encode(pixmap.tobytes("jpeg")).decode("ascii"),
-                                    }
-                                }
-                            )
-                            attempt_page_images[page_number] = {
-                                "png_bytes": pixmap.tobytes("png"),
-                                "width": pixmap.width,
-                                "height": pixmap.height,
-                            }
-
-                        pages_description = (
-                            f"{start_page} to {end_page}" if len(chunk_pages) > 1 else str(start_page)
+                        response_text = self._generate_from_parts(
+                            [{"text": job["prompt"]}, *job["page_parts"]]
                         )
-                        prompt = (
-                            f"{system_prompt}\n\n{user_prompt}\n\n"
-                            f"Attached images are PDF pages {pages_description}, in order. "
-                            "Use these page numbers for source_page."
-                        )
-                        response_text = self._generate_from_parts([{"text": prompt}, *page_parts])
                         if response_text:
                             error = None
-                            page_images = attempt_page_images
+                            page_images_out = job["page_images"]
                             break
                         error = "AI response was empty"
                     except HTTPError as e:
@@ -509,7 +550,8 @@ class GeminiProvider:
                             is_daily, retry_delay_seconds, message = _parse_gemini_http_error(e)
                             if is_daily:
                                 error = f"Gemini daily quota exhausted: {message}"
-                                daily_quota_message = error
+                                daily_quota_message_holder["message"] = error
+                                daily_quota_event.set()
                                 break
                             error = f"[rate limit] {message}"
                             custom_sleep_seconds = (
@@ -566,29 +608,59 @@ class GeminiProvider:
                             if custom_sleep_seconds is not None
                             else 4 * (2**attempt)
                         )
-                    # Falls through to the next attempt only if this one
-                    # failed or came back empty - a genuinely successful
-                    # response breaks out above and skips further retries.
 
-                results.append(
-                    {
-                        "chunk_number": chunk_number,
-                        "start_page": start_page,
-                        "end_page": end_page,
-                        "response_text": response_text,
-                        "error": error,
-                        "page_images": page_images,
-                    }
-                )
+            result = {
+                "chunk_number": chunk_number,
+                "start_page": start_page,
+                "end_page": end_page,
+                "response_text": response_text,
+                "error": error,
+                "page_images": page_images_out,
+            }
 
-                # This call can legitimately take a while per chunk with no
-                # other signal of life - a job silently sitting at "AI
-                # cleanup" for 20+ minutes with zero DB updates is exactly
-                # what made a genuinely-orphaned job indistinguishable from
-                # a genuinely-slow one in a real incident. Report after each
-                # chunk so the caller can checkpoint real progress instead.
-                if on_progress:
-                    on_progress(chunk_number, total_chunks)
+            # Completed-count, not chunk_number: chunks finish out of page
+            # order, so reporting chunk_number would make the UI jump
+            # backward (vision 3/10 then 1/10). The counter is monotonic.
+            with progress_lock:
+                progress_state["completed"] += 1
+                completed = progress_state["completed"]
+            if on_progress:
+                try:
+                    on_progress(completed, total_chunks)
+                except BaseException:
+                    # JobCancelled is deliberately a BaseException (see
+                    # worker.py#check_not_cancelled) so it survives
+                    # report()'s `except Exception: pass`. Flip the shared
+                    # flag BEFORE re-raising so every other thread - ones
+                    # already running and ones still queued - skips its
+                    # own Gemini call instead of only finding out after
+                    # wastefully making one. Re-raise unchanged so this
+                    # chunk's own future still carries the real exception
+                    # for list(executor.map(...)) to surface.
+                    job_cancelled_event.set()
+                    raise
+
+            return result
+
+        if not chunk_jobs:
+            return []
+
+        # Not a `with` block, deliberately: the default context-manager
+        # exit calls shutdown(wait=True) with cancel_futures=False, which
+        # BLOCKS until every already-queued chunk finishes running - even
+        # ones that hadn't started yet when JobCancelled fired - before
+        # the exception is allowed to keep propagating. cancel_futures=True
+        # (3.9+) drops anything still queued instead of running it, so
+        # cancellation only ever waits on chunks already mid-flight
+        # (at most AI_VISION_CHUNK_CONCURRENCY of them), not all of them.
+        executor = ThreadPoolExecutor(max_workers=max(1, AI_VISION_CHUNK_CONCURRENCY))
+        try:
+            # .map(), deliberately NOT as_completed(): .map() yields
+            # results in SUBMISSION order (chunk_number / page order),
+            # regardless of which thread's request actually finishes first.
+            results = list(executor.map(_process_chunk, chunk_jobs))
+        finally:
+            executor.shutdown(wait=True, cancel_futures=True)
 
         return results
 

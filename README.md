@@ -638,6 +638,7 @@ npm run worker
 | `GEMINI_API_KEY`                                                               | Gemini access                                    |
 | `AI_PDF_RENDER_SCALE`                                                          | Page render scale for vision                     |
 | `AI_PDF_PAGES_PER_CHUNK`                                                       | Pages per vision request                         |
+| `AI_VISION_CHUNK_CONCURRENCY`                                                  | Parallel Gemini vision chunks per PDF (default 5); still capped by `AI_MAX_REQUESTS_PER_MINUTE` |
 | `WORKER_CONCURRENCY` / `WORKER_MAX_JOBS_PER_RUN`                               | Throughput controls                              |
 
 Never put provider API keys in the frontend env files.
