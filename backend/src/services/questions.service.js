@@ -114,8 +114,8 @@ export async function getQuestion(questionId, workspaceId) {
 }
 
 // Fork-on-edit (migration 028): a question's content_id can be shared
-// with slots in OTHER mock tests (via duplicates.service.js's merge
-// action, or question-bank.service.js's copy action). Editing shared
+// with slots in OTHER mock tests (for example, via a Question Bank copy).
+// Editing shared
 // content in place would silently change what every OTHER mock test
 // sharing it shows its own students - possibly one that's already
 // published and live. So: if this slot's content_id currently has more

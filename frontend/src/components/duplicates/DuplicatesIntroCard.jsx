@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Info, X, Copy, GitCompareArrows, History } from "lucide-react";
+import { Info, X, Layers, Eye } from "lucide-react";
 
 // Exported so anything that wants to "bring the intro card back" (e.g.
 // the info button next to Duplicates in AppShell.jsx's sidebar) clears
@@ -62,46 +62,35 @@ export default function DuplicatesIntroCard() {
 
       <p className="text-xs sm:text-sm text-muted-foreground mt-3 leading-relaxed">
         A background job compares question text across every upload in your
-        workspace and flags pairs that look like the same question extracted
-        twice - common when a topic bank gets reused year over year, or the
-        same PDF is processed into two different mock tests. Nothing is
-        merged automatically; every pair sits here until you decide.
+        workspace and flags questions that look like the same one extracted
+        more than once - common when a topic bank gets reused year over
+        year, or the same PDF is processed into two different mock tests.
+        This page is a report, not a queue - there's nothing to act on here.
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
         <div className="flex gap-2.5">
-          <Copy className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
+          <Layers className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
           <div>
             <div className="text-xs font-bold text-foreground">
-              Similarity Pairs
+              Grouped, Not Paired
             </div>
             <div className="text-xs text-muted-foreground mt-0.5">
-              Each card shows two questions side by side with a similarity
-              score, so you can see exactly how close a match it is.
+              A question reused across several mock tests shows up as one
+              group with every mock test it appears in, not separate
+              side-by-side pairs.
             </div>
           </div>
         </div>
         <div className="flex gap-2.5">
-          <GitCompareArrows className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
+          <Eye className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
           <div>
             <div className="text-xs font-bold text-foreground">
-              Keep or Dismiss
+              Read-Only
             </div>
             <div className="text-xs text-muted-foreground mt-0.5">
-              Confirm a pair to resolve it, or dismiss it as a false match if
-              they're actually two different questions.
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-2.5">
-          <History className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
-          <div>
-            <div className="text-xs font-bold text-foreground">
-              Decisions Persist
-            </div>
-            <div className="text-xs text-muted-foreground mt-0.5">
-              A dismissed pair never resurfaces on the next detection run -
-              your call on it is remembered.
+              This is purely informational - questions here aren't merged
+              or changed by viewing this page.
             </div>
           </div>
         </div>

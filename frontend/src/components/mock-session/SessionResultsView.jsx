@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { CheckCircle, XCircle, BarChart2, Home, LogIn } from "lucide-react";
+import { CheckCircle, XCircle, Home, LogIn } from "lucide-react";
 import { getOptionText } from "@/utils/mockTestHelpers";
 import QuestionContent, {
   QuestionExplanation,
@@ -23,18 +23,9 @@ export default function SessionResultsView({
     : 0;
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6 font-sans">
+    <div className="min-h-screen bg-background flex items-center justify-center p-2 md:p-6 font-sans">
       <div className="w-full max-w-5xl space-y-6">
-        <div className="surface-card rounded-3xl p-8 border border-border text-center">
-          <div
-            className={`w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-5 ${percentage >= 70 ? "bg-emerald-500/15 border border-emerald-500/20" : "bg-amber-500/15 border border-amber-500/20"}`}
-          >
-            {percentage >= 70 ? (
-              <CheckCircle className="w-10 h-10 text-emerald-500" />
-            ) : (
-              <BarChart2 className="w-10 h-10 text-amber-500" />
-            )}
-          </div>
+        <div className="surface-card rounded-3xl p-2  md:p-6 border border-border text-center">
           <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">
             {guestName ? `Well done, ${guestName}!` : "Session Complete!"}
           </h1>
@@ -136,40 +127,41 @@ export default function SessionResultsView({
                 marksBadgeClass =
                   "text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20";
               } else {
-                marksBadgeClass = "text-muted-foreground bg-muted border-border";
+                marksBadgeClass =
+                  "text-muted-foreground bg-muted border-border";
               }
 
               return (
                 <div
                   key={rq.questionId}
-                  className={`p-4 rounded-2xl border text-sm ${cardClass}`}
+                  className={`p-2 md:p-4 rounded-2xl border text-sm ${cardClass}`}
                 >
                   <div className="flex items-start gap-2">
                     {statusIcon}
                     <div>
                       <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
-                          {rq.topic && (
-                            <span className="text-[11px] font-normal text-muted-foreground bg-muted border border-border px-2 py-0.5 rounded-full">
-                              {rq.topic}
+                        {rq.topic && (
+                          <span className="text-[11px] font-normal text-muted-foreground bg-muted border border-border px-2 py-0.5 rounded-full">
+                            {rq.topic}
+                          </span>
+                        )}
+                        {rq.subtopic && (
+                          <span className="text-[11px] font-normal text-sky-600 dark:text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded-full">
+                            {rq.subtopic}
+                          </span>
+                        )}
+                        {rq.marksAwarded !== undefined &&
+                          rq.marksAwarded !== null && (
+                            <span
+                              className={`text-[11px] font-semibold tabular-nums px-2 py-0.5 rounded-full border ${marksBadgeClass}`}
+                            >
+                              {rq.marksAwarded > 0
+                                ? `+${rq.marksAwarded}`
+                                : `${rq.marksAwarded}`}{" "}
+                              marks
                             </span>
                           )}
-                          {rq.subtopic && (
-                            <span className="text-[11px] font-normal text-sky-600 dark:text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded-full">
-                              {rq.subtopic}
-                            </span>
-                          )}
-                          {rq.marksAwarded !== undefined &&
-                            rq.marksAwarded !== null && (
-                              <span
-                                className={`text-[11px] font-semibold tabular-nums px-2 py-0.5 rounded-full border ${marksBadgeClass}`}
-                              >
-                                {rq.marksAwarded > 0
-                                  ? `+${rq.marksAwarded}`
-                                  : `${rq.marksAwarded}`}{" "}
-                                marks
-                              </span>
-                            )}
-                        </div>
+                      </div>
                       <DiagramAssetsProvider assets={rq.diagramAssets}>
                         <QuestionContent
                           text={rq.text}
@@ -218,13 +210,13 @@ export default function SessionResultsView({
               <>
                 <Link
                   to="/dashboard"
-                  className="flex items-center gap-2 px-6 py-3 border border-border bg-card text-foreground font-semibold rounded-xl hover:bg-muted transition-all text-sm"
+                  className="flex items-center gap-2 px-6 py-3 border border-border bg-card text-foreground font-semibold rounded-md hover:bg-muted transition-all text-sm"
                 >
                   <Home className="w-4 h-4 text-orange-500" /> Dashboard
                 </Link>
                 <Link
                   to="/clusters"
-                  className="flex items-center gap-2 px-6 py-3 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-xl shadow-xs transition-all text-sm"
+                  className="flex items-center gap-2 px-6 py-3 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-md shadow-xs transition-all text-sm"
                 >
                   View Clusters
                 </Link>

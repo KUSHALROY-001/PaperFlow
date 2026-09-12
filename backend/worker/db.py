@@ -414,8 +414,9 @@ def mark_mock_test_after_processing(connection, mock_test_id, question_count):
 # pass just flagged as a near-duplicate of something already in the
 # workspace, at or above AI_DUPLICATE_REGEN_THRESHOLD - see
 # worker.py#regenerate_flagged_duplicates_for_mock_test, which uses this to
-# drive a single bounded AI regeneration pass rather than leaving every
-# flagged question sitting in the review queue.
+# drive a single bounded AI regeneration pass. Every row returned here is
+# "live" - there's no pending/resolved split on question_duplicate_pairs
+# anymore, so nothing to filter by beyond similarity and mock test.
 #
 # question_duplicate_pairs.question_id_a/b are both SLOT ids (see
 # migrations/030 - the FK originally pointed at `questions` back when that
@@ -442,7 +443,6 @@ def find_flagged_duplicate_slots(connection, workspace_id, mock_test_id, thresho
         JOIN question_slots sa ON sa.id = qdp.question_id_a
         JOIN question_slots sb ON sb.id = qdp.question_id_b
         WHERE qdp.workspace_id = %s
-          AND qdp.status = 'pending'
           AND qdp.similarity_score >= %s
           AND (sa.mock_test_id = %s OR sb.mock_test_id = %s)
         """,
@@ -606,21 +606,14 @@ def replace_slot_content(connection, workspace_id, slot_id, new_question):
     return True
 
 
-# Marks a flagged pair 'confirmed' (system-resolved, resolved_by stays
-# NULL) once its slot has been successfully regenerated - same status a
-# human clicking "merge" or the exact-duplicate auto-merge path already
-# produces (see duplicates.repository.js#resolveDuplicatePair and
-# duplicate_detector.py#_merge_pair), since a regeneration is the same
-# kind of "yes, this was a real duplicate, and it's been resolved" outcome,
-# just via rewriting one side apart instead of merging them into one.
-# Deliberately NOT deleted outright - keeps the same audit trail every
-# other resolution path already leaves behind.
-def resolve_regenerated_duplicate_pair(connection, pair_id):
+# Once a flagged pair's slot has been successfully regenerated, the two
+# questions no longer match - the pair row doesn't describe anything real
+# anymore, so it's deleted rather than status-flagged (there's no status
+# column to flag it with; see migrations/045_remove_duplicate_pair_status.sql).
+# A deleted row and a "resolved" row mean the same thing here: nothing
+# left that needs surfacing in the duplicates report.
+def delete_duplicate_pair(connection, pair_id):
     connection.execute(
-        """
-        UPDATE question_duplicate_pairs
-        SET status = 'confirmed', resolved_at = now(), resolved_by = NULL
-        WHERE id = %s
-        """,
+        "DELETE FROM question_duplicate_pairs WHERE id = %s",
         [pair_id],
     )

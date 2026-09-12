@@ -44,6 +44,11 @@ export async function revokeInvitation(req, res) {
   res.status(204).send();
 }
 
+export async function declineInvitation(req, res) {
+  await teamService.declineInvitation(req.params.token, req.user);
+  res.status(204).send();
+}
+
 // Deliberately not scoped by req.workspaceId - the target workspace comes
 // from the invitation token itself, since the accepting user may not be a
 // member of that workspace yet (that's the whole point of accepting).

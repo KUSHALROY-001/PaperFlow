@@ -566,18 +566,12 @@ export const api = {
   listMyAttempts() {
     return apiRequest("/api/attempts");
   },
-  // --- Duplicate question review ---
-  listDuplicates() {
+  // --- Duplicate question report (read-only) ---
+  listDuplicateGroups() {
     return apiRequest("/api/duplicates");
   },
-  countPendingDuplicates() {
+  countDuplicateGroups() {
     return apiRequest("/api/duplicates/count");
-  },
-  resolveDuplicate(pairId, { action, keepQuestionId }) {
-    return apiRequest(`/api/duplicates/${pairId}/resolve`, {
-      method: "POST",
-      body: JSON.stringify({ action, keepQuestionId }),
-    });
   },
   getAttempt(attemptId) {
     return apiRequest(`/api/attempts/${attemptId}`);
@@ -803,6 +797,11 @@ export const api = {
   },
   acceptInvitation(token) {
     return apiRequest(`/api/team/invitations/${token}/accept`, {
+      method: "POST",
+    });
+  },
+  declineInvitation(token) {
+    return apiRequest(`/api/team/invitations/${token}/decline`, {
       method: "POST",
     });
   },

@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle, Clock, Mail } from "lucide-react";
+import { CheckCircle, Clock, Mail, XCircle } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 import { formatTimeAgo } from "@/lib/date";
@@ -21,10 +20,9 @@ const roleColors = {
 };
 
 export default function MyInvitations() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { switchWorkspace } = useAuth();
-  const [acceptingId, setAcceptingId] = useState(null);
+  const [processingAction, setProcessingAction] = useState(null);
   const [error, setError] = useState("");
 
   const { data, isLoading } = useQuery({
@@ -36,7 +34,7 @@ export default function MyInvitations() {
 
   const handleAccept = async (invitation) => {
     setError("");
-    setAcceptingId(invitation.id);
+    setProcessingAction({ id: invitation.id, type: "accept" });
 
     try {
       const result = await api.acceptInvitation(invitation.token);
@@ -47,7 +45,21 @@ export default function MyInvitations() {
       switchWorkspace(result.workspaceId);
     } catch (acceptError) {
       setError(acceptError.message || "Could not accept this invitation");
-      setAcceptingId(null);
+      setProcessingAction(null);
+    }
+  };
+
+  const handleReject = async (invitation) => {
+    setError("");
+    setProcessingAction({ id: invitation.id, type: "reject" });
+
+    try {
+      await api.declineInvitation(invitation.token);
+      await queryClient.invalidateQueries({ queryKey: ["my-invitations"] });
+    } catch (rejectError) {
+      setError(rejectError.message || "Could not reject this invitation");
+    } finally {
+      setProcessingAction(null);
     }
   };
 
@@ -87,42 +99,60 @@ export default function MyInvitations() {
       {invitations.length > 0 && (
         <div className="surface-card rounded-2xl border border-border overflow-hidden">
           <div className="divide-y divide-border">
-            {invitations.map((inv) => (
-              <div
-                key={inv.id}
-                className="px-4 sm:px-6 py-4 flex flex-wrap sm:flex-nowrap items-center gap-4"
-              >
-                <UserAvatar
-                  src={inv.invitedByAvatarUrl}
-                  name={inv.invitedByName || inv.workspaceName}
-                  seed={inv.invitedByName || inv.workspaceName || inv.id}
-                  rounded="xl"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-bold text-foreground truncate">
-                    {inv.workspaceName}
+            {invitations.map((inv) => {
+              const isProcessing = processingAction?.id === inv.id;
+              const isAccepting =
+                isProcessing && processingAction.type === "accept";
+              const isRejecting =
+                isProcessing && processingAction.type === "reject";
+
+              return (
+                <div
+                  key={inv.id}
+                  className="px-4 sm:px-6 py-4 flex flex-wrap sm:flex-nowrap items-center gap-4"
+                >
+                  <UserAvatar
+                    src={inv.invitedByAvatarUrl}
+                    name={inv.invitedByName || inv.workspaceName}
+                    seed={inv.invitedByName || inv.workspaceName || inv.id}
+                    rounded="xl"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-bold text-foreground truncate">
+                      {inv.workspaceName}
+                    </div>
+                    <div className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      Invited {formatTimeAgo(inv.createdAt)}
+                      {inv.invitedByName ? ` by ${inv.invitedByName}` : ""}
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    Invited {formatTimeAgo(inv.createdAt)}
-                    {inv.invitedByName ? ` by ${inv.invitedByName}` : ""}
+                  <span
+                    className={`text-xs px-2.5 py-1 rounded-full font-semibold ${roleColors[inv.role] || roleColors.viewer}`}
+                  >
+                    {roleLabels[inv.role] || inv.role}
+                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => handleReject(inv)}
+                      disabled={isProcessing}
+                      className="flex items-center gap-1.5 px-4 py-2 border border-border hover:border-red-500/30 hover:bg-red-500/10 text-muted-foreground hover:text-red-500 text-xs font-semibold rounded-full transition-all disabled:opacity-60"
+                    >
+                      <XCircle className="w-3.5 h-3.5" />
+                      {isRejecting ? "Rejecting..." : "Reject"}
+                    </button>
+                    <button
+                      onClick={() => handleAccept(inv)}
+                      disabled={isProcessing}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-full transition-all disabled:opacity-60"
+                    >
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      {isAccepting ? "Joining..." : "Accept"}
+                    </button>
                   </div>
                 </div>
-                <span
-                  className={`text-xs px-2.5 py-1 rounded-lg font-semibold ${roleColors[inv.role] || roleColors.viewer}`}
-                >
-                  {roleLabels[inv.role] || inv.role}
-                </span>
-                <button
-                  onClick={() => handleAccept(inv)}
-                  disabled={acceptingId === inv.id}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-[#ea580c] hover:bg-[#c2410c] text-white text-xs font-semibold rounded-xl transition-all disabled:opacity-60 shrink-0"
-                >
-                  <CheckCircle className="w-3.5 h-3.5" />
-                  {acceptingId === inv.id ? "Joining..." : "Accept"}
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

@@ -15,6 +15,7 @@ import SessionResultsView from "../components/mock-session/SessionResultsView";
 import SessionQuestionNav from "../components/mock-session/SessionQuestionNav";
 import SessionHeader from "../components/mock-session/SessionHeader";
 import SessionQuestionView from "../components/mock-session/SessionQuestionView";
+import CancelCountdownBanner from "../components/mock-session/CancelCountdownBanner";
 import { ConfirmDialog } from "../components/design-system/ConfirmDialog";
 
 export default function MockSession() {
@@ -49,6 +50,8 @@ export default function MockSession() {
     showExitConfirm,
     setShowExitConfirm,
     confirmExit,
+    cancelSecondsLeft,
+    undoExit,
   } = usePreventSessionExit({
     isActive: !loading && !loadError && !review && Boolean(session) && Boolean(q),
     onConfirmExit: async () => {
@@ -247,6 +250,12 @@ export default function MockSession() {
           destructive={true}
           onConfirm={confirmExit}
         />
+      )}
+
+      {/* One-minute grace period after confirming exit, so a single
+          mistaken tap can't end the test outright */}
+      {cancelSecondsLeft !== null && (
+        <CancelCountdownBanner secondsLeft={cancelSecondsLeft} onUndo={undoExit} />
       )}
     </div>
   );

@@ -1,12 +1,11 @@
 import { pool } from "../db/pool.js";
 
-// Joins both sides of a pair back to their own question + mock test +
-// cluster, so the review UI can show "Question 12 from Mock Test A"
-// alongside "Question 4 from Mock Test B" without a second round trip per
-// pair. Most-similar first - the pairs a reviewer will find least
-// ambiguous to act on.
-//
-const PENDING_SELECT = `
+// Joins both sides of a pair back to their own question + mock test, so
+// the report can show "Question 12 from Mock Test A" alongside "Question 4
+// from Mock Test B" without a second round trip per pair. Most-similar
+// first, same ordering the old review queue used - still the most useful
+// order for a report, even without anything to action.
+const ALL_PAIRS_SELECT = `
   SELECT
     dp.id,
     dp.workspace_id,
@@ -37,129 +36,18 @@ const PENDING_SELECT = `
   JOIN mock_tests mtb ON mtb.id = qb.mock_test_id
 `;
 
-export async function listPendingDuplicates(workspaceId) {
+// Every detected pair is "live" now - there's no pending/confirmed/
+// dismissed split anymore, so nothing to filter out. The service groups
+// these edges (transitively) into duplicate-question groups.
+export async function listDuplicatePairs(workspaceId) {
   const result = await pool.query(
     `
-    ${PENDING_SELECT}
+    ${ALL_PAIRS_SELECT}
     WHERE dp.workspace_id = $1
-      AND dp.status = 'pending'
     ORDER BY dp.similarity_score DESC, dp.detected_at ASC
     `,
     [workspaceId],
   );
 
   return result.rows;
-}
-
-export async function countPendingDuplicates(workspaceId) {
-  const result = await pool.query(
-    `
-    SELECT count(*)::int AS count
-    FROM question_duplicate_pairs
-    WHERE workspace_id = $1
-      AND status = 'pending'
-    `,
-    [workspaceId],
-  );
-
-  return result.rows[0].count;
-}
-
-export async function findPendingPairById(pairId, workspaceId) {
-  const result = await pool.query(
-    `
-    SELECT dp.*, qa.mock_test_id AS mock_test_a_id, qb.mock_test_id AS mock_test_b_id
-    FROM question_duplicate_pairs dp
-    JOIN questions qa ON qa.id = dp.question_id_a
-    JOIN questions qb ON qb.id = dp.question_id_b
-    WHERE dp.id = $1
-      AND dp.workspace_id = $2
-      AND dp.status = 'pending'
-    `,
-    [pairId, workspaceId],
-  );
-
-  return result.rows[0] || null;
-}
-
-// Called inside the caller's own transaction (see
-// duplicates.service.js#resolveDuplicate, which also - for a 'confirmed'
-// resolution - repoints the losing slot onto the winner's content in the
-// SAME transaction, see repointSlotContent below) so a pair never ends up
-// marked resolved while the question it was about stays untouched, or
-// vice versa, if either write fails.
-export async function resolveDuplicatePair(
-  client,
-  pairId,
-  workspaceId,
-  { status, resolvedBy },
-) {
-  const result = await client.query(
-    `
-    UPDATE question_duplicate_pairs
-    SET status = $3,
-        resolved_at = now(),
-        resolved_by = $4
-    WHERE id = $1
-      AND workspace_id = $2
-      AND status = 'pending'
-    RETURNING *
-    `,
-    [pairId, workspaceId, status, resolvedBy],
-  );
-
-  return result.rows[0] || null;
-}
-
-// The actual storage dedup a 'merge' resolution performs (migration 030):
-// repoints the losing slot's content_id onto the winning slot's, so both
-// mock tests' questions now share one question_contents row instead of
-// two independent ones.
-export async function repointSlotContent(
-  client,
-  loserSlotId,
-  winnerContentId,
-  workspaceId,
-) {
-  await client.query(
-    `
-    UPDATE question_slots
-    SET content_id = $2
-    WHERE id = $1
-      AND workspace_id = $3
-    `,
-    [loserSlotId, winnerContentId, workspaceId],
-  );
-}
-
-export async function getSlotContentId(client, slotId, workspaceId) {
-  const result = await client.query(
-    `SELECT content_id FROM question_slots WHERE id = $1 AND workspace_id = $2`,
-    [slotId, workspaceId],
-  );
-  return result.rows[0]?.content_id || null;
-}
-
-// Reclaims a content row a merge just made unreachable - unlike a
-// rejected question (027's own conservative "leave it, a human can clean
-// it up" stance, since a student may have already answered that exact
-// slot), a content row has no exam_answers pointing at it directly
-// (exam_answers.question_id references question_slots, not
-// question_contents - the slot itself, and its answer history, are
-// completely untouched by a merge). So once nothing references it,
-// deleting it is genuine, safe space reclamation, not just a schema
-// tidy-up - the real "only one question would be there" the merge
-// feature exists for. The NOT EXISTS guard makes this a safe no-op if
-// the content somehow still has another slot pointing at it.
-export async function deleteOrphanedContent(client, contentId) {
-  await client.query(
-    `
-    DELETE FROM question_contents
-    WHERE id = $1
-      AND NOT EXISTS (
-        SELECT 1 FROM question_slots WHERE content_id = $1
-      )
-    `,
-    [contentId],
-  );
 }

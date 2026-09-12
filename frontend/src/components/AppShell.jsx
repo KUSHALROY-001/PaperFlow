@@ -42,7 +42,7 @@ export default function AppShell() {
   });
   const { data: duplicatesCountData } = useQuery({
     queryKey: ["duplicates-count"],
-    queryFn: api.countPendingDuplicates,
+    queryFn: api.countDuplicateGroups,
     refetchInterval: 60_000,
   });
   const navBadges = {

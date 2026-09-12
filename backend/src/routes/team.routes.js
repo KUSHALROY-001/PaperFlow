@@ -33,6 +33,13 @@ teamRouter.delete(
   asyncHandler(teamController.revokeInvitation),
 );
 
+// Like acceptance, declining is allowed for any authenticated user, but the
+// service verifies that the invitation belongs to that user's email address.
+teamRouter.post(
+  "/invitations/:token/decline",
+  asyncHandler(teamController.declineInvitation),
+);
+
 // No requireRole here - any authenticated user can accept an invitation
 // addressed to their own email, regardless of what role (if any) they hold
 // in the workspace they're currently attached to.

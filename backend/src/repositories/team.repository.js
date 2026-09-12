@@ -193,6 +193,22 @@ export async function revokeInvitation(invitationId, workspaceId) {
   return result.rowCount > 0;
 }
 
+// Recipient-scoped rather than workspace-scoped. The email predicate ensures
+// a signed-in user can only decline invitations addressed to their account.
+export async function declineInvitation(token, email) {
+  const result = await pool.query(
+    `
+    UPDATE workspace_invitations
+    SET status = 'declined'
+    WHERE token = $1 AND email = $2 AND status = 'pending'
+    RETURNING id
+    `,
+    [token, email],
+  );
+
+  return result.rowCount > 0;
+}
+
 // client-scoped so acceptInvitation (service layer) can run the lookup and
 // the membership insert inside one transaction - same reasoning as
 // extraction-templates' applyTemplate.

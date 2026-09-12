@@ -6,7 +6,7 @@ import { createContext, useContext, useMemo } from "react";
 // right image - without threading an `images` prop through every single
 // call site that renders question content. There are close to a dozen of
 // them (SessionQuestionView, ReviewTab, OutputTab, QuestionCard,
-// DuplicatePairCard, and more), each rendering a question's text and its
+// DuplicateGroupCard, and more), each rendering a question's text and its
 // options as genuinely separate, sibling component trees, not one parent
 // passing props down to the other - a shared prop would have to be
 // threaded through every one of those trees independently. Context

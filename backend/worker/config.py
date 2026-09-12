@@ -94,7 +94,7 @@ AI_GENERATE_FROM_NOTES = os.environ.get("AI_GENERATE_FROM_NOTES", "true").strip(
     "off",
 )
 AI_NOTES_QUESTIONS_PER_CHUNK = int(os.environ.get("AI_NOTES_QUESTIONS_PER_CHUNK", "8"))
-AI_NOTES_MAX_QUESTIONS = int(os.environ.get("AI_NOTES_MAX_QUESTIONS", "100"))
+AI_NOTES_MAX_QUESTIONS = int(os.environ.get("AI_NOTES_MAX_QUESTIONS", "500"))
 # Gemini's free tier is 15 requests/minute, 500/day (as of writing) - this
 # defaults to the free-tier RPM ceiling so a fresh setup is safe out of the
 # box, but is meant to be raised via env var on a paid tier where the real
@@ -103,8 +103,8 @@ AI_NOTES_MAX_QUESTIONS = int(os.environ.get("AI_NOTES_MAX_QUESTIONS", "100"))
 AI_MAX_REQUESTS_PER_MINUTE = int(os.environ.get("AI_MAX_REQUESTS_PER_MINUTE", "15"))
 # A generated question flagged as a near-duplicate of something already in
 # the workspace (similarity_score from question_duplicate_pairs) at or
-# above this gets ONE automatic regeneration attempt rather than just
-# sitting in the review queue - see
+# above this gets ONE automatic regeneration attempt rather than only
+# appearing in the duplicate-groups report - see
 # worker.py#regenerate_flagged_duplicates_for_mock_test. Deliberately
 # higher than detect_duplicates_for_mock_test's own 0.55 detection
 # threshold: a pair between 0.55 and this cutoff is genuinely ambiguous

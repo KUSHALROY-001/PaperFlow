@@ -148,6 +148,14 @@ export async function revokeInvitation(invitationId, workspaceId) {
   }
 }
 
+export async function declineInvitation(token, currentUser) {
+  const declined = await teamRepo.declineInvitation(token, currentUser.email);
+
+  if (!declined) {
+    throw httpError(404, "Invitation not found or no longer pending");
+  }
+}
+
 // Accepting requires the caller to already be authenticated (with any
 // account) - there's no separate "invite-only signup" path. If the invited
 // person doesn't have an account yet, the frontend should send them through

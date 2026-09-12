@@ -169,6 +169,21 @@ Notes:
 """.strip()
 
 
+# Companion to build_notes_generation_prompt for pages with no usable text
+# layer (handwritten/scanned notes, or notes where OCR isn't available/
+# failed - see generate_questions_from_notes). No "Notes:" text block here,
+# unlike the text version above - the actual content arrives as attached
+# page images via generate_json_from_pdf_images, which appends its own
+# "Attached images are PDF pages X to Y..." line to whatever prompt this
+# returns, so this only needs to state the task.
+def build_notes_generation_vision_prompt(count):
+    return f"""
+Write approximately {count} multiple-choice questions covering the key
+concepts shown on the attached page images. Spread the questions across
+the whole set of pages rather than clustering them around one page.
+""".strip()
+
+
 # template_context comes from processing_jobs.input_config.templateContext
 # (see mock-tests.service.js#buildTemplateContext) - present only when this
 # job's mock test was created via "Apply Template" (extraction-templates
@@ -355,14 +370,55 @@ def _check_template_match(template_context, final_questions):
 # a dict merge would silently overwrite chunk 2's "question_no: 1" over
 # chunk 1's. Instead every chunk's questions are concatenated into a list
 # and renumbered sequentially once, at the end.
-def generate_questions_from_notes(pages, provider):
+def generate_questions_from_notes(pages, provider, pdf_path=None):
     if not AI_GENERATE_FROM_NOTES or not pages:
         return [], {"attempted": False, "questionsGenerated": 0, "errors": []}
 
     all_questions = []
     errors = []
 
-    for chunk_index, chunk in enumerate(chunk_pages(pages), start=1):
+    # Split into pages with a real text layer (handled exactly as before -
+    # chunk_pages + build_notes_generation_prompt, reading page["text"])
+    # and pages with none. A page with no text layer used to silently
+    # contribute nothing here - chunk_pages would still "chunk" it, but as
+    # an empty `[PAGE N]` marker with no actual content behind it, so the
+    # prompt sent to Gemini looked like real notes while actually being
+    # blank. That's exactly what a fully scanned/handwritten PDF with OCR
+    # unavailable produces on EVERY page (confirmed on a real job: 34/34
+    # pages empty, OCR skipped - Tesseract not installed - and only 1
+    # question survived out of ~8/chunk requested). Those pages now go
+    # through generate_json_from_pdf_images instead, the same vision path
+    # the main extraction pipeline already uses for needsVision pages, so
+    # the model actually sees the page content instead of blank markers.
+    text_pages = [page for page in pages if (page.get("text") or "").strip()]
+    vision_page_numbers = sorted(
+        page["page"] for page in pages if not (page.get("text") or "").strip()
+    )
+
+    if vision_page_numbers and pdf_path and hasattr(provider, "generate_json_from_pdf_images"):
+        chunk_results = provider.generate_json_from_pdf_images(
+            GENERATION_SYSTEM_PROMPT,
+            build_notes_generation_vision_prompt(AI_NOTES_QUESTIONS_PER_CHUNK),
+            pdf_path,
+            page_numbers=vision_page_numbers,
+        )
+        for result in chunk_results:
+            if len(all_questions) >= AI_NOTES_MAX_QUESTIONS:
+                break
+            pages_label = f"notes_vision_pages_{result['start_page']}-{result['end_page']}"
+            if result["error"] or not result["response_text"]:
+                errors.append({"chunk": pages_label, "message": result["error"] or "empty response"})
+                continue
+            try:
+                payload = extract_json_payload(result["response_text"])
+                chunk_questions = normalize_ai_questions(
+                    payload, source=f"{provider.name}_notes_generated_vision_v1"
+                )
+                all_questions.extend(chunk_questions)
+            except Exception as error:
+                errors.append({"chunk": pages_label, "message": str(error)})
+
+    for chunk_index, chunk in enumerate(chunk_pages(text_pages), start=1):
         if len(all_questions) >= AI_NOTES_MAX_QUESTIONS:
             break
 
@@ -382,11 +438,11 @@ def generate_questions_from_notes(pages, provider):
             # remaining chunk would fail identically, so stop here instead
             # of burning through each one's own retry cycle for nothing.
             errors.append(
-                {"chunk": chunk_index, "message": f"Stopped early: {error}"}
+                {"chunk": f"text_{chunk_index}", "message": f"Stopped early: {error}"}
             )
             break
         except Exception as error:
-            errors.append({"chunk": chunk_index, "message": str(error)})
+            errors.append({"chunk": f"text_{chunk_index}", "message": str(error)})
 
     all_questions = all_questions[:AI_NOTES_MAX_QUESTIONS]
     for index, question in enumerate(all_questions, start=1):
@@ -1115,7 +1171,7 @@ def _enhance_questions_with_ai_inner(
     # extraction attempts entirely instead of paying for 1-3 AI calls that
     # are almost certain to come back empty before falling back anyway.
     if document_type == "notes":
-        generated_questions, generation_summary = generate_questions_from_notes(pages, provider)
+        generated_questions, generation_summary = generate_questions_from_notes(pages, provider, pdf_path)
         return generated_questions or regex_questions, {
             "enabled": True,
             "provider": provider.name,
@@ -1292,7 +1348,7 @@ def _enhance_questions_with_ai_inner(
     # that combination (not just "AI found nothing") is what tells us this
     # is probably notes, not an exam with a couple of unparseable pages.
     if not ai_questions and regex_count == 0:
-        generated_questions, generation_summary = generate_questions_from_notes(pages, provider)
+        generated_questions, generation_summary = generate_questions_from_notes(pages, provider, pdf_path)
 
         if generated_questions:
             return generated_questions, {

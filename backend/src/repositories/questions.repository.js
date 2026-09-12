@@ -76,9 +76,8 @@ export async function cloneContent(client, contentId) {
 // a question_contents row for the actual text/options/answer, and a
 // question_slots row placing it at (mockTestId, questionNo). Content
 // created this way starts exclusive to this one slot; it only becomes
-// shared later, via duplicates.service.js's merge action or
-// question-bank.service.js's copy action repointing another slot onto
-// this same content_id.
+// shared later, via question-bank.service.js's copy action repointing
+// another slot onto this same content_id.
 export async function createQuestion(
   client,
   {

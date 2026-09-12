@@ -18,21 +18,18 @@ from .ai import (
     get_provider,
     regenerate_flagged_duplicates,
 )
-from .duplicate_detector import (
-    auto_merge_exact_duplicates_for_mock_test,
-    detect_duplicates_for_mock_test,
-)
+from .duplicate_detector import detect_duplicates_for_mock_test
 from .db import (
     JobCancelled,
     add_job_event,
     claim_next_job,
+    delete_duplicate_pair,
     find_flagged_duplicate_slots,
     get_connection,
     is_job_cancelled,
     mark_mock_test_after_processing,
     replace_questions,
     replace_slot_content,
-    resolve_regenerated_duplicate_pair,
     update_job,
 )
 from .pdf_extract import extract_pdf_pages
@@ -421,31 +418,10 @@ def process_job(job):
             connection.commit()
 
     # Also deliberately outside the "Saving questions" transaction and only
-    # reached once that committed - first auto-merges any EXACT duplicate
-    # this job's questions form with the rest of the workspace's question
-    # bank (identical text, options, correct answers, and question type -
-    # no judgment call, so no reviewer needed), THEN runs the existing
-    # fuzzy scan for near-duplicates that genuinely do need a human's
-    # opinion. Auto-merge runs first so an exact match never even reaches
-    # the pending review queue: once merged, both slots share one
-    # content_id, and detect_duplicates_for_mock_test's own
-    # `a.content_id <> b.content_id` filter (see duplicate_detector.py)
-    # then correctly skips it. Two separate try/except blocks, not one -
-    # a failure in either shouldn't prevent the other from still running,
-    # same "best-effort" stance the diagram writes above already take.
-    try:
-        with get_connection() as connection:
-            auto_merged = auto_merge_exact_duplicates_for_mock_test(
-                connection, job["workspace_id"], job["mock_test_id"]
-            )
-        if auto_merged:
-            print(f"Auto-merged {auto_merged} exact duplicate question pair(s)")
-    except Exception as error:
-        print(f"Exact-duplicate auto-merge failed for job {job['id']}: {error}")
-
-    # Scans this job's newly-inserted questions against the rest of the
-    # workspace's question bank (see duplicate_detector.py;
-    # migrations/020_duplicate_detection.sql) so a reused topic bank gets
+    # reached once that committed - scans this job's newly-inserted
+    # questions against the rest of the workspace's question bank (see
+    # duplicate_detector.py; migrations/020_duplicate_detection.sql) so a
+    # reused topic bank gets
     # flagged incrementally, one job at a time, instead of needing a full
     # workspace rescan on every extraction. Best-effort like the diagram
     # writes just above: a detection failure (e.g. the pg_trgm extension
@@ -608,18 +584,8 @@ def process_generation_job(job):
     # extraction job - see that function's own comments for the full
     # reasoning. Running it here too means a generated question that
     # happens to closely match something already in the workspace's
-    # question bank still gets flagged for review, even though the
-    # generation step itself was never shown that existing question.
-    try:
-        with get_connection() as connection:
-            auto_merged = auto_merge_exact_duplicates_for_mock_test(
-                connection, job["workspace_id"], job["mock_test_id"]
-            )
-        if auto_merged:
-            print(f"Auto-merged {auto_merged} exact duplicate question pair(s)")
-    except Exception as error:
-        print(f"Exact-duplicate auto-merge failed for job {job['id']}: {error}")
-
+    # question bank still gets flagged, even though the generation step
+    # itself was never shown that existing question.
     try:
         with get_connection() as connection:
             new_pairs = detect_duplicates_for_mock_test(
@@ -642,8 +608,9 @@ def process_generation_job(job):
     # LESS of a rate-limited quota per generation, not chase a
     # not-strictly-guaranteed zero-duplication outcome. Whatever's still
     # flagged after this one pass is left exactly where it already was -
-    # sitting in the review queue for a human, same as any other
-    # near-duplicate this pipeline has ever surfaced.
+    # its pair row stays in question_duplicate_pairs, showing up in the
+    # duplicates report same as any other near-duplicate this pipeline has
+    # ever surfaced.
     try:
         with get_connection() as connection:
             flagged = find_flagged_duplicate_slots(
@@ -669,9 +636,7 @@ def process_generation_job(job):
                             replacement,
                         )
                         if replaced:
-                            resolve_regenerated_duplicate_pair(
-                                connection, item["pair_id"]
-                            )
+                            delete_duplicate_pair(connection, item["pair_id"])
             print(
                 f"Regenerated {regen_summary['questionsRegenerated']}/"
                 f"{len(flagged)} flagged near-duplicate question(s)"

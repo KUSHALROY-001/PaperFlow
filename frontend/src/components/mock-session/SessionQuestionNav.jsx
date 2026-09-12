@@ -1,7 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { ConfirmDialog } from "../design-system/ConfirmDialog";
+import CancelCountdownBanner from "./CancelCountdownBanner";
+
+// How long the user has to undo an exit confirmation before it's actually
+// carried out, so one mistaken tap on the confirm button can't leave the
+// session outright. Matches the grace period used for the header's
+// "Cancel Session" flow (usePreventSessionExit.js).
+const EXIT_GRACE_PERIOD_SECONDS = 30;
 
 export default function SessionQuestionNav({
   questions,
@@ -14,6 +21,7 @@ export default function SessionQuestionNav({
 }) {
   const navigate = useNavigate();
   const [showExitModal, setShowExitModal] = useState(false);
+  const [exitSecondsLeft, setExitSecondsLeft] = useState(null);
 
   const answeredCount = Object.values(answers || {}).filter(
     (a) => a?.selected?.length > 0,
@@ -28,8 +36,28 @@ export default function SessionQuestionNav({
 
   const handleConfirmExit = () => {
     setShowExitModal(false);
-    navigate(exitHref);
+    setExitSecondsLeft(EXIT_GRACE_PERIOD_SECONDS);
   };
+
+  const handleUndoExit = () => {
+    setExitSecondsLeft(null);
+  };
+
+  // Ticks the grace-period countdown down to zero, then actually navigates
+  // away.
+  useEffect(() => {
+    if (exitSecondsLeft === null) return;
+    if (exitSecondsLeft <= 0) {
+      navigate(exitHref);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setExitSecondsLeft((seconds) =>
+        seconds === null ? seconds : seconds - 1,
+      );
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [exitSecondsLeft, navigate, exitHref]);
 
   return (
     <>
@@ -72,7 +100,7 @@ export default function SessionQuestionNav({
                   onClick={() =>
                     onSelectQuestion ? onSelectQuestion(i) : setCurrent(i)
                   }
-                  className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all flex items-center justify-center ${buttonClass}`}
+                  className={`w-8 h-8 rounded-full text-xs font-semibold transition-all flex items-center justify-center ${buttonClass}`}
                 >
                   {i + 1}
                 </button>
@@ -124,6 +152,17 @@ export default function SessionQuestionNav({
           confirmLabel="Exit Session"
           warning={true}
           onConfirm={handleConfirmExit}
+        />
+      )}
+
+      {/* One-minute grace period after confirming exit, so a single
+          mistaken tap can't leave the session outright */}
+      {exitSecondsLeft !== null && (
+        <CancelCountdownBanner
+          secondsLeft={exitSecondsLeft}
+          onUndo={handleUndoExit}
+          title="Exiting this session…"
+          message="You'll be taken back in"
         />
       )}
     </>
