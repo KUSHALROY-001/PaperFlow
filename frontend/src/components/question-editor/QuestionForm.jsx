@@ -195,6 +195,8 @@ export default function QuestionForm({
                 onOpenCropModal={() => setIsCropModalOpen(true)}
                 updateSelected={updateSelected}
                 isViewer={isViewer}
+                paperDefaultMarks={paperDefaultMarks}
+                paperDefaultNegative={paperDefaultNegative}
               />
             </div>
           </div>

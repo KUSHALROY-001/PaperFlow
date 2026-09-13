@@ -10,10 +10,12 @@ import QuestionJumpInput from "../shared/QuestionJumpInput";
 import { api } from "@/lib/api";
 import ScrollToTopButton from "../shared/ScrollToTopButton";
 import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
+import { getQuestionOrderMode, resolveQuestionMarks } from "@/utils/mockTestHelpers";
 
 const viewTabs = ["Visual", "JSON", "Metadata"];
 
-export default function OutputTab({ questions, metadata, mockTestId }) {
+export default function OutputTab({ questions, metadata, mockTestId, mocktest }) {
+  const isRandomOrder = getQuestionOrderMode(mocktest) === "random";
   const [activeView, setActiveView] = useState("Visual");
   const [copied, setCopied] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -29,7 +31,9 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
   // Returns true/false (found or not) - QuestionJumpInput owns showing
   // the "not found" message itself based on this return value.
   const handleJumpToQuestion = (questionNo) => {
-    const target = questions.find((q) => q.questionNo === questionNo);
+    const target =
+      questions.find((q) => q.questionNo === questionNo) ||
+      questions.find((q) => q.displayIndex === questionNo);
     if (!target) return false;
     setActiveView("Visual");
     setPendingScrollTo(target.questionNo);
@@ -179,7 +183,20 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
 
       {activeView === "Visual" && (
         <div className="grid gap-4 w-full min-w-0">
-          {questions.map((question) => (
+          {isRandomOrder && questions.length > 0 && (
+            <p className="text-xs font-semibold text-muted-foreground rounded-xl border border-border bg-muted/40 px-3 py-2">
+              Showing questions in random student order. Paper numbers are
+              unchanged.
+            </p>
+          )}
+          {questions.map((question) => {
+            const marks =
+              question.effectiveMarks ||
+              resolveQuestionMarks(question, mocktest);
+            const listNumber = isRandomOrder
+              ? question.displayIndex
+              : question.questionNo;
+            return (
             <div
               key={question.id}
               id={`question-${question.questionNo}`}
@@ -188,19 +205,20 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 flex-wrap min-w-0">
                   <span className="rounded-full bg-orange-500/15 border border-orange-500/20 px-3 py-1 text-xs font-bold text-orange-500 shrink-0">
-                    Q{question.questionNo}
+                    Q{listNumber}
                   </span>
+                  {isRandomOrder &&
+                    Number(question.questionNo) !== Number(listNumber) && (
+                      <span className="rounded-full bg-muted border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
+                        Paper Q{question.questionNo}
+                      </span>
+                    )}
                   <span className="rounded-full bg-muted border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
                     {question.topic}
                   </span>
                   <MarksBadge
-                    marksPerCorrect={
-                      question.marksPerCorrect ?? question.marks_per_correct
-                    }
-                    negativeMarksPerWrong={
-                      question.negativeMarksPerWrong ??
-                      question.negative_marks_per_wrong
-                    }
+                    marksPerCorrect={marks.marksPerCorrect}
+                    negativeMarksPerWrong={marks.negativeMarksPerWrong}
                     unsetLabel="Marks unset"
                   />
                   {question.subtopic && (
@@ -250,7 +268,8 @@ export default function OutputTab({ questions, metadata, mockTestId }) {
                 <QuestionExplanation explanation={question.explanation} />
               </DiagramAssetsProvider>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

@@ -3,7 +3,11 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { formatDate } from "@/lib/date";
-import { mapQuestion, statusConfig } from "@/utils/mockTestHelpers";
+import {
+  decorateQuestionsForWorkspace,
+  mapQuestion,
+  statusConfig,
+} from "@/utils/mockTestHelpers";
 
 // Extracted from pages/MockTestWorkspace.jsx — no behavior changes.
 // Owns all data fetching, derived state, and mutation handlers for the
@@ -92,8 +96,12 @@ export function useMockTestWorkspace() {
   });
   const generationSources = generationSourcesData?.sources || [];
   const questions = useMemo(
-    () => (questionsData?.questions || []).map(mapQuestion),
-    [questionsData],
+    () =>
+      decorateQuestionsForWorkspace(
+        (questionsData?.questions || []).map(mapQuestion),
+        mocktest,
+      ),
+    [questionsData, mocktest],
   );
   const submissions = submissionsData?.submissions || [];
 

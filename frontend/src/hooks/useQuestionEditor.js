@@ -3,6 +3,11 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { getIssues, toEditorQuestion } from "@/utils/questionEditorHelpers";
+import {
+  coerceMark,
+  getQuestionOrderMode,
+  orderQuestionsForDisplay,
+} from "@/utils/mockTestHelpers";
 
 /**
  * Content-only fingerprint (excludes questionNo / order and ephemeral UI
@@ -66,16 +71,22 @@ export function useQuestionEditor() {
     enabled: Boolean(mockTestId),
   });
   const mockTest = mockTestQuery.data?.mockTest || mockTestQuery.data || null;
-  const paperDefaultMarks =
-    mockTest?.marks_per_correct ?? mockTest?.marksPerCorrect ?? null;
-  const paperDefaultNegative =
-    mockTest?.negative_marks_per_wrong ??
-    mockTest?.negativeMarksPerWrong ??
-    null;
+  const paperDefaultMarks = coerceMark(
+    mockTest?.marks_per_correct ?? mockTest?.marksPerCorrect,
+  );
+  const paperDefaultNegative = coerceMark(
+    mockTest?.negative_marks_per_wrong ?? mockTest?.negativeMarksPerWrong,
+  );
 
   useEffect(() => {
     if (!questionsQuery.data?.questions) return;
-    const loaded = questionsQuery.data.questions.map(toEditorQuestion);
+    if (mockTestId && mockTestQuery.isLoading) return;
+
+    // Keep paper (question_no) order in editor state so drag-reorder
+    // still remumbers the canonical paper, not a student-preview shuffle.
+    const loaded = [...questionsQuery.data.questions.map(toEditorQuestion)].sort(
+      (a, b) => (Number(a.questionNo) || 0) - (Number(b.questionNo) || 0),
+    );
     const isFirstLoadForMock =
       loadedMockTestIdRef.current !== mockTestId || !hasLoadedOnceRef.current;
 
@@ -143,7 +154,7 @@ export function useQuestionEditor() {
       if (targetQId && loaded.some((q) => q.id === targetQId)) return targetQId;
       return loaded[0]?.id || "";
     });
-  }, [questionsQuery.data, targetQId, mockTestId]);
+  }, [questionsQuery.data, targetQId, mockTestId, mockTest, mockTestQuery.isLoading]);
 
   const questionsRef = useRef(questions);
   questionsRef.current = questions;
@@ -162,6 +173,16 @@ export function useQuestionEditor() {
   const selected = useMemo(
     () => questions.find((q) => q.id === selectedId),
     [questions, selectedId],
+  );
+
+  const questionOrderMode = getQuestionOrderMode(mockTest);
+  const displayQuestions = useMemo(
+    () =>
+      orderQuestionsForDisplay(questions, mockTest).map((question, index) => ({
+        ...question,
+        displayIndex: index + 1,
+      })),
+    [questions, mockTest],
   );
 
   const nextQuestionNo = useMemo(
@@ -564,6 +585,8 @@ export function useQuestionEditor() {
     clusterId,
     mockTestId,
     questions,
+    displayQuestions,
+    questionOrderMode,
     selected,
     selectedId,
     setSelectedId,

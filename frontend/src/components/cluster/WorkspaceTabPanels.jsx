@@ -60,6 +60,7 @@ export default function WorkspaceTabPanels({
       {activeTab === "review" && (
         <ReviewTab
           questions={questions}
+          mocktest={mocktest}
           onStatusChange={handleQuestionStatusChange}
           onDelete={handleQuestionDelete}
           clusterId={clusterId}
@@ -69,6 +70,7 @@ export default function WorkspaceTabPanels({
       {activeTab === "output" && (
         <OutputTab
           questions={questions}
+          mocktest={mocktest}
           metadata={metadata}
           mockTestId={mocktest.id}
         />

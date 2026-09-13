@@ -4,6 +4,7 @@ import MathText from "../shared/MathText";
 import DiagramUploadControl from "./DiagramUploadControl";
 import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
 import MarksBadge from "@/components/shared/MarksBadge";
+import { resolveQuestionMarks } from "@/utils/mockTestHelpers";
 
 export default function QuestionPreviewCard({
   selected,
@@ -13,8 +14,15 @@ export default function QuestionPreviewCard({
   onOpenCropModal,
   updateSelected,
   isViewer,
+  paperDefaultMarks = null,
+  paperDefaultNegative = null,
 }) {
   if (!selected) return null;
+
+  const marks = resolveQuestionMarks(selected, {
+    marks_per_correct: paperDefaultMarks,
+    negative_marks_per_wrong: paperDefaultNegative,
+  });
 
   const handleUpdateText = (updater) => {
     if (!updateSelected) return;
@@ -53,8 +61,8 @@ export default function QuestionPreviewCard({
         </div>
         <div className="flex flex-wrap items-center gap-1.5 mb-2">
           <MarksBadge
-            marksPerCorrect={selected.marksPerCorrect}
-            negativeMarksPerWrong={selected.negativeMarksPerWrong}
+            marksPerCorrect={marks.marksPerCorrect}
+            negativeMarksPerWrong={marks.negativeMarksPerWrong}
             unsetLabel="Marks unset"
           />
         </div>

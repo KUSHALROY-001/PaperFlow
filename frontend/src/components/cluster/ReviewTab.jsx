@@ -17,6 +17,7 @@ import QuestionContent, {
 } from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
 import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
+import { getQuestionOrderMode, resolveQuestionMarks } from "@/utils/mockTestHelpers";
 import QuestionJumpInput from "../shared/QuestionJumpInput";
 import ScrollToTopButton from "../shared/ScrollToTopButton";
 
@@ -40,6 +41,7 @@ function getConfidenceTone(confidence) {
 
 export default function ReviewTab({
   questions,
+  mocktest,
   onStatusChange,
   onDelete,
   clusterId: propClusterId,
@@ -49,6 +51,7 @@ export default function ReviewTab({
   const params = useParams();
   const clusterId = propClusterId || params.clusterId;
   const mockTestId = propMockTestId || params.mockTestId;
+  const isRandomOrder = getQuestionOrderMode(mocktest) === "random";
   const [activeFilter, setActiveFilter] = useState("all");
   const [expandedIds, setExpandedIds] = useState(
     [questions[0]?.id].filter(Boolean),
@@ -68,7 +71,9 @@ export default function ReviewTab({
   // by the current filter should still be jumpable to, not reported as
   // "not found".
   const handleJumpToQuestion = (questionNo) => {
-    const target = questions.find((q) => q.questionNo === questionNo);
+    const target =
+      questions.find((q) => q.questionNo === questionNo) ||
+      questions.find((q) => q.displayIndex === questionNo);
     if (!target) return false;
     setActiveFilter("all");
     setExpandedIds((current) =>
@@ -195,7 +200,19 @@ export default function ReviewTab({
       </div>
 
       <div className="space-y-4">
+        {isRandomOrder && questions.length > 0 && (
+          <p className="text-xs font-semibold text-muted-foreground rounded-xl border border-border bg-muted/40 px-3 py-2">
+            Showing questions in random student order. Paper numbers are
+            unchanged.
+          </p>
+        )}
         {filteredQuestions.map((question) => {
+          const marks =
+            question.effectiveMarks ||
+            resolveQuestionMarks(question, mocktest);
+          const listNumber = isRandomOrder
+            ? question.displayIndex
+            : question.questionNo;
           const expanded = expandedIds.includes(question.id);
           const isApproved = question.status === "approved";
           const isFlagged = question.status === "rejected";
@@ -252,19 +269,20 @@ export default function ReviewTab({
                   <div className="mb-3 flex items-center justify-between gap-2">
                     <div className="flex flex-wrap items-center gap-2 min-w-0">
                       <span className="rounded-full bg-orange-500/15 border border-orange-500/20 px-3 py-1 text-xs font-bold text-orange-500 shrink-0">
-                        Q{question.questionNo}
+                        Q{listNumber}
                       </span>
+                      {isRandomOrder &&
+                        Number(question.questionNo) !== Number(listNumber) && (
+                          <span className="rounded-full bg-muted border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
+                            Paper Q{question.questionNo}
+                          </span>
+                        )}
                       <span className="rounded-full bg-muted border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
                         {question.topic}
                       </span>
                       <MarksBadge
-                        marksPerCorrect={
-                          question.marksPerCorrect ?? question.marks_per_correct
-                        }
-                        negativeMarksPerWrong={
-                          question.negativeMarksPerWrong ??
-                          question.negative_marks_per_wrong
-                        }
+                        marksPerCorrect={marks.marksPerCorrect}
+                        negativeMarksPerWrong={marks.negativeMarksPerWrong}
                         unsetLabel="Marks unset"
                       />
                       {question.subtopic && (

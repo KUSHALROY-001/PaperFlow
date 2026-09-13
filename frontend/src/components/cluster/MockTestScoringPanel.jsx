@@ -1,15 +1,16 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { getMockTestSettings, getQuestionOrderMode } from "@/utils/mockTestHelpers";
 
 /**
  * Compact scoring settings for a mock test — paper defaults + student
  * visibility. Publisher/editor only; viewers see read-only values.
  */
-export default function MockTestScoringPanel({ mocktest, isViewer }) {
+export default function MockTestScoringPanel({ mocktest, isViewer, className = "" }) {
   const uid = useId();
   const queryClient = useQueryClient();
-  const settings = mocktest?.settings || {};
+  const settings = getMockTestSettings(mocktest);
   const [marks, setMarks] = useState(
     mocktest?.marks_per_correct ?? mocktest?.marksPerCorrect ?? 1,
   );
@@ -19,9 +20,25 @@ export default function MockTestScoringPanel({ mocktest, isViewer }) {
   const [showToStudents, setShowToStudents] = useState(
     Boolean(settings.showMarksToStudents),
   );
+  const [questionOrder, setQuestionOrder] = useState(
+    getQuestionOrderMode(mocktest),
+  );
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    setMarks(mocktest?.marks_per_correct ?? mocktest?.marksPerCorrect ?? 1);
+    setNegative(
+      mocktest?.negative_marks_per_wrong ??
+        mocktest?.negativeMarksPerWrong ??
+        0,
+    );
+    setShowToStudents(
+      Boolean(getMockTestSettings(mocktest).showMarksToStudents),
+    );
+    setQuestionOrder(getQuestionOrderMode(mocktest));
+  }, [mocktest]);
 
   const handleSave = async () => {
     if (isViewer) return;
@@ -29,11 +46,19 @@ export default function MockTestScoringPanel({ mocktest, isViewer }) {
     setError("");
     setMessage("");
     try {
-      await api.updateMockTest(mocktest.id, {
+      const updated = await api.updateMockTest(mocktest.id, {
         marksPerCorrect: Number(marks),
         negativeMarksPerWrong: Number(negative),
-        settings: { showMarksToStudents: Boolean(showToStudents) },
+        settings: {
+          ...getMockTestSettings(mocktest),
+          showMarksToStudents: Boolean(showToStudents),
+          questionOrder,
+        },
       });
+      queryClient.setQueryData(["mock-test", mocktest.id], (current) => ({
+        ...(current && typeof current === "object" ? current : {}),
+        mockTest: updated?.mockTest || updated,
+      }));
       await queryClient.invalidateQueries({ queryKey: ["mock-test"] });
       await queryClient.invalidateQueries({ queryKey: ["mock-tests"] });
       setMessage("Scoring settings saved");
@@ -46,7 +71,7 @@ export default function MockTestScoringPanel({ mocktest, isViewer }) {
   };
 
   return (
-    <div className="rounded-xl border border-border bg-muted/20 p-3 sm:p-4 mt-4">
+    <div className={`rounded-xl border border-border bg-muted/20 p-3 sm:p-4 ${className}`}>
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
           Global Scoring
@@ -109,6 +134,24 @@ export default function MockTestScoringPanel({ mocktest, isViewer }) {
             Show marks to students
           </span>
         </label>
+        <div className="col-span-2 sm:col-span-1">
+          <label
+            htmlFor={`${uid}-question-order`}
+            className="block text-[11px] font-semibold text-muted-foreground mb-1"
+          >
+            Question order
+          </label>
+          <select
+            id={`${uid}-question-order`}
+            disabled={isViewer || saving}
+            value={questionOrder}
+            onChange={(e) => setQuestionOrder(e.target.value)}
+            className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-orange-500/30 disabled:opacity-50"
+          >
+            <option value="sequential">Sequential</option>
+            <option value="random">Random</option>
+          </select>
+        </div>
         {!isViewer && (
           <button
             type="button"
@@ -122,7 +165,9 @@ export default function MockTestScoringPanel({ mocktest, isViewer }) {
       </div>
       <p className="mt-2 text-[13px] text-muted-foreground">
         Paper defaults apply when a question has no individual marks. Student
-        visibility is off by default.
+        visibility is off by default. Random order is previewed on Review,
+        Output, and the question editor. New student attempts still get their
+        own shuffle after you save.
       </p>
     </div>
   );

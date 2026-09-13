@@ -4,6 +4,7 @@ import { AlertCircle, GripVertical, ImageIcon, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import MathText from "../shared/MathText";
 import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
+import { resolveQuestionMarks } from "@/utils/mockTestHelpers";
 
 function QuestionCard({
   q,
@@ -16,8 +17,18 @@ function QuestionCard({
   onCardMouseEnter,
   isDragging,
   isDragOver,
+  paperDefaultMarks = null,
+  paperDefaultNegative = null,
+  questionOrderMode = "sequential",
 }) {
   const { isViewer } = useAuth();
+  const marks = resolveQuestionMarks(q, {
+    marks_per_correct: paperDefaultMarks,
+    negative_marks_per_wrong: paperDefaultNegative,
+  });
+  const isRandomOrder = questionOrderMode === "random";
+  const listNumber = isRandomOrder ? q.displayIndex || index + 1 : q.questionNo;
+  const canDrag = !isViewer && !isRandomOrder;
 
   const hasDiagram = Boolean(q.diagramUrl);
 
@@ -37,11 +48,11 @@ function QuestionCard({
   return (
     <div
       onMouseDown={(e) => {
-        if (isViewer) return;
+        if (!canDrag) return;
         if (e.target.closest("button")) return;
         onCardMouseDown(e, index);
       }}
-      onMouseEnter={() => !isViewer && onCardMouseEnter(index)}
+      onMouseEnter={() => canDrag && onCardMouseEnter(index)}
       onClick={() => onSelect(q.id)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -52,22 +63,24 @@ function QuestionCard({
       role="button"
       tabIndex={0}
       className={`relative p-4 rounded-2xl border transition-all duration-150 select-none ${
-        isViewer
-          ? "cursor-default border-border bg-card"
-          : "cursor-grab active:cursor-grabbing"
+        canDrag
+          ? "cursor-grab active:cursor-grabbing"
+          : "cursor-default border-border bg-card"
       } ${stateClass}`}
     >
       <div className="flex items-start gap-3">
         <div
           className={`p-0.5 rounded transition-colors ${
-            isViewer
-              ? "text-muted-foreground/30 cursor-not-allowed"
-              : "text-muted-foreground hover:text-orange-500"
+            canDrag
+              ? "text-muted-foreground hover:text-orange-500"
+              : "text-muted-foreground/30 cursor-not-allowed"
           }`}
           title={
             isViewer
               ? "Editor role is required to reorder questions"
-              : undefined
+              : isRandomOrder
+                ? "Reorder is disabled while question order is random"
+                : undefined
           }
         >
           <GripVertical className="w-4 h-4 mt-0.5 shrink-0" />
@@ -80,14 +93,21 @@ function QuestionCard({
           </p>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             <span className="text-xs bg-orange-500/15 text-orange-500 border border-orange-500/20 px-2 py-0.5 rounded-lg font-bold">
-              Q{q.questionNo}
+              Q{listNumber}
             </span>
+            {isRandomOrder &&
+              Number(q.questionNo) !== Number(listNumber) && (
+                <span className="text-xs bg-muted text-muted-foreground border border-border px-2 py-0.5 rounded-lg font-semibold">
+                  Paper Q{q.questionNo}
+                </span>
+              )}
             <span className="text-xs bg-orange-500/15 text-orange-500 border border-orange-500/20 px-2 py-0.5 rounded-lg font-bold truncate max-w-30">
               {q.topic}
             </span>
             <MarksBadge
-              marksPerCorrect={q.marksPerCorrect}
-              negativeMarksPerWrong={q.negativeMarksPerWrong}
+              marksPerCorrect={marks.marksPerCorrect}
+              negativeMarksPerWrong={marks.negativeMarksPerWrong}
+              unsetLabel="Marks unset"
             />
             {!q.persisted && (
               <span className="text-xs bg-amber-500/15 text-amber-500 border border-amber-500/20 px-2 py-0.5 rounded-lg font-bold">

@@ -26,6 +26,8 @@ export default function QuestionEditor() {
     clusterId,
     mockTestId,
     questions,
+    displayQuestions,
+    questionOrderMode,
     selected,
     selectedId,
     setSelectedId,
@@ -86,6 +88,11 @@ export default function QuestionEditor() {
     };
 
     const handleMouseUp = () => {
+      if (questionOrderMode === "random") {
+        setDraggingIndex(null);
+        setDragOverIndex(null);
+        return;
+      }
       if (
         draggingIndex !== null &&
         dragOverIndex !== null &&
@@ -105,7 +112,7 @@ export default function QuestionEditor() {
       window.removeEventListener("wheel", handleWheel);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [draggingIndex, dragOverIndex, reorderQuestions]);
+  }, [draggingIndex, dragOverIndex, reorderQuestions, questionOrderMode]);
 
   // Intercept browser back button / popstate gesture when unsaved changes exist
   useEffect(() => {
@@ -128,7 +135,7 @@ export default function QuestionEditor() {
   }, [hasUnsavedChanges, clusterId, mockTestId]);
 
   const handleCardMouseDown = (e, index) => {
-    if (isViewer) return;
+    if (isViewer || questionOrderMode === "random") return;
     setDraggingIndex(index);
     setDragOverIndex(index);
     setMousePos({ x: e.clientX, y: e.clientY });
@@ -159,7 +166,8 @@ export default function QuestionEditor() {
       <EditorSidebar
         clusterId={clusterId}
         mockTestId={mockTestId}
-        questions={questions}
+        questions={displayQuestions}
+        questionOrderMode={questionOrderMode}
         selectedId={selectedId}
         setSelectedId={setSelectedId}
         deleteQuestion={deleteQuestion}
@@ -174,6 +182,8 @@ export default function QuestionEditor() {
         isViewer={isViewer}
         hasUnsavedChanges={hasUnsavedChanges}
         onRequestLeave={(path) => setPendingLeavePath(path)}
+        paperDefaultMarks={paperDefaultMarks}
+        paperDefaultNegative={paperDefaultNegative}
       />
 
       <div className="flex-1 flex flex-col min-w-0">

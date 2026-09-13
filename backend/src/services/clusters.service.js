@@ -117,6 +117,19 @@ export async function deleteCluster(clusterId, workspaceId) {
 }
 
 export async function listMockTestsForCluster(clusterId, workspaceId) {
+  // Unlike createMockTestInCluster just below (which already 404s via
+  // findClusterById), this was a bare SELECT ... JOIN clusters - a
+  // non-existent or wrong-workspace clusterId naturally matches zero rows
+  // rather than raising anything, so it silently returned 200 {mockTests:
+  // []} instead of 404, same as getCluster/deleteCluster already do for
+  // this same resource. Confirmed by TestSprite's endpoint suite (GET
+  // /api/clusters/{clusterId}/mock-tests rejects a non-existent cluster).
+  const cluster = await clustersRepo.findClusterById(clusterId, workspaceId);
+
+  if (!cluster) {
+    throw httpError(404, "Cluster not found");
+  }
+
   return clustersRepo.listMockTestsForCluster(clusterId, workspaceId);
 }
 

@@ -1,4 +1,3 @@
-import MarksBadge from "@/components/shared/MarksBadge";
 import { useState } from "react";
 import {
   ChevronLeft,
@@ -15,6 +14,7 @@ export default function EditorSidebar({
   clusterId,
   mockTestId,
   questions,
+  questionOrderMode = "sequential",
   selectedId,
   setSelectedId,
   deleteQuestion,
@@ -29,6 +29,8 @@ export default function EditorSidebar({
   isViewer,
   hasUnsavedChanges,
   onRequestLeave,
+  paperDefaultMarks = null,
+  paperDefaultNegative = null,
 }) {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -101,7 +103,9 @@ export default function EditorSidebar({
           <p className="text-xs text-muted-foreground truncate">
             {isViewer
               ? "Read-only mode (Viewer role)"
-              : "Click & hold cards to swap • Scroll freely"}
+              : questionOrderMode === "random"
+                ? "Student preview: random order (paper numbers unchanged)"
+                : "Click & hold cards to swap • Scroll freely"}
           </p>
         </div>
       </div>
@@ -128,14 +132,14 @@ export default function EditorSidebar({
                   <button
                     type="button"
                     onClick={() => setSelectedId(q.id)}
-                    title={`Q${q.questionNo}: ${q.text || "Untitled question"}`}
+                    title={`Q${questionOrderMode === "random" ? q.displayIndex || q.questionNo : q.questionNo}: ${q.text || "Untitled question"}`}
                     className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                       isSelected
                         ? "bg-orange-500 text-white shadow-md shadow-orange-500/25 ring-2 ring-orange-500/40 border-orange-500"
                         : "bg-card text-foreground border border-border hover:border-orange-500/50 hover:bg-orange-500/10 hover:text-orange-500"
                     }`}
                   >
-                    Q{q.questionNo}
+                    Q{questionOrderMode === "random" ? q.displayIndex || q.questionNo : q.questionNo}
                   </button>
                   {issues > 0 && (
                     <span
@@ -172,6 +176,9 @@ export default function EditorSidebar({
               onCardMouseEnter={onCardMouseEnter}
               isDragging={draggingIndex === index}
               isDragOver={dragOverIndex === index}
+              questionOrderMode={questionOrderMode}
+              paperDefaultMarks={paperDefaultMarks}
+              paperDefaultNegative={paperDefaultNegative}
             />
           ))}
         </div>

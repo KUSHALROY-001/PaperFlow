@@ -1,4 +1,5 @@
 import { Flag, ChevronLeft, ChevronRight } from "lucide-react";
+import { useRef } from "react";
 import QuestionContent from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
 import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
@@ -17,7 +18,40 @@ export default function SessionQuestionView({
   onNavigateNext,
   onNavigatePrev,
 }) {
+  const touchStartRef = useRef(null);
+
   if (!q) return null;
+
+  const handleTouchStart = (event) => {
+    if (event.touches.length !== 1) {
+      touchStartRef.current = null;
+      return;
+    }
+
+    const touch = event.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchEnd = (event) => {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    const touch = event.changedTouches[0];
+    if (!start || !touch) return;
+
+    const horizontalDistance = touch.clientX - start.x;
+    const verticalDistance = touch.clientY - start.y;
+    const isHorizontalSwipe =
+      Math.abs(horizontalDistance) >= 48 &&
+      Math.abs(horizontalDistance) > Math.abs(verticalDistance) * 1.25;
+
+    if (!isHorizontalSwipe) return;
+
+    if (horizontalDistance < 0) {
+      onNavigateNext();
+    } else {
+      onNavigatePrev();
+    }
+  };
 
   let slideClass;
   if (slideDirection === "left") {
@@ -32,7 +66,12 @@ export default function SessionQuestionView({
     <main className="flex-1 p-3 sm:p-6 lg:p-8 max-w-3xl mx-auto w-full font-sans">
       <div
         key={q.questionId}
-        className={`surface-card rounded-md sm:rounded-3xl p-4 sm:p-8 border border-border ${slideClass}`}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={() => {
+          touchStartRef.current = null;
+        }}
+        className={`surface-card touch-pan-y rounded-md sm:rounded-3xl p-4 sm:p-8 border border-border ${slideClass}`}
       >
         <div className="flex items-start justify-between gap-2.5 sm:gap-4 mb-5 sm:mb-6">
           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 flex-1 min-w-0">

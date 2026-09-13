@@ -103,13 +103,121 @@ export function mapQuestion(question) {
     // question there showed "Marks unset" via MarksBadge regardless of
     // what was actually saved, even right after the question editor
     // itself showed the correct values.
-    marksPerCorrect:
-      question.marksPerCorrect ?? question.marks_per_correct ?? null,
-    negativeMarksPerWrong:
-      question.negativeMarksPerWrong ??
-      question.negative_marks_per_wrong ??
-      null,
+    marksPerCorrect: coerceMark(
+      question.marksPerCorrect ?? question.marks_per_correct,
+    ),
+    negativeMarksPerWrong: coerceMark(
+      question.negativeMarksPerWrong ?? question.negative_marks_per_wrong,
+    ),
   };
+}
+
+export function coerceMark(value) {
+  if (value === undefined || value === null || value === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+export function getMockTestSettings(mockTest) {
+  const raw = mockTest?.settings;
+  if (!raw) return {};
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return typeof raw === "object" ? raw : {};
+}
+
+export function getQuestionOrderMode(mockTest) {
+  const settings = getMockTestSettings(mockTest);
+  const order = settings.questionOrder || settings.question_order;
+  return order === "random" ? "random" : "sequential";
+}
+
+// Same rules as attempts.service.js#resolveQuestionMarks: a question-level
+// value for EITHER field is a full override (the missing half becomes 0).
+// Only when both are empty do we fall through to the mock test's paper
+// defaults. Review/Output/editor badges used to look only at the question
+// row, so saving Global Scoring left every card on "Marks unset".
+export function resolveQuestionMarks(question, mockTest) {
+  const hasMarks = coerceMark(
+    question?.marksPerCorrect ?? question?.marks_per_correct,
+  );
+  const hasNegative = coerceMark(
+    question?.negativeMarksPerWrong ?? question?.negative_marks_per_wrong,
+  );
+  const hasQuestionOverride = hasMarks !== null || hasNegative !== null;
+
+  if (hasQuestionOverride) {
+    return {
+      marksPerCorrect: hasMarks ?? 0,
+      negativeMarksPerWrong: hasNegative ?? 0,
+    };
+  }
+
+  return {
+    marksPerCorrect: coerceMark(
+      mockTest?.marks_per_correct ?? mockTest?.marksPerCorrect,
+    ),
+    negativeMarksPerWrong: coerceMark(
+      mockTest?.negative_marks_per_wrong ?? mockTest?.negativeMarksPerWrong,
+    ),
+  };
+}
+
+function hashStringToSeed(value) {
+  let hash = 2166136261;
+  const text = String(value || "");
+  for (let i = 0; i < text.length; i += 1) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function mulberry32(seed) {
+  let t = seed;
+  return () => {
+    t += 0x6d2b79f5;
+    let n = Math.imul(t ^ (t >>> 15), t | 1);
+    n ^= n + Math.imul(n ^ (n >>> 7), n | 61);
+    return ((n ^ (n >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Student attempts shuffle per attempt (attempts.service.js#startAttempt).
+// Authoring surfaces need a stable preview of that mode so Review/Output/
+// the editor are not stuck in question_no order after "random" is saved.
+// Seeded by mock-test id so reload/tab-switch keeps the same preview.
+export function orderQuestionsForDisplay(questions, mockTest) {
+  const list = [...(questions || [])];
+  list.sort(
+    (a, b) => (Number(a.questionNo) || 0) - (Number(b.questionNo) || 0),
+  );
+  if (getQuestionOrderMode(mockTest) !== "random" || list.length < 2) {
+    return list;
+  }
+
+  const rand = mulberry32(hashStringToSeed(mockTest.id));
+  for (let i = list.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(rand() * (i + 1));
+    [list[i], list[j]] = [list[j], list[i]];
+  }
+  return list;
+}
+
+// Review/Output/editor list shape: shuffled when random, plus the marks
+// students actually see (paper default when the question row is empty).
+export function decorateQuestionsForWorkspace(questions, mockTest) {
+  return orderQuestionsForDisplay(questions, mockTest).map((question, index) => ({
+    ...question,
+    displayIndex: index + 1,
+    effectiveMarks: resolveQuestionMarks(question, mockTest),
+  }));
 }
 
 export function getOptionText(options, index) {

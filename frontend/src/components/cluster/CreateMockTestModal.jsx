@@ -22,6 +22,14 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
     marksPerCorrect: 1,
     negativeMarksPerWrong: 0.25,
     showMarksToStudents: false,
+    // "sequential" = same order as in the uploaded/generated paper
+    // (questionNo ASC); "random" = shuffled per student per attempt, same
+    // shuffle kept for that attempt's whole lifetime (resume, review) -
+    // see attempts.service.js#startAttempt. Changeable later from
+    // MockTestScoringPanel, which is why this lives in settings rather
+    // than its own mock_tests column - same pattern showMarksToStudents
+    // already uses.
+    questionOrder: "sequential",
   });
   // "blank" - no content attached, same as leaving the file picker empty
   // always used to mean. "upload" / "generate" just swap which panel
@@ -77,6 +85,19 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
         name: form.name,
         description: form.description,
         durationMinutes: Number(form.durationMinutes),
+        // Pre-existing bug fixed alongside adding questionOrder below:
+        // this call never sent marksPerCorrect/negativeMarksPerWrong/
+        // showMarksToStudents at all despite the form collecting them -
+        // every newly created mock test silently got the backend's
+        // defaults (1/0.25, marks hidden) regardless of what was chosen
+        // here. Sending them now; MockTestScoringPanel remains the way to
+        // change any of this later.
+        marksPerCorrect: Number(form.marksPerCorrect),
+        negativeMarksPerWrong: Number(form.negativeMarksPerWrong),
+        settings: {
+          showMarksToStudents: Boolean(form.showMarksToStudents),
+          questionOrder: form.questionOrder,
+        },
       });
 
       if (mode === "upload" && selectedFile) {
@@ -272,6 +293,56 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
               </span>
             </span>
           </label>
+
+          <div>
+            <p className="mb-2 block text-sm font-semibold text-foreground">
+              Question order
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setForm((current) => ({
+                    ...current,
+                    questionOrder: "sequential",
+                  }))
+                }
+                className={`rounded-md border-2 px-3 py-2.5 text-left transition-all ${
+                  form.questionOrder === "sequential"
+                    ? "border-orange-500/60 bg-orange-500/10"
+                    : "border-border bg-muted/40 hover:border-orange-500/30"
+                }`}
+              >
+                <span className="block text-sm font-semibold text-foreground">
+                  Sequential
+                </span>
+                <span className="block text-xs text-muted-foreground mt-0.5">
+                  Same order as the uploaded paper
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setForm((current) => ({
+                    ...current,
+                    questionOrder: "random",
+                  }))
+                }
+                className={`rounded-md border-2 px-3 py-2.5 text-left transition-all ${
+                  form.questionOrder === "random"
+                    ? "border-orange-500/60 bg-orange-500/10"
+                    : "border-border bg-muted/40 hover:border-orange-500/30"
+                }`}
+              >
+                <span className="block text-sm font-semibold text-foreground">
+                  Random
+                </span>
+                <span className="block text-xs text-muted-foreground mt-0.5">
+                  Shuffled per student, kept for their whole attempt
+                </span>
+              </button>
+            </div>
+          </div>
 
           <div>
             <p className="mb-2 block text-sm font-semibold text-foreground">

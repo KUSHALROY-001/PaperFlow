@@ -4,6 +4,60 @@ import * as attemptsRepo from "../repositories/attempts.repository.js";
 import * as mockTestsRepo from "../repositories/mock-tests.repository.js";
 import { attachDiagramUrls } from "./question-assets.service.js";
 
+// Fisher-Yates - used once, when a brand-new attempt is created for a
+// mock test with settings.questionOrder === "random" (see startAttempt).
+// The resulting order is persisted onto the attempt (metadata.questionOrder,
+// an array of question ids) rather than re-shuffled on every fetch -
+// otherwise a page refresh or resume would show the student a completely
+// different question order mid-attempt, and review-after-submit
+// (getAttempt) would no longer match what they actually saw while taking
+// it. Mutates nothing - returns a new array.
+function shuffleQuestions(questions) {
+  const shuffled = [...questions];
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+// Reorders `questions` (any array of objects carrying `idKey`) to match
+// `orderIds` (an array of those same ids, in display order) - used by both
+// startAttempt (resuming an attempt) and getAttempt (in-progress or
+// post-submit review) so every view of an already-started attempt shows
+// questions in the exact order this specific attempt was given them,
+// regardless of what the mock test's own settings.questionOrder says NOW
+// (that only decides the order for attempts created from this point on -
+// see startAttempt). Falls back to `questions` unchanged when there's no
+// stored order (sequential attempts never get one - see startAttempt).
+// Defensive against drift between the stored id list and the current
+// question set (a question deleted/added after the attempt started):
+// unknown ids are skipped, and any question missing from orderIds is
+// appended at the end in its natural order rather than silently dropped.
+function applyStoredQuestionOrder(questions, orderIds, idKey = "questionId") {
+  if (!orderIds || !orderIds.length) {
+    return questions;
+  }
+
+  const byId = new Map(questions.map((question) => [question[idKey], question]));
+  const ordered = [];
+  for (const id of orderIds) {
+    const question = byId.get(id);
+    if (question) {
+      ordered.push(question);
+      byId.delete(id);
+    }
+  }
+  // Anything left in byId wasn't in orderIds at all (added since the
+  // attempt started) - keep it, appended in its original relative order.
+  for (const question of questions) {
+    if (byId.has(question[idKey])) {
+      ordered.push(question);
+    }
+  }
+  return ordered;
+}
+
 // A question with a per-question override for EITHER field is treated as
 // fully opted out of the mock test's own defaults, not half-in/half-out -
 // resolving the still-missing field from mockTest's marks would silently
@@ -156,6 +210,19 @@ export async function startAttempt({
     questionsInSession: questions.length,
   });
 
+  // Decided once, up front: applies only to a brand-new attempt (see the
+  // insertAttempt call below) - an attempt already in progress keeps
+  // whatever order it was created with (applied further down via
+  // applyStoredQuestionOrder), even if the mock test's own
+  // settings.questionOrder has changed since. "Change it later"
+  // (MockTestScoringPanel) is forward-looking, same as changing
+  // marksPerCorrect mid-test wouldn't retroactively re-grade an attempt
+  // already in progress.
+  const orderMode =
+    (mockTest.settings || {}).questionOrder === "random"
+      ? "random"
+      : "sequential";
+
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -184,6 +251,18 @@ export async function startAttempt({
       : null;
 
     if (!attempt) {
+      // Shuffle only decided/applied here, at the moment the attempt is
+      // actually created - see the orderMode comment above for why a
+      // resumed attempt never re-enters this branch. The chosen order is
+      // captured as an id list in metadata.questionOrder so every later
+      // fetch of this attempt (resume, or review after submit - see
+      // getAttempt) can reconstruct the exact same order via
+      // applyStoredQuestionOrder, rather than re-shuffling.
+      const questionOrderMetadata =
+        orderMode === "random"
+          ? { questionOrder: shuffleQuestions(questions).map((q) => q.questionId) }
+          : {};
+
       attempt = await attemptsRepo.insertAttempt(client, {
         workspaceId,
         mockTestId,
@@ -192,7 +271,7 @@ export async function startAttempt({
         totalQuestions: questions.length,
         durationMinutes: sessionDurationMinutes,
         takerEmail: takerEmail && takerEmail.trim() ? takerEmail.trim() : null,
-        metadata: metadata || {},
+        metadata: { ...(metadata || {}), ...questionOrderMetadata },
       });
     }
 
@@ -220,8 +299,16 @@ export async function startAttempt({
       (mockTest.settings || {}).showMarksToStudents,
     );
 
+    // Whatever order this attempt was actually created with (see
+    // orderMode/insertAttempt above) - the same on every resume, not
+    // re-derived from the mock test's current settings each time.
+    const orderedQuestions = applyStoredQuestionOrder(
+      questions,
+      attempt.metadata?.questionOrder,
+    );
+
     const clientQuestions = await attachDiagramUrls(
-      questions.map((question) => ({
+      orderedQuestions.map((question) => ({
         questionId: question.questionId,
         questionNo: question.questionNo,
         topic: question.topic,
@@ -472,10 +559,21 @@ export async function getAttempt({
     attempt.topics,
   );
 
+  // Same stored per-attempt order startAttempt applies - this is what
+  // makes a page refresh mid-attempt, and the post-submit review, show
+  // questions in the same order the student actually saw them while
+  // taking it, even for a "random" mock test. Rows here key on
+  // question_id (snake_case), unlike startAttempt's questionId.
+  const orderedRows = applyStoredQuestionOrder(
+    rows,
+    attempt.metadata?.questionOrder,
+    "question_id",
+  );
+
   const isSubmitted = attempt.status === "submitted";
 
   const questions = await attachDiagramUrls(
-    rows.map((row) => ({
+    orderedRows.map((row) => ({
       questionId: row.question_id,
       questionNo: row.question_no,
       topic: row.topic,
@@ -566,6 +664,21 @@ export async function listAttemptsForMockTest({
   workspaceId,
   userId,
 }) {
+  // listAllAttemptsForMockTest just below already guards with this same
+  // check - this sibling function (a user's own attempts, vs. the owner-
+  // facing "everyone's attempts" version) was the one instance that got
+  // missed, same bug class TestSprite's suite caught on
+  // clusters.service.js#listMockTestsForCluster: a bad mockTestId matches
+  // zero rows in the underlying query and silently returns an empty list
+  // instead of 404.
+  const mockTest = await mockTestsRepo.findMockTestById(
+    mockTestId,
+    workspaceId,
+  );
+  if (!mockTest) {
+    throw httpError(404, "Mock test not found");
+  }
+
   const rows = await attemptsRepo.listAttemptsForMockTest(
     mockTestId,
     workspaceId,
