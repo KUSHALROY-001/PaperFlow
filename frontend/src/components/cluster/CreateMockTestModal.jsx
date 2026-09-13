@@ -1,9 +1,25 @@
 import { useId, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Upload, X, Sparkles, FileText, FilePlus, Loader2 } from "lucide-react";
+import {
+  Upload,
+  X,
+  Sparkles,
+  FileText,
+  FilePlus,
+  Loader2,
+  Layers,
+  Rows3,
+} from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
+import {
+  mergeFilesToPdf,
+  ensureSingleFileIsPdf,
+  isPdfFile,
+  PdfAssemblyError,
+} from "@/lib/pdfAssembly";
+import MultiFileList from "./MultiFileList";
 
 const MIN_GENERATED_QUESTIONS = 5;
 const MAX_GENERATED_QUESTIONS = 200;
@@ -35,13 +51,27 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
   // always used to mean. "upload" / "generate" just swap which panel
   // below collects the extra input each mode needs.
   const [mode, setMode] = useState("upload");
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  // Only meaningful once 2+ files are selected in "upload" mode - see the
+  // toggle rendered below. "combine" merges everything into the ONE mock
+  // test this form is already creating (lib/pdfAssembly.js#mergeFilesToPdf).
+  // "batch" instead creates a SEPARATE mock test per file, looping the
+  // same create-then-upload calls this form already makes for a single
+  // file - see handleSubmit's batch branch.
+  const [uploadMode, setUploadMode] = useState("combine");
   const [documentType, setDocumentType] = useState("questions");
   const [selectedSourceIds, setSelectedSourceIds] = useState([]);
   const [targetQuestionCount, setTargetQuestionCount] = useState(50);
   const [difficultyHint, setDifficultyHint] = useState("Variable");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Only used mid-batch, to show "Creating 3 of 6..." instead of a single
+  // opaque spinner for what can be a several-second loop of N create+
+  // upload round trips.
+  const [batchProgress, setBatchProgress] = useState(null);
+
+  const isBatchMode =
+    mode === "upload" && uploadMode === "batch" && selectedFiles.length > 1;
 
   // Workspace-wide, not cluster-scoped - a generated test can draw its
   // shape from a source test in any cluster, not just this one. Only
@@ -80,30 +110,124 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
 
     setIsSubmitting(true);
 
-    try {
-      const result = await api.createMockTest(clusterId, {
-        name: form.name,
-        description: form.description,
-        durationMinutes: Number(form.durationMinutes),
-        // Pre-existing bug fixed alongside adding questionOrder below:
-        // this call never sent marksPerCorrect/negativeMarksPerWrong/
-        // showMarksToStudents at all despite the form collecting them -
-        // every newly created mock test silently got the backend's
-        // defaults (1/0.25, marks hidden) regardless of what was chosen
-        // here. Sending them now; MockTestScoringPanel remains the way to
-        // change any of this later.
-        marksPerCorrect: Number(form.marksPerCorrect),
-        negativeMarksPerWrong: Number(form.negativeMarksPerWrong),
-        settings: {
-          showMarksToStudents: Boolean(form.showMarksToStudents),
-          questionOrder: form.questionOrder,
-        },
-      });
+    // Shared by both branches below - the settings every created mock
+    // test (one, in combine/generate/blank mode, or several in batch
+    // mode) gets, only the name itself differs per branch.
+    const buildCreatePayload = (name) => ({
+      name,
+      description: form.description,
+      durationMinutes: Number(form.durationMinutes),
+      // Pre-existing bug fixed alongside adding questionOrder below: this
+      // call never sent marksPerCorrect/negativeMarksPerWrong/
+      // showMarksToStudents at all despite the form collecting them -
+      // every newly created mock test silently got the backend's
+      // defaults (1/0.25, marks hidden) regardless of what was chosen
+      // here. Sending them now; MockTestScoringPanel remains the way to
+      // change any of this later.
+      marksPerCorrect: Number(form.marksPerCorrect),
+      negativeMarksPerWrong: Number(form.negativeMarksPerWrong),
+      settings: {
+        showMarksToStudents: Boolean(form.showMarksToStudents),
+        questionOrder: form.questionOrder,
+      },
+    });
 
-      if (mode === "upload" && selectedFile) {
+    try {
+      if (isBatchMode) {
+        const prefix = form.name.trim();
+        const created = [];
+        const failures = [];
+        setBatchProgress({ done: 0, total: selectedFiles.length });
+
+        // Sequential, not Promise.all - these are real create+upload API
+        // calls per file, and a batch of many files hammering the backend
+        // concurrently isn't worth the speedup for what's normally a
+        // handful of files at a time. Errors are per-file: one bad file
+        // (a corrupt image, a failed upload) doesn't lose the mock tests
+        // already successfully created for the files before it.
+        for (const file of selectedFiles) {
+          const baseName = file.name.replace(/\.[^.]+$/, "");
+          const testName = prefix ? `${prefix} - ${baseName}` : baseName;
+          try {
+            const pdfFile = await ensureSingleFileIsPdf(file);
+            const result = await api.createMockTest(
+              clusterId,
+              buildCreatePayload(testName),
+            );
+            await api.uploadMockTestDocument(
+              result.mockTest.id,
+              pdfFile,
+              documentType,
+            );
+            created.push(result.mockTest);
+          } catch (fileError) {
+            failures.push({
+              fileName: file.name,
+              message: fileError.message || "Failed",
+            });
+          } finally {
+            setBatchProgress((current) => ({
+              done: (current?.done || 0) + 1,
+              total: selectedFiles.length,
+            }));
+          }
+        }
+
+        await queryClient.invalidateQueries({
+          queryKey: ["mock-tests", clusterId],
+        });
+        await queryClient.invalidateQueries({ queryKey: ["clusters"] });
+        await queryClient.invalidateQueries({
+          queryKey: ["dashboard-summary"],
+        });
+
+        if (created.length === 0) {
+          setError(
+            `Could not create any mock tests: ` +
+              failures.map((f) => `${f.fileName} (${f.message})`).join("; "),
+          );
+          return;
+        }
+
+        if (failures.length > 0) {
+          // Some tests were created despite the failures - don't hide
+          // that by staying on the (now half-wrong) form; navigate away
+          // like the success path, but keep the failure detail visible
+          // via a toast-style message would be nicer, but this form has
+          // no toast plumbing, so surface it the same way any other
+          // partial failure here does and let the cluster view show what
+          // actually landed.
+          window.alert(
+            `Created ${created.length} of ${selectedFiles.length} mock tests.\n\nFailed:\n` +
+              failures.map((f) => `- ${f.fileName}: ${f.message}`).join("\n"),
+          );
+        }
+
+        onClose();
+        navigate(`/cluster/${clusterId}`);
+        return;
+      }
+
+      const result = await api.createMockTest(
+        clusterId,
+        buildCreatePayload(form.name),
+      );
+
+      if (mode === "upload" && selectedFiles.length > 0) {
+        // Single already-PDF file: pass through unchanged, no pdf-lib
+        // round-trip, exactly today's behavior. Anything else (a lone
+        // image, or 2+ files being combined) needs assembly first.
+        const singleFile = selectedFiles.length === 1 ? selectedFiles[0] : null;
+        const fileToUpload =
+          singleFile && isPdfFile(singleFile)
+            ? singleFile
+            : singleFile
+              ? await ensureSingleFileIsPdf(singleFile)
+              : await mergeFilesToPdf(selectedFiles);
+
         await api.uploadMockTestDocument(
           result.mockTest.id,
-          selectedFile,
+          fileToUpload,
           documentType,
         );
       } else if (mode === "generate") {
@@ -115,7 +239,7 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
       }
 
       const willProcess =
-        (mode === "upload" && selectedFile) || mode === "generate";
+        (mode === "upload" && selectedFiles.length > 0) || mode === "generate";
 
       await queryClient.invalidateQueries({
         queryKey: ["mock-tests", clusterId],
@@ -127,9 +251,14 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
         `/cluster/${clusterId}/mocktest/${result.mockTest.id}?tab=${willProcess ? "processing" : "overview"}`,
       );
     } catch (submitError) {
-      setError(submitError.message || "Could not create mock test");
+      setError(
+        submitError instanceof PdfAssemblyError
+          ? submitError.message
+          : submitError.message || "Could not create mock test",
+      );
     } finally {
       setIsSubmitting(false);
+      setBatchProgress(null);
     }
   };
 
@@ -163,16 +292,20 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
               htmlFor={`${uid}-name`}
               className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-foreground"
             >
-              Mock Test Name *
+              {isBatchMode ? "Name Prefix (optional)" : "Mock Test Name *"}
             </label>
             <input
               id={`${uid}-name`}
-              required
+              required={!isBatchMode}
               value={form.name}
               onChange={(event) =>
                 setForm((current) => ({ ...current, name: event.target.value }))
               }
-              placeholder="e.g. JECA PYQ 2024"
+              placeholder={
+                isBatchMode
+                  ? 'e.g. JECA PYQ (each test is named "prefix - filename")'
+                  : "e.g. JECA PYQ 2024"
+              }
               className="w-full rounded-md border border-border bg-card px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
             />
           </div>
@@ -289,7 +422,8 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
                 Show marking to students
               </span>
               <span className="block text-xs text-muted-foreground mt-0.5">
-                Off by default. When on, students see +/− marks on each question during the attempt.
+                Off by default. When on, students see +/− marks on each question
+                during the attempt.
               </span>
             </span>
           </label>
@@ -397,51 +531,113 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
           {mode === "upload" && (
             <div>
               <p className="mb-2 block text-sm font-semibold text-foreground">
-                Upload Document
+                Upload Document{selectedFiles.length > 1 ? "s" : ""}
               </p>
               <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/40 px-4 py-6 text-center transition-all hover:border-orange-500/40 hover:bg-muted">
                 <Upload className="mb-3 h-6 w-6 text-orange-500" />
                 <span className="max-w-full break-all text-sm font-semibold text-foreground">
-                  {selectedFile ? selectedFile.name : "Choose PDF document"}
+                  {selectedFiles.length > 0
+                    ? `${selectedFiles.length} file${selectedFiles.length === 1 ? "" : "s"} selected`
+                    : "Choose PDF or image files"}
                 </span>
                 <span className="mt-1 text-xs text-muted-foreground">
                   We'll extract questions automatically after upload.
                 </span>
                 <input
                   type="file"
-                  accept="application/pdf,.pdf"
+                  accept="application/pdf,.pdf,image/*"
+                  multiple
                   className="hidden"
                   onChange={(event) => {
-                    const file = event.target.files?.[0] || null;
-                    setSelectedFile(file);
-                    if (file && !form.name.trim()) {
+                    const picked = Array.from(event.target.files || []);
+                    // Selection is additive (repeated picks keep adding, not
+                    // replacing) - reset so choosing the same file(s) again
+                    // still fires onChange.
+                    event.target.value = "";
+                    if (picked.length === 0) return;
+
+                    setSelectedFiles((current) => [...current, ...picked]);
+                    // Only auto-fill the name from a single file's name, the
+                    // same as before - with several files there's no one
+                    // obvious name to guess, and batch mode below derives
+                    // each created test's name from its own file anyway.
+                    if (
+                      selectedFiles.length === 0 &&
+                      picked.length === 1 &&
+                      !form.name.trim()
+                    ) {
                       setForm((current) => ({
                         ...current,
-                        name: file.name.replace(/\.pdf$/i, ""),
+                        name: picked[0].name.replace(/\.[^.]+$/, ""),
                       }));
                     }
                   }}
                 />
               </label>
-              {selectedFile && (
-                <div className="mt-2 flex items-center justify-between rounded-xl border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
-                  <span className="truncate">{selectedFile.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedFile(null)}
-                    className="font-semibold text-red-500 hover:text-red-600"
-                  >
-                    Remove
-                  </button>
+
+              <MultiFileList
+                files={selectedFiles}
+                onReorder={setSelectedFiles}
+                onRemove={(index) =>
+                  setSelectedFiles((current) =>
+                    current.filter((_, i) => i !== index),
+                  )
+                }
+              />
+
+              {selectedFiles.length > 1 && (
+                <div className="mt-3">
+                  <p className="mb-2 block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Multiple files - how should these become mock tests?
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setUploadMode("combine")}
+                      className={`flex flex-col items-center gap-1.5 rounded-md border-2 px-2 py-3 text-center transition-all ${
+                        uploadMode === "combine"
+                          ? "border-orange-500/60 bg-orange-500/10"
+                          : "border-border bg-muted/40 hover:border-orange-500/30"
+                      }`}
+                    >
+                      <Layers className="h-4 w-4 text-orange-500" />
+                      <span className="text-xs font-semibold text-foreground">
+                        Combine into this one test
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setUploadMode("batch")}
+                      className={`flex flex-col items-center gap-1.5 rounded-md border-2 px-2 py-3 text-center transition-all ${
+                        uploadMode === "batch"
+                          ? "border-orange-500/60 bg-orange-500/10"
+                          : "border-border bg-muted/40 hover:border-orange-500/30"
+                      }`}
+                    >
+                      <Rows3 className="h-4 w-4 text-orange-500" />
+                      <span className="text-xs font-semibold text-foreground">
+                        Separate test per file
+                      </span>
+                    </button>
+                  </div>
+                  {isBatchMode && (
+                    <p className="mt-2 text-[11px] text-muted-foreground">
+                      Each file becomes its own mock test, named after the file
+                      (the Name field above is used as an optional prefix).
+                      Duration, marking and other settings below apply to all of
+                      them.
+                    </p>
+                  )}
                 </div>
               )}
             </div>
           )}
 
-          {mode === "upload" && selectedFile && (
+          {mode === "upload" && selectedFiles.length > 0 && (
             <div>
               <p className="mb-2 block text-sm font-semibold text-foreground">
-                What's in this PDF?
+                What's in{" "}
+                {selectedFiles.length > 1 ? "these files" : "this PDF"}?
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <button
@@ -607,11 +803,19 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
                 <>
                   <Loader2 className="w-4 h-4 animate-spin shrink-0" />
                   <span>
-                    {mode === "generate" ? "Generating..." : "Creating..."}
+                    {batchProgress
+                      ? `Creating ${batchProgress.done} of ${batchProgress.total}...`
+                      : mode === "generate"
+                        ? "Generating..."
+                        : "Creating..."}
                   </span>
                 </>
               ) : (
-                <span>Add Mock Test</span>
+                <span>
+                  {isBatchMode
+                    ? `Add ${selectedFiles.length} Mock Tests`
+                    : "Add Mock Test"}
+                </span>
               )}
             </button>
           </div>
