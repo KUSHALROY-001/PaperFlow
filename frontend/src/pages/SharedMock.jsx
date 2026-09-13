@@ -265,6 +265,19 @@ export default function SharedMock() {
                   Left Arrow
                 </kbd>
               </div>
+              {/* Touch devices only - see SessionQuestionView.jsx's touch
+                  handlers. Kept as a plain badge, not a <kbd>, since it's a
+                  gesture rather than a key - matches this modal's existing
+                  text-label style (no ArrowLeft/ArrowRight icons imported
+                  here, unlike MockSession.jsx's copy of this modal). */}
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground font-medium">
+                  Swap Question (touch)
+                </span>
+                <kbd className="px-2 py-1 bg-muted border border-border rounded-lg font-mono font-bold text-foreground">
+                  Swipe Left / Right
+                </kbd>
+              </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground font-medium">
                   Select Option
@@ -303,7 +316,10 @@ export default function SharedMock() {
       {/* One-minute grace period after confirming exit, so a single
           mistaken tap can't end the test outright */}
       {cancelSecondsLeft !== null && (
-        <CancelCountdownBanner secondsLeft={cancelSecondsLeft} onUndo={undoExit} />
+        <CancelCountdownBanner
+          secondsLeft={cancelSecondsLeft}
+          onUndo={undoExit}
+        />
       )}
     </div>
   );

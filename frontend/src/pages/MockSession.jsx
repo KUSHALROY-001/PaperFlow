@@ -6,6 +6,7 @@ import {
   X,
   ArrowRight,
   ArrowLeft,
+  Hand,
 } from "lucide-react";
 import { useExamSession } from "@/hooks/useExamSession";
 import { usePreventSessionExit } from "@/hooks/usePreventSessionExit";
@@ -53,10 +54,16 @@ export default function MockSession() {
     cancelSecondsLeft,
     undoExit,
   } = usePreventSessionExit({
-    isActive: !loading && !loadError && !review && Boolean(session) && Boolean(q),
+    isActive:
+      !loading && !loadError && !review && Boolean(session) && Boolean(q),
     onConfirmExit: async () => {
       await handleCancelSession();
-      navigate(-1);
+      // Not navigate(-1): this hook pushes an extra history entry on
+      // mount to trap the back button, so a relative "back" would just
+      // land on this same exam page instead of actually leaving it.
+      // Navigate to an absolute route instead, matching the sidebar's
+      // "Exit Session" link (SessionQuestionNav's default exitHref).
+      navigate("/dashboard");
     },
   });
 
@@ -217,6 +224,19 @@ export default function MockSession() {
                   <ArrowLeft></ArrowLeft>
                 </kbd>
               </div>
+              {/* Touch devices only - see SessionQuestionView.jsx's touch
+                  handlers. Kept as a plain badge, not a <kbd>, since it's a
+                  gesture rather than a key. */}
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground font-medium">
+                  Swap Question (touch)
+                </span>
+                <span className="flex items-center gap-1.5 px-2 py-1 bg-muted border border-border rounded-lg font-mono font-bold text-foreground">
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <Hand className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </span>
+              </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground font-medium">
                   Select Option
@@ -255,7 +275,10 @@ export default function MockSession() {
       {/* One-minute grace period after confirming exit, so a single
           mistaken tap can't end the test outright */}
       {cancelSecondsLeft !== null && (
-        <CancelCountdownBanner secondsLeft={cancelSecondsLeft} onUndo={undoExit} />
+        <CancelCountdownBanner
+          secondsLeft={cancelSecondsLeft}
+          onUndo={undoExit}
+        />
       )}
     </div>
   );
