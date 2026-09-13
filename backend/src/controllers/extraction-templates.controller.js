@@ -18,6 +18,20 @@ export async function getOne(req, res) {
   res.json({ template });
 }
 
+// AI draft only - nothing is created here (see
+// extraction-templates.service.js#generateTemplateDraft), so this is a
+// plain 200 with the same { template } envelope `create` uses below -
+// letting the frontend treat a draft and a freshly-created template
+// identically once either lands in the form, rather than needing to know
+// which one it's looking at.
+export async function generate(req, res) {
+  const template = await templatesService.generateTemplateDraft(
+    req.workspaceId,
+    req.body,
+  );
+  res.json({ template });
+}
+
 export async function create(req, res) {
   const template = await templatesService.createTemplate(
     req.workspaceId,

@@ -472,6 +472,15 @@ export const api = {
       body: JSON.stringify(payload),
     });
   },
+  // Synchronous - the worker may be waking from idle (up to ~90s), so
+  // this can take a while; GenerateTemplateModal shows a loading state
+  // for the duration rather than treating it like a normal quick fetch.
+  generateExtractionTemplate(examName) {
+    return apiRequest("/api/extraction-templates/generate", {
+      method: "POST",
+      body: JSON.stringify({ examName }),
+    });
+  },
   updateExtractionTemplate(templateId, payload) {
     return apiRequest(`/api/extraction-templates/${templateId}`, {
       method: "PATCH",

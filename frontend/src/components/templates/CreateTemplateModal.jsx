@@ -61,6 +61,13 @@ export default function CreateTemplateModal({
     applyButtonTitle = undefined;
   }
 
+  // An AI draft is initialTemplate with every field a real template has
+  // except id (see useTemplateForm's isEditing, which is what actually
+  // keeps this on the create/POST path despite initialTemplate being
+  // set) - just enough to tell the subtitle apart from both the blank
+  // create and the real-edit case below.
+  const isAiDraft = Boolean(initialTemplate && !initialTemplate.id);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
@@ -82,9 +89,11 @@ export default function CreateTemplateModal({
               {isEditing ? "Edit Template" : "Create Template"}
             </h2>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-              {isEditing
-                ? "Changes apply the next time this template is used — mock tests already created from it are unaffected."
-                : "Saved to your workspace — only your team can see and apply it."}
+              {isAiDraft
+                ? "Generated from AI — review and adjust before saving."
+                : isEditing
+                  ? "Changes apply the next time this template is used — mock tests already created from it are unaffected."
+                  : "Saved to your workspace — only your team can see and apply it."}
             </p>
           </div>
           <button

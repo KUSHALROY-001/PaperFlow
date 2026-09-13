@@ -1,5 +1,6 @@
 import { pool } from "../db/pool.js";
 import { httpError } from "../lib/http-error.js";
+import { generateTemplateFromExamName } from "../lib/template-generate-client.js";
 import {
   optionalNumber,
   optionalString,
@@ -410,6 +411,96 @@ export async function getTemplateWithMyRating(templateId, workspaceId, userId) {
 // Custom templates are always workspace-owned - there is no way for this API
 // to create a global one; that's a deliberate seed/admin-only distinction.
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// AI-generated draft ("Build with AI" on Create Template)
+// Runs the worker's raw JSON through the EXACT same validators/normalizers
+// createTemplate below already uses (requiredEnum, normalizeSections,
+// nonNegativeNumber, normalizeStringArray, normalizeTemplateSettings) -
+// deliberately, so a malformed AI response fails the same way a malformed
+// manual submission would, with zero new validation logic to write or keep
+// in sync as those rules evolve. Returns the validated draft directly -
+// never inserts anything. A real row only ever gets created when the user
+// reviews the pre-filled form and submits it through createTemplate below,
+// same as typing everything in by hand.
+// ---------------------------------------------------------------------------
+export async function generateTemplateDraft(workspaceId, body) {
+  const examName = requiredString(body.examName, "examName");
+
+  const raw = await generateTemplateFromExamName(examName);
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    throw httpError(
+      502,
+      "AI returned an unusable draft - try again or build manually",
+    );
+  }
+
+  // Validation errors here mean the AI's OWN draft failed a rule a manual
+  // submission would also fail (e.g. a category outside CATEGORIES) - re-
+  // thrown with a prefix distinguishing "the AI got this wrong" from "you
+  // typed something wrong", since there's no form the user could have
+  // made this specific mistake in themselves.
+  try {
+    const name = requiredString(raw.name || examName, "name");
+    const description = optionalString(raw.description);
+    const category = requiredEnum(raw.category || "custom", CATEGORIES, "category");
+    const difficulty = requiredEnum(
+      raw.difficulty || "Variable",
+      DIFFICULTIES,
+      "difficulty",
+    );
+    const color = requiredEnum(raw.color || "purple", COLORS, "color");
+    const questionCount = requiredPositiveInteger(
+      raw.questionCount,
+      "questionCount",
+    );
+    const durationMinutes = positiveInteger(
+      raw.durationMinutes,
+      "durationMinutes",
+      null,
+    );
+    // Same defaults createTemplate itself falls back to when a manual
+    // submission omits these - keeps an incomplete AI draft landing on
+    // the same sensible numbers a blank form already starts with, rather
+    // than a second, different set of fallbacks to keep in sync.
+    const marksPerCorrect = nonNegativeNumber(
+      raw.marksPerCorrect,
+      "marksPerCorrect",
+      1,
+    );
+    const negativeMarksPerWrong = nonNegativeNumber(
+      raw.negativeMarksPerWrong,
+      "negativeMarksPerWrong",
+      0.25,
+    );
+    const tags = normalizeStringArray(raw.tags, "tags") ?? [];
+    const sections = normalizeSections(raw.sections, "sections") ?? [];
+    const settings = normalizeTemplateSettings(raw.settings);
+
+    return {
+      name,
+      description,
+      category,
+      difficulty,
+      color,
+      questionCount,
+      durationMinutes,
+      marksPerCorrect,
+      negativeMarksPerWrong,
+      tags,
+      sections,
+      settings,
+    };
+  } catch (error) {
+    if (error.statusCode) {
+      throw httpError(
+        422,
+        `AI returned an unusable draft (${error.message}) - try again or build manually`,
+      );
+    }
+    throw error;
+  }
+}
+
 export async function createTemplate(workspaceId, userId, body) {
   const name = requiredString(body.name, "name");
   const description = optionalString(body.description);

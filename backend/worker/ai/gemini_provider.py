@@ -19,7 +19,7 @@ from ..config import (
     AI_VISION_CHUNK_CONCURRENCY,
     GEMINI_API_KEY,
 )
-from .schemas import GEMINI_QUESTION_RESPONSE_SCHEMA
+from .schemas import GEMINI_QUESTION_RESPONSE_SCHEMA, GEMINI_TEMPLATE_RESPONSE_SCHEMA
 
 QUESTION_GENERATION_CONFIG = {
     "responseMimeType": "application/json",
@@ -29,6 +29,44 @@ QUESTION_GENERATION_CONFIG = {
     # from smaller/less strictly-instruction-following models.
     "responseSchema": GEMINI_QUESTION_RESPONSE_SCHEMA,
 }
+
+# Own dedicated generationConfig - generate_json below is hardwired to
+# QUESTION_GENERATION_CONFIG's question-list schema, which would force a
+# template-generation response into the wrong shape entirely, so that
+# request goes through its own method with its own schema instead.
+TEMPLATE_GENERATION_CONFIG = {
+    "responseMimeType": "application/json",
+    "responseSchema": GEMINI_TEMPLATE_RESPONSE_SCHEMA,
+}
+
+# Step 1 of generate_template_json's two-call flow (see that method's own
+# comment for why this can't just be one call with both search and a
+# schema attached). Deliberately NOT asking for the final JSON shape here
+# - a plain-text research summary the model is free to write however it
+# needs to is more reliable to extract from a grounded response than
+# fighting the model to hand-write valid JSON without any schema
+# enforcement backing it. Step 2 (the existing schema-constrained call)
+# does the actual JSON formatting, working from this summary.
+TEMPLATE_RESEARCH_SYSTEM_PROMPT = """
+You are researching real exam formats using Google Search. Given an exam
+name, search for and report its CURRENT, most recently published official
+pattern - prefer the latest available year's official notification,
+syllabus PDF, or exam-conducting-body announcement over older sources,
+forum posts, or your own general knowledge, since exam patterns (section
+structure, question counts, marking scheme, duration) genuinely change
+from year to year and an outdated pattern is actively misleading here.
+
+Report what you find in plain text, covering: the exam's full name, a
+short description, its category and typical difficulty, total question
+count, duration, marks per correct answer, negative marking (if any -
+many exams changed this in recent years, so check specifically), and a
+section-by-section breakdown (name, topics typically covered, and any
+section-specific question count or marking that differs from the overall
+scheme). Mention which year/cycle your sources are from where you can
+tell, and flag plainly if the pattern seems to have changed recently or if
+you're not confident about a specific number. If you can't find anything
+specific for this exam, say so plainly rather than inventing details.
+""".strip()
 
 
 class GeminiDailyQuotaExceededError(RuntimeError):
@@ -293,7 +331,7 @@ class GeminiProvider:
             raise RuntimeError("GEMINI_API_KEY is required when AI_PROVIDER=gemini")
         self.model = AI_MODEL or "gemini-flash-latest"
 
-    def generate_json(self, system_prompt, user_prompt):
+    def _generate_with_config(self, system_prompt, user_prompt, generation_config):
         def make_request():
             payload = {
                 "contents": [
@@ -304,7 +342,7 @@ class GeminiProvider:
                         ],
                     }
                 ],
-                "generationConfig": QUESTION_GENERATION_CONFIG,
+                "generationConfig": generation_config,
             }
 
             req = request.Request(
@@ -323,6 +361,90 @@ class GeminiProvider:
             return _extract_text_or_diagnose(data)
 
         return _call_with_retry(make_request)
+
+    def generate_json(self, system_prompt, user_prompt):
+        return self._generate_with_config(
+            system_prompt, user_prompt, QUESTION_GENERATION_CONFIG
+        )
+
+    # Same call shape as _generate_with_config above, minus generationConfig
+    # entirely and with the google_search tool attached instead. Kept as
+    # its own method rather than a parameter on _generate_with_config
+    # because the two are not just "config A vs config B" - a schema'd
+    # generationConfig and this tool are mutually exclusive on Gemini's
+    # API (confirmed: attaching both returns 400 "Tool use with a response
+    # mime type: 'application/json' is unsupported"), so there's no
+    # request shape where both would ever apply together.
+    def _generate_grounded_text(self, system_prompt, user_prompt):
+        def make_request():
+            payload = {
+                "contents": [
+                    {
+                        "role": "user",
+                        "parts": [
+                            {"text": f"{system_prompt}\n\n{user_prompt}"},
+                        ],
+                    }
+                ],
+                "tools": [{"google_search": {}}],
+            }
+
+            req = request.Request(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent",
+                data=json.dumps(payload).encode("utf-8"),
+                headers={
+                    "x-goog-api-key": GEMINI_API_KEY,
+                    "Content-Type": "application/json",
+                },
+                method="POST",
+            )
+
+            with request.urlopen(req, timeout=AI_TIMEOUT_SECONDS) as response:
+                data = json.loads(response.read().decode("utf-8"))
+
+            return _extract_text_or_diagnose(data)
+
+        return _call_with_retry(make_request)
+
+    def generate_template_json(self, system_prompt, user_prompt):
+        # Two calls, not one - see TEMPLATE_RESEARCH_SYSTEM_PROMPT's own
+        # comment and _generate_grounded_text's above for why Gemini
+        # specifically can't combine search grounding with the
+        # schema-constrained call in a single request the way OpenAI's
+        # Responses API can (openai_provider.py's generate_template_json
+        # stays single-call). Step 1 grounds the model in the exam's
+        # actual CURRENT pattern via a live search (plain text, no
+        # schema); step 2 is the original schema-constrained call,
+        # working from those findings instead of - or in addition to -
+        # whatever the model already "knows" from training, which is
+        # exactly what was producing outdated exam patterns before this.
+        try:
+            research = self._generate_grounded_text(
+                TEMPLATE_RESEARCH_SYSTEM_PROMPT, user_prompt
+            )
+        except Exception:
+            # Search grounding is a quality improvement, not a hard
+            # dependency for this feature to function at all - if it
+            # fails for any reason (quota, transient network error, a
+            # model that doesn't support the tool), fall back to a
+            # single ungrounded call rather than failing template
+            # generation entirely.
+            research = None
+
+        structuring_prompt = user_prompt
+        if research and research.strip():
+            structuring_prompt = (
+                f"{user_prompt}\n\n"
+                "Live web search findings on this exam's CURRENT pattern "
+                "(prefer these over your own training knowledge wherever "
+                "they differ - your training data may predate a pattern "
+                "change):\n"
+                f"{research.strip()}"
+            )
+
+        return self._generate_with_config(
+            system_prompt, structuring_prompt, TEMPLATE_GENERATION_CONFIG
+        )
 
     def generate_json_from_pdf(self, system_prompt, user_prompt, pdf_path):
         def make_request():

@@ -64,6 +64,16 @@ WORKER_CONCURRENCY = int(os.environ.get("WORKER_CONCURRENCY", "4"))
 # this is saturated - a request just waits briefly or gets a clear "busy"
 # response instead of failing outright.
 WORKER_RENDER_CONCURRENCY = int(os.environ.get("WORKER_RENDER_CONCURRENCY", "3"))
+
+# Same reasoning as WORKER_RENDER_CONCURRENCY above, its own separate pool
+# again - /generate-template (http_server.py) is a third distinct kind of
+# synchronous request (one AI call, no PDF/B2 involved at all), triggered
+# by someone clicking "Build with AI" on Create Template. Small default
+# for the same reason: no queue to fall back on if saturated, just a
+# quick "busy" response.
+WORKER_TEMPLATE_GENERATION_CONCURRENCY = int(
+    os.environ.get("WORKER_TEMPLATE_GENERATION_CONCURRENCY", "3")
+)
 AI_PROVIDER = os.environ.get("AI_PROVIDER", "disabled").strip().lower()
 AI_MODEL = os.environ.get("AI_MODEL", "").strip()
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "").strip()

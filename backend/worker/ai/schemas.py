@@ -197,6 +197,95 @@ OPENAI_QUESTION_RESPONSE_SCHEMA = _question_response_schema(nullable_as_union=Tr
 # The anchored, try-parse-first version now lives inline in that function.
 
 
+# Template generation (AI-generate-a-template-from-an-exam-name feature).
+# A wholly different shape from the question schema above - no per-question
+# fields at all - so this is its own builder rather than a variant of
+# _question_item_schema/_question_response_schema. Mirrors
+# extraction-templates.service.js's own validation shape exactly
+# (CATEGORIES/DIFFICULTIES/COLORS enums, sections as {name, topics,
+# questionCount?, marksPerCorrect?, negativeMarksPerWrong?}) so the
+# provider is constrained to return something that validation can actually
+# accept, not just "some JSON".
+def _template_section_schema(*, nullable_as_union):
+    def optional(json_type):
+        if nullable_as_union:
+            return {"type": [json_type, "null"]}
+        return {"type": json_type, "nullable": True}
+
+    properties = {
+        "name": {"type": "string"},
+        "topics": {"type": "array", "items": {"type": "string"}},
+        "questionCount": optional("integer"),
+        "marksPerCorrect": optional("number"),
+        "negativeMarksPerWrong": optional("number"),
+    }
+    schema = {
+        "type": "object",
+        "properties": properties,
+        "required": ["name", "topics"],
+    }
+    if nullable_as_union:
+        schema["required"] = list(properties.keys())
+        schema["additionalProperties"] = False
+    return schema
+
+
+def _template_response_schema(*, nullable_as_union):
+    def optional(json_type):
+        if nullable_as_union:
+            return {"type": [json_type, "null"]}
+        return {"type": json_type, "nullable": True}
+
+    properties = {
+        "name": {"type": "string"},
+        "description": optional("string"),
+        # Kept as free-form strings here, not a token-level enum
+        # constraint - the provider dialects don't agree on enum syntax
+        # the same way they don't agree on nullable syntax, and
+        # extraction-templates.service.js's requiredEnum already rejects
+        # anything outside CATEGORIES/DIFFICULTIES/COLORS with a clear
+        # 400 the frontend surfaces - the same safety net every other
+        # field here already relies on instead of trusting the schema
+        # alone.
+        "category": {"type": "string"},
+        "difficulty": {"type": "string"},
+        "color": {"type": "string"},
+        "questionCount": {"type": "integer"},
+        "durationMinutes": optional("integer"),
+        "marksPerCorrect": {"type": "number"},
+        "negativeMarksPerWrong": {"type": "number"},
+        "tags": {"type": "array", "items": {"type": "string"}},
+        "sections": {
+            "type": "array",
+            "items": _template_section_schema(nullable_as_union=nullable_as_union),
+        },
+        "markingSchemeDescription": optional("string"),
+    }
+    schema = {
+        "type": "object",
+        "properties": properties,
+        "required": [
+            "name",
+            "category",
+            "difficulty",
+            "color",
+            "questionCount",
+            "marksPerCorrect",
+            "negativeMarksPerWrong",
+            "tags",
+            "sections",
+        ],
+    }
+    if nullable_as_union:
+        schema["required"] = list(properties.keys())
+        schema["additionalProperties"] = False
+    return schema
+
+
+GEMINI_TEMPLATE_RESPONSE_SCHEMA = _template_response_schema(nullable_as_union=False)
+OPENAI_TEMPLATE_RESPONSE_SCHEMA = _template_response_schema(nullable_as_union=True)
+
+
 def _find_balanced_objects(text):
     """
     Scans text for every balanced {...} substring, at any nesting depth -
@@ -697,4 +786,4 @@ def parse_positive_int(value):
         value = int(value)
     except (TypeError, ValueError):
         return None
-    return value if value > 0 else None
+    return value if value > 0 else None 

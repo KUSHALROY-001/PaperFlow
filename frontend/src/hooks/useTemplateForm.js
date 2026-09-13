@@ -12,7 +12,16 @@ import {
 
 export function useTemplateForm({ initialTemplate = null, onSaved }) {
   const { isViewer } = useAuth();
-  const isEditing = Boolean(initialTemplate);
+  // An AI-generated draft (see GenerateTemplateModal.jsx) is passed in as
+  // initialTemplate to prefill this same form/hook, but it has every
+  // field a real saved template has EXCEPT id (it was never inserted -
+  // see extraction-templates.service.js#generateTemplateDraft, which
+  // returns a validated draft object without ever calling
+  // templatesRepo.createTemplate). Keying off .id rather than the whole
+  // object means a draft still submits through createTemplate below
+  // (POST, exactly like starting from a blank form), while a real saved
+  // template - which always has an id from the DB - still PATCHes.
+  const isEditing = Boolean(initialTemplate?.id);
 
   const [name, setName] = useState(initialTemplate?.name || "");
   const [description, setDescription] = useState(

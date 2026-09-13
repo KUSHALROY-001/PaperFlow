@@ -64,7 +64,13 @@ from urllib.parse import parse_qs, urlparse
 
 import fitz
 
-from .config import AI_PDF_RENDER_SCALE, WORKER_CONCURRENCY, WORKER_RENDER_CONCURRENCY
+from .ai import generate_template_from_exam_name, get_provider
+from .config import (
+    AI_PDF_RENDER_SCALE,
+    WORKER_CONCURRENCY,
+    WORKER_RENDER_CONCURRENCY,
+    WORKER_TEMPLATE_GENERATION_CONCURRENCY,
+)
 from .storage import download_pdf_to_temp_file
 from .worker import process_next_job
 
@@ -93,6 +99,12 @@ _recheck_requested = threading.Event()
 # WORKER_RENDER_CONCURRENCY's own comment in config.py for why this isn't
 # just reusing the job-processing semaphore.
 _render_semaphore = threading.Semaphore(WORKER_RENDER_CONCURRENCY)
+
+# Same reasoning again, its own separate pool - see
+# WORKER_TEMPLATE_GENERATION_CONCURRENCY's own comment in config.py.
+_template_generation_semaphore = threading.Semaphore(
+    WORKER_TEMPLATE_GENERATION_CONCURRENCY
+)
 
 
 def _hold_slot_and_drain():
@@ -272,12 +284,10 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self):
-        print(
-        f"[INCOMING REQUEST] POST {self.path} from {self.client_address}",
-        flush=True
-        )
-        
         parsed = urlparse(self.path)
+        if parsed.path == "/generate-template":
+            self._handle_generate_template(parsed)
+            return
         if parsed.path != "/run":
             self._send_json(404, {"error": "not found"})
             return
@@ -313,6 +323,75 @@ class Handler(BaseHTTPRequestHandler):
                     "note": f"all {WORKER_CONCURRENCY} concurrency slots are busy; will run as soon as one frees up",
                 },
             )
+
+    def _read_json_body(self):
+        length = int(self.headers.get("Content-Length") or 0)
+        if length <= 0:
+            return {}
+        raw = self.rfile.read(length)
+        return json.loads(raw.decode("utf-8"))
+
+    def _handle_generate_template(self, parsed):
+        # Same auth shape as every other endpoint here - see do_POST's
+        # own comment for why a missing secret fails loudly rather than
+        # silently accepting unauthenticated requests.
+        if not WORKER_TRIGGER_SECRET:
+            self._send_json(
+                500, {"error": "WORKER_TRIGGER_SECRET is not configured"}
+            )
+            return
+
+        provided_token = parse_qs(parsed.query).get("token", [""])[0]
+        if provided_token != WORKER_TRIGGER_SECRET:
+            self._send_json(403, {"error": "invalid or missing token"})
+            return
+
+        try:
+            body = self._read_json_body()
+        except (ValueError, UnicodeDecodeError):
+            self._send_json(400, {"error": "request body must be valid JSON"})
+            return
+
+        exam_name = str(body.get("examName") or "").strip()
+        if not exam_name:
+            self._send_json(400, {"error": "examName is required"})
+            return
+
+        provider = get_provider()
+        if not provider:
+            self._send_json(
+                503,
+                {
+                    "error": "AI_PROVIDER is disabled - generating a template "
+                    "requires an AI provider to be configured"
+                },
+            )
+            return
+
+        # Bounded separately from both job-processing and render
+        # concurrency (see _template_generation_semaphore's own comment) -
+        # blocking=False so a request arriving when every slot is already
+        # busy gets a clear, immediate "try again shortly" rather than
+        # this handler thread sitting blocked indefinitely.
+        if not _template_generation_semaphore.acquire(blocking=False):
+            self._send_json(
+                429,
+                {
+                    "error": f"all {WORKER_TEMPLATE_GENERATION_CONCURRENCY} "
+                    "template-generation slots are busy - try again shortly"
+                },
+            )
+            return
+
+        try:
+            template = generate_template_from_exam_name(exam_name, provider)
+        except Exception as error:
+            self._send_json(500, {"error": str(error)})
+            return
+        finally:
+            _template_generation_semaphore.release()
+
+        self._send_json(200, {"template": template})
 
     def log_message(self, format, *args):
         # BaseHTTPRequestHandler logs every request to stderr by default,

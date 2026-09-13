@@ -8,6 +8,8 @@ import TemplateCard from "../components/templates/TemplateCard";
 import TemplatePreviewModal from "../components/templates/TemplatePreviewModal";
 import ApplyTemplateModal from "../components/templates/ApplyTemplateModal";
 import CreateTemplateModal from "../components/templates/CreateTemplateModal";
+import CreateTemplateChoiceModal from "../components/templates/CreateTemplateChoiceModal";
+import GenerateTemplateModal from "../components/templates/GenerateTemplateModal";
 import { ConfirmDialog } from "../components/design-system/ConfirmDialog";
 import { SkeletonCard } from "@/components/ui/skeleton-card";
 
@@ -29,6 +31,12 @@ export default function Templates() {
     setApplyTarget,
     showCreateModal,
     setShowCreateModal,
+    showChoiceModal,
+    setShowChoiceModal,
+    showGenerateModal,
+    setShowGenerateModal,
+    aiDraftTemplate,
+    setAiDraftTemplate,
     editTarget,
     setEditTarget,
     deleteTarget,
@@ -65,7 +73,7 @@ export default function Templates() {
         <div className="text-left sm:text-right flex sm:flex-col items-center sm:items-end gap-3 sm:gap-1">
           <button
             disabled={isViewer}
-            onClick={() => !isViewer && setShowCreateModal(true)}
+            onClick={() => !isViewer && setShowChoiceModal(true)}
             title={
               isViewer
                 ? "Editor role is required to create templates"
@@ -192,6 +200,47 @@ export default function Templates() {
             });
             setApplyTarget(null);
             navigate(`/cluster/${clusterId}/mocktest/${mockTestId}`);
+          }}
+        />
+      )}
+
+      {showChoiceModal && (
+        <CreateTemplateChoiceModal
+          onClose={() => setShowChoiceModal(false)}
+          onChooseManual={() => {
+            setShowChoiceModal(false);
+            setShowCreateModal(true);
+          }}
+          onChooseAi={() => {
+            setShowChoiceModal(false);
+            setShowGenerateModal(true);
+          }}
+        />
+      )}
+
+      {showGenerateModal && (
+        <GenerateTemplateModal
+          onClose={() => setShowGenerateModal(false)}
+          onBack={() => {
+            setShowGenerateModal(false);
+            setShowChoiceModal(true);
+          }}
+          onGenerated={(draft) => {
+            setShowGenerateModal(false);
+            setAiDraftTemplate(draft);
+          }}
+        />
+      )}
+
+      {aiDraftTemplate && (
+        <CreateTemplateModal
+          initialTemplate={aiDraftTemplate}
+          onClose={() => setAiDraftTemplate(null)}
+          onSaved={() => {
+            queryClient.invalidateQueries({
+              queryKey: ["extraction-templates"],
+            });
+            setAiDraftTemplate(null);
           }}
         />
       )}

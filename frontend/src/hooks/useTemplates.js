@@ -18,6 +18,15 @@ export function useTemplates() {
   const [preview, setPreview] = useState(null);
   const [applyTarget, setApplyTarget] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  // "Build with AI" flow (see CreateTemplateChoiceModal/GenerateTemplateModal):
+  // clicking Create Template opens the choice modal first instead of
+  // showCreateModal directly; aiDraftTemplate holds the mapped draft once
+  // generated, which re-uses CreateTemplateModal exactly like editTarget
+  // does below - same component, same submit path - just with no `id`,
+  // so useTemplateForm's isEditing fix keeps it on the create (POST) path.
+  const [showChoiceModal, setShowChoiceModal] = useState(false);
+  const [showGenerateModal, setShowGenerateModal] = useState(false);
+  const [aiDraftTemplate, setAiDraftTemplate] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [actionError, setActionError] = useState("");
@@ -119,6 +128,12 @@ export function useTemplates() {
     setApplyTarget,
     showCreateModal,
     setShowCreateModal,
+    showChoiceModal,
+    setShowChoiceModal,
+    showGenerateModal,
+    setShowGenerateModal,
+    aiDraftTemplate,
+    setAiDraftTemplate,
     editTarget,
     setEditTarget,
     deleteTarget,

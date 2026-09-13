@@ -7,6 +7,11 @@ export const extractionTemplatesRouter = Router();
 
 extractionTemplatesRouter.get("/", asyncHandler(templatesController.list));
 extractionTemplatesRouter.post(
+  "/generate",
+  requireRole("editor"),
+  asyncHandler(templatesController.generate),
+);
+extractionTemplatesRouter.post(
   "/",
   requireRole("editor"),
   asyncHandler(templatesController.create),
