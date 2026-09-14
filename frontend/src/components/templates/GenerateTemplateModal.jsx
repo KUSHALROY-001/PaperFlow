@@ -26,14 +26,39 @@ export default function GenerateTemplateModal({ onClose, onBack, onGenerated }) 
 
     setError("");
     setIsGenerating(true);
-    try {
-      const { template } = await api.generateExtractionTemplate(trimmed);
-      onGenerated(mapTemplate(template));
-    } catch (generateError) {
-      setError(
-        generateError.message || "Could not generate a template draft",
-      );
-      setIsGenerating(false);
+
+    // First click after Render's worker has spun down often gets an edge
+    // 429/502 before the process is up. The API already retries; this
+    // extra loop covers the case where even that budget ran out but the
+    // wake is still in progress — retrying here is what actually succeeds.
+    const maxAttempts = 4;
+    const retryDelaysMs = [8000, 12000, 20000];
+    let lastMessage = "";
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        const { template } = await api.generateExtractionTemplate(trimmed);
+        onGenerated(mapTemplate(template));
+        return;
+      } catch (generateError) {
+        const status = generateError.status;
+        const retryable = [429, 502, 503, 504].includes(status);
+        lastMessage =
+          generateError.message || "Could not generate a template draft";
+
+        if (!retryable || attempt === maxAttempts) {
+          setError(lastMessage);
+          setIsGenerating(false);
+          return;
+        }
+
+        setError(
+          "The AI service is waking up after being idle — retrying shortly…",
+        );
+        await new Promise((resolve) =>
+          setTimeout(resolve, retryDelaysMs[attempt - 1] || 15000),
+        );
+      }
     }
   };
 
@@ -88,8 +113,8 @@ export default function GenerateTemplateModal({ onClose, onBack, onGenerated }) 
 
         {isGenerating && (
           <p className="text-xs text-muted-foreground mt-3">
-            This can take a moment, especially if the AI service has been
-            idle — hang tight.
+            This can take a minute if the AI service has been idle — it
+            may need to wake up first. Hang tight.
           </p>
         )}
 

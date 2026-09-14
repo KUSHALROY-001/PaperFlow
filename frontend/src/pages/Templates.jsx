@@ -42,9 +42,11 @@ export default function Templates() {
     deleteTarget,
     setDeleteTarget,
     actionError,
+    visibilityUpdatingId,
     handleDeleteTemplate,
     handleRateTemplate,
     handleRemoveRating,
+    handleUpdateTemplateVisibility,
     isLoading,
     error,
     templates,
@@ -165,6 +167,8 @@ export default function Templates() {
               onApply={setApplyTarget}
               onEdit={setEditTarget}
               onDelete={setDeleteTarget}
+              onUpdateVisibility={handleUpdateTemplateVisibility}
+              isVisibilityUpdating={visibilityUpdatingId === t.id}
             />
           ))}
         </div>

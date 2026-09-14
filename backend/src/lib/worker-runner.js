@@ -223,7 +223,30 @@ async function kickDeployedWorker(jobId) {
 // (rare) or the underlying worker call it makes failing for the same
 // reasons kickDeployedWorker already logs and retries independently.
 async function kickViaRelay(jobId) {
-  if (!RELAY_URL || !RELAY_SHARED_SECRET) return;
+  const result = await wakeWorkerViaRelay();
+  if (result.skipped) return;
+
+  if (result.error) {
+    console.warn(
+      `[worker-runner] Relay kick for job ${jobId} failed: ${result.error}`,
+    );
+    return;
+  }
+
+  console.info(
+    `[worker-runner] Relay kick for job ${jobId}: relay responded ${result.relayStatus}, worker responded ${result.workerStatus}`,
+  );
+}
+
+// The Cloudflare Worker is the only origin that has been shown to actually
+// wake a spun-down Render worker from this API. Node hitting
+// WORKER_SERVICE_URL directly gets an edge 429 before the process starts
+// (see the RELAY_* comment at the top of this file). Template generation
+// awaits this; job kicks fire it in the background.
+export async function wakeWorkerViaRelay() {
+  if (!RELAY_URL || !RELAY_SHARED_SECRET) {
+    return { skipped: true };
+  }
 
   try {
     const res = await fetch(RELAY_URL, {
@@ -231,13 +254,14 @@ async function kickViaRelay(jobId) {
       headers: { "x-relay-token": RELAY_SHARED_SECRET },
     });
     const responseBody = await res.json().catch(() => ({}));
-    console.info(
-      `[worker-runner] Relay kick for job ${jobId}: relay responded ${res.status}, worker responded ${responseBody.workerStatus}`,
-    );
+    return {
+      skipped: false,
+      relayStatus: res.status,
+      workerStatus: responseBody.workerStatus,
+      body: responseBody,
+    };
   } catch (error) {
-    console.warn(
-      `[worker-runner] Relay kick for job ${jobId} failed: ${error.message}`,
-    );
+    return { skipped: false, error: error.message };
   }
 }
 

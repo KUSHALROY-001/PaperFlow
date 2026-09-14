@@ -27,9 +27,15 @@ const TEMPLATE_COLUMNS = `
   t.rating,
   t.rating_count AS "ratingCount",
   t.settings,
+  t.is_public AS "isPublic",
   t.workspace_id IS NULL AS "systemTemplate",
   t.created_at AS "createdAt",
-  t.updated_at AS "updatedAt"
+  t.updated_at AS "updatedAt",
+  t.published_at AS "publishedAt",
+  (SELECT u.name FROM users u WHERE u.id = t.created_by) AS "publisherName",
+  (SELECT u.avatar_url FROM users u WHERE u.id = t.created_by) AS "publisherAvatarUrl",
+  (SELECT u.avatar_public_id FROM users u WHERE u.id = t.created_by) AS "publisherAvatarPublicId",
+  (SELECT u.avatar_updated_at FROM users u WHERE u.id = t.created_by) AS "publisherAvatarUpdatedAt"
 `;
 
 const templateSelect = `SELECT ${TEMPLATE_COLUMNS} FROM extraction_templates t`;
@@ -64,7 +70,7 @@ export async function listAccessibleTemplates(
   { category, search, sortBy = "usage" } = {},
 ) {
   const conditions = [
-    "(t.workspace_id IS NULL OR t.workspace_id = $1)",
+    "(t.workspace_id IS NULL OR t.workspace_id = $1 OR t.is_public = TRUE)",
     "t.is_active = TRUE",
   ];
   const params = [workspaceId];
@@ -107,7 +113,7 @@ export async function listTemplateCategories(workspaceId) {
     `
     SELECT DISTINCT t.category
     FROM extraction_templates t
-    WHERE (t.workspace_id IS NULL OR t.workspace_id = $1)
+    WHERE (t.workspace_id IS NULL OR t.workspace_id = $1 OR t.is_public = TRUE)
       AND t.is_active = TRUE
     ORDER BY t.category ASC
     `,
@@ -130,7 +136,7 @@ export async function findAccessibleTemplateById(
     `
     ${templateSelect}
     WHERE t.id = $1
-      AND (t.workspace_id IS NULL OR t.workspace_id = $2)
+      AND (t.workspace_id IS NULL OR t.workspace_id = $2 OR t.is_public = TRUE)
     `,
     [templateId, workspaceId],
   );
@@ -233,7 +239,13 @@ export async function updateTemplate(templateId, workspaceId, fields) {
         color = COALESCE($16, color),
         is_active = COALESCE($17, is_active),
         rating = CASE WHEN $18::boolean THEN $19 ELSE rating END,
-        settings = COALESCE($20::jsonb, settings)
+        settings = COALESCE($20::jsonb, settings),
+        is_public = CASE WHEN $21::boolean THEN $22 ELSE is_public END,
+        published_at = CASE
+          WHEN $21::boolean AND $22::boolean THEN COALESCE(published_at, now())
+          WHEN $21::boolean AND NOT $22::boolean THEN NULL
+          ELSE published_at
+        END
       WHERE id = $1
         AND workspace_id = $2
       RETURNING *
@@ -261,6 +273,8 @@ export async function updateTemplate(templateId, workspaceId, fields) {
       fields.ratingProvided ?? false,
       fields.rating ?? null,
       fields.settings ? JSON.stringify(fields.settings) : null,
+      fields.isPublicProvided ?? false,
+      fields.isPublic ?? false,
     ],
   );
 

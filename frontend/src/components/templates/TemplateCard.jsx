@@ -1,7 +1,5 @@
 import {
-  BookOpen,
   Download,
-  Eye,
   Pencil,
   Sparkles,
   Star,
@@ -10,8 +8,32 @@ import {
   Users,
   Zap,
 } from "lucide-react";
-import { colorMap, iconBgMap } from "@/utils/templateHelpers";
+import { colorMap } from "@/utils/templateHelpers";
 import { useAuth } from "@/lib/AuthContext";
+import UserAvatar from "@/components/shared/UserAvatar";
+
+function formatPublishedDate(value) {
+  if (!value || Number.isNaN(new Date(value).getTime())) return "-";
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
+function TemplatePublisher({ template, className = "" }) {
+  return (
+    <div className={`flex items-center gap-1.5 min-w-0 ${className}`}>
+      <span className="max-w-28 truncate text-[11px] font-semibold text-foreground">
+        {template.publisherName}
+      </span>
+      <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+        {formatPublishedDate(template.publishedAt)}
+      </span>
+    </div>
+  );
+}
 
 export default function TemplateCard({
   template,
@@ -19,6 +41,8 @@ export default function TemplateCard({
   onApply,
   onEdit,
   onDelete,
+  onUpdateVisibility,
+  isVisibilityUpdating,
 }) {
   const { isViewer, isAdmin } = useAuth();
 
@@ -31,14 +55,38 @@ export default function TemplateCard({
     difficultyClass = "text-red-500";
   }
 
+  const handleCardClick = (event) => {
+    if (event.target.closest?.("button, a, input, select, textarea")) {
+      return;
+    }
+    onPreview(template);
+  };
+
+  const handleCardKeyDown = (event) => {
+    if (event.target !== event.currentTarget) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onPreview(template);
+    }
+  };
+
   return (
-    <div className="surface-card rounded-2xl p-5 border border-border hover:border-orange-500/30 transition-all">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+      className="surface-card cursor-pointer rounded-2xl p-5 border border-border hover:border-orange-500/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/30 transition-all"
+    >
       <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-        <div
-          className={`w-12 h-12 rounded-2xl ${iconBgMap[template.color] || "bg-orange-500/15 text-orange-500"} flex items-center justify-center shrink-0`}
-        >
-          <BookOpen className="w-6 h-6" />
-        </div>
+        <UserAvatar
+          src={template.publisherAvatarUrl}
+          name={template.publisherName}
+          seed={template.createdBy || template.publisherName || template.id}
+          size="lg"
+          rounded="xl"
+        />
+        <TemplatePublisher template={template} className="sm:hidden -mt-2" />
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div>
@@ -46,6 +94,10 @@ export default function TemplateCard({
                 <h3 className="font-bold text-foreground text-sm sm:text-base">
                   {template.name}
                 </h3>
+                <TemplatePublisher
+                  template={template}
+                  className="hidden sm:flex"
+                />
                 {template.isOwn && (
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                     <Sparkles className="w-2.5 h-2.5" /> Yours
@@ -93,13 +145,7 @@ export default function TemplateCard({
               {template.difficulty}
             </span>
           </div>
-          <div className="flex flex-col min-[420px]:flex-row gap-2 mt-4">
-            <button
-              onClick={() => onPreview(template)}
-              className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold border border-border bg-card text-foreground rounded-xl hover:bg-muted hover:border-orange-500/40 transition-all"
-            >
-              <Eye className="w-3.5 h-3.5 text-orange-500" /> Preview
-            </button>
+          <div className="flex flex-wrap gap-2 mt-4">
             <button
               disabled={isViewer}
               onClick={() => !isViewer && onApply(template)}
@@ -119,6 +165,51 @@ export default function TemplateCard({
             </button>
             {template.isOwn && (
               <>
+                <div className="flex items-center justify-center gap-2 shrink-0">
+                  <div className="group/visibility relative h-9 w-11">
+                    <span
+                      className={`hidden sm:flex absolute inset-0 items-center justify-center rounded-full text-[9px] font-bold transition-opacity group-hover/visibility:opacity-0 group-focus-within/visibility:opacity-0 ${
+                        template.isPublic
+                          ? "bg-orange-500/15 text-orange-500"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {template.isPublic ? "Public" : "Private"}
+                    </span>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={template.isPublic}
+                      disabled={isViewer || isVisibilityUpdating}
+                      onClick={() =>
+                        !isViewer &&
+                        !isVisibilityUpdating &&
+                        onUpdateVisibility(template, !template.isPublic)
+                      }
+                      title={
+                        isViewer
+                          ? "Editor role is required to change template visibility"
+                          : template.isPublic
+                            ? "Make this template private"
+                            : "Make this template public"
+                      }
+                      className={`absolute inset-x-0 top-1.5 opacity-100 sm:opacity-0 sm:group-hover/visibility:opacity-100 sm:group-focus-within/visibility:opacity-100 inline-flex h-6 w-11 items-center rounded-full transition-opacity disabled:opacity-40 disabled:cursor-not-allowed ${
+                        template.isPublic
+                          ? "bg-orange-500"
+                          : "bg-muted-foreground/30"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          template.isPublic ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                  <span className="sm:hidden text-xs font-semibold text-foreground">
+                    {template.isPublic ? "Public" : "Private"}
+                  </span>
+                </div>
                 <button
                   disabled={isViewer}
                   onClick={() => !isViewer && onEdit(template)}
@@ -127,7 +218,7 @@ export default function TemplateCard({
                       ? "Editor role is required to edit templates"
                       : "Edit template"
                   }
-                  className={`flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold border rounded-xl transition-all ${
+                  className={`flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold border rounded-full transition-all ${
                     isViewer
                       ? "border-border bg-muted text-muted-foreground/40 cursor-not-allowed opacity-50"
                       : "border-border bg-card text-foreground hover:bg-muted hover:border-orange-500/40"
@@ -143,7 +234,7 @@ export default function TemplateCard({
                       ? "Delete template"
                       : "Admin role is required to delete templates"
                   }
-                  className={`flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold border rounded-xl transition-all ${
+                  className={`flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold border rounded-full transition-all ${
                     isAdmin
                       ? "border-red-500/20 bg-card text-muted-foreground hover:text-red-500 hover:border-red-500/40 hover:bg-red-500/10"
                       : "border-border bg-muted text-muted-foreground/40 cursor-not-allowed opacity-50"

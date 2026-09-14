@@ -1,4 +1,5 @@
 import { pool } from "../db/pool.js";
+import { resolveAvatarUrl } from "../lib/cloudinary-storage.js";
 import { httpError } from "../lib/http-error.js";
 import { generateTemplateFromExamName } from "../lib/template-generate-client.js";
 import {
@@ -38,6 +39,26 @@ const COLORS = [
   "purple",
   "indigo",
 ];
+
+function shapeTemplate(template) {
+  if (!template) return template;
+
+  const {
+    publisherAvatarUrl,
+    publisherAvatarPublicId,
+    publisherAvatarUpdatedAt,
+    ...rest
+  } = template;
+
+  return {
+    ...rest,
+    publisherAvatarUrl: resolveAvatarUrl({
+      avatarUrl: publisherAvatarUrl,
+      avatarPublicId: publisherAvatarPublicId,
+      avatarUpdatedAt: publisherAvatarUpdatedAt,
+    }),
+  };
+}
 
 function slugify(name) {
   return (
@@ -373,7 +394,7 @@ export async function listTemplates(workspaceId, userId, query) {
 
   return {
     templates: templates.map((t) => ({
-      ...t,
+      ...shapeTemplate(t),
       myRating: myRatings[t.id] ?? null,
     })),
     categories,
@@ -391,7 +412,7 @@ export async function getTemplateOrFail(templateId, workspaceId, client) {
     throw httpError(404, "Template not found");
   }
 
-  return template;
+  return shapeTemplate(template);
 }
 
 // Same shape as getTemplateOrFail, plus the requesting user's own rating -
@@ -552,7 +573,7 @@ export async function createTemplate(workspaceId, userId, body) {
     const slug = attempt === 0 ? baseSlug : `${baseSlug}-${attempt + 1}`;
 
     try {
-      return await templatesRepo.createTemplate({
+      const template = await templatesRepo.createTemplate({
         workspaceId,
         createdBy: userId,
         slug,
@@ -570,6 +591,7 @@ export async function createTemplate(workspaceId, userId, body) {
         rating,
         settings,
       });
+      return shapeTemplate(template);
     } catch (error) {
       if (error.code !== "23505" || attempt === 4) {
         handleDuplicateTemplate(error);
@@ -589,6 +611,10 @@ export async function updateTemplate(templateId, workspaceId, body) {
   const descriptionProvided = body.description !== undefined;
   const durationMinutesProvided = body.durationMinutes !== undefined;
   const ratingProvided = body.rating !== undefined;
+  const isPublicProvided = body.isPublic !== undefined;
+  if (isPublicProvided && typeof body.isPublic !== "boolean") {
+    throw httpError(400, "isPublic must be a boolean");
+  }
   const tags = normalizeStringArray(body.tags, "tags");
   const sections = normalizeSections(body.sections, "sections");
 
@@ -634,6 +660,8 @@ export async function updateTemplate(templateId, workspaceId, body) {
     tags,
     sections,
     isActive: typeof body.isActive === "boolean" ? body.isActive : undefined,
+    isPublicProvided,
+    isPublic: isPublicProvided ? body.isPublic : undefined,
     ratingProvided,
     rating: ratingValue(body.rating),
     // undefined (not {}) when the caller didn't send `settings` at all -
@@ -653,7 +681,7 @@ export async function updateTemplate(templateId, workspaceId, body) {
     throw httpError(404, "Template not found");
   }
 
-  return template;
+  return shapeTemplate(template);
 }
 
 export async function deleteTemplate(templateId, workspaceId) {

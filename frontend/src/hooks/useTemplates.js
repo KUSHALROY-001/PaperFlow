@@ -2,10 +2,12 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { mapTemplate } from "@/utils/templateHelpers";
+import { useAuth } from "@/lib/AuthContext";
 
 // Extracted from pages/Templates.jsx — no behavior changes.
 export function useTemplates() {
   const queryClient = useQueryClient();
+  const { workspaceId } = useAuth();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState(null);
   // Replaces the old client-side "is popular" section (removed along with
@@ -30,6 +32,7 @@ export function useTemplates() {
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [actionError, setActionError] = useState("");
+  const [visibilityUpdatingId, setVisibilityUpdatingId] = useState(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["extraction-templates", category, sortBy],
@@ -37,8 +40,8 @@ export function useTemplates() {
   });
 
   const templates = useMemo(
-    () => (data?.templates || []).map(mapTemplate),
-    [data],
+    () => (data?.templates || []).map((row) => mapTemplate(row, workspaceId)),
+    [data, workspaceId],
   );
 
   const filtered = useMemo(
@@ -91,7 +94,7 @@ export function useTemplates() {
     try {
       setActionError("");
       const { template } = await api.rateExtractionTemplate(templateId, rating);
-      const mapped = mapTemplate(template);
+      const mapped = mapTemplate(template, workspaceId);
       setPreview((current) => (current?.id === templateId ? mapped : current));
       await queryClient.invalidateQueries({
         queryKey: ["extraction-templates"],
@@ -105,13 +108,35 @@ export function useTemplates() {
     try {
       setActionError("");
       const { template } = await api.deleteExtractionTemplateRating(templateId);
-      const mapped = mapTemplate(template);
+      const mapped = mapTemplate(template, workspaceId);
       setPreview((current) => (current?.id === templateId ? mapped : current));
       await queryClient.invalidateQueries({
         queryKey: ["extraction-templates"],
       });
     } catch (removeError) {
       setActionError(removeError.message || "Could not remove rating");
+    }
+  };
+
+  const handleUpdateTemplateVisibility = async (template, isPublic) => {
+    try {
+      setActionError("");
+      setVisibilityUpdatingId(template.id);
+      const { template: updatedTemplate } = await api.updateExtractionTemplate(
+        template.id,
+        { isPublic },
+      );
+      const mapped = mapTemplate(updatedTemplate, workspaceId);
+      setPreview((current) => (current?.id === template.id ? mapped : current));
+      await queryClient.invalidateQueries({
+        queryKey: ["extraction-templates"],
+      });
+    } catch (visibilityError) {
+      setActionError(
+        visibilityError.message || "Could not update template visibility",
+      );
+    } finally {
+      setVisibilityUpdatingId(null);
     }
   };
 
@@ -139,9 +164,11 @@ export function useTemplates() {
     deleteTarget,
     setDeleteTarget,
     actionError,
+    visibilityUpdatingId,
     handleDeleteTemplate,
     handleRateTemplate,
     handleRemoveRating,
+    handleUpdateTemplateVisibility,
     isLoading,
     error,
     templates,

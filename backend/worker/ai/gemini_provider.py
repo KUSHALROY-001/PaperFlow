@@ -422,17 +422,29 @@ class GeminiProvider:
             research = self._generate_grounded_text(
                 TEMPLATE_RESEARCH_SYSTEM_PROMPT, user_prompt
             )
-        except Exception:
+        except Exception as error:
             # Search grounding is a quality improvement, not a hard
             # dependency for this feature to function at all - if it
             # fails for any reason (quota, transient network error, a
             # model that doesn't support the tool), fall back to a
             # single ungrounded call rather than failing template
-            # generation entirely.
+            # generation entirely. Logged (not just swallowed) because a
+            # silent failure here is indistinguishable from grounding
+            # working but finding nothing - and it's exactly the kind of
+            # thing that produces a stale, training-data-only template
+            # with no visible error anywhere.
+            print(
+                f"[gemini_provider] template grounding search failed for "
+                f"{user_prompt!r}: {error!r} - falling back to ungrounded generation"
+            )
             research = None
 
         structuring_prompt = user_prompt
         if research and research.strip():
+            print(
+                f"[gemini_provider] template grounding research for "
+                f"{user_prompt!r}: {research.strip()[:500]!r}"
+            )
             structuring_prompt = (
                 f"{user_prompt}\n\n"
                 "Live web search findings on this exam's CURRENT pattern "
@@ -440,6 +452,12 @@ class GeminiProvider:
                 "they differ - your training data may predate a pattern "
                 "change):\n"
                 f"{research.strip()}"
+            )
+        else:
+            print(
+                f"[gemini_provider] template grounding returned no usable "
+                f"research for {user_prompt!r} - structuring call will rely "
+                f"on the model's own training knowledge"
             )
 
         return self._generate_with_config(

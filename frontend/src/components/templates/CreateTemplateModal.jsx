@@ -70,7 +70,7 @@ export default function CreateTemplateModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-4 bg-black/40 backdrop-blur-xs"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -81,7 +81,7 @@ export default function CreateTemplateModal({
     >
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto surface-card border border-border rounded-3xl shadow-2xl p-6"
+        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto surface-card border border-border rounded-2xl shadow-2xl p-2 md:p-6"
       >
         <div className="flex items-start justify-between mb-4">
           <div>

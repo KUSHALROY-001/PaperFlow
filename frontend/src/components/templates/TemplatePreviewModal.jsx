@@ -1,6 +1,17 @@
 import { BookOpen, ChevronRight, Download, Star, X } from "lucide-react";
 import { iconBgMap } from "@/utils/templateHelpers";
 import StarRatingInput from "./StarRatingInput";
+import UserAvatar from "@/components/shared/UserAvatar";
+
+function formatPublishedDate(value) {
+  if (!value || Number.isNaN(new Date(value).getTime())) return null;
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(value));
+}
 
 // Promoted from inline JSX inside pages/Templates.jsx — no behavior changes.
 export default function TemplatePreviewModal({
@@ -42,8 +53,29 @@ export default function TemplatePreviewModal({
             <h2 className="text-xl font-bold text-foreground">
               {template.name}
             </h2>
+            <div className="flex items-center gap-2 mt-1.5">
+              <UserAvatar
+                src={template.publisherAvatarUrl}
+                name={template.publisherName}
+                seed={
+                  template.createdBy || template.publisherName || template.id
+                }
+                size="sm"
+              />
+              <span className="text-xs min-w-0 truncate">
+                <span className="font-semibold text-foreground">
+                  {template.publisherName}
+                </span>
+                {formatPublishedDate(template.publishedAt) && (
+                  <span className="text-muted-foreground">
+                    {" "}
+                    · {formatPublishedDate(template.publishedAt)}
+                  </span>
+                )}
+              </span>
+            </div>
             {template.description && (
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-2 leading-relaxed">
                 {template.description}
               </p>
             )}

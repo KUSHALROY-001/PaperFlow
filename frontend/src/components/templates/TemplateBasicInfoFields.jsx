@@ -43,7 +43,7 @@ export default function TemplateBasicInfoFields({
           disabled={isViewer}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          rows={2}
+          rows={5}
           placeholder="What kind of exam is this format for?"
           className={`${fieldClass} resize-none`}
         />

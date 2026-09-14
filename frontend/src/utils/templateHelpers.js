@@ -62,7 +62,14 @@ export function formatDuration(minutes) {
 // Normalizes a raw extraction_templates row (already camelCased by
 // extraction-templates.repository.js's TEMPLATE_COLUMNS) into the shape
 // this page's JSX was already written against.
-export function mapTemplate(row) {
+//
+// currentWorkspaceId is the viewer's own active workspace (from
+// useAuth()'s workspaceId) - needed to correctly compute isOwn below.
+// Optional/omittable: callers that map a not-yet-saved draft (see
+// GenerateTemplateModal.jsx) have no `row.workspaceId` to compare against
+// either way, so isOwn correctly comes out false regardless of what's
+// passed here.
+export function mapTemplate(row, currentWorkspaceId = null) {
   return {
     id: row.id,
     name: row.name,
@@ -110,7 +117,22 @@ export function mapTemplate(row) {
     // each have to redo that null-check themselves.
     workspaceId: row.workspaceId ?? null,
     createdBy: row.createdBy ?? null,
-    isOwn: row.systemTemplate === false,
+    // Bug fix (RBAC): this used to be `row.systemTemplate === false`, which
+    // is true for ANY custom (non-platform) template - including public
+    // templates published by a completely different workspace. That made
+    // every workspace's Edit/Delete/visibility-toggle controls visible on
+    // every OTHER workspace's public templates too (TemplateCard.jsx /
+    // PopularTemplateCard.jsx both gate solely on isOwn). isOwn now
+    // actually means "my workspace created this," matching the one thing
+    // extraction-templates.repository.js's updateTemplate/deleteTemplate
+    // really check (WHERE workspace_id = $2).
+    isOwn: row.workspaceId != null && row.workspaceId === currentWorkspaceId,
+    isPublic: Boolean(row.isPublic),
+    systemTemplate: Boolean(row.systemTemplate),
+    publisherName: row.publisherName || "PaperFlow",
+    publisherAvatarUrl: row.publisherAvatarUrl || null,
+    publishedAt: row.publishedAt ?? row.createdAt ?? null,
+    createdAt: row.createdAt ?? null,
     // Raw (unformatted) values, kept alongside the display-formatted ones
     // above rather than replacing them - CreateTemplateModal's edit mode
     // needs the actual number to prefill a <input type="number">, not the
