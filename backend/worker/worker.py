@@ -10,6 +10,7 @@ from .config import (
     MAX_JOBS_PER_RUN,
     OCR_ENABLED,
     POLL_INTERVAL_SECONDS,
+    QUESTION_WRITE_BATCH_SIZE,
     WORKER_CONCURRENCY,
 )
 from .ai import (
@@ -29,6 +30,9 @@ from .db import (
     is_job_cancelled,
     mark_mock_test_after_processing,
     replace_questions,
+    delete_existing_questions,
+    insert_question_batch,
+    count_questions_for_mock_test,
     replace_slot_content,
     update_job,
 )
@@ -117,6 +121,51 @@ def _count_pages_with_text(pages):
     # tells us how many pages actually have a text layer. This is the
     # replacement for every spot that used to read `len(pages)` for that.
     return sum(1 for page in pages if (page.get("text") or "").strip())
+
+
+# Raised when a batched save fails partway through. Distinct from a plain
+# Exception because process_job has ALREADY marked the job failed and set
+# the mock test's status from the rows that did commit (see
+# _mark_partial_save_failure) - process_next_job's generic handler would
+# otherwise overwrite that with mark_mock_test_after_processing(..., 0),
+# hiding questions that are genuinely saved and reviewable.
+class PartialSaveFailed(Exception):
+    pass
+
+
+def _batched(items, size):
+    return [items[start:start + size] for start in range(0, len(items), size)]
+
+
+def _mark_partial_save_failure(job, error, *, summary):
+    try:
+        with get_connection() as connection:
+            saved_count = count_questions_for_mock_test(connection, job["mock_test_id"])
+            update_job(
+                connection,
+                job["id"],
+                status="failed",
+                stage="Failed",
+                progress=100,
+                summary={**summary, "questionsSavedInDb": saved_count},
+                error=friendly_job_error_message(error),
+            )
+            # Not 0 like the generic failure path: these questions really
+            # are in the database, so the mock test should land in 'review'
+            # (partially extracted, openable in the editor) rather than
+            # 'draft' (looks like nothing happened).
+            mark_mock_test_after_processing(connection, job["mock_test_id"], saved_count)
+            add_job_event(
+                connection,
+                job["id"],
+                "warning",
+                f"Partial save: {saved_count} question(s) were committed before this job failed",
+                {"failedAtBatch": summary.get("failedAtBatch"), "totalBatches": summary.get("totalBatches")},
+            )
+            connection.commit()
+    except Exception as marking_error:
+        # Never let the bookkeeping failure replace the real one.
+        print(f"Failed to record partial-save state for job {job['id']}: {marking_error}")
 
 
 def process_job(job):
@@ -331,6 +380,21 @@ def process_job(job):
         template_context=template_context,
     )
 
+    total_parsed = len(questions)
+    base_summary = {
+        "pagesWithText": _count_pages_with_text(pages),
+        "ocr": ocr_summary,
+        "regexQuestionsParsed": ai_summary.get("regexQuestionsParsed"),
+        "ai": ai_summary,
+        "questionsParsed": total_parsed,
+        "questionWriteBatchSize": QUESTION_WRITE_BATCH_SIZE,
+    }
+
+    # Phase 1 of the save: clear this mock test's previous extraction, in
+    # its own short transaction. This used to be the opening of ONE
+    # transaction that then stayed open across every insert below - see
+    # config.py#QUESTION_WRITE_BATCH_SIZE for why a 3000-question paper
+    # could not survive that.
     with get_connection() as connection:
         with connection.transaction():
             # Locks this job's row and re-checks cancellation as the very
@@ -356,20 +420,127 @@ def process_job(job):
                 status="running",
                 stage="Saving questions",
                 progress=80,
+                summary=base_summary,
+            )
+            delete_existing_questions(connection, job["mock_test_id"])
+
+    # Phase 2: insert in batches, each one its own transaction, each one's
+    # diagram bytes uploaded and dropped before the next batch starts.
+    # Committing as we go means a failure at batch 40 of 100 leaves the
+    # first ~1200 questions saved and reviewable instead of throwing the
+    # whole extraction away - that is a deliberate trade (see the partial
+    # handling below), not an oversight.
+    inserted = 0
+    diagrams_extracted = 0
+    diagram_upload_errors = []
+    batches = _batched(questions, QUESTION_WRITE_BATCH_SIZE)
+    total_batches = len(batches)
+    last_reported_progress = 80
+
+    for batch_index, batch in enumerate(batches, start=1):
+        try:
+            with get_connection() as connection:
+                with connection.transaction():
+                    # Re-taken per batch rather than once up front: with
+                    # the save now spread over many short transactions, a
+                    # cancellation arriving mid-save should stop at the
+                    # next batch boundary instead of writing the remaining
+                    # 2000 questions of a job nobody is waiting for.
+                    row = connection.execute(
+                        "SELECT status FROM processing_jobs WHERE id = %s FOR UPDATE",
+                        [job["id"]],
+                    ).fetchone()
+                    if row is None or row["status"] == "cancelled":
+                        raise JobCancelled(job["id"])
+
+                    batch_inserted, pending_diagram_writes, batch_diagrams = insert_question_batch(
+                        connection,
+                        workspace_id=job["workspace_id"],
+                        mock_test_id=job["mock_test_id"],
+                        questions=batch,
+                    )
+        except JobCancelled:
+            raise
+        except (Exception, KeyboardInterrupt, SystemExit) as error:
+            # This batch rolled back; every batch before it is already
+            # committed. Record that explicitly - a job that saved 1200 of
+            # 3000 questions must not look identical to one that saved
+            # nothing, and process_next_job's generic failure handler would
+            # otherwise force the mock test back to 'draft'.
+            _mark_partial_save_failure(
+                job,
+                error,
                 summary={
-                    "pagesWithText": _count_pages_with_text(pages),
-                    "ocr": ocr_summary,
-                    "regexQuestionsParsed": ai_summary.get("regexQuestionsParsed"),
-                    "ai": ai_summary,
-                    "questionsParsed": len(questions),
+                    **base_summary,
+                    "questionsInserted": inserted,
+                    "diagramsExtracted": diagrams_extracted,
+                    "partialSave": True,
+                    "failedAtBatch": batch_index,
+                    "totalBatches": total_batches,
                 },
             )
-            inserted, pending_diagram_writes, diagrams_extracted = replace_questions(
-                connection,
-                workspace_id=job["workspace_id"],
-                mock_test_id=job["mock_test_id"],
-                questions=questions,
-            )
+            raise PartialSaveFailed(
+                f"Saving questions failed at batch {batch_index}/{total_batches} "
+                f"after {inserted} question(s) were committed: {error}"
+            ) from error
+
+        inserted += batch_inserted
+        diagrams_extracted += batch_diagrams
+
+        # Uploaded per batch and deliberately AFTER that batch's
+        # transaction committed - see db.py#insert_question_batch.
+        # Uploading to Cloudinary first and the DB rows second would risk
+        # an orphaned asset pointing at a question that got rolled back;
+        # this order can only ever leave a question_assets row with no
+        # Cloudinary asset behind it yet (which the signed-URL image
+        # endpoint should treat as "not found" - a much safer failure than
+        # serving a phantom row for bytes that were never uploaded).
+        for pending_write in pending_diagram_writes:
+            try:
+                upload_diagram(pending_write["png_bytes"], pending_write["public_id"])
+            except Exception as error:
+                # Best-effort - the question and its DB asset row are
+                # already committed and correct either way; losing one
+                # diagram image to an upload error shouldn't fail a job
+                # that otherwise succeeded.
+                diagram_upload_errors.append(f"{pending_write['public_id']}: {error}")
+                print(f"Failed to upload diagram asset {pending_write['public_id']}: {error}")
+            finally:
+                # Drop the reference as soon as this one is handled, so
+                # peak memory is bounded by ONE batch's crops rather than
+                # the whole document's.
+                pending_write["png_bytes"] = None
+        pending_diagram_writes.clear()
+
+        # These questions are saved; their crop bytes have no further use
+        # here and `questions` itself stays alive until the end of this
+        # function (its length is the return value).
+        for saved_question in batch:
+            saved_question.pop("_diagram_crops", None)
+
+        # 80 -> 97 across the save, so a long save shows real movement
+        # instead of sitting at 80 and then jumping to 100. Only written
+        # when the whole-number percentage actually changes: update_job
+        # also appends a processing_job_events row, and 100 batches would
+        # otherwise mean 100 near-identical events per job.
+        progress = 80 + int(17 * batch_index / total_batches)
+        if progress != last_reported_progress or batch_index == total_batches:
+            last_reported_progress = progress
+            with get_connection() as connection:
+                update_job(
+                    connection,
+                    job["id"],
+                    status="running",
+                    stage=f"Saving questions ({inserted}/{total_parsed})",
+                    progress=progress,
+                    summary={**base_summary, "questionsInserted": inserted},
+                )
+                connection.commit()
+
+    # Phase 3: every batch committed - flip the mock test and the job to
+    # their final state.
+    with get_connection() as connection:
+        with connection.transaction():
             mark_mock_test_after_processing(connection, job["mock_test_id"], inserted)
             update_job(
                 connection,
@@ -378,33 +549,11 @@ def process_job(job):
                 stage="Completed",
                 progress=100,
                 summary={
-                    "pagesWithText": _count_pages_with_text(pages),
-                    "ocr": ocr_summary,
-                    "ai": ai_summary,
-                    "questionsParsed": len(questions),
+                    **base_summary,
                     "questionsInserted": inserted,
                     "diagramsExtracted": diagrams_extracted,
                 },
             )
-
-    # Deliberately OUTSIDE the transaction block above, and only reached if
-    # it committed successfully - see db.py#replace_questions. Uploading
-    # to Cloudinary first and the DB rows second would risk an orphaned
-    # asset pointing at a question that got rolled back; this order can
-    # only ever leave a question_assets row with no Cloudinary asset
-    # behind it yet (which the signed-URL image endpoint should treat as
-    # "not found" - a much safer failure than serving a phantom row for
-    # bytes that were never uploaded).
-    diagram_upload_errors = []
-    for pending_write in pending_diagram_writes:
-        try:
-            upload_diagram(pending_write["png_bytes"], pending_write["public_id"])
-        except Exception as error:
-            # Best-effort - the question and its DB asset row are already
-            # committed and correct either way; losing one diagram image to
-            # an upload error shouldn't fail a job that otherwise succeeded.
-            diagram_upload_errors.append(f"{pending_write['public_id']}: {error}")
-            print(f"Failed to upload diagram asset {pending_write['public_id']}: {error}")
 
     if diagram_upload_errors:
         with get_connection() as connection:
@@ -670,6 +819,12 @@ def process_next_job():
         # mock test's status is the superseding job's responsibility now,
         # not this abandoned one's.
         print(f"Job {job['id']} was cancelled (superseded by a newer job) - stopping early")
+    except PartialSaveFailed as error:
+        # process_job already wrote status='failed', the partial summary,
+        # and the mock test's status derived from the rows that committed.
+        # Re-doing any of that here would clobber it with zeros.
+        print(f"Job {job['id']} failed mid-save: {error}")
+        traceback.print_exc()
     except (Exception, KeyboardInterrupt, SystemExit) as error:
         # KeyboardInterrupt/SystemExit are BaseException, not Exception -
         # without listing them explicitly, a Ctrl+C (or SIGTERM converted

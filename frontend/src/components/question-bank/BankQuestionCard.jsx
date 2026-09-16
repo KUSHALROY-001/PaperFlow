@@ -160,7 +160,7 @@ export default function BankQuestionCard({
         <div className="mt-3 space-y-1">
           {question.options.map((option, index) => (
             <div
-              key={option}
+              key={`${question.id}-option-${index}`}
               className={`text-xs sm:text-sm px-2.5 py-1.5 rounded-lg ${
                 question.correctOptionIndexes.includes(index)
                   ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-semibold"

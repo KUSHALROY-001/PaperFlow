@@ -801,6 +801,14 @@ export async function reprocessMockTest({ mockTest, workspaceId, userId }) {
   });
 }
 
+export async function getQuestionStats(mockTestId, workspaceId) {
+  await getMockTestOrFail(mockTestId, workspaceId);
+  return mockTestsRepo.getMockTestQuestionStats(mockTestId, workspaceId);
+}
+
+// Unbounded: still what the PDF export needs (it renders the whole paper
+// in one document, so there is no page to fetch). Everything interactive
+// should use listQuestionsPage below instead.
 export async function listQuestions(mockTestId, workspaceId) {
   await getMockTestOrFail(mockTestId, workspaceId);
   const questions = await mockTestsRepo.listQuestionsWithOptions(
@@ -811,6 +819,46 @@ export async function listQuestions(mockTestId, workspaceId) {
     idField: "id",
   });
   return attachDiagramSource(withDiagrams, { idField: "id" });
+}
+
+// One page of the same rows, plus the counters the client needs to keep
+// paging. attachDiagramUrls signs a URL per diagram, so it is materially
+// cheaper here too: it now runs over ~30 questions per request instead of
+// every diagram in the paper before the editor can render anything.
+//
+// nextOffset is null (not 0) at the end of the list, so the caller has a
+// single unambiguous "stop" signal rather than having to compare counts.
+export async function listQuestionsPage(
+  mockTestId,
+  workspaceId,
+  { limit, offset = 0 } = {},
+) {
+  await getMockTestOrFail(mockTestId, workspaceId);
+
+  const [rows, total] = await Promise.all([
+    mockTestsRepo.listQuestionsWithOptions(mockTestId, workspaceId, {
+      limit,
+      offset,
+    }),
+    mockTestsRepo.countQuestions(mockTestId, workspaceId),
+  ]);
+
+  const withDiagrams = await attachDiagramUrls(rows, workspaceId, {
+    idField: "id",
+  });
+  // attachDiagramSource performs a database lookup for each page's asset
+  // metadata. It must settle before this page is serialized; otherwise the
+  // API sends a Promise object in `questions` instead of the question array.
+  const questions = await attachDiagramSource(withDiagrams, { idField: "id" });
+  const nextOffset = offset + questions.length;
+
+  return {
+    questions,
+    total,
+    limit,
+    offset,
+    nextOffset: nextOffset < total ? nextOffset : null,
+  };
 }
 
 export async function getPlayableMockTest(mockTestId, workspaceId) {

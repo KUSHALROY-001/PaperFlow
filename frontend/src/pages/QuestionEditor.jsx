@@ -53,6 +53,10 @@ export default function QuestionEditor() {
     handleSave,
     paperDefaultMarks,
     paperDefaultNegative,
+    totalQuestionCount,
+    hasMoreQuestions,
+    isLoadingMoreQuestions,
+    loadMoreQuestions,
   } = useQuestionEditor();
 
   const [isCustomTopic, setIsCustomTopic] = useState(false);
@@ -184,11 +188,16 @@ export default function QuestionEditor() {
         onRequestLeave={(path) => setPendingLeavePath(path)}
         paperDefaultMarks={paperDefaultMarks}
         paperDefaultNegative={paperDefaultNegative}
+        totalQuestionCount={totalQuestionCount}
+        hasMoreQuestions={hasMoreQuestions}
+        isLoadingMoreQuestions={isLoadingMoreQuestions}
+        loadMoreQuestions={loadMoreQuestions}
       />
 
       <div className="flex-1 flex flex-col min-w-0">
         <EditorHeader
           questionsCount={questions.length}
+          totalQuestionCount={totalQuestionCount}
           issueCount={issueCount}
           addQuestion={addQuestion}
           handleSave={handleSave}

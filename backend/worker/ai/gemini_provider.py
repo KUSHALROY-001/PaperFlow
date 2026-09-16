@@ -135,10 +135,12 @@ _DAILY_QUOTA_MARKERS = ("perday", "requestsperday")
 
 def _parse_gemini_http_error(http_error):
     """
-    Reads a 429 response body to tell a per-minute rate limit apart from a
-    per-day quota exhaustion, and to pull out Gemini's own suggested
-    retryDelay when it gives one (far more accurate than a blind guess,
-    since Gemini knows exactly when its own window resets).
+    Reads an HTTPError's response body for Gemini's own error message text
+    (works for any status, not just 429 - see the two call sites below).
+    For a 429 specifically, also pulls out enough to tell a per-minute
+    rate limit apart from a per-day quota exhaustion, and Gemini's own
+    suggested retryDelay when it gives one (far more accurate than a
+    blind guess, since Gemini knows exactly when its own window resets).
 
     Gemini's 429 body looks like:
       {"error": {"code": 429, "status": "RESOURCE_EXHAUSTED", "details": [
@@ -146,6 +148,14 @@ def _parse_gemini_http_error(http_error):
           "GenerateRequestsPerDayPerProjectPerModel-FreeTier", ...}]},
         {"@type": ".../RetryInfo", "retryDelay": "23s"}
       ]}}
+    A non-429 error body (e.g. a bad model name) typically has no
+    "details" at all, just a top-level "message" - e.g. Gemini's actual
+    text for an unrecognized AI_MODEL value is literally
+    "models/<value> is not found for API version v1beta, or is not
+    supported for that method." - is_daily/retry_delay_seconds simply
+    stay at their defaults (False/None) for these, which is correct:
+    neither concept applies outside a 429.
+
     quotaId distinguishes PerDay from PerMinute; retryDelay is a
     "<number>s" string. Either can be absent (a non-JSON body, or a 429
     from something other than Gemini's own quota enforcement, e.g. an
@@ -179,7 +189,7 @@ def _parse_gemini_http_error(http_error):
     return is_daily, retry_delay_seconds, message
 
 
-def _call_with_retry(make_request):
+def _call_with_retry(make_request, model_name):
     """
     Wraps a single Gemini HTTP call (make_request: a zero-arg callable that
     performs the actual request.urlopen and returns the parsed response)
@@ -204,8 +214,18 @@ def _call_with_retry(make_request):
       rejecting the request, so there's no useful "retry delay" to read
       from a response that was never received.
     - A non-429, non-5xx HTTPError (e.g. 400 Bad Request, 401
-      Unauthorized) is NOT retried - retrying an authentication failure or
-      a malformed request would just fail identically every time.
+      Unauthorized, or 404 - most often an AI_MODEL value Gemini doesn't
+      recognize, see config.py's _normalize_ai_model) is NOT retried -
+      retrying a malformed request or a bad model name would just fail
+      identically every time. Re-raised as a RuntimeError with Gemini's
+      own message text and the model name that produced it, rather than
+      letting the raw HTTPError (whose default str() is a content-free
+      "HTTP Error 404: Not Found") propagate untouched - that bare
+      message reaches both worker.py#friendly_job_error_message (which
+      trusts a RuntimeError's own text verbatim) and
+      http_server.py's generic exception handler, and gave no indication
+      at all of which model name was actually wrong when this branch
+      still just re-raised the original HTTPError as-is.
     """
     max_attempts = 3
     for attempt in range(max_attempts):
@@ -215,7 +235,11 @@ def _call_with_retry(make_request):
         except HTTPError as e:
             if e.code != 429:
                 if e.code < 500 or attempt == max_attempts - 1:
-                    raise
+                    _, _, message = _parse_gemini_http_error(e)
+                    raise RuntimeError(
+                        f"Gemini API error for model {model_name!r}: "
+                        f"HTTP {e.code} - {message}"
+                    ) from e
                 time.sleep(4 * (2**attempt))
                 continue
             is_daily, retry_delay_seconds, message = _parse_gemini_http_error(e)
@@ -360,7 +384,7 @@ class GeminiProvider:
 
             return _extract_text_or_diagnose(data)
 
-        return _call_with_retry(make_request)
+        return _call_with_retry(make_request, self.model)
 
     def generate_json(self, system_prompt, user_prompt):
         return self._generate_with_config(
@@ -404,7 +428,7 @@ class GeminiProvider:
 
             return _extract_text_or_diagnose(data)
 
-        return _call_with_retry(make_request)
+        return _call_with_retry(make_request, self.model)
 
     def generate_template_json(self, system_prompt, user_prompt):
         # Two calls, not one - see TEMPLATE_RESEARCH_SYSTEM_PROMPT's own
@@ -500,7 +524,7 @@ class GeminiProvider:
 
             return _extract_text_or_diagnose(data)
 
-        return _call_with_retry(make_request)
+        return _call_with_retry(make_request, self.model)
 
     def generate_json_from_pdf_images(self, system_prompt, user_prompt, pdf_path, page_numbers=None, on_progress=None):
         # Returns one result dict PER CHUNK, always - success or failure -
@@ -685,7 +709,19 @@ class GeminiProvider:
                         error = "AI response was empty"
                     except HTTPError as e:
                         if e.code != 429:
-                            error = f"[http {e.code}] {e.reason}"
+                            # e.reason is only the generic HTTP reason
+                            # phrase ("Not Found") - Gemini's actual
+                            # explanation (e.g. "models/<x> is not found
+                            # for API version v1beta, or is not supported
+                            # for that method") lives in the response
+                            # body, which _parse_gemini_http_error reads
+                            # regardless of status code (see its own
+                            # docstring). Without this, a bad AI_MODEL
+                            # value surfaced as the content-free
+                            # "[http 404] Not Found" with no hint of which
+                            # model name was actually wrong.
+                            _, _, message = _parse_gemini_http_error(e)
+                            error = f"[http {e.code}] {message}"
                         else:
                             is_daily, retry_delay_seconds, message = _parse_gemini_http_error(e)
                             if is_daily:

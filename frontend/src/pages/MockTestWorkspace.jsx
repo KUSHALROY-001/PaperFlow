@@ -30,6 +30,12 @@ export default function MockTestWorkspace() {
     isGenerated,
     generationSources,
     questions,
+    questionCount,
+    isStreamingQuestions,
+    loadedQuestionCount,
+    hasMoreQuestions,
+    loadMoreQuestions,
+    loadThroughQuestion,
     submissions,
     isLoadingSubmissions,
     ocrSummary,
@@ -87,7 +93,7 @@ export default function MockTestWorkspace() {
           generationSources={generationSources}
           status={status}
           isProcessing={isProcessing}
-          questionsCount={questions.length}
+          questionsCount={questionCount}
           clusterId={clusterId}
           isViewer={isViewer}
           actionError={actionError}
@@ -127,7 +133,7 @@ export default function MockTestWorkspace() {
           } md:block md:mt-4`}
         >
           <WorkspaceStatsGrid
-            totalQuestions={mocktest.total_questions || questions.length}
+            totalQuestions={mocktest.total_questions || questionCount}
             approvedCount={approvedCount}
             lowConfidence={lowConfidence}
             topicsFound={topicsFound}
@@ -149,6 +155,13 @@ export default function MockTestWorkspace() {
         activeTab={activeTab}
         mocktest={mocktest}
         questions={questions}
+        questionCount={questionCount}
+        isProcessing={isProcessing}
+        isStreamingQuestions={isStreamingQuestions}
+        loadedQuestionCount={loadedQuestionCount}
+        hasMoreQuestions={hasMoreQuestions}
+        onLoadMoreQuestions={loadMoreQuestions}
+        onLoadThroughQuestion={loadThroughQuestion}
         latestJob={latestJob}
         clusterId={clusterId}
         setActiveTab={setActiveTab}
@@ -168,7 +181,7 @@ export default function MockTestWorkspace() {
 
       <WorkspaceConfirmDialogs
         mocktest={mocktest}
-        questionsCount={questions.length}
+        questionsCount={questionCount}
         showShareModal={showShareModal}
         setShowShareModal={setShowShareModal}
         showDeleteConfirm={showDeleteConfirm}

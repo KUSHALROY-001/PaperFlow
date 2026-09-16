@@ -11,10 +11,23 @@ import { api } from "@/lib/api";
 import ScrollToTopButton from "../shared/ScrollToTopButton";
 import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
 import { getQuestionOrderMode, resolveQuestionMarks } from "@/utils/mockTestHelpers";
+import LiveExtractionBanner from "./LiveExtractionBanner";
 
 const viewTabs = ["Visual", "JSON", "Metadata"];
 
-export default function OutputTab({ questions, metadata, mockTestId, mocktest }) {
+export default function OutputTab({
+  questions,
+  metadata,
+  mockTestId,
+  mocktest,
+  isProcessing = false,
+  isStreamingQuestions = false,
+  loadedQuestionCount = 0,
+  totalQuestionCount = 0,
+  hasMoreQuestions = false,
+  onLoadMoreQuestions,
+  onLoadThroughQuestion,
+}) {
   const isRandomOrder = getQuestionOrderMode(mocktest) === "random";
   const [activeView, setActiveView] = useState("Visual");
   const [copied, setCopied] = useState(false);
@@ -34,7 +47,12 @@ export default function OutputTab({ questions, metadata, mockTestId, mocktest })
     const target =
       questions.find((q) => q.questionNo === questionNo) ||
       questions.find((q) => q.displayIndex === questionNo);
-    if (!target) return false;
+    if (!target) {
+      if (!onLoadThroughQuestion?.(questionNo)) return false;
+      setActiveView("Visual");
+      setPendingScrollTo(questionNo);
+      return true;
+    }
     setActiveView("Visual");
     setPendingScrollTo(target.questionNo);
     return true;
@@ -57,7 +75,7 @@ export default function OutputTab({ questions, metadata, mockTestId, mocktest })
     }, 1600);
     setPendingScrollTo(null);
     return () => window.clearTimeout(timeoutId);
-  }, [pendingScrollTo, activeView]);
+  }, [pendingScrollTo, activeView, questions]);
 
   const exportPayload = useMemo(
     () => ({
@@ -125,6 +143,15 @@ export default function OutputTab({ questions, metadata, mockTestId, mocktest })
 
   return (
     <div className="space-y-6 font-inter w-full min-w-0">
+      {/* Placed above the view switcher rather than inside the Visual
+          list, so the JSON and Metadata views also make it obvious that
+          what's being exported is still incomplete. */}
+      <LiveExtractionBanner
+        isProcessing={isProcessing}
+        isStreaming={isStreamingQuestions}
+        loadedCount={loadedQuestionCount}
+        totalCount={totalQuestionCount}
+      />
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="inline-flex max-w-full rounded-3xl bg-muted/60 p-1.5 border border-border">
           {viewTabs.map((view) => {
@@ -249,11 +276,11 @@ export default function OutputTab({ questions, metadata, mockTestId, mocktest })
                 />
 
                 <div className="mt-5 grid gap-3 md:grid-cols-2 w-full min-w-0">
-                  {question.options.map((option) => {
+                  {question.options.map((option, optionIndex) => {
                     const correct = option === question.answer;
                     return (
                       <div
-                        key={option}
+                        key={`${question.id}-option-${optionIndex}`}
                         className={`rounded-md border px-4 py-3 text-sm whitespace-pre-wrap wrap-break-word min-w-0 overflow-x-auto scrollbar-hidden ${
                           correct
                             ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
@@ -270,6 +297,26 @@ export default function OutputTab({ questions, metadata, mockTestId, mocktest })
             </div>
             );
           })}
+          {hasMoreQuestions && (
+            <div className="flex flex-col items-center gap-2 border-t border-border pt-5 sm:flex-row sm:justify-between">
+              <p className="text-sm text-muted-foreground">
+                Showing {loadedQuestionCount} of {totalQuestionCount} questions
+              </p>
+              <button
+                type="button"
+                onClick={onLoadMoreQuestions}
+                disabled={isStreamingQuestions}
+                className={`inline-flex min-h-10 items-center gap-2 rounded-md border border-orange-500/30 px-4 py-2 text-sm font-semibold text-orange-600 transition-colors dark:text-orange-400 ${
+                  isStreamingQuestions
+                    ? "cursor-not-allowed opacity-60"
+                    : "hover:bg-orange-500/10"
+                }`}
+              >
+                {isStreamingQuestions && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isStreamingQuestions ? "Loading..." : "Load 50 more"}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

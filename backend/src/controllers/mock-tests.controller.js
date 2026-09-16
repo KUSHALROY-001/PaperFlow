@@ -128,12 +128,50 @@ export async function reprocess(req, res) {
   res.status(201).json(result);
 }
 
-export async function listQuestions(req, res) {
-  const questions = await mockTestsService.listQuestions(
+export async function questionStats(req, res) {
+  const stats = await mockTestsService.getQuestionStats(
     req.params.mockTestId,
     req.workspaceId,
   );
-  res.json({ questions });
+  res.json({ stats });
+}
+
+// Hard ceiling on how many questions one request can ask for. The point
+// of this endpoint being paginated at all is that a big paper must never
+// be serialized in one response; letting a client pass ?limit=5000 would
+// hand that footgun straight back.
+const MAX_QUESTIONS_PAGE_SIZE = 200;
+
+function parsePositiveInt(value, fallback) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
+export async function listQuestions(req, res) {
+  // No ?limit= means the original unpaginated response shape
+  // ({ questions: [...] }), which existing callers still depend on.
+  // Passing a limit opts into the paged envelope (total / nextOffset).
+  if (req.query.limit === undefined) {
+    const questions = await mockTestsService.listQuestions(
+      req.params.mockTestId,
+      req.workspaceId,
+    );
+    res.json({ questions });
+    return;
+  }
+
+  const limit = Math.min(
+    Math.max(parsePositiveInt(req.query.limit, 30) || 1, 1),
+    MAX_QUESTIONS_PAGE_SIZE,
+  );
+  const offset = parsePositiveInt(req.query.offset, 0);
+
+  const page = await mockTestsService.listQuestionsPage(
+    req.params.mockTestId,
+    req.workspaceId,
+    { limit, offset },
+  );
+  res.json(page);
 }
 
 export async function play(req, res) {

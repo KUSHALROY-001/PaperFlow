@@ -227,7 +227,16 @@ def update_job(connection, job_id, *, status=None, stage=None, progress=None, su
     )
 
 
-def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_path=None):
+# Split out of replace_questions so the delete-then-insert sequence no
+# longer has to happen inside ONE transaction. worker.py now runs this
+# once up front (its own short transaction), then streams the new
+# questions in via insert_question_batch in batches of
+# QUESTION_WRITE_BATCH_SIZE - see config.py#QUESTION_WRITE_BATCH_SIZE for
+# why the single-transaction version could not survive a 3000-question
+# paper. Callers that genuinely want the old all-or-nothing behaviour
+# (process_generation_job, whose question counts are bounded by a target
+# the user picked) still get it from replace_questions below, unchanged.
+def delete_existing_questions(connection, mock_test_id):
     # questions is a read-only compatibility view as of migration 030 -
     # both the SELECT and DELETE below now target question_slots (the
     # physical table) directly. content_id is captured alongside id so
@@ -265,6 +274,22 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
             [existing_content_ids],
         )
 
+    return len(existing)
+
+
+# The insert half of the old replace_questions, over an arbitrary slice of
+# the question list rather than all of it. Deliberately takes no
+# responsibility for transactions: the caller decides whether this batch
+# is its own transaction (worker.py#process_job, so a 3000-question paper
+# commits in 100 short transactions) or one of many inside a larger one
+# (replace_questions below).
+#
+# pending_diagram_writes is returned PER CALL, so the caller can upload
+# and drop this batch's PNG bytes before the next batch is even parsed -
+# the single biggest source of the memory growth that made large papers
+# fail, since previously every diagram crop in the document stayed
+# resident until the one giant transaction committed.
+def insert_question_batch(connection, *, workspace_id, mock_test_id, questions):
     inserted_count = 0
     # (public_id, png_bytes) pairs to actually upload to Cloudinary -
     # deferred until AFTER the caller's transaction commits (see
@@ -396,6 +421,35 @@ def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_
         inserted_count += 1
 
     return inserted_count, pending_diagram_writes, diagrams_extracted_count
+
+
+# Backwards-compatible wrapper with the original signature and the
+# original semantics: one delete + every insert, all inside whatever
+# transaction the caller has open. Still used by
+# worker.py#process_generation_job (no PDF, no diagram crops, question
+# count bounded by the user's requested target) and by anything else that
+# wants "replace this mock test's questions atomically".
+def replace_questions(connection, *, workspace_id, mock_test_id, questions, pdf_path=None):
+    delete_existing_questions(connection, mock_test_id)
+    return insert_question_batch(
+        connection,
+        workspace_id=workspace_id,
+        mock_test_id=mock_test_id,
+        questions=questions,
+    )
+
+
+# How many slots this mock test actually has right now. Used by worker.py
+# when a batched save fails partway: the job is marked failed, but the
+# mock test's status has to reflect the questions that DID commit (a
+# partial extraction is still reviewable) rather than being forced back to
+# 'draft' as if nothing had been saved.
+def count_questions_for_mock_test(connection, mock_test_id):
+    row = connection.execute(
+        "SELECT COUNT(*)::int AS count FROM question_slots WHERE mock_test_id = %s",
+        [mock_test_id],
+    ).fetchone()
+    return row["count"] if row else 0
 
 
 def mark_mock_test_after_processing(connection, mock_test_id, question_count):

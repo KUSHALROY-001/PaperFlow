@@ -353,8 +353,24 @@ export const api = {
       method: "DELETE",
     });
   },
-  listQuestions(mockTestId) {
-    return apiRequest(`/api/mock-tests/${mockTestId}/questions`);
+  // Four aggregate counts for the workspace stat tiles. Exists so that
+  // page (and its 2.5s poll during processing) never has to download the
+  // whole question list just to show numbers.
+  getQuestionStats(mockTestId) {
+    return apiRequest(`/api/mock-tests/${mockTestId}/questions/stats`);
+  },
+  // Called with no options this returns the whole list as { questions }.
+  // Called with { limit, offset } it returns one page as
+  // { questions, total, limit, offset, nextOffset } - see
+  // mock-tests.controller.js#listQuestions.
+  listQuestions(mockTestId, { limit, offset } = {}) {
+    const params = new URLSearchParams();
+    if (limit != null) params.set("limit", String(limit));
+    if (offset != null) params.set("offset", String(offset));
+    const query = params.toString();
+    return apiRequest(
+      `/api/mock-tests/${mockTestId}/questions${query ? `?${query}` : ""}`,
+    );
   },
   reorderQuestions(mockTestId, items) {
     return apiRequest(`/api/mock-tests/${mockTestId}/questions/reorder`, {

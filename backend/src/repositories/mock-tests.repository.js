@@ -305,7 +305,22 @@ export async function getMockTestTopicCounts(mockTestId) {
   return result.rows;
 }
 
-export async function listQuestionsWithOptions(mockTestId, workspaceId) {
+// limit/offset are optional and default to the original unbounded
+// behaviour, because two callers genuinely want every row at once (PDF
+// export, and the generation pipeline). Everything user-facing should
+// pass a limit: a 100-page paper is ~3000 rows, and shipping all of them
+// in one response is what made the editor take seconds to open and then
+// stall the main thread while React rendered the lot.
+//
+// question_no is the ORDER BY the unpaginated version already used, so
+// paging on it needs no new index and gives stable, gap-free pages.
+// LIMIT NULL is valid Postgres for "no limit", so the same statement
+// serves both shapes without branching on the SQL text.
+export async function listQuestionsWithOptions(
+  mockTestId,
+  workspaceId,
+  { limit = null, offset = 0 } = {},
+) {
   const result = await pool.query(
     `
     SELECT q.*
@@ -313,11 +328,65 @@ export async function listQuestionsWithOptions(mockTestId, workspaceId) {
     WHERE q.mock_test_id = $1
       AND q.workspace_id = $2
     ORDER BY q.question_no ASC
+    LIMIT $3::int
+    OFFSET $4::int
+    `,
+    [mockTestId, workspaceId, limit, offset],
+  );
+
+  return result.rows;
+}
+
+// The four numbers the workspace's stat tiles show, computed in Postgres
+// instead of by pulling every question row into Node and counting there.
+// The workspace page polls this every 2.5s while a job is running, which
+// is precisely why it must not be "fetch 3000 rows and call .filter()" -
+// that was one full paper crossing the wire every few seconds, for four
+// integers.
+//
+// The thresholds are duplicated from useMockTestWorkspace.js (confidence
+// < 75 is "low confidence", status 'approved' is approved). Kept in sync
+// deliberately: moving the arithmetic server-side is the whole point, and
+// the frontend no longer computes these at all.
+export async function getMockTestQuestionStats(mockTestId, workspaceId) {
+  const result = await pool.query(
+    `
+    SELECT
+      COUNT(*)::int AS total,
+      COUNT(*) FILTER (WHERE q.status = 'approved')::int AS approved,
+      COUNT(*) FILTER (WHERE q.confidence < 75)::int AS low_confidence,
+      COUNT(DISTINCT q.topic) FILTER (WHERE q.topic IS NOT NULL)::int AS topics_found
+    FROM questions q
+    WHERE q.mock_test_id = $1
+      AND q.workspace_id = $2
     `,
     [mockTestId, workspaceId],
   );
 
-  return result.rows;
+  const row = result.rows[0] || {};
+  return {
+    total: row.total ?? 0,
+    approved: row.approved ?? 0,
+    lowConfidence: row.low_confidence ?? 0,
+    topicsFound: row.topics_found ?? 0,
+  };
+}
+
+// Total row count for a paginated listQuestionsWithOptions call, so the
+// client can show "42 of 3000" and know when to stop fetching without
+// having to request a page past the end first.
+export async function countQuestions(mockTestId, workspaceId) {
+  const result = await pool.query(
+    `
+    SELECT COUNT(*)::int AS count
+    FROM questions q
+    WHERE q.mock_test_id = $1
+      AND q.workspace_id = $2
+    `,
+    [mockTestId, workspaceId],
+  );
+
+  return result.rows[0]?.count ?? 0;
 }
 
 export async function listPlayableQuestions(mockTestId, topics) {

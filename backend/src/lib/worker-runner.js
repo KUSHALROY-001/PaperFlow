@@ -35,6 +35,29 @@ const WORKER_SERVICE_URL = (process.env.WORKER_SERVICE_URL || "")
   .replace(/\/+$/, "");
 const WORKER_TRIGGER_SECRET = (process.env.WORKER_TRIGGER_SECRET || "").trim();
 
+// Single source of truth for "is WORKER_SERVICE_URL actually a local
+// worker" - template-generate-client.js imports IS_LOCAL_WORKER from here
+// instead of keeping its own copy, so the two call sites can't drift out
+// of sync the way kickViaRelay below already had (it never got this
+// check at all). A real localhost/loopback target never needs waking -
+// there's no Render free-tier spin-down to route around, and no relay
+// could reach it anyway.
+export function isLocalWorkerUrl(url) {
+  try {
+    const { hostname } = new URL(url);
+    return (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "[::1]" ||
+      hostname === "0.0.0.0"
+    );
+  } catch {
+    return false;
+  }
+}
+
+export const IS_LOCAL_WORKER = isLocalWorkerUrl(WORKER_SERVICE_URL);
+
 // Relay hop added after confirming (see docs/engineering-log/DEBUG_LOG.md,
 // worker cold-start investigation) that the Node backend's own outbound IP
 // gets a 429 from Render/Cloudflare's edge specifically when it calls the
@@ -223,6 +246,13 @@ async function kickDeployedWorker(jobId) {
 // (rare) or the underlying worker call it makes failing for the same
 // reasons kickDeployedWorker already logs and retries independently.
 async function kickViaRelay(jobId) {
+  if (IS_LOCAL_WORKER) {
+    console.info(
+      `[worker-runner] WORKER_SERVICE_URL is localhost - skipping Cloudflare relay kick for job ${jobId} (local worker must already be running)`,
+    );
+    return;
+  }
+
   const result = await wakeWorkerViaRelay();
   if (result.skipped) return;
 

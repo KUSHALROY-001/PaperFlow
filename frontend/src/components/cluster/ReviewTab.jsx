@@ -7,6 +7,7 @@ import {
   ChevronDown,
   Edit2,
   Flag,
+  Loader2,
   ShieldAlert,
   Trash2,
 } from "lucide-react";
@@ -20,6 +21,7 @@ import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
 import { getQuestionOrderMode, resolveQuestionMarks } from "@/utils/mockTestHelpers";
 import QuestionJumpInput from "../shared/QuestionJumpInput";
 import ScrollToTopButton from "../shared/ScrollToTopButton";
+import LiveExtractionBanner from "./LiveExtractionBanner";
 
 const filters = [
   { id: "all", label: "All" },
@@ -41,6 +43,13 @@ function getConfidenceTone(confidence) {
 
 export default function ReviewTab({
   questions,
+  isProcessing = false,
+  isStreamingQuestions = false,
+  loadedQuestionCount = 0,
+  totalQuestionCount = 0,
+  hasMoreQuestions = false,
+  onLoadMoreQuestions,
+  onLoadThroughQuestion,
   mocktest,
   onStatusChange,
   onDelete,
@@ -74,7 +83,12 @@ export default function ReviewTab({
     const target =
       questions.find((q) => q.questionNo === questionNo) ||
       questions.find((q) => q.displayIndex === questionNo);
-    if (!target) return false;
+    if (!target) {
+      if (!onLoadThroughQuestion?.(questionNo)) return false;
+      setActiveFilter("all");
+      setPendingScrollTo(questionNo);
+      return true;
+    }
     setActiveFilter("all");
     setExpandedIds((current) =>
       current.includes(target.id) ? current : [...current, target.id],
@@ -139,6 +153,12 @@ export default function ReviewTab({
 
   return (
     <div className="space-y-6 font-inter">
+      <LiveExtractionBanner
+        isProcessing={isProcessing}
+        isStreaming={isStreamingQuestions}
+        loadedCount={loadedQuestionCount}
+        totalCount={totalQuestionCount}
+      />
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex flex-wrap gap-2">
@@ -408,11 +428,11 @@ export default function ReviewTab({
               {expanded && (
                 <div className="mt-5 space-y-3 rounded-2xl border border-border bg-muted/40 p-2 sm:p-4">
                   <DiagramAssetsProvider assets={question.diagramAssets}>
-                  {question.options.map((option) => {
+                  {question.options.map((option, optionIndex) => {
                     const correct = option === question.answer;
                     return (
                       <div
-                        key={option}
+                        key={`${question.id}-option-${optionIndex}`}
                         className={`flex flex-wrap items-center justify-between gap-2 rounded-2xl px-3 py-3 text-xs sm:px-4 sm:text-sm ${
                           correct
                             ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20"
@@ -454,6 +474,26 @@ export default function ReviewTab({
             </div>
           );
         })}
+        {hasMoreQuestions && (
+          <div className="flex flex-col items-center gap-2 border-t border-border pt-5 sm:flex-row sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              Showing {loadedQuestionCount} of {totalQuestionCount} questions
+            </p>
+            <button
+              type="button"
+              onClick={onLoadMoreQuestions}
+              disabled={isStreamingQuestions}
+              className={`inline-flex min-h-10 items-center gap-2 rounded-md border border-orange-500/30 px-4 py-2 text-sm font-semibold text-orange-600 transition-colors dark:text-orange-400 ${
+                isStreamingQuestions
+                  ? "cursor-not-allowed opacity-60"
+                  : "hover:bg-orange-500/10"
+              }`}
+            >
+              {isStreamingQuestions && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isStreamingQuestions ? "Loading..." : "Load 50 more"}
+            </button>
+          </div>
+        )}
       </div>
 
       {deleteTarget && (

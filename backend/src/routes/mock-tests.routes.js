@@ -141,6 +141,12 @@ mockTestsRouter.post(
   asyncHandler(mockTestsController.cancelProcessing),
 );
 
+// Registered BEFORE /:mockTestId/questions so "stats" is never swallowed
+// as a question id by any later :questionId route on this prefix.
+mockTestsRouter.get(
+  "/:mockTestId/questions/stats",
+  asyncHandler(mockTestsController.questionStats),
+);
 mockTestsRouter.get(
   "/:mockTestId/questions",
   asyncHandler(mockTestsController.listQuestions),

@@ -3,6 +3,7 @@ import { Plus, Save, CheckCircle, Sigma, ArrowLeft } from "lucide-react";
 
 export default function EditorHeader({
   questionsCount,
+  totalQuestionCount = null,
   issueCount,
   addQuestion,
   handleSave,
@@ -47,9 +48,23 @@ export default function EditorHeader({
             <ArrowLeft className="w-3.5 h-3.5" /> Back to Review Queue
           </Link>
         )}
+        {/* questionsCount is what the editor currently holds; on a large
+            paper that is only the pages fetched so far, so the paper's
+            real length comes from the server's COUNT. Showing the loaded
+            figure alone would read as "this 3000-question paper has 30
+            questions". */}
         <span className="text-sm font-bold text-foreground">
-          {questionsCount} Questions
+          {totalQuestionCount ?? questionsCount} Questions
         </span>
+        {totalQuestionCount != null && questionsCount < totalQuestionCount && (
+          <span
+            className="text-xs text-muted-foreground"
+            title="Scroll the question list to load the rest"
+          >
+            {questionsCount} loaded
+          </span>
+        )}
+        {/* Counted over loaded questions only - see the note above. */}
         <span className="text-xs text-muted-foreground">
           {issueCount} with issues
         </span>

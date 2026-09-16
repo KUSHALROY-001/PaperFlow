@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ChevronLeft,
   Plus,
@@ -31,9 +31,48 @@ export default function EditorSidebar({
   onRequestLeave,
   paperDefaultMarks = null,
   paperDefaultNegative = null,
+  totalQuestionCount = null,
+  hasMoreQuestions = false,
+  isLoadingMoreQuestions = false,
+  loadMoreQuestions = null,
 }) {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const loadMoreSentinelRef = useRef(null);
+
+  // `questions` here is only the pages fetched so far (see
+  // useQuestionEditor's useInfiniteQuery), so the list has to ask for the
+  // next 30 as the user reaches the bottom. An IntersectionObserver rooted
+  // on the scroll container is used rather than an onScroll handler
+  // because this container is also the drag-autoscroll target - a scroll
+  // listener here would fire on every frame of a card drag and start
+  // fetching pages mid-reorder.
+  const loadMore = useCallback(() => {
+    if (!loadMoreQuestions || !hasMoreQuestions || isLoadingMoreQuestions) return;
+    loadMoreQuestions();
+  }, [loadMoreQuestions, hasMoreQuestions, isLoadingMoreQuestions]);
+
+  useEffect(() => {
+    const sentinel = loadMoreSentinelRef.current;
+    if (!sentinel || !hasMoreQuestions) return undefined;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) loadMore();
+      },
+      {
+        // The scroll container itself, not the viewport: on desktop this
+        // sidebar scrolls independently of the page, so a viewport-rooted
+        // observer would never fire.
+        root: sidebarRef?.current || null,
+        // Start fetching a little before the sentinel is actually visible,
+        // so scrolling feels continuous instead of stopping at a spinner.
+        rootMargin: "300px",
+      },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadMore, hasMoreQuestions, sidebarRef, isCollapsed]);
 
   const backPath = mockTestId
     ? `/cluster/${clusterId}/mocktest/${mockTestId}`
@@ -182,6 +221,29 @@ export default function EditorSidebar({
             />
           ))}
         </div>
+
+        {/* Pagination sentinel + manual fallback. Kept outside both list
+            variants so it works collapsed or expanded, and rendered only
+            while more pages exist so a fully-loaded paper has no dangling
+            control. The button matters: if IntersectionObserver never
+            fires (a very short list that doesn't scroll, or a browser
+            quirk), the user is still never stuck at 30 questions. */}
+        {hasMoreQuestions && (
+          <div ref={loadMoreSentinelRef} className="pt-3 pb-1">
+            <button
+              type="button"
+              onClick={loadMore}
+              disabled={isLoadingMoreQuestions}
+              className="w-full rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground hover:border-orange-500/50 transition-colors disabled:opacity-60"
+            >
+              {isLoadingMoreQuestions
+                ? "Loading more..."
+                : totalQuestionCount
+                  ? `Load more (${questions.length} of ${totalQuestionCount})`
+                  : "Load more"}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Footer / Add Question Button */}

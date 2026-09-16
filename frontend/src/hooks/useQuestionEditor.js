@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { getIssues, toEditorQuestion } from "@/utils/questionEditorHelpers";
 import {
@@ -41,6 +45,12 @@ function buildInitialSnapshot(questions) {
   return byId;
 }
 
+// Matches the worker's QUESTION_WRITE_BATCH_SIZE by intent rather than by
+// coupling: small enough that the first page paints almost immediately on
+// a 3000-question paper, large enough that scrolling the sidebar doesn't
+// fire a request every few rows.
+const QUESTION_PAGE_SIZE = 30;
+
 export function useQuestionEditor() {
   const { clusterId, mockTestId } = useParams();
   const [searchParams] = useSearchParams();
@@ -59,11 +69,36 @@ export function useQuestionEditor() {
   // tests re-runs the initial-load path (including ?qId= deep-link).
   const loadedMockTestIdRef = useRef(null);
 
-  const questionsQuery = useQuery({
-    queryKey: ["questions", mockTestId],
-    queryFn: () => api.listQuestions(mockTestId),
+  // Paged instead of one unbounded request. The query key keeps
+  // ["questions", mockTestId] as its prefix so every existing
+  // invalidateQueries({ queryKey: ["questions", mockTestId] }) in this
+  // file and elsewhere still matches it (react-query matches keys by
+  // prefix), while staying a distinct cache entry from the unpaginated
+  // list useMockTestWorkspace still holds.
+  const questionsQuery = useInfiniteQuery({
+    queryKey: ["questions", mockTestId, "paged"],
+    queryFn: ({ pageParam = 0 }) =>
+      api.listQuestions(mockTestId, {
+        limit: QUESTION_PAGE_SIZE,
+        offset: pageParam,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage?.nextOffset ?? undefined,
     enabled: Boolean(mockTestId),
   });
+
+  const loadedServerQuestions = useMemo(
+    () =>
+      (questionsQuery.data?.pages || []).flatMap((page) =>
+        Array.isArray(page?.questions) ? page.questions : [],
+      ),
+    [questionsQuery.data],
+  );
+  // Comes from the server's COUNT, so it is the real paper length even
+  // when only the first 30 rows have been fetched.
+  const totalQuestionCount =
+    questionsQuery.data?.pages?.[0]?.total ?? loadedServerQuestions.length;
+  const hasMoreQuestions = Boolean(questionsQuery.hasNextPage);
 
   const mockTestQuery = useQuery({
     queryKey: ["mock-test", mockTestId],
@@ -79,12 +114,12 @@ export function useQuestionEditor() {
   );
 
   useEffect(() => {
-    if (!questionsQuery.data?.questions) return;
+    if (!questionsQuery.data) return;
     if (mockTestId && mockTestQuery.isLoading) return;
 
     // Keep paper (question_no) order in editor state so drag-reorder
     // still remumbers the canonical paper, not a student-preview shuffle.
-    const loaded = [...questionsQuery.data.questions.map(toEditorQuestion)].sort(
+    const loaded = [...loadedServerQuestions.map(toEditorQuestion)].sort(
       (a, b) => (Number(a.questionNo) || 0) - (Number(b.questionNo) || 0),
     );
     const isFirstLoadForMock =
@@ -107,14 +142,24 @@ export function useQuestionEditor() {
       return;
     }
 
-    // Subsequent refetches (diagram upload, soft-invalidate after save):
-    // keep the user's current selection, keep unsaved content/order, but
-    // always take fresh diagram fields from the server so a PDF-fetch
-    // upload is not wiped by the merge.
+    // Subsequent refetches (diagram upload, soft-invalidate after save)
+    // AND every scroll-triggered next page: keep the user's current
+    // selection, keep unsaved content/order, but always take fresh diagram
+    // fields from the server so a PDF-fetch upload is not wiped by the
+    // merge.
     setQuestions((prev) => {
       const prevById = new Map(prev.map((q) => [q.id, q]));
       const snap = initialSnapshotRef.current;
-      return loaded.map((serverQ) => {
+      const loadedIds = new Set(loaded.map((q) => q.id));
+      // Anything in local state that this (partial) server view doesn't
+      // mention. Before pagination, "not in the server response" could
+      // only mean "unsaved draft" - now it can also mean "lives on a page
+      // we haven't fetched yet", so dropping these unconditionally would
+      // silently delete rows from the editor as the user scrolled.
+      const keptLocal = prev.filter(
+        (q) => !loadedIds.has(q.id) && (!q.persisted || questionsQuery.hasNextPage),
+      );
+      const merged = loaded.map((serverQ) => {
         const local = prevById.get(serverQ.id);
         if (!local) return serverQ;
         const entry = snap.get(serverQ.id);
@@ -145,16 +190,35 @@ export function useQuestionEditor() {
           ...(isOrderDirty ? { questionNo: local.questionNo } : {}),
         };
       });
+
+      return [...merged, ...keptLocal].sort(
+        (a, b) => (Number(a.questionNo) || 0) - (Number(b.questionNo) || 0),
+      );
     });
 
     // Prefer staying on whatever the user is viewing. Only fall back to
     // ?qId= / first question when the current selection is gone (deleted).
+    // Checked against local state rather than the server page, because
+    // with pagination "not in this response" no longer means "deleted" -
+    // an unsaved draft, or a question from an already-loaded earlier page,
+    // would otherwise yank the selection back to Q1 on every scroll.
     setSelectedId((current) => {
-      if (current && loaded.some((q) => q.id === current)) return current;
+      const localIds = new Set(questionsRef.current.map((q) => q.id));
+      if (current && (localIds.has(current) || loaded.some((q) => q.id === current))) {
+        return current;
+      }
       if (targetQId && loaded.some((q) => q.id === targetQId)) return targetQId;
       return loaded[0]?.id || "";
     });
-  }, [questionsQuery.data, targetQId, mockTestId, mockTest, mockTestQuery.isLoading]);
+  }, [
+    questionsQuery.data,
+    questionsQuery.hasNextPage,
+    loadedServerQuestions,
+    targetQId,
+    mockTestId,
+    mockTest,
+    mockTestQuery.isLoading,
+  ]);
 
   const questionsRef = useRef(questions);
   questionsRef.current = questions;
@@ -185,13 +249,18 @@ export function useQuestionEditor() {
     [questions, mockTest],
   );
 
+  // totalQuestionCount is in the max() because `questions` only holds the
+  // pages fetched so far: numbering a new draft purely from loaded rows
+  // would hand it a question_no that an unloaded later page already uses,
+  // and the collision would only surface at save time.
   const nextQuestionNo = useMemo(
     () =>
       Math.max(
         0,
+        totalQuestionCount,
         ...questions.map((question) => Number(question.questionNo) || 0),
       ) + 1,
-    [questions],
+    [questions, totalQuestionCount],
   );
 
   const issuesById = useMemo(() => {
@@ -594,6 +663,13 @@ export function useQuestionEditor() {
     error,
     isSaving,
     isLoading: questionsQuery.isLoading,
+    // Pagination surface for the sidebar's load-more / scroll trigger.
+    // `questions` only ever holds what has been fetched so far, so
+    // totalQuestionCount is what headers and counters should show.
+    totalQuestionCount,
+    hasMoreQuestions,
+    isLoadingMoreQuestions: questionsQuery.isFetchingNextPage,
+    loadMoreQuestions: questionsQuery.fetchNextPage,
     issuesById,
     issueCount,
     extractedTopics,

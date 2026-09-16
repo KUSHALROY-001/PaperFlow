@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useStreamingQuestions } from "./useStreamingQuestions";
 import { formatDate } from "@/lib/date";
 import {
   decorateQuestionsForWorkspace,
@@ -41,16 +42,49 @@ export function useMockTestWorkspace() {
     enabled: Boolean(mockTestId),
   });
 
-  const { data: questionsData } = useQuery({
-    queryKey: ["questions", mockTestId],
-    queryFn: () => api.listQuestions(mockTestId),
+  // Four integers, computed in SQL. This is what the stat tiles and the
+  // during-processing poll read now - previously both were served by the
+  // full question list below, which meant a 100-page paper's entire
+  // extraction crossed the wire every 2.5 seconds while a job ran, just
+  // to update four numbers.
+  const { data: questionStatsData } = useQuery({
+    queryKey: ["question-stats", mockTestId],
+    queryFn: () => api.getQuestionStats(mockTestId),
     enabled: Boolean(mockTestId),
     refetchInterval: () => {
       const mockStatus = queryClient.getQueryData(["mock-test", mockTestId])
         ?.mockTest?.status;
-      return mockStatus === "processing" ? 2500 : false;
+      // Also keyed off the job cache, not just the mock test's own status.
+      // The ["mock-test"] query isn't polled, so its cached status can lag
+      // behind reality by a whole job; the jobs query IS polled every 2s
+      // while one is in flight. This poll is what drives the live Review/
+      // Output fill-in, so it must not stall on a stale status field.
+      const latestJobStatusInCache = queryClient.getQueryData([
+        "processing-jobs",
+        "mock-test",
+        mockTestId,
+      ])?.jobs?.[0]?.status;
+      const isJobInFlight =
+        mockStatus === "processing" ||
+        ["queued", "running"].includes(latestJobStatusInCache);
+      return isJobInFlight ? 2500 : false;
     },
   });
+  const questionStats = questionStatsData?.stats || null;
+
+  // Streamed in pages rather than fetched as one array, and gated to the
+  // tabs that actually render questions (overview's preview, review,
+  // output) - same gating idea as submissionsData below.
+  //
+  // The paging is what makes Review and Output live: the worker commits
+  // extracted questions in batches of 30, the stats poll above sees the
+  // count climb every 2.5s while a job runs, and useStreamingQuestions
+  // fetches and appends exactly the rows that appeared. So the tabs fill
+  // in as the extraction happens instead of sitting empty until the job
+  // reports "completed" and then rendering 3000 questions at once.
+  const needsQuestionList = ["overview", "review", "output"].includes(
+    activeTab,
+  );
 
   const { data: jobsData } = useQuery({
     queryKey: ["processing-jobs", "mock-test", mockTestId],
@@ -80,6 +114,30 @@ export function useMockTestWorkspace() {
   const latestJob = jobsData?.jobs?.[0];
   const latestJobId = latestJob?.id;
   const latestJobStatus = latestJob?.status;
+
+  // Restarts the stream from offset 0 whenever a job reaches a terminal
+  // state. Necessary because the worker's post-save passes (duplicate
+  // detection, and the bounded near-duplicate regeneration that rewrites
+  // slot content in place) can change rows that were already streamed in
+  // while the job was running.
+  const questionStreamToken = `${latestJobId || ""}:${latestJobStatus || ""}`;
+  const {
+    questions: streamedQuestions,
+    isStreaming: isStreamingQuestions,
+    loadedCount: loadedQuestionCount,
+    hasMoreQuestions,
+    loadMoreQuestions,
+    loadThroughQuestion,
+    patchQuestion,
+    removeQuestion,
+  } = useStreamingQuestions(mockTestId, {
+    enabled: Boolean(mockTestId) && needsQuestionList,
+    // Review and Output are deliberately user-paced. Overview retains its
+    // live, automatic loading behavior.
+    autoLoad: activeTab === "overview",
+    total: questionStats?.total ?? 0,
+    resetToken: questionStreamToken,
+  });
   const jobSummary = latestJob?.output_summary || {};
   const ocrSummary = jobSummary.ocr || {};
   const aiSummary = jobSummary.ai || {};
@@ -98,10 +156,10 @@ export function useMockTestWorkspace() {
   const questions = useMemo(
     () =>
       decorateQuestionsForWorkspace(
-        (questionsData?.questions || []).map(mapQuestion),
+        streamedQuestions.map(mapQuestion),
         mocktest,
       ),
-    [questionsData, mocktest],
+    [streamedQuestions, mocktest],
   );
   const submissions = submissionsData?.submissions || [];
 
@@ -111,20 +169,25 @@ export function useMockTestWorkspace() {
 
     queryClient.invalidateQueries({ queryKey: ["mock-test", mockTestId] });
     queryClient.invalidateQueries({ queryKey: ["questions", mockTestId] });
+    queryClient.invalidateQueries({ queryKey: ["question-stats", mockTestId] });
     queryClient.invalidateQueries({ queryKey: ["mock-tests", clusterId] });
     queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
   }, [clusterId, latestJobId, latestJobStatus, mockTestId, queryClient]);
 
+  // Keyed off the stats count rather than questions.length: the full list
+  // is no longer fetched on the Processing tab, which is where the user is
+  // sitting when a job completes, so questions.length would be 0 there and
+  // this auto-switch would never fire.
   useEffect(() => {
     if (
       latestJobStatus === "completed" &&
-      questions.length > 0 &&
+      (questionStats?.total ?? 0) > 0 &&
       openedOutputJobId !== latestJobId
     ) {
       setActiveTab("output");
       setOpenedOutputJobId(latestJobId);
     }
-  }, [latestJobId, latestJobStatus, openedOutputJobId, questions.length]);
+  }, [latestJobId, latestJobStatus, openedOutputJobId, questionStats?.total]);
 
   const status = statusConfig[mocktest?.status] || statusConfig.draft;
   // Single source of truth for "is a job currently in flight for this
@@ -134,15 +197,14 @@ export function useMockTestWorkspace() {
   const isProcessing =
     mocktest?.status === "processing" ||
     ["queued", "running"].includes(latestJobStatus);
-  const lowConfidence = questions.filter(
-    (question) => question.confidence < 75,
-  ).length;
-  const topicsFound = new Set(
-    questions.map((question) => question.topic).filter(Boolean),
-  ).size;
-  const approvedCount = questions.filter(
-    (question) => question.status === "approved",
-  ).length;
+  // All four now come from the server aggregate (see questionStats above)
+  // rather than from .filter() over a list this hook may not even have
+  // fetched. The || 0 fallbacks cover the first render before the stats
+  // request resolves.
+  const questionCount = questionStats?.total ?? 0;
+  const lowConfidence = questionStats?.lowConfidence ?? 0;
+  const topicsFound = questionStats?.topicsFound ?? 0;
+  const approvedCount = questionStats?.approved ?? 0;
 
   const metadata = mocktest
     ? {
@@ -249,8 +311,14 @@ export function useMockTestWorkspace() {
     try {
       setActionError("");
       await api.updateQuestion(questionId, { status: statusValue });
+      // Patched in place rather than by invalidating and re-reading:
+      // re-reading would mean draining the whole stream again just to
+      // change one row's status.
+      patchQuestion(questionId, { status: statusValue });
+      // Approving a question moves the "approved" tile, which is now a
+      // server aggregate rather than something derived from the list.
       await queryClient.invalidateQueries({
-        queryKey: ["questions", mockTestId],
+        queryKey: ["question-stats", mockTestId],
       });
       await queryClient.invalidateQueries({
         queryKey: ["mock-test", mockTestId],
@@ -264,8 +332,9 @@ export function useMockTestWorkspace() {
     try {
       setActionError("");
       await api.deleteQuestion(questionId);
+      removeQuestion(questionId);
       await queryClient.invalidateQueries({
-        queryKey: ["questions", mockTestId],
+        queryKey: ["question-stats", mockTestId],
       });
       await queryClient.invalidateQueries({
         queryKey: ["mock-test", mockTestId],
@@ -309,6 +378,17 @@ export function useMockTestWorkspace() {
     isGenerated,
     generationSources,
     questions,
+    // The paper's real length, independent of how much of the stream has
+    // arrived. Anything that only needs a count should use this, not
+    // questions.length.
+    questionCount,
+    // "Rows are still coming in" - true both for the initial drain of a
+    // large paper and for a job actively committing new batches.
+    isStreamingQuestions,
+    loadedQuestionCount,
+    hasMoreQuestions,
+    loadMoreQuestions,
+    loadThroughQuestion,
     submissions,
     isLoadingSubmissions,
     ocrSummary,

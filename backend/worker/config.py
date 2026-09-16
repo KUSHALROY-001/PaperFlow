@@ -75,9 +75,54 @@ WORKER_TEMPLATE_GENERATION_CONCURRENCY = int(
     os.environ.get("WORKER_TEMPLATE_GENERATION_CONCURRENCY", "3")
 )
 AI_PROVIDER = os.environ.get("AI_PROVIDER", "disabled").strip().lower()
-AI_MODEL = os.environ.get("AI_MODEL", "").strip()
+
+
+def _normalize_ai_model(raw_value):
+    """
+    Strips whitespace AND a matched pair of surrounding quote characters
+    from AI_MODEL. The quotes case is not hypothetical - it's the single
+    most common way this env var actually gets corrupted: someone copies
+    an example like `AI_MODEL="gemini-2.5-flash-lite"` (quotes included,
+    exactly as it'd appear in a .env file or shell export) into a
+    dashboard env var field (Render, etc.) that does NOT interpret shell
+    quoting - the literal `"` characters become part of the value. That
+    value then gets pasted RAW into the request URL in gemini_provider.py
+    (`.../models/{self.model}:generateContent`), and Gemini's API has no
+    model literally named `"gemini-2.5-flash-lite"` (quotes included), so
+    it 404s - a real, previously-unexplained case (see the 2026-09
+    "HTTP Error 404" investigation this normalization comes from).
+
+    Deliberately does NOT validate the value against a hardcoded list of
+    known-good model names beyond this - Google adds new models often
+    enough that a strict allowlist here would go stale and start
+    rejecting perfectly valid new models. This only fixes copy-paste
+    corruption that's unambiguously never a real model name.
+    """
+    value = raw_value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
+        value = value[1:-1].strip()
+    return value
+
+
+AI_MODEL = _normalize_ai_model(os.environ.get("AI_MODEL", ""))
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "").strip()
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
+# How many extracted questions are written to the database per
+# transaction (and per diagram-upload flush) at the end of a job. The old
+# behaviour was effectively "all of them": one transaction held open
+# across every INSERT for the whole document, with every diagram PNG kept
+# in memory until that single transaction committed. On a 100-page paper
+# (~3000 questions) that is one transaction alive for minutes and tens of
+# megabytes of crop bytes resident the entire time - the combination that
+# made saving hang, time out, or get the worker OOM-killed on a small
+# Render instance. Saving in small batches keeps each transaction short,
+# lets each batch's diagram bytes be uploaded and freed immediately, and
+# makes job progress advance smoothly instead of jumping 80 -> 100.
+#
+# 30 is deliberately small: the per-batch overhead (one extra round trip)
+# is negligible next to the AI stage, while the peak memory held is
+# bounded by the batch, not by the document.
+QUESTION_WRITE_BATCH_SIZE = max(1, int(os.environ.get("QUESTION_WRITE_BATCH_SIZE", "30")))
 AI_MAX_CHARS_PER_CHUNK = int(os.environ.get("AI_MAX_CHARS_PER_CHUNK", "12000"))
 AI_TIMEOUT_SECONDS = int(os.environ.get("AI_TIMEOUT_SECONDS", "90"))
 AI_PDF_PAGES_PER_CHUNK = int(os.environ.get("AI_PDF_PAGES_PER_CHUNK", "3"))

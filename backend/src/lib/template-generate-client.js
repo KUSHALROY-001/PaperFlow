@@ -5,7 +5,7 @@
 // up - Render/Cloudflare's edge returns 429/502 before Python starts.
 // worker-runner.js#wakeWorkerViaRelay is the path that actually works.
 import { httpError } from "./http-error.js";
-import { wakeWorkerViaRelay } from "./worker-runner.js";
+import { wakeWorkerViaRelay, IS_LOCAL_WORKER } from "./worker-runner.js";
 
 const WORKER_SERVICE_URL = (process.env.WORKER_SERVICE_URL || "")
   .trim()
@@ -13,6 +13,16 @@ const WORKER_SERVICE_URL = (process.env.WORKER_SERVICE_URL || "")
 const WORKER_TRIGGER_SECRET = (process.env.WORKER_TRIGGER_SECRET || "").trim();
 const RELAY_URL = (process.env.WAKE_RELAY_URL || "").trim();
 const RELAY_SHARED_SECRET = (process.env.RELAY_SHARED_SECRET || "").trim();
+
+// IS_LOCAL_WORKER now lives in worker-runner.js (single source of truth -
+// see that file's comment). Whether the relay is even relevant at all is
+// about WORKER_SERVICE_URL's own hostname, not about whether relay
+// secrets happen to be configured - those are two different questions
+// that can disagree (e.g. local .env pointing WORKER_SERVICE_URL at the
+// hosted Render URL without also configuring WAKE_RELAY_URL/
+// RELAY_SHARED_SECRET locally), and conflating them is what let a direct
+// hit against a sleeping HOSTED worker slip through silently logged as
+// if it were the safe local-worker case.
 
 const GENERATE_TIMEOUT_MS = 150_000;
 const WAKE_MAX_ATTEMPTS = 4;
@@ -51,11 +61,27 @@ function workerLooksAwake(wake) {
 }
 
 async function wakeWorkerThroughCloudflare() {
-  if (!RELAY_URL || !RELAY_SHARED_SECRET) {
+  if (IS_LOCAL_WORKER) {
     console.info(
-      "[template-generate] No Cloudflare relay configured - skipping wake (local worker must already be running)",
+      "[template-generate] WORKER_SERVICE_URL is localhost - skipping Cloudflare relay wake (local worker must already be running)",
     );
     return { skipped: true };
+  }
+
+  if (!RELAY_URL || !RELAY_SHARED_SECRET) {
+    // WORKER_SERVICE_URL points at a real (non-localhost) host but the
+    // relay isn't configured - this is a genuine misconfiguration, not
+    // the "must be local dev" situation the old check conflated it with.
+    // A direct hit here is a known dead end (see this file's top comment
+    // and worker-runner.js's cold-start investigation: Render/Cloudflare's
+    // edge blocks this API's own outbound IP before the sleeping worker's
+    // Python process ever starts), so fail with a clear, actionable
+    // message instead of silently attempting - and failing - a direct
+    // call that's already been confirmed not to work.
+    throw httpError(
+      503,
+      "AI template generation against the hosted worker requires WAKE_RELAY_URL and RELAY_SHARED_SECRET to be configured - a direct hit to a sleeping Render worker is blocked at the edge before it can wake up.",
+    );
   }
 
   let lastWake = null;
