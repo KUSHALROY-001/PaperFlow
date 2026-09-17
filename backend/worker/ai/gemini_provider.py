@@ -526,7 +526,15 @@ class GeminiProvider:
 
         return _call_with_retry(make_request, self.model)
 
-    def generate_json_from_pdf_images(self, system_prompt, user_prompt, pdf_path, page_numbers=None, on_progress=None):
+    def generate_json_from_pdf_images(
+        self,
+        system_prompt,
+        user_prompt,
+        pdf_path,
+        page_numbers=None,
+        on_progress=None,
+        on_result=None,
+    ):
         # Returns one result dict PER CHUNK, always - success or failure -
         # each carrying its TRUE physical page range. This used to return
         # (responses, chunk_errors), where `responses` only contained
@@ -793,6 +801,12 @@ class GeminiProvider:
                 "error": error,
                 "page_images": page_images_out,
             }
+            # The request body can be several megabytes. The result keeps
+            # only the PNG data needed for this chunk's diagram crops, so
+            # release the base64/JPEG request payload as soon as Gemini has
+            # answered instead of retaining every page until the last call.
+            job["page_parts"] = []
+            job["prompt"] = ""
 
             # Completed-count, not chunk_number: chunks finish out of page
             # order, so reporting chunk_number would make the UI jump
@@ -834,7 +848,19 @@ class GeminiProvider:
             # .map(), deliberately NOT as_completed(): .map() yields
             # results in SUBMISSION order (chunk_number / page order),
             # regardless of which thread's request actually finishes first.
-            results = list(executor.map(_process_chunk, chunk_jobs))
+            results = []
+            # executor.map yields in page order. Deliver each completed
+            # result before waiting for later pages, so the worker can merge
+            # and publish it while the remaining vision requests continue.
+            for result in executor.map(_process_chunk, chunk_jobs):
+                if on_result:
+                    on_result(result)
+                    # Streaming consumers have already parsed, cropped, and
+                    # persisted this page range. Do not retain its full-page
+                    # PNGs in the results list until every later chunk ends.
+                    result["page_images"].clear()
+                    result["response_text"] = None
+                results.append(result)
         finally:
             executor.shutdown(wait=True, cancel_futures=True)
 

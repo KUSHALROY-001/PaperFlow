@@ -1,4 +1,6 @@
 import re
+import threading
+from concurrent.futures import ThreadPoolExecutor
 
 from ..asset_extractor import crop_diagram
 from ..config import (
@@ -7,6 +9,7 @@ from ..config import (
     AI_NOTES_MAX_QUESTIONS,
     AI_NOTES_QUESTIONS_PER_CHUNK,
     AI_PROVIDER,
+    AI_TEXT_CHUNK_CONCURRENCY,
 )
 from ..reconcile import reconcile_questions
 from .gemini_provider import GeminiDailyQuotaExceededError
@@ -1135,6 +1138,7 @@ def _enhance_questions_with_ai_inner(
     document_type="questions",
     was_scanned=False,
     on_progress=None,
+    on_vision_chunk=None,
     template_context=None,
 ):
     def report(message):
@@ -1221,6 +1225,36 @@ def _enhance_questions_with_ai_inner(
         # always - whether it succeeded or failed (including after its
         # internal retry) - so an error here always names the real pages
         # that need attention, never a shifted position in a shorter list.
+        def handle_vision_result(result):
+            pages_label = f"pdf_images_pages_{result['start_page']}-{result['end_page']}"
+            if result["error"] or not result["response_text"]:
+                errors.append({"chunk": pages_label, "message": result["error"] or "empty response"})
+                return
+            try:
+                payload = extract_json_payload(result["response_text"])
+                ai_questions = normalize_ai_questions(payload, source=f"{provider.name}_image_ai_v1")
+                chunk_diagram_stats = _attach_diagram_crops(ai_questions, result.get("page_images") or {})
+                for key in diagram_stats:
+                    diagram_stats[key] += chunk_diagram_stats[key]
+
+                before = dict(questions_by_no)
+                for question in ai_questions:
+                    _put_extracted_question(questions_by_no, question, prefer_new=True)
+                changed_questions = [
+                    question
+                    for number, question in questions_by_no.items()
+                    if before.get(number) is not question
+                ]
+            except Exception as error:
+                errors.append({"chunk": f"{pages_label}_parse", "message": str(error)})
+                return
+
+            if changed_questions and on_vision_chunk:
+                # Persistence failures must remain real worker failures.
+                # They are not malformed AI JSON and must not be swallowed
+                # into the chunk's recoverable parse-error list.
+                on_vision_chunk(changed_questions, result)
+
         chunk_results = provider.generate_json_from_pdf_images(
             system_prompt,
             build_pdf_prompt(regex_questions),
@@ -1229,29 +1263,8 @@ def _enhance_questions_with_ai_inner(
             on_progress=lambda chunk_number, total_chunks: report(
                 f"AI cleanup (vision {chunk_number}/{total_chunks})"
             ),
+            on_result=handle_vision_result,
         )
-        for result in chunk_results:
-            pages_label = f"pdf_images_pages_{result['start_page']}-{result['end_page']}"
-            if result["error"] or not result["response_text"]:
-                errors.append({"chunk": pages_label, "message": result["error"] or "empty response"})
-                continue
-            try:
-                payload = extract_json_payload(result["response_text"])
-                ai_questions = normalize_ai_questions(payload, source=f"{provider.name}_image_ai_v1")
-                chunk_diagram_stats = _attach_diagram_crops(ai_questions, result.get("page_images") or {})
-                for key in diagram_stats:
-                    diagram_stats[key] += chunk_diagram_stats[key]
-                # Highest-priority pass: same paper number + same body
-                # overwrites (later chunk wins on page splits). Same paper
-                # number + DIFFERENT body is a subject restart (JEE Advanced
-                # Physics/Chemistry/Mathematics each use Q.1..N) and is
-                # kept under a new global number - never silent overwrite.
-                for question in ai_questions:
-                    _put_extracted_question(
-                        questions_by_no, question, prefer_new=True
-                    )
-            except Exception as error:
-                errors.append({"chunk": f"{pages_label}_parse", "message": str(error)})
 
     # Gated on "which question numbers are still missing" rather than the
     # old "if not questions_by_no" - a vision pass that recovered most (but
@@ -1267,22 +1280,63 @@ def _enhance_questions_with_ai_inner(
     if missing and text_only_pages:
         chunks = list(chunk_pages(text_only_pages))
         total_chunks = len(chunks)
-        for chunk_index, chunk in enumerate(chunks, start=1):
-            report(f"AI cleanup (text {chunk_index}/{total_chunks})")
-            user_prompt = build_user_prompt(chunk, regex_questions)
+
+        # Keep the merge deterministic even though the requests themselves
+        # overlap: executor.map yields results in the original text-chunk
+        # order. That preserves the existing collision behaviour in
+        # _put_extracted_question while removing idle network wait time.
+        daily_quota_event = threading.Event()
+        daily_quota_message = {"value": ""}
+
+        def process_text_chunk(job):
+            if daily_quota_event.is_set():
+                return {
+                    "chunk_index": job["chunk_index"],
+                    "error": f"Skipped - {daily_quota_message['value']}",
+                }
+
             try:
-                response_text = provider.generate_json(system_prompt, user_prompt)
-                payload = extract_json_payload(response_text)
-                ai_questions = normalize_ai_questions(payload, source=f"{provider.name}_ai_v1")
-                # Gap-fill only for true overlaps; subject restarts still
-                # get a new global number (prefer_new=False keeps the
-                # earlier vision result when bodies match).
-                for question in ai_questions:
-                    _put_extracted_question(
-                        questions_by_no, question, prefer_new=False
-                    )
+                return {
+                    "chunk_index": job["chunk_index"],
+                    "response_text": provider.generate_json(system_prompt, job["user_prompt"]),
+                }
+            except GeminiDailyQuotaExceededError as error:
+                daily_quota_message["value"] = str(error)
+                daily_quota_event.set()
+                return {
+                    "chunk_index": job["chunk_index"],
+                    "error": f"Stopped early: {error}",
+                }
             except Exception as error:
-                errors.append({"chunk": chunk_index, "message": str(error)})
+                return {"chunk_index": job["chunk_index"], "error": str(error)}
+
+        text_jobs = [
+            {
+                "chunk_index": chunk_index,
+                "user_prompt": build_user_prompt(chunk, regex_questions),
+            }
+            for chunk_index, chunk in enumerate(chunks, start=1)
+        ]
+        with ThreadPoolExecutor(max_workers=AI_TEXT_CHUNK_CONCURRENCY) as executor:
+            for completed, result in enumerate(executor.map(process_text_chunk, text_jobs), start=1):
+                report(f"AI cleanup (text {completed}/{total_chunks})")
+                chunk_index = result["chunk_index"]
+                if result.get("error"):
+                    errors.append({"chunk": chunk_index, "message": result["error"]})
+                    continue
+
+                try:
+                    payload = extract_json_payload(result["response_text"])
+                    ai_questions = normalize_ai_questions(payload, source=f"{provider.name}_ai_v1")
+                    # Gap-fill only for true overlaps; subject restarts still
+                    # get a new global number (prefer_new=False keeps the
+                    # earlier vision result when bodies match).
+                    for question in ai_questions:
+                        _put_extracted_question(
+                            questions_by_no, question, prefer_new=False
+                        )
+                except Exception as error:
+                    errors.append({"chunk": chunk_index, "message": str(error)})
 
     # Scanned docs already sent every page to vision above - this fallback
     # now only fires for pages that were text-only-routed (not flagged
@@ -1746,6 +1800,18 @@ def _classify_question_type_label(label):
 # needing the same few lines duplicated at each of those five-plus return
 # statements individually, with the real risk of a future one added there
 # getting missed.
+def prepare_questions_for_persistence(questions, template_context=None):
+    """Apply deterministic fields required before an incremental DB write."""
+    for question in questions:
+        if question.get("question_type"):
+            continue
+        correct_option_indexes = question.get("correct_option_indexes") or []
+        question["question_type"] = (
+            "multi" if len(correct_option_indexes) > 1 else "single"
+        )
+    return _apply_section_marks(template_context, questions)
+
+
 def enhance_questions_with_ai(
     pages,
     regex_questions,
@@ -1753,6 +1819,7 @@ def enhance_questions_with_ai(
     document_type="questions",
     was_scanned=False,
     on_progress=None,
+    on_vision_chunk=None,
     template_context=None,
 ):
     questions, summary = _enhance_questions_with_ai_inner(
@@ -1762,6 +1829,7 @@ def enhance_questions_with_ai(
         document_type=document_type,
         was_scanned=was_scanned,
         on_progress=on_progress,
+        on_vision_chunk=on_vision_chunk,
         template_context=template_context,
     )
 
@@ -1772,19 +1840,11 @@ def enhance_questions_with_ai(
     # ever see it. Derive it here, from the same rule db.py uses, so both
     # places agree on what "multi" means; respect an existing value first
     # in case a future extraction path ever sets one explicitly.
-    for question in questions:
-        if question.get("question_type"):
-            continue
-        correct_option_indexes = question.get("correct_option_indexes") or []
-        question["question_type"] = (
-            "multi" if len(correct_option_indexes) > 1 else "single"
-        )
-
     template_match = _check_template_match(template_context, questions)
     if template_match:
         summary["templateMatch"] = template_match
 
-    section_marks = _apply_section_marks(template_context, questions)
+    section_marks = prepare_questions_for_persistence(questions, template_context)
     if (
         section_marks["sectionsWithOverrides"]
         or section_marks["typesWithOverrides"]

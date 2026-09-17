@@ -3,6 +3,7 @@ from .provider import (
     generate_questions_from_metadata,
     generate_template_from_exam_name,
     get_provider,
+    prepare_questions_for_persistence,
     regenerate_flagged_duplicates,
 )
 
@@ -11,5 +12,6 @@ __all__ = [
     "generate_questions_from_metadata",
     "generate_template_from_exam_name",
     "get_provider",
+    "prepare_questions_for_persistence",
     "regenerate_flagged_duplicates",
 ]

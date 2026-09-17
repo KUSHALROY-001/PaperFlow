@@ -423,6 +423,44 @@ def insert_question_batch(connection, *, workspace_id, mock_test_id, questions):
     return inserted_count, pending_diagram_writes, diagrams_extracted_count
 
 
+def upsert_question_batch(connection, *, workspace_id, mock_test_id, questions):
+    """Replace only the slots represented by this incremental AI result.
+
+    Vision chunks can overlap at a page boundary. A later chunk is allowed
+    to provide a better version of an already-published question number, so
+    the streaming worker must replace that one slot instead of attempting a
+    second INSERT against the mock-test/question-number uniqueness rule.
+    """
+    question_numbers = [question["question_no"] for question in questions]
+    existing = connection.execute(
+        """
+        SELECT id, content_id FROM question_slots
+        WHERE mock_test_id = %s AND question_no = ANY(%s::int[])
+        """,
+        [mock_test_id, question_numbers],
+    ).fetchall()
+
+    for row in existing:
+        connection.execute("DELETE FROM question_slots WHERE id = %s", [row["id"]])
+        connection.execute(
+            """
+            DELETE FROM question_contents
+            WHERE id = %s
+              AND NOT EXISTS (
+                SELECT 1 FROM question_slots WHERE content_id = %s
+              )
+            """,
+            [row["content_id"], row["content_id"]],
+        )
+
+    return insert_question_batch(
+        connection,
+        workspace_id=workspace_id,
+        mock_test_id=mock_test_id,
+        questions=questions,
+    )
+
+
 # Backwards-compatible wrapper with the original signature and the
 # original semantics: one delete + every insert, all inside whatever
 # transaction the caller has open. Still used by

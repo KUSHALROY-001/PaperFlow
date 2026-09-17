@@ -19,6 +19,12 @@ port:
     usage pattern from /run's fire-and-forget kick, which is why it has
     its own separate concurrency pool (WORKER_RENDER_CONCURRENCY) rather
     than sharing /run's.
+  - GET /health - trivial 200, identical to "/". Exists purely as the
+    target of this process's OWN self-heartbeat (_heartbeat_loop below),
+    which pings it every WORKER_HEARTBEAT_INTERVAL_SECONDS while a job is
+    actively processing, so Render sees real inbound traffic and doesn't
+    spin the container down mid-job on a large PDF - see
+    WORKER_PUBLIC_URL's comment in config.py for the full reasoning.
 
 Deploy this instead of worker.py as the service's start command:
     python -m worker.http_server
@@ -59,6 +65,8 @@ import json
 import os
 import ssl
 import threading
+import time
+import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
@@ -68,6 +76,8 @@ from .ai import generate_template_from_exam_name, get_provider
 from .config import (
     AI_PDF_RENDER_SCALE,
     WORKER_CONCURRENCY,
+    WORKER_HEARTBEAT_INTERVAL_SECONDS,
+    WORKER_PUBLIC_URL,
     WORKER_RENDER_CONCURRENCY,
     WORKER_TEMPLATE_GENERATION_CONCURRENCY,
 )
@@ -106,6 +116,36 @@ _template_generation_semaphore = threading.Semaphore(
     WORKER_TEMPLATE_GENERATION_CONCURRENCY
 )
 
+# How many _hold_slot_and_drain threads (below) are currently between
+# "claimed a job" and "finished draining" - i.e. genuinely mid-job, not
+# just holding a slot while idle. _heartbeat_loop reads this (via
+# _has_active_job) to decide whether this process has any reason to ping
+# itself right now. A plain int guarded by a lock, not the semaphore
+# itself - Semaphore doesn't expose "how many are currently acquired",
+# and this needs to count active job threads specifically, not free
+# slots (WORKER_RENDER_CONCURRENCY / WORKER_TEMPLATE_GENERATION_CONCURRENCY
+# work never counts here; the heartbeat exists for long job processing,
+# not those short synchronous requests).
+_active_job_lock = threading.Lock()
+_active_job_count = 0
+
+
+def _register_job_thread_start():
+    global _active_job_count
+    with _active_job_lock:
+        _active_job_count += 1
+
+
+def _register_job_thread_end():
+    global _active_job_count
+    with _active_job_lock:
+        _active_job_count = max(0, _active_job_count - 1)
+
+
+def _has_active_job():
+    with _active_job_lock:
+        return _active_job_count > 0
+
 
 def _hold_slot_and_drain():
     """
@@ -114,6 +154,7 @@ def _hold_slot_and_drain():
     once a claim attempt finds nothing (checking _recheck_requested once
     more first - see the module docstring).
     """
+    _register_job_thread_start()
     try:
         while True:
             _recheck_requested.clear()
@@ -121,6 +162,7 @@ def _hold_slot_and_drain():
             if not handled and not _recheck_requested.is_set():
                 return
     finally:
+        _register_job_thread_end()
         _slot_semaphore.release()
 
 
@@ -179,6 +221,64 @@ def render_page(storage_key, page_number):
         local_path.unlink(missing_ok=True)
 
 
+def _heartbeat_loop():
+    """
+    Runs on its own daemon thread for the lifetime of this process. Every
+    WORKER_HEARTBEAT_INTERVAL_SECONDS, if at least one job thread is
+    currently mid-job (_has_active_job), sends this worker a GET /health
+    request against its OWN public URL (WORKER_PUBLIC_URL) - see that
+    var's comment in config.py for why self-pinging real inbound HTTP
+    traffic, rather than anything based on this process's own CPU/thread
+    activity, is what's actually needed to stop Render's free-tier idle
+    spin-down from killing a container mid-job.
+
+    Deliberately does nothing - and pings nothing - while _has_active_job()
+    is False: a worker with no job running SHOULD be allowed to spin down
+    on Render's normal schedule. This exists to keep an already-warm
+    worker warm through a job that's still legitimately in progress, not
+    to force the free instance to run 24/7 (see worker-runner.js's own
+    comment on why kickWorker deliberately avoids that).
+
+    Any failure here (network blip, timeout, misconfigured
+    WORKER_PUBLIC_URL) is logged and swallowed, never raised - a failed
+    heartbeat must not crash this thread or touch whatever job is
+    actually running. Worst case if heartbeats for a given job keep
+    failing: Render still spins the container down mid-job, which is
+    exactly the pre-existing failure mode this feature is meant to
+    reduce, not a new one - and db.py's STALE_JOB_THRESHOLD reclaim logic
+    is still there to recover from it, unchanged.
+    """
+    if not WORKER_PUBLIC_URL:
+        print(
+            "[http_server] WORKER_PUBLIC_URL is not set - heartbeat "
+            "self-pings are disabled, so a long-running job may still be "
+            "killed mid-way by Render's free-tier idle spin-down. Set "
+            "WORKER_PUBLIC_URL to this service's own public URL (same "
+            "value as the Node backend's WORKER_SERVICE_URL) to enable "
+            "them."
+        )
+        return
+
+    url = f"{WORKER_PUBLIC_URL}/health"
+    print(
+        f"[http_server] Heartbeat enabled: will ping {url} every "
+        f"{WORKER_HEARTBEAT_INTERVAL_SECONDS}s while a job is running"
+    )
+    while True:
+        time.sleep(WORKER_HEARTBEAT_INTERVAL_SECONDS)
+        if not _has_active_job():
+            continue
+        try:
+            with urllib.request.urlopen(url, timeout=15) as response:
+                response.read()
+        except Exception as error:
+            # Swallowed deliberately - see the docstring above. Logged so
+            # a persistently-failing heartbeat (e.g. a wrong
+            # WORKER_PUBLIC_URL) is at least visible in Render's logs
+            # instead of silently doing nothing every 2 minutes forever.
+            print(f"[http_server] Heartbeat ping to {url} failed: {error}")
+
+
 class Handler(BaseHTTPRequestHandler):
     def _send_json(self, status, payload):
         body = json.dumps(payload).encode("utf-8")
@@ -209,6 +309,16 @@ class Handler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/render-page":
             self._handle_render_page(parsed)
+            return
+        if parsed.path == "/health":
+            # Trivial 200, same as "/" - kept as its own path purely so
+            # this worker's own heartbeat traffic (_heartbeat_loop below)
+            # is distinguishable from external uptime-pinger traffic on
+            # "/" in Render's request logs, even though the response
+            # body is identical. Deliberately unauthenticated, like "/" -
+            # it does nothing but confirm the process is alive, so there
+            # is nothing here worth gating behind WORKER_TRIGGER_SECRET.
+            self._send_json(200, {"status": "ok"})
             return
         self._send_json(404, {"error": "not found"})
 
@@ -402,6 +512,7 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     server = ThreadingHTTPServer(("0.0.0.0", PORT), Handler)
+    threading.Thread(target=_heartbeat_loop, daemon=True).start()
     scheme = "http"
     if WORKER_TLS_CERT_FILE and WORKER_TLS_KEY_FILE:
         ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)

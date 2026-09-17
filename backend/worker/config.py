@@ -141,6 +141,13 @@ AI_PDF_PAGES_PER_CHUNK = int(os.environ.get("AI_PDF_PAGES_PER_CHUNK", "3"))
 # limiter; they do not multiply the quota. Set to 1 to force sequential
 # vision (regression-check against the old loop).
 AI_VISION_CHUNK_CONCURRENCY = int(os.environ.get("AI_VISION_CHUNK_CONCURRENCY", "5"))
+# Text-only cleanup uses the same bounded-concurrency approach as vision.
+# Responses are still parsed and merged in source-page order by provider.py;
+# this only overlaps network wait time. Gemini's shared request limiter
+# continues to cap the real request rate across both text and vision work.
+AI_TEXT_CHUNK_CONCURRENCY = max(
+    1, int(os.environ.get("AI_TEXT_CHUNK_CONCURRENCY", "5"))
+)
 AI_PDF_RENDER_SCALE = float(os.environ.get("AI_PDF_RENDER_SCALE", "1.5"))
 AI_GENERATE_FROM_NOTES = os.environ.get("AI_GENERATE_FROM_NOTES", "true").strip().lower() not in (
     "0",
@@ -204,6 +211,38 @@ CLOUDINARY_API_KEY = os.environ.get(
 CLOUDINARY_API_SECRET = os.environ.get(
     "CLOUDINARY_API_SECRET", os.environ.get("API_SECRET", "")
 ).strip()
+
+# Self-heartbeat while a job is running. Render's free-tier web services
+# spin down after ~15 minutes with no INBOUND HTTP traffic - NOT after 15
+# minutes of CPU/thread idle. A background job thread (worker.py#process_job)
+# can be genuinely busy the entire time on a large PDF, and Render still
+# kills the container mid-job, because "busy but silent on the network"
+# looks identical to "idle" from Render's side. http_server.py's
+# _heartbeat_loop works around this by having the worker GET its own
+# /health endpoint every WORKER_HEARTBEAT_INTERVAL_SECONDS while at least
+# one job thread is actively processing - genuine inbound traffic, which is
+# what actually resets Render's idle clock.
+#
+# This is deliberately separate from db.py's STALE_JOB_THRESHOLD reclaim
+# logic, not a replacement for it: that recovers a job AFTER Render has
+# already killed the container (another worker eventually reclaims the
+# orphaned 'running' row); this is meant to stop that kill from happening
+# in the first place for a job that's still legitimately in progress. Keep
+# both - the reclaim logic remains the safety net for the cases a
+# heartbeat can't prevent (the container getting killed for reasons other
+# than idle spin-down, a heartbeat ping itself failing, etc).
+#
+# Must be set to this SAME worker service's own public HTTPS URL (i.e. the
+# same value as the Node backend's WORKER_SERVICE_URL) - left blank by
+# default so a deploy that hasn't set it fails safe (heartbeat disabled,
+# logged once) rather than guessing a URL and pinging the wrong thing.
+WORKER_PUBLIC_URL = os.environ.get("WORKER_PUBLIC_URL", "").strip().rstrip("/")
+# 2 minutes, per the "worker sleeps and the job gets stuck in running"
+# symptom this was built for - comfortably inside Render's ~15 minute idle
+# window even accounting for a slow/retried ping.
+WORKER_HEARTBEAT_INTERVAL_SECONDS = int(
+    os.environ.get("WORKER_HEARTBEAT_INTERVAL_SECONDS", "120")
+)
 
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL is required")

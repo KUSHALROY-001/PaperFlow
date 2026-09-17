@@ -17,6 +17,7 @@ from .ai import (
     enhance_questions_with_ai,
     generate_questions_from_metadata,
     get_provider,
+    prepare_questions_for_persistence,
     regenerate_flagged_duplicates,
 )
 from .duplicate_detector import detect_duplicates_for_mock_test
@@ -32,6 +33,7 @@ from .db import (
     replace_questions,
     delete_existing_questions,
     insert_question_batch,
+    upsert_question_batch,
     count_questions_for_mock_test,
     replace_slot_content,
     update_job,
@@ -361,6 +363,81 @@ def process_job(job):
         # swallow anything raised here.
         check_not_cancelled(job["id"])
 
+    # Clear the previous extraction before the first vision response arrives.
+    # Each following response can now become visible immediately instead of
+    # waiting for a complete 100-page paper to be merged in memory.
+    with get_connection() as connection:
+        with connection.transaction():
+            row = connection.execute(
+                "SELECT status FROM processing_jobs WHERE id = %s FOR UPDATE",
+                [job["id"]],
+            ).fetchone()
+            if row is None or row["status"] == "cancelled":
+                raise JobCancelled(job["id"])
+            delete_existing_questions(connection, job["mock_test_id"])
+
+    streamed_question_numbers = set()
+    streamed_inserted = 0
+    streamed_diagrams = 0
+    diagram_upload_errors = []
+
+    def persist_vision_chunk(chunk_questions, result):
+        nonlocal streamed_inserted, streamed_diagrams
+
+        # The provider invokes this in page order. A later page-boundary
+        # correction can therefore safely replace its earlier slot.
+        prepare_questions_for_persistence(chunk_questions, template_context)
+
+        for batch in _batched(chunk_questions, QUESTION_WRITE_BATCH_SIZE):
+            with get_connection() as connection:
+                with connection.transaction():
+                    row = connection.execute(
+                        "SELECT status FROM processing_jobs WHERE id = %s FOR UPDATE",
+                        [job["id"]],
+                    ).fetchone()
+                    if row is None or row["status"] == "cancelled":
+                        raise JobCancelled(job["id"])
+                    batch_inserted, pending_writes, batch_diagrams = upsert_question_batch(
+                        connection,
+                        workspace_id=job["workspace_id"],
+                        mock_test_id=job["mock_test_id"],
+                        questions=batch,
+                    )
+
+            for pending_write in pending_writes:
+                try:
+                    upload_diagram(pending_write["png_bytes"], pending_write["public_id"])
+                except Exception as error:
+                    diagram_upload_errors.append(f"{pending_write['public_id']}: {error}")
+                    print(f"Failed to upload diagram asset {pending_write['public_id']}: {error}")
+                finally:
+                    pending_write["png_bytes"] = None
+
+            for question in batch:
+                question.pop("_diagram_crops", None)
+                streamed_question_numbers.add(question["question_no"])
+            streamed_inserted += batch_inserted
+            streamed_diagrams += batch_diagrams
+
+        with get_connection() as connection:
+            update_job(
+                connection,
+                job["id"],
+                status="running",
+                stage=(
+                    f"AI cleanup (pages {result['start_page']}-{result['end_page']}; "
+                    f"{len(streamed_question_numbers)} saved)"
+                ),
+                progress=72,
+                summary={
+                    "pagesWithText": _count_pages_with_text(pages),
+                    "ocr": ocr_summary,
+                    "questionsInserted": len(streamed_question_numbers),
+                    "questionWriteBatchSize": QUESTION_WRITE_BATCH_SIZE,
+                },
+            )
+            connection.commit()
+
     questions, ai_summary = enhance_questions_with_ai(
         pages,
         questions,
@@ -377,6 +454,7 @@ def process_job(job):
         # correctly without that blanket cost.
         was_scanned=bool(ocr_summary.get("converted")) and ocr_summary.get("pagesWithTextBeforeOcr") == 0,
         on_progress=report_ai_progress,
+        on_vision_chunk=persist_vision_chunk,
         template_context=template_context,
     )
 
@@ -390,39 +468,29 @@ def process_job(job):
         "questionWriteBatchSize": QUESTION_WRITE_BATCH_SIZE,
     }
 
-    # Phase 1 of the save: clear this mock test's previous extraction, in
-    # its own short transaction. This used to be the opening of ONE
-    # transaction that then stayed open across every insert below - see
-    # config.py#QUESTION_WRITE_BATCH_SIZE for why a 3000-question paper
-    # could not survive that.
-    with get_connection() as connection:
-        with connection.transaction():
-            # Locks this job's row and re-checks cancellation as the very
-            # first thing inside the transaction that's about to persist
-            # its results - this is the one check in process_job that
-            # can't settle for "checked recently", since it's the point of
-            # no return. FOR UPDATE closes the race a plain check_not_
-            # cancelled() call just before this block would leave open:
-            # Node cancelling this job in the instant between that check
-            # and this transaction starting. Raising here rolls the
-            # transaction back automatically (psycopg3's transaction
-            # context manager rolls back on any exception).
-            row = connection.execute(
-                "SELECT status FROM processing_jobs WHERE id = %s FOR UPDATE",
-                [job["id"]],
-            ).fetchone()
-            if row is None or row["status"] == "cancelled":
-                raise JobCancelled(job["id"])
+    # Vision results have already cleared and incrementally repopulated the
+    # paper. If no vision response was usable, retain the legacy final-save
+    # path for text-only, notes, and AI-disabled extraction.
+    if not streamed_question_numbers:
+        with get_connection() as connection:
+            with connection.transaction():
+                # Locks the job and re-checks cancellation at the precise
+                # point the non-vision fallback is about to persist.
+                row = connection.execute(
+                    "SELECT status FROM processing_jobs WHERE id = %s FOR UPDATE",
+                    [job["id"]],
+                ).fetchone()
+                if row is None or row["status"] == "cancelled":
+                    raise JobCancelled(job["id"])
 
-            update_job(
-                connection,
-                job["id"],
-                status="running",
-                stage="Saving questions",
-                progress=80,
-                summary=base_summary,
-            )
-            delete_existing_questions(connection, job["mock_test_id"])
+                update_job(
+                    connection,
+                    job["id"],
+                    status="running",
+                    stage="Saving questions",
+                    progress=80,
+                    summary=base_summary,
+                )
 
     # Phase 2: insert in batches, each one its own transaction, each one's
     # diagram bytes uploaded and dropped before the next batch starts.
@@ -430,10 +498,14 @@ def process_job(job):
     # first ~1200 questions saved and reviewable instead of throwing the
     # whole extraction away - that is a deliberate trade (see the partial
     # handling below), not an oversight.
-    inserted = 0
-    diagrams_extracted = 0
-    diagram_upload_errors = []
-    batches = _batched(questions, QUESTION_WRITE_BATCH_SIZE)
+    inserted = streamed_inserted
+    diagrams_extracted = streamed_diagrams
+    # Vision chunks have already committed. The final pass only handles
+    # non-vision fallback questions that were not published earlier.
+    batches = _batched(
+        [q for q in questions if q["question_no"] not in streamed_question_numbers],
+        QUESTION_WRITE_BATCH_SIZE,
+    )
     total_batches = len(batches)
     last_reported_progress = 80
 
@@ -537,11 +609,21 @@ def process_job(job):
                 )
                 connection.commit()
 
+    # A streamed page-boundary correction replaces an existing slot and is
+    # deliberately counted as a write above. The database count is the
+    # authoritative final paper length, not the number of write operations.
+    with get_connection() as connection:
+        saved_question_count = count_questions_for_mock_test(
+            connection, job["mock_test_id"]
+        )
+
     # Phase 3: every batch committed - flip the mock test and the job to
     # their final state.
     with get_connection() as connection:
         with connection.transaction():
-            mark_mock_test_after_processing(connection, job["mock_test_id"], inserted)
+            mark_mock_test_after_processing(
+                connection, job["mock_test_id"], saved_question_count
+            )
             update_job(
                 connection,
                 job["id"],
@@ -550,7 +632,7 @@ def process_job(job):
                 progress=100,
                 summary={
                     **base_summary,
-                    "questionsInserted": inserted,
+                    "questionsInserted": saved_question_count,
                     "diagramsExtracted": diagrams_extracted,
                 },
             )
@@ -600,7 +682,7 @@ def process_job(job):
         except Exception as error:
             print(f"Failed to remove temp PDF {temp_path}: {error}")
 
-    return len(questions)
+    return saved_question_count
 
 
 # "Generate from existing tests" - process_job's counterpart with no PDF,
