@@ -13,6 +13,7 @@ from ..config import (
 )
 from ..reconcile import reconcile_questions
 from .gemini_provider import GeminiDailyQuotaExceededError
+from ..placeholders import is_placeholder_question
 from .schemas import extract_json_payload, normalize_ai_questions
 
 SYSTEM_PROMPT = """
@@ -21,6 +22,11 @@ Return only valid JSON. Do not include markdown.
 Use zero-based option indexes.
 If an answer is missing or uncertain, choose the most likely option, lower confidence, set needs_review true, and explain in issues.
 Keep original meaning. Do not invent questions that are not present in the text.
+Never write filler stems such as "Reasoning question 21" or "English question 1",
+and never use the bare letters A/B/C/D as the option text unless that is
+literally all the paper prints for that choice. If a page is an answer key
+(numbers mapped to A-D with no question stems), return {"questions": []} -
+do not invent questions from the key.
 
 For every visible diagram, circuit, graph, chart, or figure belonging to a
 question, add an entry to that question's required "diagrams" list with a
@@ -1052,6 +1058,8 @@ def _put_extracted_question(questions_by_no, question, *, prefer_new):
     """
     if not question:
         return
+    if is_placeholder_question(question):
+        return
     no = question.get("question_no")
     if no is None:
         return
@@ -1215,10 +1223,19 @@ def _enhance_questions_with_ai_inner(
     # per the incident in the comment above), but a non-scanned document
     # now only sends the SPECIFIC pages that actually need it.
     vision_page_numbers = sorted(
-        {page_data["page"] for page_data in pages if was_scanned or page_data.get("needsVision")}
+        {
+            page_data["page"]
+            for page_data in pages
+            if (was_scanned or page_data.get("needsVision"))
+            and not page_data.get("isAnswerKey")
+        }
     )
     vision_page_set = set(vision_page_numbers)
-    text_only_pages = pages if was_scanned else [p for p in pages if p["page"] not in vision_page_set]
+    text_only_pages = [
+        page
+        for page in (pages if was_scanned else [p for p in pages if p["page"] not in vision_page_set])
+        if not page.get("isAnswerKey")
+    ]
 
     if vision_page_numbers and pdf_path and hasattr(provider, "generate_json_from_pdf_images"):
         # Every entry below is labeled with its TRUE start_page/end_page,
@@ -1920,6 +1937,13 @@ def build_pdf_prompt(regex_questions):
 Extract and clean all MCQ questions from the attached PDF.
 This may be a scanned PDF, so inspect the PDF content directly.
 Use the regex parser preview as hints only. If the preview is empty, rely on the PDF.
+The preview is an incomplete SAMPLE of questions found elsewhere in the document
+- it is not a complete list, and it is not limited to the attached pages.
+Extract EVERY question actually visible on the attached pages, including
+those whose numbers are not in the preview.
+If the attached pages are an answer key (question numbers mapped to A-D
+with no stems), return an empty questions list. Do not invent filler
+such as "Reasoning question 21" with options A/B/C/D.
 
 Regex parser preview:
 {regex_preview}

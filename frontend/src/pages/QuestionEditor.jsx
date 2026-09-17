@@ -40,6 +40,7 @@ export default function QuestionEditor() {
     extractedTopics,
     hasUnsavedChanges,
     selectedIsDirty,
+    dirtyContentIds,
     dirtyContentCount,
     orderChangeCount,
     updateSelected,
@@ -185,6 +186,7 @@ export default function QuestionEditor() {
         addQuestion={addQuestion}
         isViewer={isViewer}
         hasUnsavedChanges={hasUnsavedChanges}
+        dirtyContentIds={dirtyContentIds}
         onRequestLeave={(path) => setPendingLeavePath(path)}
         paperDefaultMarks={paperDefaultMarks}
         paperDefaultNegative={paperDefaultNegative}

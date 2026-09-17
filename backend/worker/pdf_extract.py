@@ -38,6 +38,37 @@ CODE_KEYWORD_RE = re.compile(
 )
 CODE_PUNCTUATION_DENSITY_THRESHOLD = 0.02
 
+ANSWER_KEY_HEADING_RE = re.compile(r"(?im)^\s*answer\s*key\s*$")
+ANSWER_KEY_LINE_RE = re.compile(r"(?m)^\s*(\d{1,4})\.\s*([A-Da-d])\s*$")
+QUESTION_OPTION_MARKER_RE = re.compile(r"(?m)^\s*\([A-Da-d]\)")
+
+
+def is_answer_key_page(text):
+    """True when the page is a printed answer key, not question stems.
+
+    Confirmed on IAF Group Y mock PDFs: the only pages with vector
+    drawings were the answer-key tables (ruled lines around `1. A` /
+    `21. D` cells). classify_page_content used to treat those rules as
+    `needsVision`, so Gemini vision was asked to extract questions from
+    a page that has no stems - and it invented filler like
+    "Reasoning question 21" with options ["A","B","C","D"].
+    """
+    if not (text or "").strip():
+        return False
+    if ANSWER_KEY_HEADING_RE.search(text):
+        return True
+    key_lines = ANSWER_KEY_LINE_RE.findall(text)
+    option_markers = QUESTION_OPTION_MARKER_RE.findall(text)
+    return len(key_lines) >= 8 and len(option_markers) < 2
+
+
+def parse_answer_key(text):
+    """Map paper-local question number -> 'A'/'B'/'C'/'D' from a key page."""
+    return {
+        int(number): letter.upper()
+        for number, letter in ANSWER_KEY_LINE_RE.findall(text or "")
+    }
+
 
 def _looks_like_code(text):
     if CODE_KEYWORD_RE.search(text):
@@ -47,6 +78,41 @@ def _looks_like_code(text):
     # but dense in almost any code snippet.
     punctuation_count = text.count("{") + text.count("}") + text.count(";")
     return (punctuation_count / max(len(text), 1)) > CODE_PUNCTUATION_DENSITY_THRESHOLD
+
+
+def _point_xy(point):
+    if hasattr(point, "x") and hasattr(point, "y"):
+        return float(point.x), float(point.y)
+    if isinstance(point, (tuple, list)) and len(point) >= 2:
+        return float(point[0]), float(point[1])
+    return None
+
+
+def _is_table_rule_drawing(drawing):
+    """Horizontal/vertical stroked line - a table border, not a diagram.
+
+    Answer-key pages in generated exam PDFs are a grid of such rules
+    (get_drawings() type 's', a single 'l' item). Counting those as
+    hasVectorDrawings was the entire reason those pages were routed to
+    vision while the actual question pages (no drawings) were not.
+    """
+    items = drawing.get("items") or []
+    if drawing.get("type") != "s" or len(items) != 1:
+        return False
+    item = items[0]
+    if not item or item[0] != "l" or len(item) < 3:
+        return False
+    p1 = _point_xy(item[1])
+    p2 = _point_xy(item[2])
+    if p1 is None or p2 is None:
+        return False
+    dx, dy = abs(p1[0] - p2[0]), abs(p1[1] - p2[1])
+    return dx < 1.5 or dy < 1.5
+
+
+def _has_diagram_drawings(page):
+    drawings = page.get_drawings() or []
+    return any(not _is_table_rule_drawing(drawing) for drawing in drawings)
 
 
 def classify_page_content(page):
@@ -68,22 +134,30 @@ def classify_page_content(page):
     """
     text = page.get_text("text") or ""
     has_raster_images = len(page.get_images(full=True)) > 0
-    has_vector_drawings = len(page.get_drawings()) > 0
+    raw_drawing_count = len(page.get_drawings() or [])
+    has_diagram_drawings = _has_diagram_drawings(page)
+    is_answer_key = is_answer_key_page(text)
 
     math_symbol_count = len(MATH_SYMBOL_RE.findall(text))
     math_symbol_density = math_symbol_count / max(len(text), 1)
 
-    needs_vision = (
+    # Answer keys must never go to vision: they have no stems, and the
+    # model will invent "{section} question {n}" placeholders from the
+    # printed pattern line / regex preview. Table-rule strokes also do
+    # not count as diagrams - only real drawings do.
+    needs_vision = (not is_answer_key) and (
         has_raster_images
-        or has_vector_drawings
+        or has_diagram_drawings
         or math_symbol_density > MATH_SYMBOL_DENSITY_THRESHOLD
         or _looks_like_code(text)
     )
 
     return {
         "hasRasterImages": has_raster_images,
-        "hasVectorDrawings": has_vector_drawings,
+        "hasVectorDrawings": has_diagram_drawings,
+        "rawVectorDrawingCount": raw_drawing_count,
         "mathSymbolDensity": round(math_symbol_density, 4),
+        "isAnswerKey": is_answer_key,
         "needsVision": needs_vision,
     }
 

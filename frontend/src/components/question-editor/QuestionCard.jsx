@@ -17,6 +17,7 @@ function QuestionCard({
   onCardMouseEnter,
   isDragging,
   isDragOver,
+  isEdited = false,
   paperDefaultMarks = null,
   paperDefaultNegative = null,
   questionOrderMode = "sequential",
@@ -41,6 +42,9 @@ function QuestionCard({
       "border-2 border-orange-500 bg-orange-500/20 dark:bg-orange-500/25 ring-2 ring-orange-500/40 shadow-md transform translate-y-0.5 scale-[1.01]";
   } else if (isSelected) {
     stateClass = "border-orange-500 bg-orange-500/10 dark:bg-orange-500/15";
+  } else if (isEdited) {
+    stateClass =
+      "border-blue-500/40 bg-blue-500/5 dark:bg-blue-500/10 hover:border-blue-500/60";
   } else {
     stateClass = "border-border bg-card hover:border-orange-500/40";
   }
@@ -112,6 +116,14 @@ function QuestionCard({
             {!q.persisted && (
               <span className="text-xs bg-amber-500/15 text-amber-500 border border-amber-500/20 px-2 py-0.5 rounded-lg font-bold">
                 Draft
+              </span>
+            )}
+            {isEdited && q.persisted && (
+              <span
+                className="text-xs bg-blue-500/15 text-blue-500 border border-blue-500/20 px-2 py-0.5 rounded-lg font-bold"
+                title="Unsaved edits on this question"
+              >
+                Edited
               </span>
             )}
             {issues > 0 && (

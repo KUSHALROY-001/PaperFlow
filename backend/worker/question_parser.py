@@ -1,5 +1,7 @@
 import re
 
+from .pdf_extract import is_answer_key_page, parse_answer_key
+
 
 QUESTION_START_RE = re.compile(
     r"(?im)(?:^|\n)\s*(?:q(?:uestion)?\.?\s*)?(\d{1,4})[\).:\-,]\s+"
@@ -203,7 +205,34 @@ def confidence_for(question_text, options, answer_indexes):
     return min(confidence, 95)
 
 
-def parse_questions(pages):
+def _split_into_papers(pages):
+    """Group question pages by the answer-key page that follows them.
+
+    Each mock test in a compiled booklet is typically N question pages
+    then one ANSWER KEY page. Parsing the whole booklet as one stream
+    used to let `1. A` / `21. D` key lines match QUESTION_START_RE,
+    consume 50 question numbers per key (even though those blocks were
+    later dropped for having no options), and leave a 50-wide hole in
+    the numbering - which _missing_question_numbers then treated as
+    real missing questions.
+    """
+    papers = []
+    current = []
+    for page in pages:
+        if is_answer_key_page(page.get("text") or ""):
+            papers.append((current, page))
+            current = []
+        else:
+            current.append(page)
+    if current:
+        papers.append((current, None))
+    return papers
+
+
+def _parse_question_pages(pages):
+    if not pages:
+        return []
+
     combined = "\n\n".join(
         f"\n[PAGE {page['page']}]\n{page['text']}" for page in pages
     )
@@ -211,7 +240,7 @@ def parse_questions(pages):
     page_lookup = []
 
     for page in pages:
-        for match in QUESTION_START_RE.finditer(page["text"]):
+        for match in QUESTION_START_RE.finditer(page.get("text") or ""):
             page_lookup.append((int(match.group(1)), page["page"]))
 
     page_by_question = {}
@@ -222,16 +251,14 @@ def parse_questions(pages):
     seen_numbers = set()
 
     for fallback_index, (question_no, block) in enumerate(split_question_blocks(text), start=1):
+        paper_question_no = question_no
         if question_no > MAX_PLAUSIBLE_QUESTION_NO:
             # Not a real question number (see MAX_PLAUSIBLE_QUESTION_NO
             # above) - skip the block entirely rather than renumbering it
             # into the sequence, since it isn't actually a missed question.
             continue
-        if question_no in seen_numbers:
-            question_no = max(seen_numbers) + 1
-        seen_numbers.add(question_no)
 
-        raw_question = strip_question_prefix(question_no, block)
+        raw_question = strip_question_prefix(paper_question_no, block)
         options = parse_options(raw_question)
 
         if len(options) < 2:
@@ -255,6 +282,14 @@ def parse_questions(pages):
         if any(len(option) > MAX_PLAUSIBLE_OPTION_LENGTH for option in options):
             continue
 
+        # Only consume a number once the block is actually accepted.
+        # Answer-key lines used to be added to seen_numbers and then
+        # `continue`'d for missing options, which punched 50-wide holes
+        # in the sequence after every paper.
+        if question_no in seen_numbers:
+            question_no = max(seen_numbers) + 1
+        seen_numbers.add(question_no)
+
         answer_indexes = parse_answer(raw_question)
         answer_indexes = [
             index for index in answer_indexes if 0 <= index < len(options)
@@ -271,13 +306,61 @@ def parse_questions(pages):
                 "text": question_text,
                 "options": options,
                 "correct_option_indexes": answer_indexes,
-                "source_page": page_by_question.get(question_no),
+                "source_page": page_by_question.get(paper_question_no),
                 "confidence": confidence_for(question_text, options, answer_indexes),
                 "metadata": {
                     "parser": "regex_v1",
                     "rawBlockPreview": block[:500],
+                    "paper_question_no": paper_question_no,
                 },
             }
         )
+
+    return parsed
+
+
+def _apply_answer_key(questions, answer_key_page):
+    if not questions or not answer_key_page:
+        return
+    answers = parse_answer_key(answer_key_page.get("text") or "")
+    if not answers:
+        return
+    for question in questions:
+        paper_no = (question.get("metadata") or {}).get("paper_question_no")
+        if paper_no is None:
+            paper_no = question.get("question_no")
+        letter = answers.get(paper_no)
+        if not letter:
+            continue
+        index = ord(letter) - ord("A")
+        options = question.get("options") or []
+        if 0 <= index < len(options):
+            question["correct_option_indexes"] = [index]
+            metadata = dict(question.get("metadata") or {})
+            metadata["answerKey"] = letter
+            question["metadata"] = metadata
+            question["confidence"] = confidence_for(
+                question.get("text") or "", options, [index]
+            )
+
+
+def parse_questions(pages):
+    parsed = []
+    seen_numbers = set()
+
+    for question_pages, answer_key_page in _split_into_papers(pages):
+        paper_questions = _parse_question_pages(question_pages)
+        _apply_answer_key(paper_questions, answer_key_page)
+
+        for question in paper_questions:
+            paper_no = question["question_no"]
+            if paper_no in seen_numbers:
+                new_no = max(seen_numbers) + 1
+                metadata = dict(question.get("metadata") or {})
+                metadata.setdefault("paper_question_no", paper_no)
+                metadata["renumbered_due_to_subject_restart"] = True
+                question = {**question, "question_no": new_no, "metadata": metadata}
+            seen_numbers.add(question["question_no"])
+            parsed.append(question)
 
     return parsed

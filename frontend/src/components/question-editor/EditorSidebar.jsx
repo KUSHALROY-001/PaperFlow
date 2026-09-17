@@ -28,6 +28,7 @@ export default function EditorSidebar({
   addQuestion,
   isViewer,
   hasUnsavedChanges,
+  dirtyContentIds = null,
   onRequestLeave,
   paperDefaultMarks = null,
   paperDefaultNegative = null,
@@ -166,16 +167,22 @@ export default function EditorSidebar({
             {questions.map((q) => {
               const isSelected = q.id === selectedId;
               const issues = issuesById.get(q.id);
+              const isEdited =
+                Boolean(q.persisted) &&
+                dirtyContentIds != null &&
+                dirtyContentIds.has(q.id);
               return (
                 <div key={q.id} className="relative group">
                   <button
                     type="button"
                     onClick={() => setSelectedId(q.id)}
-                    title={`Q${questionOrderMode === "random" ? q.displayIndex || q.questionNo : q.questionNo}: ${q.text || "Untitled question"}`}
+                    title={`Q${questionOrderMode === "random" ? q.displayIndex || q.questionNo : q.questionNo}: ${q.text || "Untitled question"}${isEdited ? " (edited)" : ""}`}
                     className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                       isSelected
                         ? "bg-orange-500 text-white shadow-md shadow-orange-500/25 ring-2 ring-orange-500/40 border-orange-500"
-                        : "bg-card text-foreground border border-border hover:border-orange-500/50 hover:bg-orange-500/10 hover:text-orange-500"
+                        : isEdited
+                          ? "bg-card text-foreground border border-blue-500/50 hover:border-blue-500 hover:bg-blue-500/10 hover:text-blue-500"
+                          : "bg-card text-foreground border border-border hover:border-orange-500/50 hover:bg-orange-500/10 hover:text-orange-500"
                     }`}
                   >
                     Q{questionOrderMode === "random" ? q.displayIndex || q.questionNo : q.questionNo}
@@ -190,6 +197,12 @@ export default function EditorSidebar({
                     <span
                       className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 border-2 border-card"
                       title="Draft"
+                    />
+                  )}
+                  {isEdited && (!issues || issues <= 0) && (
+                    <span
+                      className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-blue-500 border-2 border-card"
+                      title="Edited — unsaved changes"
                     />
                   )}
                 </div>
@@ -211,6 +224,11 @@ export default function EditorSidebar({
               onSelect={setSelectedId}
               onDelete={() => setDeleteTarget(q)}
               issues={issuesById.get(q.id)}
+              isEdited={
+                Boolean(q.persisted) &&
+                dirtyContentIds != null &&
+                dirtyContentIds.has(q.id)
+              }
               onCardMouseDown={onCardMouseDown}
               onCardMouseEnter={onCardMouseEnter}
               isDragging={draggingIndex === index}

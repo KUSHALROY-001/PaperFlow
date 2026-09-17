@@ -675,6 +675,7 @@ export function useQuestionEditor() {
     extractedTopics,
     hasUnsavedChanges,
     selectedIsDirty,
+    dirtyContentIds,
     dirtyContentCount: dirtyContentIds.size,
     orderChangeCount: orderChangedItems.length,
     updateSelected,

@@ -21,6 +21,11 @@ never touched at all (e.g. because the one chunk covering that page failed
 and there was nothing to compare against). Regex can never override or
 outscore an AI answer, even a low-confidence one.
 
+Exception: invented placeholder stems ("Reasoning question 21" with
+options A/B/C/D) are not real AI extractions. Those used to beat the
+regex body because AI-priority is unconditional. They now lose to regex
+on the same paper number, and are dropped if regex has nothing either.
+
 Subject-restart handling (JEE Advanced Physics/Chemistry/Mathematics each
 restart at Q.1): when both sources report the same paper number but the
 bodies are clearly different questions, keep BOTH - the AI one stays on
@@ -30,6 +35,8 @@ question_no alone used to drop entire subjects.
 """
 
 import re
+
+from .placeholders import is_placeholder_question
 
 
 def _fingerprint(question):
@@ -71,6 +78,8 @@ def reconcile_questions(regex_questions, ai_questions):
         no = question.get("question_no")
         if no is None:
             continue
+        if is_placeholder_question(question):
+            continue
         merged_by_no[no] = question
 
     decisions = []
@@ -85,6 +94,9 @@ def reconcile_questions(regex_questions, ai_questions):
             continue
 
         existing = merged_by_no[no]
+        if is_placeholder_question(existing):
+            merged_by_no[no] = question
+            continue
         if _is_same_question(existing, question):
             # AI already has this question - regex never overrides.
             continue
@@ -102,13 +114,6 @@ def reconcile_questions(regex_questions, ai_questions):
         source = _source_of(q)
         # Decide reason relative to original paper number / AI presence.
         paper_no = (q.get("metadata") or {}).get("paper_question_no", question_no)
-        ai_has_same = any(
-            aq.get("question_no") == question_no
-            or (aq.get("metadata") or {}).get("paper_question_no") == paper_no
-            for aq in ai_questions
-            if _is_same_question(aq, q) or aq is q
-        )
-        # Simpler audit labels:
         parser = (q.get("metadata") or {}).get("parser", "")
         if "ai" in str(parser).lower() or "gemini" in str(parser).lower() or "openai" in str(parser).lower():
             # AI-sourced

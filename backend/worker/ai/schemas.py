@@ -2,6 +2,8 @@ import json
 import math
 import re
 
+from ..placeholders import is_placeholder_question
+
 
 def _question_item_schema(*, nullable_as_union):
     # Gemini's responseSchema is a subset of OpenAPI 3.0: optional fields are
@@ -444,6 +446,15 @@ def normalize_ai_questions(payload, *, source="ai"):
 
         options = [str(option).strip() for option in options if str(option).strip()]
         if len(options) < 2:
+            continue
+
+        # Drop invented filler before it can occupy a question_no slot.
+        # An answer-key-only vision pass used to persist
+        # "Reasoning question 21" / ["A","B","C","D"] as real questions
+        # (confidence 40, needs_review) and, because vision runs first
+        # and fills 1-N with no gaps, skip the text-layer extraction that
+        # already had the real stems.
+        if is_placeholder_question({"text": question_text, "options": options}):
             continue
 
         try:
