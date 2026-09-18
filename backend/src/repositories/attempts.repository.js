@@ -234,19 +234,20 @@ export async function listAllAttemptsForMockTest(mockTestId, workspaceId) {
 
 export async function upsertAnswer(
   client,
-  { attemptId, questionId, selectedOptionIndexes },
+  { attemptId, questionId, selectedOptionIndexes, answerText },
 ) {
   const result = await client.query(
     `
-    INSERT INTO exam_answers (attempt_id, question_id, selected_option_indexes, answered_at)
-    VALUES ($1, $2, $3, now())
+    INSERT INTO exam_answers (attempt_id, question_id, selected_option_indexes, answer_text, answered_at)
+    VALUES ($1, $2, $3, $4, now())
     ON CONFLICT (attempt_id, question_id)
     DO UPDATE SET
       selected_option_indexes = EXCLUDED.selected_option_indexes,
+      answer_text = EXCLUDED.answer_text,
       answered_at = now()
     RETURNING *
     `,
-    [attemptId, questionId, selectedOptionIndexes],
+    [attemptId, questionId, selectedOptionIndexes, answerText],
   );
 
   return result.rows[0];
@@ -281,10 +282,21 @@ export async function listQuestionsWithAnswersForAttempt(
       q.explanation,
       q.question_type,
       q.correct_option_indexes,
+      q.accepted_answers,
+      q.grading_rubric,
+      q.expected_answer,
+      q.answer_word_limit,
+      q.numeric_answer,
+      q.numeric_tolerance,
       q.options,
       ea.selected_option_indexes,
+      ea.answer_text,
       ea.is_correct,
-      ea.marks_awarded
+      ea.marks_awarded,
+      ea.grading_status,
+      ea.ai_suggested_marks,
+      ea.ai_rubric_breakdown,
+      ea.ai_reasoning
     FROM questions q
     LEFT JOIN exam_answers ea ON ea.question_id = q.id AND ea.attempt_id = $1
     WHERE q.mock_test_id = $2
@@ -312,10 +324,15 @@ export async function listQuestionsForScoring(mockTestId, attemptId, topics) {
     `
     SELECT
       q.id AS question_id,
+      q.question_type,
       q.correct_option_indexes,
+      q.accepted_answers,
+      q.numeric_answer,
+      q.numeric_tolerance,
       q.marks_per_correct AS question_marks_per_correct,
       q.negative_marks_per_wrong AS question_negative_marks_per_wrong,
-      ea.selected_option_indexes
+      ea.selected_option_indexes,
+      ea.answer_text
     FROM questions q
     LEFT JOIN exam_answers ea ON ea.question_id = q.id AND ea.attempt_id = $2
     WHERE q.mock_test_id = $1
@@ -341,6 +358,32 @@ export async function updateAnswerScore(
     `,
     [attemptId, questionId, isCorrect, marksAwarded],
   );
+}
+
+export async function markAnswerPendingGrading(client, { attemptId, questionId }) {
+  await client.query(
+    `
+    UPDATE exam_answers
+    SET is_correct = NULL,
+        marks_awarded = NULL,
+        grading_status = 'pending_grading'
+    WHERE attempt_id = $1 AND question_id = $2
+    `,
+    [attemptId, questionId],
+  );
+}
+
+export async function createGradingBatches(client, { attemptId, questionIds, chunkSize = 12 }) {
+  for (let index = 0; index < questionIds.length; index += chunkSize) {
+    await client.query(
+      `
+      INSERT INTO attempt_grading_batches (attempt_id, chunk_index, question_ids)
+      VALUES ($1, $2, $3::uuid[])
+      ON CONFLICT (attempt_id, chunk_index) DO NOTHING
+      `,
+      [attemptId, index / chunkSize, questionIds.slice(index, index + chunkSize)],
+    );
+  }
 }
 
 export async function finalizeAttempt(
@@ -425,13 +468,13 @@ export async function findActiveAttemptForUser(
   return result.rows[0] || null;
 }
 
-export async function findQuestionMockTestId(questionId) {
+export async function findQuestionForAttempt(questionId) {
   const result = await pool.query(
-    "SELECT mock_test_id FROM questions WHERE id = $1",
+    "SELECT mock_test_id, question_type FROM questions WHERE id = $1",
     [questionId],
   );
 
-  return result.rows[0]?.mock_test_id || null;
+  return result.rows[0] || null;
 }
 
 export async function abandonAttempt(attemptId, workspaceId) {

@@ -3,6 +3,7 @@ import { httpError } from "../lib/http-error.js";
 import * as attemptsRepo from "../repositories/attempts.repository.js";
 import * as mockTestsRepo from "../repositories/mock-tests.repository.js";
 import { attachDiagramUrls } from "./question-assets.service.js";
+import { kickWorker } from "../lib/worker-runner.js";
 
 // Fisher-Yates - used once, when a brand-new attempt is created for a
 // mock test with settings.questionOrder === "random" (see startAttempt).
@@ -317,6 +318,7 @@ export async function startAttempt({
         text: question.text,
         options: question.options,
         questionType: question.questionType,
+        answerWordLimit: question.answerWordLimit,
         // Only when publisher opts in — default is hidden during attempt.
         ...(showMarksToStudents
           ? resolveQuestionMarks(question, mockTest)
@@ -363,12 +365,15 @@ export async function saveAnswer({
   workspaceId,
   questionId,
   selectedOptionIndexes,
+  answerText,
 }) {
-  if (!Array.isArray(selectedOptionIndexes)) {
+  const normalizedAnswerText = typeof answerText === "string" ? answerText.trim() : "";
+  const normalizedSelectedOptionIndexes = selectedOptionIndexes ?? [];
+  if (!Array.isArray(normalizedSelectedOptionIndexes)) {
     throw httpError(400, "selectedOptionIndexes must be an array");
   }
   if (
-    !selectedOptionIndexes.every(
+    !normalizedSelectedOptionIndexes.every(
       (value) => Number.isInteger(value) && value >= 0,
     )
   ) {
@@ -401,19 +406,27 @@ export async function saveAnswer({
     // belonging to a totally different mock test) and it would still
     // satisfy the exam_answers foreign key, just silently record data
     // against the wrong test.
-    const questionMockTestId =
-      await attemptsRepo.findQuestionMockTestId(questionId);
-    if (!questionMockTestId || questionMockTestId !== attempt.mock_test_id) {
+    const question = await attemptsRepo.findQuestionForAttempt(questionId);
+    if (!question || question.mock_test_id !== attempt.mock_test_id) {
       throw httpError(
         400,
         "This question does not belong to this attempt's mock test",
       );
     }
 
+    const isMcq = question.question_type === "single" || question.question_type === "multi";
+    if (isMcq && normalizedAnswerText) {
+      throw httpError(400, "MCQ answers must use selectedOptionIndexes");
+    }
+    if (!isMcq && normalizedSelectedOptionIndexes.length) {
+      throw httpError(400, "This question requires a text or numeric answer");
+    }
+
     const answer = await attemptsRepo.upsertAnswer(client, {
       attemptId,
       questionId,
-      selectedOptionIndexes,
+      selectedOptionIndexes: normalizedSelectedOptionIndexes,
+      answerText: isMcq ? null : normalizedAnswerText || null,
     });
 
     await client.query("COMMIT");
@@ -421,6 +434,7 @@ export async function saveAnswer({
     return {
       questionId: answer.question_id,
       selectedOptionIndexes: answer.selected_option_indexes,
+      answerText: answer.answer_text,
       answeredAt: answer.answered_at,
     };
   } catch (error) {
@@ -429,6 +443,36 @@ export async function saveAnswer({
   } finally {
     client.release();
   }
+}
+
+function normalizeComparableAnswer(value) {
+  return String(value || "")
+    .trim()
+    .toLocaleLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+function isFillBlankCorrect(answerText, acceptedAnswers) {
+  let submitted = [answerText];
+  try {
+    const parsed = JSON.parse(answerText);
+    if (Array.isArray(parsed)) submitted = parsed;
+  } catch {
+    // A single blank is stored as plain text for compatibility with callers.
+  }
+  if (!Array.isArray(acceptedAnswers) || submitted.length !== acceptedAnswers.length) return false;
+  return acceptedAnswers.every((alternatives, index) =>
+    Array.isArray(alternatives) && alternatives.some(
+      (answer) => normalizeComparableAnswer(answer) === normalizeComparableAnswer(submitted[index]),
+    ),
+  );
+}
+
+function isNumericalCorrect(answerText, numericAnswer, numericTolerance) {
+  const submitted = Number(answerText);
+  const expected = Number(numericAnswer);
+  if (!Number.isFinite(submitted) || !Number.isFinite(expected)) return false;
+  return Math.abs(submitted - expected) <= Number(numericTolerance ?? 0);
 }
 
 export async function submitAttempt({ attemptId, workspaceId }) {
@@ -467,16 +511,31 @@ export async function submitAttempt({ attemptId, workspaceId }) {
     let wrongCount = 0;
     let score = 0;
 
+    const pendingGradingQuestionIds = [];
     for (const row of rows) {
       const selected = row.selected_option_indexes || [];
-      if (selected.length === 0) {
+      const answerText = (row.answer_text || "").trim();
+      const isMcq = row.question_type === "single" || row.question_type === "multi";
+      if ((isMcq && selected.length === 0) || (!isMcq && !answerText)) {
         continue; // stays unattempted - no exam_answers row exists to score
       }
 
       attemptedCount += 1;
 
-      const correct = row.correct_option_indexes || [];
-      const isCorrect = sameNumbersRegardlessOfOrder(selected, correct);
+      if (row.question_type === "short_answer" || row.question_type === "long_answer") {
+        pendingGradingQuestionIds.push(row.question_id);
+        await attemptsRepo.markAnswerPendingGrading(client, {
+          attemptId,
+          questionId: row.question_id,
+        });
+        continue;
+      }
+
+      const isCorrect = isMcq
+        ? sameNumbersRegardlessOfOrder(selected, row.correct_option_indexes || [])
+        : row.question_type === "fill_blank"
+          ? isFillBlankCorrect(answerText, row.accepted_answers)
+          : isNumericalCorrect(answerText, row.numeric_answer, row.numeric_tolerance);
 
       const { marksPerCorrect, negativeMarksPerWrong } = resolveQuestionMarks(
         {
@@ -506,6 +565,11 @@ export async function submitAttempt({ attemptId, workspaceId }) {
 
     const unattemptedCount = rows.length - attemptedCount;
 
+    await attemptsRepo.createGradingBatches(client, {
+      attemptId,
+      questionIds: pendingGradingQuestionIds,
+    });
+
     const finalized = await attemptsRepo.finalizeAttempt(client, {
       attemptId,
       status: "submitted",
@@ -520,6 +584,9 @@ export async function submitAttempt({ attemptId, workspaceId }) {
     });
 
     await client.query("COMMIT");
+    if (pendingGradingQuestionIds.length) {
+      kickWorker({ jobId: `grading:${attemptId}` });
+    }
     return serializeAttempt(finalized);
   } catch (error) {
     await client.query("ROLLBACK");
@@ -580,6 +647,7 @@ export async function getAttempt({
       text: row.question_text,
       questionType: row.question_type,
       options: row.options,
+      answerWordLimit: row.answer_word_limit,
       // Unlike correctOptionIndexes/explanation/isCorrect/marksAwarded
       // below, these are never gated on isSubmitted - they describe
       // how to DISPLAY the question body, not the answer key, so there's
@@ -588,6 +656,8 @@ export async function getAttempt({
       subtopic: row.subtopic,
       passage: row.passage,
       selectedOptionIndexes: row.selected_option_indexes || [],
+      answerText: row.answer_text || "",
+      gradingStatus: row.grading_status || "not_applicable",
       // Correct answers, explanations, and per-question correctness are
       // ONLY included once the attempt is submitted - resuming an
       // in-progress attempt (e.g. after a page refresh) must never leak
@@ -595,10 +665,19 @@ export async function getAttempt({
       ...(isSubmitted
         ? {
             correctOptionIndexes: row.correct_option_indexes,
+            acceptedAnswers: row.accepted_answers,
+            gradingRubric: row.grading_rubric,
+            expectedAnswer: row.expected_answer,
+            numericAnswer: row.numeric_answer !== null ? Number(row.numeric_answer) : null,
+            numericTolerance: row.numeric_tolerance !== null ? Number(row.numeric_tolerance) : null,
             explanation: row.explanation,
             isCorrect: row.is_correct,
             marksAwarded:
               row.marks_awarded !== null ? Number(row.marks_awarded) : null,
+            aiSuggestedMarks:
+              row.ai_suggested_marks !== null ? Number(row.ai_suggested_marks) : null,
+            aiRubricBreakdown: row.ai_rubric_breakdown,
+            aiReasoning: row.ai_reasoning,
           }
         : {}),
     })),

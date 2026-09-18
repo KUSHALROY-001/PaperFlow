@@ -57,7 +57,7 @@ export function useExamSession({ mode }) {
 
   const [session, setSession] = useState(null); // { attempt, mockTest, questions }
   const [current, setCurrent] = useState(0);
-  // questionId -> { selected: number[], saved: boolean }
+  // questionId -> { selected: number[], text: string, saved: boolean }
   const [answers, setAnswers] = useState({});
   const [flagged, setFlagged] = useState(new Set());
   const [timeLeft, setTimeLeft] = useState(DEFAULT_DURATION_SECONDS);
@@ -133,7 +133,7 @@ export function useExamSession({ mode }) {
   const questions = session?.questions || [];
   const q = questions[current];
   const answeredCount = Object.values(answers).filter(
-    (a) => a.selected.length > 0,
+    (a) => a.selected.length > 0 || Boolean(a.text?.trim()),
   ).length;
 
   const progress = questions.length
@@ -154,9 +154,10 @@ export function useExamSession({ mode }) {
           attemptId,
           questionId,
           value.selected,
+          value.text,
         );
       } else {
-        await api.saveAttemptAnswer(attemptId, questionId, value.selected);
+        await api.saveAttemptAnswer(attemptId, questionId, value.selected, value.text);
       }
       setAnswers((prev) => ({
         ...prev,
@@ -271,13 +272,13 @@ export function useExamSession({ mode }) {
 
     setAnswers((prev) => ({
       ...prev,
-      [questionId]: { selected: newSelected, saved: false },
+      [questionId]: { selected: newSelected, text: "", saved: false },
     }));
 
     const save =
       mode === "guest"
-        ? api.saveSharedAnswer(shareToken, attemptId, questionId, newSelected)
-        : api.saveAttemptAnswer(attemptId, questionId, newSelected);
+        ? api.saveSharedAnswer(shareToken, attemptId, questionId, newSelected, "")
+        : api.saveAttemptAnswer(attemptId, questionId, newSelected, "");
 
     save
       .then(() => {
@@ -290,6 +291,26 @@ export function useExamSession({ mode }) {
         });
       })
       .catch(() => {});
+  };
+
+  const handleTextAnswer = (answerText) => {
+    if (review || !q) return;
+    const questionId = q.questionId;
+    const attemptId = session.attempt.id;
+    setAnswers((prev) => ({
+      ...prev,
+      [questionId]: { selected: [], text: answerText, saved: false },
+    }));
+
+    const save = mode === "guest"
+      ? api.saveSharedAnswer(shareToken, attemptId, questionId, [], answerText)
+      : api.saveAttemptAnswer(attemptId, questionId, [], answerText);
+    save.then(() => {
+      setAnswers((prev) => {
+        if (prev[questionId]?.text !== answerText) return prev;
+        return { ...prev, [questionId]: { ...prev[questionId], saved: true } };
+      });
+    }).catch(() => {});
   };
 
   const toggleFlag = () => {
@@ -375,6 +396,7 @@ export function useExamSession({ mode }) {
     handleStart,
     handleSubmit,
     handleAnswer,
+    handleTextAnswer,
     toggleFlag,
     claimResult,
     handleCancelSession,

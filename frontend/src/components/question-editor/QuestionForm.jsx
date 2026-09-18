@@ -160,6 +160,13 @@ export default function QuestionForm({
             optionMenuRefs={optionMenuRefs}
             optionEditorRefs={optionEditorRefs}
             isViewer={isViewer}
+            acceptedAnswers={selected.acceptedAnswers}
+            gradingRubric={selected.gradingRubric}
+            expectedAnswer={selected.expectedAnswer}
+            answerWordLimit={selected.answerWordLimit}
+            numericAnswer={selected.numericAnswer}
+            numericTolerance={selected.numericTolerance}
+            updateSelected={updateSelected}
           />
         </div>
 

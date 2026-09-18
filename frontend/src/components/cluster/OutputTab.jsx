@@ -10,7 +10,10 @@ import QuestionJumpInput from "../shared/QuestionJumpInput";
 import { api } from "@/lib/api";
 import ScrollToTopButton from "../shared/ScrollToTopButton";
 import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
-import { getQuestionOrderMode, resolveQuestionMarks } from "@/utils/mockTestHelpers";
+import {
+  getQuestionOrderMode,
+  resolveQuestionMarks,
+} from "@/utils/mockTestHelpers";
 import LiveExtractionBanner from "./LiveExtractionBanner";
 
 const viewTabs = ["Visual", "JSON", "Metadata"];
@@ -87,7 +90,15 @@ export default function OutputTab({
         question: question.text,
         options: question.options,
         correctOptionIndexes: question.correctOptionIndexes,
-        answer: question.answer,
+        // Numerical-type questions (JEE-style "enter the value") have no
+        // options and store their answer separately as numericAnswer
+        // (+ an optional numericTolerance for range answers like
+        // "[1.15 to 1.25]") rather than in `answer`, which is MCQ-only.
+        // Fall back so the export doesn't silently ship an empty answer
+        // for every numerical question.
+        answer: question.answer || question.numericAnswer,
+        numericAnswer: question.numericAnswer,
+        numericTolerance: question.numericTolerance,
         confidence: question.confidence,
         status: question.status,
         // diagramUrl deliberately excluded here - it's a short-lived
@@ -224,77 +235,145 @@ export default function OutputTab({
               ? question.displayIndex
               : question.questionNo;
             return (
-            <div
-              key={question.id}
-              id={`question-${question.questionNo}`}
-              className="rounded-3xl p-3 sm:p-5 surface-card border border-border transition-all w-full min-w-0 overflow-hidden"
-            >
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 flex-wrap min-w-0">
-                  <span className="rounded-full bg-orange-500/15 border border-orange-500/20 px-3 py-1 text-xs font-bold text-orange-500 shrink-0">
-                    Q{listNumber}
-                  </span>
-                  {isRandomOrder &&
-                    Number(question.questionNo) !== Number(listNumber) && (
-                      <span className="rounded-full bg-muted border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
-                        Paper Q{question.questionNo}
+              <div
+                key={question.id}
+                id={`question-${question.questionNo}`}
+                className="rounded-3xl p-3 sm:p-5 surface-card border border-border transition-all w-full min-w-0 overflow-hidden"
+              >
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 flex-wrap min-w-0">
+                    <span className="rounded-full bg-orange-500/15 border border-orange-500/20 px-3 py-1 text-xs font-bold text-orange-500 shrink-0">
+                      Q{listNumber}
+                    </span>
+                    {isRandomOrder &&
+                      Number(question.questionNo) !== Number(listNumber) && (
+                        <span className="rounded-full bg-muted border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
+                          Paper Q{question.questionNo}
+                        </span>
+                      )}
+                    <span className="rounded-full bg-muted border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
+                      {question.topic}
+                    </span>
+                    <MarksBadge
+                      marksPerCorrect={marks.marksPerCorrect}
+                      negativeMarksPerWrong={marks.negativeMarksPerWrong}
+                      unsetLabel="Marks unset"
+                    />
+                    {question.subtopic && (
+                      <span className="rounded-full bg-sky-500/10 border border-sky-500/20 px-3 py-1 text-xs font-semibold text-sky-600 dark:text-sky-400">
+                        {question.subtopic}
                       </span>
                     )}
-                  <span className="rounded-full bg-muted border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
-                    {question.topic}
-                  </span>
-                  <MarksBadge
-                    marksPerCorrect={marks.marksPerCorrect}
-                    negativeMarksPerWrong={marks.negativeMarksPerWrong}
-                    unsetLabel="Marks unset"
-                  />
-                  {question.subtopic && (
-                    <span className="rounded-full bg-sky-500/10 border border-sky-500/20 px-3 py-1 text-xs font-semibold text-sky-600 dark:text-sky-400">
-                      {question.subtopic}
-                    </span>
-                  )}
+                  </div>
+                  <Link
+                    to={`/cluster/${metadata.clusterId}/mock/${metadata.mockTestId}/editor?qId=${question.id}`}
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all hover:border-orange-500/40 hover:text-orange-500 hover:bg-orange-500/10 shrink-0"
+                    title={`Edit Question ${question.questionNo} in Question Editor`}
+                  >
+                    <Edit2 className="h-4 w-4 text-orange-500" />
+                  </Link>
                 </div>
-                <Link
-                  to={`/cluster/${metadata.clusterId}/mock/${metadata.mockTestId}/editor?qId=${question.id}`}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all hover:border-orange-500/40 hover:text-orange-500 hover:bg-orange-500/10 shrink-0"
-                  title={`Edit Question ${question.questionNo} in Question Editor`}
-                >
-                  <Edit2 className="h-4 w-4 text-orange-500" />
-                </Link>
-              </div>
 
-              {/* Without this provider, MathText always sees an empty
+                {/* Without this provider, MathText always sees an empty
                   slot map and renders "Missing image" for every
                   ![[img:…]] marker even when question.diagramAssets is
                   populated from the API. This is the Output Visual view
                   matching the Q34 screenshot. */}
-              <DiagramAssetsProvider assets={question.diagramAssets}>
-                <QuestionContent
-                  text={question.text}
-                  passage={question.passage}
-                  textClassName="text-base sm:text-lg text-foreground break-words"
-                />
+                <DiagramAssetsProvider assets={question.diagramAssets}>
+                  <QuestionContent
+                    text={question.text}
+                    passage={question.passage}
+                    textClassName="text-base sm:text-lg text-foreground break-words"
+                  />
 
-                <div className="mt-5 grid gap-3 md:grid-cols-2 w-full min-w-0">
-                  {question.options.map((option, optionIndex) => {
-                    const correct = option === question.answer;
-                    return (
-                      <div
-                        key={`${question.id}-option-${optionIndex}`}
-                        className={`rounded-md border px-4 py-3 text-sm whitespace-pre-wrap wrap-break-word min-w-0 overflow-x-auto scrollbar-hidden ${
-                          correct
-                            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
-                            : "border-border bg-card text-muted-foreground"
-                        }`}
-                      >
-                        <MathText text={option} />
+                  <div className="mt-5 grid gap-3 md:grid-cols-2 w-full min-w-0">
+                    {question.questionType === "numerical" && (
+                      // No options for a numerical question - the answer
+                      // key is question.numericAnswer/numericTolerance
+                      // (now mapped through - see mockTestHelpers.js).
+                      // This tab had nothing to show here at all before.
+                      <div className="md:col-span-2 flex flex-wrap items-center justify-between gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-500">
+                        <span className="font-semibold">
+                          Answer: {question.numericAnswer ?? "Not set"}
+                          {question.numericTolerance
+                            ? ` ± ${question.numericTolerance}`
+                            : ""}
+                        </span>
                       </div>
-                    );
-                  })}
-                </div>
-                <QuestionExplanation explanation={question.explanation} />
-              </DiagramAssetsProvider>
-            </div>
+                    )}
+                    {question.questionType === "fill_blank" &&
+                      // Same gap as numerical - the answer key is
+                      // question.acceptedAnswers: one array of acceptable
+                      // strings PER BLANK, in blank order.
+                      (question.acceptedAnswers?.length ? (
+                        question.acceptedAnswers.map((group, blankIndex) => (
+                          <div
+                            key={`${question.id}-blank-${blankIndex}`}
+                            className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-500 min-w-0"
+                          >
+                            <span className="font-bold">
+                              Blank {blankIndex + 1}:{" "}
+                            </span>
+                            {(Array.isArray(group) ? group : [group]).join(
+                              " / ",
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="md:col-span-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-500">
+                          No accepted answers set for this blank
+                        </div>
+                      ))}
+                    {(question.questionType === "short_answer" ||
+                      question.questionType === "long_answer") &&
+                      // No options - the answer key is a rubric
+                      // (question.gradingRubric: [{point, weight}]) when
+                      // derivable from the paper, else a single model
+                      // answer (question.expectedAnswer).
+                      (question.gradingRubric?.length ? (
+                        question.gradingRubric.map((entry, pointIndex) => (
+                          <div
+                            key={`${question.id}-rubric-${pointIndex}`}
+                            className="flex items-center justify-between gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-500 min-w-0"
+                          >
+                            <span>{entry.point}</span>
+                            <span className="shrink-0 font-bold">
+                              {entry.weight} pt{entry.weight === 1 ? "" : "s"}
+                            </span>
+                          </div>
+                        ))
+                      ) : question.expectedAnswer ? (
+                        <div className="md:col-span-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-500 whitespace-pre-wrap min-w-0">
+                          <span className="font-bold">Model answer: </span>
+                          {question.expectedAnswer}
+                          {question.answerWordLimit
+                            ? ` (~${question.answerWordLimit} words)`
+                            : ""}
+                        </div>
+                      ) : (
+                        <div className="md:col-span-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-500">
+                          No model answer or rubric set
+                        </div>
+                      ))}
+                    {question.options.map((option, optionIndex) => {
+                      const correct = option === question.answer;
+                      return (
+                        <div
+                          key={`${question.id}-option-${optionIndex}`}
+                          className={`rounded-md border px-4 py-3 text-sm whitespace-pre-wrap wrap-break-word min-w-0 overflow-x-auto scrollbar-hidden ${
+                            correct
+                              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
+                              : "border-border bg-card text-muted-foreground"
+                          }`}
+                        >
+                          <MathText text={option} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <QuestionExplanation explanation={question.explanation} />
+                </DiagramAssetsProvider>
+              </div>
             );
           })}
           {hasMoreQuestions && (
@@ -312,7 +391,9 @@ export default function OutputTab({
                     : "hover:bg-orange-500/10"
                 }`}
               >
-                {isStreamingQuestions && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isStreamingQuestions && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                )}
                 {isStreamingQuestions ? "Loading..." : "Load 50 more"}
               </button>
             </div>

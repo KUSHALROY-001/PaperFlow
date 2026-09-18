@@ -57,12 +57,16 @@ export async function cloneContent(client, contentId) {
     INSERT INTO question_contents (
       workspace_id, topic, subtopic, passage, question_text, explanation,
       question_type, correct_option_indexes, marks_per_correct,
-      negative_marks_per_wrong, metadata, options
+      negative_marks_per_wrong, metadata, options, accepted_answers,
+      grading_rubric, expected_answer, answer_word_limit, numeric_answer,
+      numeric_tolerance
     )
     SELECT
       workspace_id, topic, subtopic, passage, question_text, explanation,
       question_type, correct_option_indexes, marks_per_correct,
-      negative_marks_per_wrong, metadata, options
+      negative_marks_per_wrong, metadata, options, accepted_answers,
+      grading_rubric, expected_answer, answer_word_limit, numeric_answer,
+      numeric_tolerance
     FROM question_contents
     WHERE id = $1
     RETURNING id
@@ -98,6 +102,12 @@ export async function createQuestion(
     confidence,
     status,
     metadata,
+    acceptedAnswers,
+    gradingRubric,
+    expectedAnswer,
+    answerWordLimit,
+    numericAnswer,
+    numericTolerance,
   },
 ) {
   const contentResult = await client.query(
@@ -105,9 +115,11 @@ export async function createQuestion(
     INSERT INTO question_contents (
       workspace_id, topic, subtopic, passage, question_text, explanation,
       question_type, correct_option_indexes, marks_per_correct,
-      negative_marks_per_wrong, metadata, options
+      negative_marks_per_wrong, metadata, options, accepted_answers,
+      grading_rubric, expected_answer, answer_word_limit, numeric_answer,
+      numeric_tolerance
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8::int[], $9, $10, $11, $12::jsonb)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8::int[], $9, $10, $11, $12::jsonb, $13::jsonb, $14::jsonb, $15, $16, $17, $18)
     RETURNING id
     `,
     [
@@ -123,6 +135,12 @@ export async function createQuestion(
       negativeMarksPerWrong,
       metadata,
       JSON.stringify(options),
+      acceptedAnswers ? JSON.stringify(acceptedAnswers) : null,
+      gradingRubric ? JSON.stringify(gradingRubric) : null,
+      expectedAnswer,
+      answerWordLimit,
+      numericAnswer,
+      numericTolerance,
     ],
   );
   const contentId = contentResult.rows[0].id;
@@ -174,6 +192,12 @@ export const CONTENT_FIELDS = [
   "marksPerCorrect",
   "negativeMarksPerWrong",
   "metadata",
+  "acceptedAnswers",
+  "gradingRubric",
+  "expectedAnswer",
+  "answerWordLimit",
+  "numericAnswer",
+  "numericTolerance",
 ];
 
 // In-place update of a content row - only ever called once
@@ -200,6 +224,18 @@ export async function updateContent(client, contentId, fields) {
     negativeMarksPerWrongProvided,
     negativeMarksPerWrong,
     metadata,
+    acceptedAnswersProvided,
+    acceptedAnswers,
+    gradingRubricProvided,
+    gradingRubric,
+    expectedAnswerProvided,
+    expectedAnswer,
+    answerWordLimitProvided,
+    answerWordLimit,
+    numericAnswerProvided,
+    numericAnswer,
+    numericToleranceProvided,
+    numericTolerance,
   } = fields;
 
   const result = await client.query(
@@ -216,7 +252,13 @@ export async function updateContent(client, contentId, fields) {
       marks_per_correct = CASE WHEN $13::boolean THEN $14 ELSE marks_per_correct END,
       negative_marks_per_wrong = CASE WHEN $15::boolean THEN $16 ELSE negative_marks_per_wrong END,
       metadata = COALESCE($17, metadata),
-      options = COALESCE($18::jsonb, options)
+      options = COALESCE($18::jsonb, options),
+      accepted_answers = CASE WHEN $19::boolean THEN $20::jsonb ELSE accepted_answers END,
+      grading_rubric = CASE WHEN $21::boolean THEN $22::jsonb ELSE grading_rubric END,
+      expected_answer = CASE WHEN $23::boolean THEN $24 ELSE expected_answer END,
+      answer_word_limit = CASE WHEN $25::boolean THEN $26 ELSE answer_word_limit END,
+      numeric_answer = CASE WHEN $27::boolean THEN $28 ELSE numeric_answer END,
+      numeric_tolerance = CASE WHEN $29::boolean THEN $30 ELSE numeric_tolerance END
     WHERE id = $1
     RETURNING id
     `,
@@ -238,7 +280,36 @@ export async function updateContent(client, contentId, fields) {
       negativeMarksPerWrongProvided,
       negativeMarksPerWrong,
       metadata,
+      // Must sit at $18, immediately after metadata - matching
+      // `options = COALESCE($18::jsonb, options)` above. This value used
+      // to be appended at the very END of this array instead (after
+      // numericTolerance), which kept the array's total length correct
+      // (30 elements for 30 placeholders) but shifted every value from
+      // here on by one position relative to what the SQL expected - so
+      // $19::boolean (meant for acceptedAnswersProvided) silently
+      // received acceptedAnswers' own JSON text instead, and so on down
+      // the list. That only surfaces as a Postgres error - "22P02
+      // invalid input syntax for type boolean" - once one of those
+      // shifted values isn't parseable as the type the SQL cast
+      // expected, which happened on nearly every save (an empty
+      // accepted_answers/grading_rubric array serializes to the string
+      // "[]", which fails a ::boolean cast). Confirmed against a live
+      // Postgres instance: this fired even on a plain single/MCQ save,
+      // since the frontend sends acceptedAnswers/gradingRubric/etc.
+      // unconditionally on every save regardless of question type.
       options === undefined ? null : JSON.stringify(options),
+      acceptedAnswersProvided,
+      acceptedAnswers ? JSON.stringify(acceptedAnswers) : null,
+      gradingRubricProvided,
+      gradingRubric ? JSON.stringify(gradingRubric) : null,
+      expectedAnswerProvided,
+      expectedAnswer,
+      answerWordLimitProvided,
+      answerWordLimit,
+      numericAnswerProvided,
+      numericAnswer,
+      numericToleranceProvided,
+      numericTolerance,
     ],
   );
 

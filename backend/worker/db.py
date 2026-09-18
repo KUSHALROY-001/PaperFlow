@@ -312,7 +312,7 @@ def insert_question_batch(connection, *, workspace_id, mock_test_id, questions):
         # question_type used to be hardcoded to 'single' here regardless of
         # how many correct answers the parser/AI actually found, which
         # mislabeled every multi-answer question. Derive it from the data.
-        correct_option_indexes = question["correct_option_indexes"]
+        correct_option_indexes = question.get("correct_option_indexes") or []
         question_type = question.get("question_type") or (
             "multi" if len(correct_option_indexes) > 1 else "single"
         )
@@ -346,9 +346,15 @@ def insert_question_batch(connection, *, workspace_id, mock_test_id, questions):
               metadata,
               options,
               marks_per_correct,
-              negative_marks_per_wrong
+              negative_marks_per_wrong,
+              accepted_answers,
+              grading_rubric,
+              expected_answer,
+              answer_word_limit,
+              numeric_answer,
+              numeric_tolerance
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
             """,
             [
@@ -364,6 +370,12 @@ def insert_question_batch(connection, *, workspace_id, mock_test_id, questions):
                 json.dumps(question["options"]),
                 question.get("marks_per_correct"),
                 question.get("negative_marks_per_wrong"),
+                json.dumps(question.get("accepted_answers")) if question.get("accepted_answers") is not None else None,
+                json.dumps(question.get("grading_rubric")) if question.get("grading_rubric") is not None else None,
+                question.get("expected_answer"),
+                question.get("answer_word_limit"),
+                question.get("numeric_answer"),
+                question.get("numeric_tolerance"),
             ],
         ).fetchone()
 

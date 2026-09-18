@@ -18,7 +18,10 @@ import QuestionContent, {
 } from "../shared/QuestionContent";
 import MathText from "../shared/MathText";
 import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
-import { getQuestionOrderMode, resolveQuestionMarks } from "@/utils/mockTestHelpers";
+import {
+  getQuestionOrderMode,
+  resolveQuestionMarks,
+} from "@/utils/mockTestHelpers";
 import QuestionJumpInput from "../shared/QuestionJumpInput";
 import ScrollToTopButton from "../shared/ScrollToTopButton";
 import LiveExtractionBanner from "./LiveExtractionBanner";
@@ -228,8 +231,7 @@ export default function ReviewTab({
         )}
         {filteredQuestions.map((question) => {
           const marks =
-            question.effectiveMarks ||
-            resolveQuestionMarks(question, mocktest);
+            question.effectiveMarks || resolveQuestionMarks(question, mocktest);
           const listNumber = isRandomOrder
             ? question.displayIndex
             : question.questionNo;
@@ -428,30 +430,116 @@ export default function ReviewTab({
               {expanded && (
                 <div className="mt-5 space-y-3 rounded-2xl border border-border bg-muted/40 p-2 sm:p-4">
                   <DiagramAssetsProvider assets={question.diagramAssets}>
-                  {question.options.map((option, optionIndex) => {
-                    const correct = option === question.answer;
-                    return (
-                      <div
-                        key={`${question.id}-option-${optionIndex}`}
-                        className={`flex flex-wrap items-center justify-between gap-2 rounded-2xl px-3 py-3 text-xs sm:px-4 sm:text-sm ${
-                          correct
-                            ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20"
-                            : "bg-card text-muted-foreground border border-border"
-                        }`}
-                      >
-                        <span className="whitespace-pre-wrap wrap-break-word">
-                          <MathText text={option} />
+                    {question.questionType === "numerical" && (
+                      // This tab only ever rendered question.options - fine
+                      // for MCQs, but numerical questions have no options at
+                      // all, so their answer (now correctly mapped through
+                      // mapQuestion as question.numericAnswer/answer) never
+                      // had anywhere to display. Same reason the JSON export
+                      // and question editor needed separate fixes: three
+                      // different consumers of the same underlying field,
+                      // each with its own gap.
+                      <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/15 px-3 py-3 text-xs text-emerald-500 sm:px-4 sm:text-sm">
+                        <span className="font-semibold">
+                          Answer: {question.numericAnswer ?? "Not set"}
+                          {question.numericTolerance
+                            ? ` ± ${question.numericTolerance}`
+                            : ""}
                         </span>
-                        {correct && (
-                          <span className="inline-flex items-center gap-1 text-xs font-bold">
-                            <CheckCircle2 className="h-4 w-4" />
-                            Correct
-                          </span>
-                        )}
+                        <span className="inline-flex items-center gap-1 text-xs font-bold">
+                          <CheckCircle2 className="h-4 w-4" />
+                          Numerical
+                        </span>
                       </div>
-                    );
-                  })}
-                  <QuestionExplanation explanation={question.explanation} />
+                    )}
+                    {question.questionType === "fill_blank" &&
+                      // Same gap as numerical above - fill_blank has no
+                      // options either, its answer key is
+                      // question.acceptedAnswers: one array of acceptable
+                      // strings PER BLANK, in blank order (see
+                      // worker/ai/schemas.py's accepted_answers field).
+                      (question.acceptedAnswers?.length ? (
+                        <div className="space-y-2">
+                          {question.acceptedAnswers.map((group, blankIndex) => (
+                            <div
+                              key={`${question.id}-blank-${blankIndex}`}
+                              className="flex flex-wrap items-center gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/15 px-3 py-3 text-xs text-emerald-500 sm:px-4 sm:text-sm"
+                            >
+                              <span className="font-bold shrink-0">
+                                Blank {blankIndex + 1}:
+                              </span>
+                              <span className="font-semibold">
+                                {(Array.isArray(group) ? group : [group]).join(
+                                  " / ",
+                                )}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-3 py-3 text-xs text-amber-500 sm:px-4 sm:text-sm">
+                          No accepted answers set for this blank
+                        </div>
+                      ))}
+                    {(question.questionType === "short_answer" ||
+                      question.questionType === "long_answer") &&
+                      // No options either - the answer key is a rubric
+                      // (question.gradingRubric: [{point, weight}], graded
+                      // point-by-point at submission time) when the paper's
+                      // marking scheme was detailed enough to derive one,
+                      // else a single model answer (question.expectedAnswer).
+                      (question.gradingRubric?.length ? (
+                        <div className="space-y-1.5">
+                          {question.gradingRubric.map((entry, pointIndex) => (
+                            <div
+                              key={`${question.id}-rubric-${pointIndex}`}
+                              className="flex items-center justify-between gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/15 px-3 py-3 text-xs text-emerald-500 sm:px-4 sm:text-sm"
+                            >
+                              <span>{entry.point}</span>
+                              <span className="shrink-0 font-bold">
+                                {entry.weight} pt
+                                {entry.weight === 1 ? "" : "s"}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : question.expectedAnswer ? (
+                        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/15 px-3 py-3 text-xs text-emerald-500 whitespace-pre-wrap sm:px-4 sm:text-sm">
+                          <span className="font-bold">Model answer: </span>
+                          {question.expectedAnswer}
+                          {question.answerWordLimit
+                            ? ` (~${question.answerWordLimit} words)`
+                            : ""}
+                        </div>
+                      ) : (
+                        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-3 py-3 text-xs text-amber-500 sm:px-4 sm:text-sm">
+                          No model answer or rubric set
+                        </div>
+                      ))}
+                    {question.options.map((option, optionIndex) => {
+                      const correct = option === question.answer;
+                      return (
+                        <div
+                          key={`${question.id}-option-${optionIndex}`}
+                          className={`flex flex-wrap items-center justify-between gap-2 rounded-2xl px-3 py-3 text-xs sm:px-4 sm:text-sm ${
+                            correct
+                              ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20"
+                              : "bg-card text-muted-foreground border border-border"
+                          }`}
+                        >
+                          <span className="whitespace-pre-wrap wrap-break-word">
+                            <MathText text={option} />
+                          </span>
+                          {correct && (
+                            <span className="inline-flex items-center gap-1 text-xs font-bold">
+                              <CheckCircle2 className="h-4 w-4" />
+                              Correct
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                    <QuestionExplanation explanation={question.explanation} />
                   </DiagramAssetsProvider>
                   {question.status === "rejected" && (
                     <div className="inline-flex items-center gap-2 rounded-full bg-red-500/10 border border-red-500/20 px-3 py-1.5 text-xs font-semibold text-red-500">
@@ -489,7 +577,9 @@ export default function ReviewTab({
                   : "hover:bg-orange-500/10"
               }`}
             >
-              {isStreamingQuestions && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isStreamingQuestions && (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              )}
               {isStreamingQuestions ? "Loading..." : "Load 50 more"}
             </button>
           </div>

@@ -24,7 +24,7 @@ export default function SessionQuestionNav({
   const [exitSecondsLeft, setExitSecondsLeft] = useState(null);
 
   const answeredCount = Object.values(answers || {}).filter(
-    (a) => a?.selected?.length > 0,
+    (a) => a?.selected?.length > 0 || Boolean(a?.text?.trim()),
   ).length;
   const flaggedCount = flagged ? flagged.size : 0;
   const notVisitedCount = Math.max(0, questions.length - answeredCount);
@@ -84,7 +84,10 @@ export default function SessionQuestionNav({
               if (i === current) {
                 buttonClass =
                   "bg-orange-500/10 text-orange-500 dark:bg-orange-500/15 font-bold border border-orange-500/30";
-              } else if (answers[question.questionId]?.selected?.length) {
+              } else if (
+                answers[question.questionId]?.selected?.length ||
+                answers[question.questionId]?.text?.trim()
+              ) {
                 buttonClass =
                   "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20";
               } else if (flagged.has(question.questionId)) {

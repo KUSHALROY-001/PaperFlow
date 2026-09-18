@@ -68,6 +68,7 @@ export async function saveSharedAnswer(req, res) {
     attemptId: req.params.attemptId,
     questionId: req.params.questionId,
     selectedOptionIndexes: req.body.selectedOptionIndexes,
+    answerText: req.body.answerText,
   });
   res.json({ answer });
 }

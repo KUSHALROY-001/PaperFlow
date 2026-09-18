@@ -30,6 +30,12 @@ function contentFingerprint(question) {
     questionType: question.questionType ?? "single",
     marksPerCorrect: question.marksPerCorrect ?? null,
     negativeMarksPerWrong: question.negativeMarksPerWrong ?? null,
+    acceptedAnswers: question.acceptedAnswers ?? [],
+    gradingRubric: question.gradingRubric ?? [],
+    expectedAnswer: question.expectedAnswer ?? "",
+    answerWordLimit: question.answerWordLimit ?? null,
+    numericAnswer: question.numericAnswer ?? null,
+    numericTolerance: question.numericTolerance ?? null,
   });
 }
 
@@ -157,11 +163,29 @@ export function useQuestionEditor() {
       // we haven't fetched yet", so dropping these unconditionally would
       // silently delete rows from the editor as the user scrolled.
       const keptLocal = prev.filter(
-        (q) => !loadedIds.has(q.id) && (!q.persisted || questionsQuery.hasNextPage),
+        (q) =>
+          !loadedIds.has(q.id) && (!q.persisted || questionsQuery.hasNextPage),
       );
       const merged = loaded.map((serverQ) => {
         const local = prevById.get(serverQ.id);
-        if (!local) return serverQ;
+        if (!local) {
+          // First time this question has been loaded (e.g. a
+          // scroll-triggered next page, arriving well after the initial
+          // snapshot was built from page 1 only). It was never registered
+          // in the snapshot, so the dirty-check below - which just does
+          // `snapshot.get(q.id)` and treats a miss as "dirty" - flagged
+          // every question past the first page as edited the instant it
+          // loaded, with nothing actually touched. Register it as a clean
+          // baseline now.
+          if (!snap.has(serverQ.id)) {
+            snap.set(serverQ.id, {
+              content: contentFingerprint(serverQ),
+              questionNo: Number(serverQ.questionNo) || 0,
+              persisted: Boolean(serverQ.persisted),
+            });
+          }
+          return serverQ;
+        }
         const entry = snap.get(serverQ.id);
         const isContentDirty =
           !entry ||
@@ -185,6 +209,12 @@ export function useQuestionEditor() {
                 questionType: local.questionType,
                 marksPerCorrect: local.marksPerCorrect,
                 negativeMarksPerWrong: local.negativeMarksPerWrong,
+                acceptedAnswers: local.acceptedAnswers,
+                gradingRubric: local.gradingRubric,
+                expectedAnswer: local.expectedAnswer,
+                answerWordLimit: local.answerWordLimit,
+                numericAnswer: local.numericAnswer,
+                numericTolerance: local.numericTolerance,
               }
             : {}),
           ...(isOrderDirty ? { questionNo: local.questionNo } : {}),
@@ -204,7 +234,10 @@ export function useQuestionEditor() {
     // would otherwise yank the selection back to Q1 on every scroll.
     setSelectedId((current) => {
       const localIds = new Set(questionsRef.current.map((q) => q.id));
-      if (current && (localIds.has(current) || loaded.some((q) => q.id === current))) {
+      if (
+        current &&
+        (localIds.has(current) || loaded.some((q) => q.id === current))
+      ) {
         return current;
       }
       if (targetQId && loaded.some((q) => q.id === targetQId)) return targetQId;
@@ -283,49 +316,51 @@ export function useQuestionEditor() {
    * successful load/save snapshot. Swaps only touch order; field edits only
    * touch content. New drafts are always content-dirty.
    */
-  const { dirtyContentIds, orderChangedItems, hasUnsavedChanges, selectedIsDirty } =
-    useMemo(() => {
-      const snapshot = initialSnapshotRef.current;
-      const contentIds = new Set();
-      const orderItems = [];
+  const {
+    dirtyContentIds,
+    orderChangedItems,
+    hasUnsavedChanges,
+    selectedIsDirty,
+  } = useMemo(() => {
+    const snapshot = initialSnapshotRef.current;
+    const contentIds = new Set();
+    const orderItems = [];
 
-      for (const q of questions) {
-        const prev = snapshot.get(q.id);
-        if (!prev || !q.persisted) {
-          // Draft or unknown id → must be created / treated as content dirty
-          contentIds.add(q.id);
-          continue;
-        }
-        if (contentFingerprint(q) !== prev.content) {
-          contentIds.add(q.id);
-        }
-        const currentNo = Number(q.questionNo) || 0;
-        if (currentNo !== prev.questionNo) {
-          orderItems.push({ id: q.id, questionNo: currentNo });
-        }
+    for (const q of questions) {
+      const prev = snapshot.get(q.id);
+      if (!prev || !q.persisted) {
+        // Draft or unknown id → must be created / treated as content dirty
+        contentIds.add(q.id);
+        continue;
       }
+      if (contentFingerprint(q) !== prev.content) {
+        contentIds.add(q.id);
+      }
+      const currentNo = Number(q.questionNo) || 0;
+      if (currentNo !== prev.questionNo) {
+        orderItems.push({ id: q.id, questionNo: currentNo });
+      }
+    }
 
-      // Also: questions that existed in snapshot but were deleted locally
-      // are handled by deleteQuestion (immediate API), so not tracked here.
+    // Also: questions that existed in snapshot but were deleted locally
+    // are handled by deleteQuestion (immediate API), so not tracked here.
 
-      const dirty =
-        contentIds.size > 0 ||
-        orderItems.length > 0;
+    const dirty = contentIds.size > 0 || orderItems.length > 0;
 
-      // Enable "Save" when the selection has content edits, OR when any
-      // reorder is pending (save-one always flushes the full order delta,
-      // which is typically just the two swapped rows — cheap).
-      const selectedDirty =
-        Boolean(selectedId) &&
-        (contentIds.has(selectedId) || orderItems.length > 0);
+    // Enable "Save" when the selection has content edits, OR when any
+    // reorder is pending (save-one always flushes the full order delta,
+    // which is typically just the two swapped rows — cheap).
+    const selectedDirty =
+      Boolean(selectedId) &&
+      (contentIds.has(selectedId) || orderItems.length > 0);
 
-      return {
-        dirtyContentIds: contentIds,
-        orderChangedItems: orderItems,
-        hasUnsavedChanges: dirty,
-        selectedIsDirty: selectedDirty,
-      };
-    }, [questions, selectedId]);
+    return {
+      dirtyContentIds: contentIds,
+      orderChangedItems: orderItems,
+      hasUnsavedChanges: dirty,
+      selectedIsDirty: selectedDirty,
+    };
+  }, [questions, selectedId]);
 
   // Keep refs so async save handlers always see the latest dirty sets
   const dirtyContentIdsRef = useRef(dirtyContentIds);
@@ -496,6 +531,12 @@ export function useQuestionEditor() {
         questionType: question.questionType,
         marksPerCorrect: question.marksPerCorrect ?? null,
         negativeMarksPerWrong: question.negativeMarksPerWrong ?? null,
+        acceptedAnswers: question.acceptedAnswers ?? [],
+        gradingRubric: question.gradingRubric ?? [],
+        expectedAnswer: question.expectedAnswer ?? "",
+        answerWordLimit: question.answerWordLimit ?? null,
+        numericAnswer: question.numericAnswer ?? null,
+        numericTolerance: question.numericTolerance ?? null,
         status: "approved",
       };
 
@@ -571,9 +612,7 @@ export function useQuestionEditor() {
       const dirtyIds = dirtyContentIdsRef.current;
       const orderItems = orderChangedItemsRef.current;
 
-      const toSave = list.filter(
-        (q) => dirtyIds.has(q.id) || !q.persisted,
-      );
+      const toSave = list.filter((q) => dirtyIds.has(q.id) || !q.persisted);
 
       if (toSave.length === 0 && orderItems.length === 0) {
         throw new Error("No changes to save");

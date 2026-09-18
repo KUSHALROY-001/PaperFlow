@@ -22,13 +22,32 @@ function normalizeOptionText(option) {
 
 export function toEditorQuestion(question) {
   const options = question.options?.map(normalizeOptionText) || [];
+  const questionType = question.question_type || "single";
   return {
     id: question.id,
     persisted: true,
     questionNo: question.question_no,
     text: question.question_text,
     options,
-    correctOptionIndexes: question.correct_option_indexes || [0],
+    // Bug fix: this used to default to [0] whenever correct_option_indexes
+    // was null - which it legitimately is for every non-MCQ type
+    // (numerical/fill_blank/short_answer/long_answer; nullable since
+    // migration 050_written_answer_columns.sql). That fake [0] then got
+    // sent back on save (useQuestionEditor.js#saveQuestion sends this
+    // field unconditionally), and the backend rejects it outright for a
+    // numerical question: optionCount is 0, so index 0 is "out of range"
+    // -> 400 "correctOptionIndexes contains an invalid option index".
+    // Only default for the MCQ types, where the DB CHECK constraint
+    // guarantees a real value should exist anyway.
+    correctOptionIndexes:
+      question.correct_option_indexes ||
+      (["single", "multi"].includes(questionType) ? [0] : []),
+    acceptedAnswers: question.accepted_answers ?? [],
+    gradingRubric: question.grading_rubric ?? [],
+    expectedAnswer: question.expected_answer ?? "",
+    answerWordLimit: question.answer_word_limit ?? null,
+    numericAnswer: question.numeric_answer ?? null,
+    numericTolerance: question.numeric_tolerance ?? null,
     topic: question.topic || "General",
     // Powers the "fetch this page from the original PDF" feature's
     // default page number (PdfPageFetchModal) - independent of whether
@@ -41,7 +60,7 @@ export function toEditorQuestion(question) {
     subtopic: question.subtopic || "",
     passage: question.passage || "",
     explanation: question.explanation || "",
-    questionType: question.question_type || "single",
+    questionType,
     // The API attaches this (see backend attachDiagramUrls /
     // question-assets.service.js) whenever question_assets has a saved
     // diagram for this question - without carrying it through here it
@@ -87,9 +106,11 @@ export function toEditorQuestion(question) {
 export function getIssues(q) {
   let issues = 0;
   if (!q.text.trim()) issues++;
-  if (q.options.length < 2) issues++;
-  if (q.options.some((o) => !o.trim())) issues++;
-  if (!q.correctOptionIndexes.length) issues++;
+  if (["single", "multi"].includes(q.questionType)) {
+    if (q.options.length < 2) issues++;
+    if (q.options.some((o) => !o.trim())) issues++;
+    if (!q.correctOptionIndexes.length) issues++;
+  }
   return issues;
 }
 

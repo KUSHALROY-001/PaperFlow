@@ -601,10 +601,10 @@ export const api = {
   getAttempt(attemptId) {
     return apiRequest(`/api/attempts/${attemptId}`);
   },
-  saveAttemptAnswer(attemptId, questionId, selectedOptionIndexes) {
+  saveAttemptAnswer(attemptId, questionId, selectedOptionIndexes, answerText) {
     return apiRequest(`/api/attempts/${attemptId}/answers/${questionId}`, {
       method: "PUT",
-      body: JSON.stringify({ selectedOptionIndexes }),
+      body: JSON.stringify({ selectedOptionIndexes, answerText }),
     });
   },
   submitAttempt(attemptId) {
@@ -677,12 +677,12 @@ export const api = {
   getSharedAttempt(token, attemptId) {
     return apiRequest(`/api/shared/${token}/attempts/${attemptId}`);
   },
-  saveSharedAnswer(token, attemptId, questionId, selectedOptionIndexes) {
+  saveSharedAnswer(token, attemptId, questionId, selectedOptionIndexes, answerText) {
     return apiRequest(
       `/api/shared/${token}/attempts/${attemptId}/answers/${questionId}`,
       {
         method: "PUT",
-        body: JSON.stringify({ selectedOptionIndexes }),
+        body: JSON.stringify({ selectedOptionIndexes, answerText }),
       },
     );
   },

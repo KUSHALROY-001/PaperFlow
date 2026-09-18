@@ -155,6 +155,7 @@ export async function saveSharedAnswer({
   attemptId,
   questionId,
   selectedOptionIndexes,
+  answerText,
 }) {
   const share = await resolveShare(shareToken);
 
@@ -163,6 +164,7 @@ export async function saveSharedAnswer({
     workspaceId: share.workspace_id,
     questionId,
     selectedOptionIndexes,
+    answerText,
   });
 }
 

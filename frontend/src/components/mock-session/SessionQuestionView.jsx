@@ -29,6 +29,8 @@ export default function SessionQuestionView({
   flagged,
   toggleFlag,
   handleAnswer,
+  answerText,
+  handleTextAnswer,
   progress,
   slideDirection,
   onNavigateNext,
@@ -223,8 +225,9 @@ export default function SessionQuestionView({
             />
           </div>
 
+          {(q.questionType === "single" || q.questionType === "multi") && (
           <div className="space-y-3">
-            {q.options.map((opt, i) => (
+            {(q.options || []).map((opt, i) => (
               <button
                 key={opt}
                 type="button"
@@ -242,6 +245,59 @@ export default function SessionQuestionView({
               </button>
             ))}
           </div>
+          )}
+          {q.questionType === "fill_blank" && (() => {
+            const blankCount = Math.max(1, (q.text.match(/_{3,}/g) || []).length);
+            let blanks = Array(blankCount).fill("");
+            try {
+              const saved = JSON.parse(answerText);
+              if (Array.isArray(saved)) blanks = blanks.map((_, index) => saved[index] || "");
+            } catch {
+              blanks[0] = answerText;
+            }
+            return <div className="space-y-3">
+              <label className="block text-sm font-semibold text-foreground">Your answer{blankCount > 1 ? "s" : ""}</label>
+              {blanks.map((value, index) => <input
+                key={index}
+                value={value}
+                onChange={(event) => {
+                  const next = [...blanks];
+                  next[index] = event.target.value;
+                  handleTextAnswer(next.some((answer) => answer.trim()) ? JSON.stringify(next) : "");
+                }}
+                placeholder={`Blank ${index + 1}`}
+                className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm text-foreground outline-none focus:border-orange-500"
+              />)}
+            </div>;
+          })()}
+          {q.questionType === "numerical" && (
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-foreground">Your numeric answer</label>
+              <input
+                type="number"
+                step="any"
+                value={answerText}
+                onChange={(event) => handleTextAnswer(event.target.value)}
+                placeholder="Enter a number"
+                className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm text-foreground outline-none focus:border-orange-500"
+              />
+            </div>
+          )}
+          {(q.questionType === "short_answer" || q.questionType === "long_answer") && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <label className="block text-sm font-semibold text-foreground">Your answer</label>
+                {q.answerWordLimit && <span className="text-xs text-muted-foreground">{answerText.trim() ? answerText.trim().split(/\s+/).length : 0}/{q.answerWordLimit} words</span>}
+              </div>
+              <textarea
+                value={answerText}
+                onChange={(event) => handleTextAnswer(event.target.value)}
+                rows={q.questionType === "long_answer" ? 10 : 5}
+                placeholder="Write your answer here"
+                className="w-full resize-y rounded-md border border-border bg-card px-4 py-3 text-sm leading-relaxed text-foreground outline-none focus:border-orange-500"
+              />
+            </div>
+          )}
         </DiagramAssetsProvider>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-8 pt-6 border-t border-border">

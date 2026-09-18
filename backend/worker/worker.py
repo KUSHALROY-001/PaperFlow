@@ -21,6 +21,7 @@ from .ai import (
     regenerate_flagged_duplicates,
 )
 from .duplicate_detector import detect_duplicates_for_mock_test
+from .grading import process_next_grading_batch
 from .db import (
     JobCancelled,
     add_job_event,
@@ -884,7 +885,7 @@ def process_next_job():
         connection.commit()
 
     if not job:
-        return False
+        return process_next_grading_batch()
 
     print(f"Processing job {job['id']} for mock test {job['mock_test_id']}")
 

@@ -39,6 +39,7 @@ const MATH_TOKEN_RE =
   /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\$[^\n$]+?\$|\\\([\s\S]+?\\\)|(?<!\$)\$\$(?!\$)|!\[\[img:[a-z0-9][a-z0-9-]{0,63}\]\])/g;
 
 const IMAGE_MARKER_RE = /^!\[\[img:([a-z0-9][a-z0-9-]{0,63})\]\]$/;
+const PROTECTED_MATH_NEWLINE = "\u0000";
 
 const INLINE_MARKERS = [
   { open: "***", close: "***", marks: ["bold", "italic"] },
@@ -242,8 +243,19 @@ function mathAttrsFromToken(token) {
   if (token === "$$") return { latex: "", displayMode: false };
 
   const isDisplay = token.startsWith("$$") || token.startsWith(String.raw`\[`);
-  const inner = isDisplay ? token.slice(2, -2) : token.slice(1, -1);
+  const hasBackslashDelimiters =
+    token.startsWith(String.raw`\[`) || token.startsWith(String.raw`\(`);
+  const delimiterLength = isDisplay || hasBackslashDelimiters ? 2 : 1;
+  const inner = token
+    .slice(delimiterLength, -delimiterLength)
+    .replaceAll(PROTECTED_MATH_NEWLINE, "\n");
   return { latex: inner, displayMode: isDisplay };
+}
+
+function protectMathNewlines(text) {
+  return text.replace(MATH_TOKEN_RE, (token) =>
+    token.replaceAll("\n", PROTECTED_MATH_NEWLINE),
+  );
 }
 
 function findClosing(text, start, open) {
@@ -406,7 +418,9 @@ function tableBlock({ header, rows, colWidths }) {
 }
 
 function appendProseBlocks(text, content) {
-  splitIntoTextBlocks(text).forEach((block) => {
+  // Keep a multiline \(...\) or \[...\] expression together until the
+  // math tokenizer has converted it to a MathNode.
+  splitIntoTextBlocks(protectMathNewlines(text)).forEach((block) => {
     if (block.type === "table") {
       content.push(tableBlock(block));
       return;

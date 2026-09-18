@@ -82,5 +82,39 @@ if (
   console.log("FAIL - empty inline math was not reconstructed as a math node");
 }
 
+const conventionalDelimiterDocument = markdownToDoc(
+  String.raw`Inline \(\mathbb{R}\) with display \[\begin{aligned}x &= 1 \\ y &= 2\end{aligned}\]`,
+);
+const conventionalMathNodes = [];
+const collectMathNodes = (node) => {
+  if (node.type === "math") conventionalMathNodes.push(node);
+  node.content?.forEach(collectMathNodes);
+};
+collectMathNodes(conventionalDelimiterDocument);
+if (
+  conventionalMathNodes.length !== 2 ||
+  conventionalMathNodes[0]?.attrs?.latex !== String.raw`\mathbb{R}` ||
+  conventionalMathNodes[0]?.attrs?.displayMode !== false ||
+  conventionalMathNodes[1]?.attrs?.latex !== String.raw`\begin{aligned}x &= 1 \\ y &= 2\end{aligned}` ||
+  conventionalMathNodes[1]?.attrs?.displayMode !== true
+) {
+  failures++;
+  console.log("FAIL - conventional LaTex delimiters did not become math nodes");
+}
+
+const multilineInlineDocument = markdownToDoc(
+  String.raw`Before \(\begin{aligned}x &= 1 \\
+y &= 2\end{aligned}\) after`,
+);
+const multilineMathNode = multilineInlineDocument.content[0]?.content?.[1];
+if (
+  multilineMathNode?.type !== "math" ||
+  multilineMathNode.attrs?.latex !== String.raw`\begin{aligned}x &= 1 \\
+y &= 2\end{aligned}`
+) {
+  failures++;
+  console.log("FAIL - multiline inline LaTex was split into raw text");
+}
+
 console.log(`\n${cases.length - failures}/${cases.length} passed.`);
 process.exit(failures > 0 ? 1 : 0);

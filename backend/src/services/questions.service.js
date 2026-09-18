@@ -32,19 +32,40 @@ function validateAnswerShape({
   }
 }
 
+const QUESTION_TYPES = new Set([
+  "single",
+  "multi",
+  "fill_blank",
+  "short_answer",
+  "long_answer",
+  "numerical",
+]);
+
+function parseQuestionType(value) {
+  const type = String(value || "single");
+  if (!QUESTION_TYPES.has(type))
+    throw httpError(400, "Unsupported questionType");
+  return type;
+}
+
 export async function createQuestion(workspaceId, body) {
   const mockTestId = requiredString(body.mockTestId, "mockTestId");
   const questionNo = Number(body.questionNo);
   const questionText = requiredString(body.questionText, "questionText");
-  const rawOptions = requiredArray(body.options, "options");
+  const questionType = parseQuestionType(body.questionType);
+  const rawOptions =
+    questionType === "single" || questionType === "multi"
+      ? requiredArray(body.options, "options")
+      : body.options || [];
   const options = rawOptions.map((option, index) =>
     requiredString(option, `options[${index}]`),
   );
-  const correctOptionIndexes = requiredArray(
-    body.correctOptionIndexes,
-    "correctOptionIndexes",
-  ).map(Number);
-  const questionType = body.questionType === "multi" ? "multi" : "single";
+  const correctOptionIndexes =
+    questionType === "single" || questionType === "multi"
+      ? requiredArray(body.correctOptionIndexes, "correctOptionIndexes").map(
+          Number,
+        )
+      : [];
 
   if (!Number.isInteger(questionNo) || questionNo <= 0) {
     throw httpError(400, "questionNo must be a positive integer");
@@ -88,6 +109,12 @@ export async function createQuestion(workspaceId, body) {
       confidence: optionalNumber(body.confidence, null),
       status: body.status || "needs_review",
       metadata: body.metadata || {},
+      acceptedAnswers: body.acceptedAnswers || null,
+      gradingRubric: body.gradingRubric || null,
+      expectedAnswer: optionalString(body.expectedAnswer),
+      answerWordLimit: optionalNumber(body.answerWordLimit, null),
+      numericAnswer: optionalNumber(body.numericAnswer, null),
+      numericTolerance: optionalNumber(body.numericTolerance, null),
     });
 
     await client.query("COMMIT");
@@ -137,27 +164,46 @@ export async function updateQuestion(questionId, workspaceId, body) {
     throw httpError(404, "Question not found");
   }
 
+  let questionType;
+  if (body.questionType !== undefined) {
+    questionType = parseQuestionType(body.questionType);
+  }
+  const effectiveQuestionType = questionType || existing.question_type;
+
+  // Bug fix: this used requiredArray(body.options, "options") unconditionally
+  // whenever options was present in the body, rejecting anything with an
+  // empty array - but createQuestion (above) already knows better: options
+  // are only ever non-empty for the MCQ types (single/multi). The frontend's
+  // saveQuestion (useQuestionEditor.js) sends `options: question.options`
+  // on every save regardless of type, which is legitimately [] for
+  // numerical/fill_blank/short_answer/long_answer questions - so every save
+  // of any non-MCQ question 400'd here with "options must be a non-empty
+  // array", even when nothing about options had actually changed.
+  const requiresNonEmptyOptions = ["single", "multi"].includes(
+    effectiveQuestionType,
+  );
   const options =
     body.options === undefined
       ? undefined
-      : requiredArray(body.options, "options").map((option, index) =>
-          requiredString(option, `options[${index}]`),
-        );
+      : (requiresNonEmptyOptions
+          ? requiredArray(body.options, "options")
+          : body.options || []
+        ).map((option, index) => requiredString(option, `options[${index}]`));
   const correctOptionIndexes = body.correctOptionIndexes?.map(Number);
-  let questionType;
-  if (body.questionType !== undefined) {
-    questionType = body.questionType === "multi" ? "multi" : "single";
-  }
 
-  if (correctOptionIndexes && correctOptionIndexes.length === 0) {
+  if (
+    correctOptionIndexes &&
+    correctOptionIndexes.length === 0 &&
+    ["single", "multi"].includes(questionType || existing.question_type)
+  ) {
     throw httpError(400, "correctOptionIndexes must not be empty");
   }
 
-  const effectiveQuestionType = questionType || existing.question_type;
   const effectiveCorrectOptionIndexes =
     correctOptionIndexes || existing.correct_option_indexes || [];
   const effectiveOptionCount =
-    options?.length ?? (Array.isArray(existing.options) ? existing.options.length : 0);
+    options?.length ??
+    (Array.isArray(existing.options) ? existing.options.length : 0);
 
   if (
     body.questionType !== undefined ||
@@ -182,6 +228,12 @@ export async function updateQuestion(questionId, workspaceId, body) {
     body.marksPerCorrect !== undefined ||
     body.negativeMarksPerWrong !== undefined ||
     body.metadata !== undefined ||
+    body.acceptedAnswers !== undefined ||
+    body.gradingRubric !== undefined ||
+    body.expectedAnswer !== undefined ||
+    body.answerWordLimit !== undefined ||
+    body.numericAnswer !== undefined ||
+    body.numericTolerance !== undefined ||
     options !== undefined;
 
   const client = await pool.connect();
@@ -228,6 +280,18 @@ export async function updateQuestion(questionId, workspaceId, body) {
         negativeMarksPerWrongProvided: body.negativeMarksPerWrong !== undefined,
         negativeMarksPerWrong: optionalNumber(body.negativeMarksPerWrong, null),
         metadata: body.metadata || null,
+        acceptedAnswersProvided: body.acceptedAnswers !== undefined,
+        acceptedAnswers: body.acceptedAnswers || null,
+        gradingRubricProvided: body.gradingRubric !== undefined,
+        gradingRubric: body.gradingRubric || null,
+        expectedAnswerProvided: body.expectedAnswer !== undefined,
+        expectedAnswer: optionalString(body.expectedAnswer),
+        answerWordLimitProvided: body.answerWordLimit !== undefined,
+        answerWordLimit: optionalNumber(body.answerWordLimit, null),
+        numericAnswerProvided: body.numericAnswer !== undefined,
+        numericAnswer: optionalNumber(body.numericAnswer, null),
+        numericToleranceProvided: body.numericTolerance !== undefined,
+        numericTolerance: optionalNumber(body.numericTolerance, null),
       });
     }
 

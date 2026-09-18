@@ -21,7 +21,15 @@ export default function QuestionOptionsCard({
   optionMenuRefs,
   optionEditorRefs,
   isViewer,
+  acceptedAnswers = [],
+  gradingRubric = [],
+  expectedAnswer = "",
+  answerWordLimit,
+  numericAnswer,
+  numericTolerance,
+  updateSelected,
 }) {
+  const isMcq = questionType === "single" || questionType === "multi";
   return (
     <div className="surface-card rounded-2xl p-3 sm:p-6 border border-border">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
@@ -53,10 +61,14 @@ export default function QuestionOptionsCard({
           >
             <option value="single">Single</option>
             <option value="multi">Multi</option>
+            <option value="fill_blank">Fill in the blank</option>
+            <option value="short_answer">Short answer</option>
+            <option value="long_answer">Long answer</option>
+            <option value="numerical">Numerical</option>
           </select>
         </div>
       </div>
-      <div className="space-y-2">
+      {isMcq && <div className="space-y-2">
         {options.map((opt, i) => {
           const isCorrect = correctOptionIndexes.includes(i);
           return (
@@ -88,8 +100,8 @@ export default function QuestionOptionsCard({
             />
           );
         })}
-      </div>
-      <button
+      </div>}
+      {isMcq && <button
         type="button"
         disabled={isViewer || options.length >= 6}
         onClick={() => !isViewer && addOption()}
@@ -100,7 +112,34 @@ export default function QuestionOptionsCard({
         }`}
       >
         <Plus className="w-3.5 h-3.5" /> Add Option
-      </button>
+      </button>}
+      {questionType === "fill_blank" && (
+        <div className="space-y-2">
+          <label className="block text-xs font-semibold text-muted-foreground">Accepted answers (one line per blank; alternatives separated by |)</label>
+          <textarea
+            disabled={isViewer}
+            value={acceptedAnswers.map((answers) => answers.join(" | ")).join("\n")}
+            onChange={(event) => updateSelected("acceptedAnswers", event.target.value.split("\n").map((line) => line.split("|").map((answer) => answer.trim()).filter(Boolean)).filter((answers) => answers.length))}
+            rows={3}
+            className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-orange-500 disabled:opacity-60"
+          />
+        </div>
+      )}
+      {(questionType === "short_answer" || questionType === "long_answer") && (
+        <div className="space-y-3">
+          <label className="block text-xs font-semibold text-muted-foreground">Model answer</label>
+          <textarea disabled={isViewer} value={expectedAnswer} onChange={(event) => updateSelected("expectedAnswer", event.target.value)} rows={3} className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-orange-500 disabled:opacity-60" />
+          <label className="block text-xs font-semibold text-muted-foreground">Rubric points (one per line: point | weight)</label>
+          <textarea disabled={isViewer} value={gradingRubric.map((item) => `${item.point} | ${item.weight}`).join("\n")} onChange={(event) => updateSelected("gradingRubric", event.target.value.split("\n").map((line) => { const [point, weight] = line.split("|"); return { point: point?.trim(), weight: Number(weight) || 1 }; }).filter((item) => item.point))} rows={4} className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-orange-500 disabled:opacity-60" />
+          <input disabled={isViewer} type="number" min="1" value={answerWordLimit ?? ""} placeholder="Optional word limit" onChange={(event) => updateSelected("answerWordLimit", event.target.value ? Number(event.target.value) : null)} className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-orange-500 disabled:opacity-60" />
+        </div>
+      )}
+      {questionType === "numerical" && (
+        <div className="grid grid-cols-2 gap-3">
+          <input disabled={isViewer} type="number" step="any" value={numericAnswer ?? ""} placeholder="Correct answer" onChange={(event) => updateSelected("numericAnswer", event.target.value === "" ? null : Number(event.target.value))} className="rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-orange-500 disabled:opacity-60" />
+          <input disabled={isViewer} type="number" min="0" step="any" value={numericTolerance ?? ""} placeholder="Tolerance" onChange={(event) => updateSelected("numericTolerance", event.target.value === "" ? null : Number(event.target.value))} className="rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-orange-500 disabled:opacity-60" />
+        </div>
+      )}
     </div>
   );
 }

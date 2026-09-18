@@ -27,7 +27,9 @@ export function buildDiagramUrl(
   const token = generateDiagramAccessToken(questionId, workspaceId);
   const suffix = slotKey === "default" ? "" : `/${slotKey}`;
   const versionQuery =
-    version != null && version !== "" ? `&v=${encodeURIComponent(version)}` : "";
+    version != null && version !== ""
+      ? `&v=${encodeURIComponent(version)}`
+      : "";
   return shareToken
     ? `/api/shared/${shareToken}/questions/${questionId}/diagram${suffix}?access_token=${token}${versionQuery}`
     : `/api/questions/${questionId}/diagram${suffix}?access_token=${token}${versionQuery}`;
@@ -77,8 +79,8 @@ export async function attachDiagramUrls(
 
   return questions.map((question) => {
     const id = question[idField];
-    const assets = (id ? assetsByQuestionId.get(String(id)) : null)?.filter((asset) =>
-      isValidDiagramPublicId(asset.storagePath),
+    const assets = (id ? assetsByQuestionId.get(String(id)) : null)?.filter(
+      (asset) => isValidDiagramPublicId(asset.storagePath),
     );
     if (!assets || assets.length === 0) {
       return question;

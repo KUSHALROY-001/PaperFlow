@@ -62,6 +62,32 @@ export function mapQuestion(question) {
   const normalizedStatus = ["approved", "rejected"].includes(question.status)
     ? question.status
     : "review";
+  const questionType = question.question_type || "single";
+  // Bug fix: numeric_answer/numeric_tolerance were never mapped through at
+  // all (same shape of miss as diagramUrl/marks below), and `answer` was
+  // unconditionally derived from `options[correctIndex]` - which is empty
+  // for numerical questions (no options), so it always came out "".
+  // useQuestionEditor.js was unaffected because it goes through
+  // toEditorQuestion (questionEditorHelpers.js), a separate mapper that
+  // already handled these two fields - only OutputTab/ReviewTab, which
+  // render mapQuestion's output, showed a blank answer.
+  const numericAnswer = question.numeric_answer ?? null;
+  const numericTolerance = question.numeric_tolerance ?? null;
+  // Same gap as numericAnswer/numericTolerance above, for the other three
+  // non-MCQ types (fill_blank, short_answer, long_answer) - these were
+  // never mapped through at all, so OutputTab/ReviewTab had literally
+  // nothing to render for those questions: no options (there are none for
+  // these types), and no answer-key field either. useQuestionEditor.js
+  // was unaffected for the same reason as before - it reads the raw API
+  // response via toEditorQuestion, a separate mapper.
+  const acceptedAnswers = Array.isArray(question.accepted_answers)
+    ? question.accepted_answers
+    : null;
+  const gradingRubric = Array.isArray(question.grading_rubric)
+    ? question.grading_rubric
+    : null;
+  const expectedAnswer = question.expected_answer ?? null;
+  const answerWordLimit = question.answer_word_limit ?? null;
 
   return {
     id: question.id,
@@ -77,8 +103,20 @@ export function mapQuestion(question) {
       ? `Page ${question.source_page}`
       : "Manual entry",
     options,
-    answer: options[correctIndex] || "",
-    correctOptionIndexes: question.correct_option_indexes || [correctIndex],
+    questionType,
+    answer:
+      questionType === "numerical"
+        ? (numericAnswer ?? "")
+        : options[correctIndex] || "",
+    correctOptionIndexes:
+      question.correct_option_indexes ||
+      (["single", "multi"].includes(questionType) ? [correctIndex] : []),
+    numericAnswer,
+    numericTolerance,
+    acceptedAnswers,
+    gradingRubric,
+    expectedAnswer,
+    answerWordLimit,
     aiIssues,
     aiNeedsReview: metadata.aiNeedsReview,
     // Bug fix: these three were never mapped through at all, even though
@@ -213,11 +251,13 @@ export function orderQuestionsForDisplay(questions, mockTest) {
 // Review/Output/editor list shape: shuffled when random, plus the marks
 // students actually see (paper default when the question row is empty).
 export function decorateQuestionsForWorkspace(questions, mockTest) {
-  return orderQuestionsForDisplay(questions, mockTest).map((question, index) => ({
-    ...question,
-    displayIndex: index + 1,
-    effectiveMarks: resolveQuestionMarks(question, mockTest),
-  }));
+  return orderQuestionsForDisplay(questions, mockTest).map(
+    (question, index) => ({
+      ...question,
+      displayIndex: index + 1,
+      effectiveMarks: resolveQuestionMarks(question, mockTest),
+    }),
+  );
 }
 
 export function getOptionText(options, index) {

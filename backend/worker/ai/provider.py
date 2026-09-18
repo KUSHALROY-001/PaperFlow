@@ -1,5 +1,7 @@
+import difflib
 import re
 import threading
+import unicodedata
 from concurrent.futures import ThreadPoolExecutor
 
 from ..asset_extractor import crop_diagram
@@ -22,6 +24,13 @@ Return only valid JSON. Do not include markdown.
 Use zero-based option indexes.
 If an answer is missing or uncertain, choose the most likely option, lower confidence, set needs_review true, and explain in issues.
 Keep original meaning. Do not invent questions that are not present in the text.
+Classify every question as single, multi, fill_blank, short_answer,
+long_answer, or numerical. Do not convert written or numerical questions
+into fake MCQs. A visible blank (____) is fill_blank; a requested brief
+response is short_answer; an extended explanation or stated word count is
+long_answer; and a number-only answer box/instruction is numerical. For
+written questions, derive grading_rubric from the paper's marking scheme
+when it is visible; otherwise provide expected_answer.
 Never write filler stems such as "Reasoning question 21" or "English question 1",
 and never use the bare letters A/B/C/D as the option text unless that is
 literally all the paper prints for that choice. If a page is an answer key
@@ -1005,22 +1014,45 @@ def _attach_diagram_crops(ai_questions, page_images):
 
 def _question_text_fingerprint(question):
     """
-    Short normalized prefix of the question body used to decide whether two
+    Normalized prefix of the question body used to decide whether two
     extractions with the SAME paper question_no are the same question (e.g.
-    overlapping vision chunks of one subject) or different ones (e.g. JEE
-    Advanced Physics Q.1 vs Chemistry Q.1 vs Mathematics Q.1 - each subject
-    restarts numbering at 1).
+    overlapping vision chunks of one subject, or the SAME question
+    re-transcribed by a different extraction backend) or genuinely
+    different ones (e.g. JEE Advanced Physics Q.1 vs Chemistry Q.1 vs
+    Mathematics Q.1 - each subject restarts numbering at 1).
+
+    NFKC-normalized before comparison, not just lowercased/whitespace-
+    collapsed - this matters specifically because the two backends that
+    can produce competing results for the same question
+    (generate_json_from_pdf_images, reading rendered page images, vs
+    generate_json_from_pdf, the last-resort call that hands Gemini the
+    raw PDF bytes to read natively) transcribe math notation differently
+    even when they agree on the actual question text. Unicode's
+    Mathematical Alphanumeric Symbols block (the math-italic 𝑎, 𝑏, ℝ, etc.
+    that fill a real JEE Advanced PDF) has compatibility decompositions to
+    plain ASCII letters for exactly this kind of case - NFKC collapses
+    "𝑎𝑖" and "ai" (or "ℝ" and "R") to the same string, so two transcriptions
+    of the identical question fingerprint the same instead of silently
+    failing the comparison below and being misread as a subject-boundary
+    restart (see the real incident this caused: a JEE paper's true 48
+    questions came back as 69, because ~23 re-transcriptions from the
+    whole-PDF fallback didn't fingerprint-match their already-found
+    counterpart from the page-image vision pass and got renumbered as new
+    questions instead of recognized as duplicates).
     """
-    text = (question.get("text") or "").strip().lower()
+    text = (question.get("text") or "")
+    text = unicodedata.normalize("NFKC", text)
+    text = text.strip().lower()
     text = re.sub(r"\s+", " ", text)
-    return text[:160]
+    return text[:200]
 
 
 def _is_same_extracted_question(existing, new):
     """
     True when two results with the same paper number are almost certainly
-    the same physical question (chunk overlap / fuller re-extraction), not
-    a subject-boundary restart.
+    the same physical question (chunk overlap / fuller re-extraction, or a
+    re-transcription of the same question through a different extraction
+    backend), not a subject-boundary restart.
     """
     fp_a = _question_text_fingerprint(existing)
     fp_b = _question_text_fingerprint(new)
@@ -1038,7 +1070,21 @@ def _is_same_extracted_question(existing, new):
         return True
     if len(fp_b) >= 24 and fp_b[:80] in fp_a:
         return True
-    return False
+    # Exact/substring matching catches near-identical transcriptions, but
+    # NFKC normalization alone doesn't close the whole gap between
+    # extraction backends - generate_json_from_pdf and
+    # generate_json_from_pdf_images can still transcribe fractions,
+    # spacing around operators, or a leading "Q.1" label differently for
+    # the SAME question. Fall back to overall similarity rather than
+    # treating any remaining difference as proof of a subject restart.
+    # A genuine subject restart (Math Q.1 vs Physics Q.1 vs Chemistry Q.1)
+    # shares at most a short boilerplate opener ("let r denote the set of
+    # all real numbers." - several questions in a real JEE Advanced paper
+    # open with exactly that) before diverging completely, which scores
+    # well under this threshold; a re-transcription of the SAME question
+    # scores well above it even with formatting noise spread throughout.
+    similarity = difflib.SequenceMatcher(None, fp_a, fp_b).ratio()
+    return similarity >= 0.72
 
 
 def _put_extracted_question(questions_by_no, question, *, prefer_new):

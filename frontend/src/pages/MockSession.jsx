@@ -40,6 +40,7 @@ export default function MockSession() {
     progress,
     handleSubmit,
     handleAnswer,
+    handleTextAnswer,
     toggleFlag,
     handleCancelSession,
   } = useExamSession({ mode: "member" });
@@ -139,6 +140,7 @@ export default function MockSession() {
     return null;
   }
   const selected = answers[q.questionId]?.selected?.[0];
+  const answerText = answers[q.questionId]?.text || "";
 
   return (
     <div className="min-h-screen bg-background flex flex-col lg:flex-row font-sans">
@@ -186,6 +188,8 @@ export default function MockSession() {
           flagged={flagged}
           toggleFlag={toggleFlag}
           handleAnswer={handleAnswer}
+          answerText={answerText}
+          handleTextAnswer={handleTextAnswer}
           progress={progress}
           slideDirection={slideDirection}
           onNavigateNext={handleNavigateNext}

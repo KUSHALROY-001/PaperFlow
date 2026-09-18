@@ -32,14 +32,76 @@ def _question_item_schema(*, nullable_as_union):
         "passage": optional("string"),
         "text": {"type": "string"},
         "explanation": optional("string"),
+        "question_type": {
+            "type": "string",
+            "enum": ["single", "multi", "fill_blank", "short_answer", "long_answer", "numerical"],
+            "description": (
+                "Classify the question from the source. Use single/multi only for questions "
+                "with answer options; fill_blank for one or more visible blanks; short_answer "
+                "for a brief written response; long_answer for an extended explanation; and "
+                "numerical when the student must enter a number."
+            ),
+        },
         "options": {
-            "type": "array",
-            "items": {"type": "string"},
-            "minItems": 2,
+            **optional_array("string"),
+            "description": "MCQ choices only. Null for fill_blank, short_answer, long_answer, and numerical.",
         },
         "correct_option_indexes": {
-            "type": "array",
-            "items": {"type": "integer"},
+            **optional_array("integer"),
+            "description": "Zero-based MCQ answer indexes only. Null for non-MCQ question types.",
+        },
+        "accepted_answers": (
+            {
+                "type": ["array", "null"],
+                "items": {"type": "array", "items": {"type": "string"}},
+            }
+            if nullable_as_union
+            else {
+                "type": "array",
+                "nullable": True,
+                "items": {"type": "array", "items": {"type": "string"}},
+            }
+        ) | {
+            "description": "For fill_blank only: one array of acceptable strings per blank, in blank order. Null otherwise.",
+        },
+        "grading_rubric": (
+            {
+                "type": ["array", "null"],
+                "items": {
+                    "type": "object",
+                    "properties": {"point": {"type": "string"}, "weight": {"type": "number"}},
+                    "required": ["point", "weight"],
+                    "additionalProperties": False,
+                },
+            }
+            if nullable_as_union
+            else {
+                "type": "array",
+                "nullable": True,
+                "items": {
+                    "type": "object",
+                    "properties": {"point": {"type": "string"}, "weight": {"type": "number"}},
+                    "required": ["point", "weight"],
+                },
+            }
+        ) | {
+            "description": "For short_answer/long_answer only: rubric entries shaped as {point, weight}; derive them from the paper when visible. Null when unavailable or not a written question.",
+        },
+        "expected_answer": {
+            **optional("string"),
+            "description": "For short_answer/long_answer only: a model answer when a detailed grading_rubric cannot be derived. Null otherwise.",
+        },
+        "answer_word_limit": {
+            **optional("integer"),
+            "description": "For written answers only: an explicit word limit stated by the paper. Null when no limit is stated.",
+        },
+        "numeric_answer": {
+            **optional("number"),
+            "description": "For numerical only: the expected numeric value. Null otherwise.",
+        },
+        "numeric_tolerance": {
+            **optional("number"),
+            "description": "For numerical only: allowed absolute error, 0 for exact answers. Null otherwise.",
         },
         "source_page": optional("integer"),
         "confidence": {"type": "integer"},
@@ -153,6 +215,7 @@ def _question_item_schema(*, nullable_as_union):
         "required": [
             "question_no",
             "text",
+            "question_type",
             "options",
             "correct_option_indexes",
             "diagrams",
@@ -440,12 +503,15 @@ def normalize_ai_questions(payload, *, source="ai"):
             continue
 
         question_text = str(item.get("text") or item.get("question_text") or "").strip()
+        question_type = str(item.get("question_type") or item.get("questionType") or "single").strip()
+        if question_type not in {"single", "multi", "fill_blank", "short_answer", "long_answer", "numerical"}:
+            question_type = "single"
         options = item.get("options") or []
         if not question_text or not isinstance(options, list):
             continue
 
         options = [str(option).strip() for option in options if str(option).strip()]
-        if len(options) < 2:
+        if question_type in {"single", "multi"} and len(options) < 2:
             continue
 
         # Drop invented filler before it can occupy a question_no slot.
@@ -454,7 +520,7 @@ def normalize_ai_questions(payload, *, source="ai"):
         # (confidence 40, needs_review) and, because vision runs first
         # and fills 1-N with no gaps, skip the text-layer extraction that
         # already had the real stems.
-        if is_placeholder_question({"text": question_text, "options": options}):
+        if question_type in {"single", "multi"} and is_placeholder_question({"text": question_text, "options": options}):
             continue
 
         try:
@@ -466,7 +532,7 @@ def normalize_ai_questions(payload, *, source="ai"):
             question_no += 1
         seen_numbers.add(question_no)
 
-        correct_indexes = item.get("correct_option_indexes") or item.get("correctOptionIndexes") or [0]
+        correct_indexes = item.get("correct_option_indexes") or item.get("correctOptionIndexes") or []
         if not isinstance(correct_indexes, list):
             correct_indexes = [correct_indexes]
 
@@ -479,8 +545,37 @@ def normalize_ai_questions(payload, *, source="ai"):
             if 0 <= numeric_index < len(options):
                 valid_correct_indexes.append(numeric_index)
 
-        if not valid_correct_indexes:
+        if question_type in {"single", "multi"} and not valid_correct_indexes:
             valid_correct_indexes = [0]
+
+        accepted_answers = item.get("accepted_answers") or item.get("acceptedAnswers")
+        if question_type == "fill_blank":
+            if not isinstance(accepted_answers, list) or not accepted_answers:
+                continue
+            accepted_answers = [
+                [str(answer).strip() for answer in group if str(answer).strip()]
+                for group in accepted_answers
+                if isinstance(group, list)
+            ]
+            if not accepted_answers or any(not group for group in accepted_answers):
+                continue
+        else:
+            accepted_answers = None
+
+        grading_rubric = item.get("grading_rubric") or item.get("gradingRubric")
+        if question_type in {"short_answer", "long_answer"} and isinstance(grading_rubric, list):
+            grading_rubric = [
+                {"point": str(entry.get("point") or "").strip(), "weight": parse_optional_number(entry.get("weight")) or 1}
+                for entry in grading_rubric
+                if isinstance(entry, dict) and str(entry.get("point") or "").strip()
+            ] or None
+        else:
+            grading_rubric = None
+        expected_answer = clean_optional_text(item.get("expected_answer") or item.get("expectedAnswer"))
+        numeric_answer = parse_optional_number(item.get("numeric_answer") if item.get("numeric_answer") is not None else item.get("numericAnswer"))
+        numeric_tolerance = parse_optional_number(item.get("numeric_tolerance") if item.get("numeric_tolerance") is not None else item.get("numericTolerance"))
+        if question_type == "numerical" and numeric_answer is None:
+            continue
 
         try:
             confidence = float(item.get("confidence", 70))
@@ -641,6 +736,13 @@ def normalize_ai_questions(payload, *, source="ai"):
                 "explanation": explanation,
                 "options": options,
                 "correct_option_indexes": valid_correct_indexes,
+                "question_type": question_type,
+                "accepted_answers": accepted_answers,
+                "grading_rubric": grading_rubric,
+                "expected_answer": expected_answer if question_type in {"short_answer", "long_answer"} else None,
+                "answer_word_limit": parse_positive_int(item.get("answer_word_limit") or item.get("answerWordLimit")),
+                "numeric_answer": numeric_answer if question_type == "numerical" else None,
+                "numeric_tolerance": numeric_tolerance if question_type == "numerical" else None,
                 "source_page": parse_positive_int(item.get("source_page") or item.get("sourcePage")),
                 "confidence": max(0, min(confidence, 100)),
                 "metadata": metadata,
@@ -797,4 +899,4 @@ def parse_positive_int(value):
         value = int(value)
     except (TypeError, ValueError):
         return None
-    return value if value > 0 else None 
+    return value if value > 0 else None

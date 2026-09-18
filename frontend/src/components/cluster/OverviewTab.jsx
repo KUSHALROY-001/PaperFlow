@@ -158,6 +158,7 @@ export default function OverviewTab({
         {needsFirstUpload && (
           <UploadPdfPanel
             mocktest={mocktest}
+            clusterId={clusterId}
             isViewer={isViewer}
             onUpload={onUpload}
           />

@@ -67,6 +67,7 @@ export async function saveAnswer(req, res) {
     workspaceId: req.workspaceId,
     questionId: req.params.questionId,
     selectedOptionIndexes: req.body.selectedOptionIndexes,
+    answerText: req.body.answerText,
   });
   res.json({ answer });
 }
