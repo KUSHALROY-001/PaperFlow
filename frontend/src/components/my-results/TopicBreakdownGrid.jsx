@@ -7,7 +7,7 @@ export default function TopicBreakdownGrid({ topicBreakdown }) {
   if (!topicBreakdown || Object.keys(topicBreakdown).length === 0) return null;
 
   return (
-    <div className="border border-border/60 rounded-2xl p-3 sm:p-4 bg-card/50">
+    <div className="border border-border/60 rounded-md p-3 sm:p-4 bg-card/50">
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
@@ -27,43 +27,40 @@ export default function TopicBreakdownGrid({ topicBreakdown }) {
 
       {isOpen && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-3">
-          {Object.entries(topicBreakdown).map(
-            ([topic, { correct, total }]) => {
-              let scoreTextClass;
-              if (correct === total) {
-                scoreTextClass = "text-emerald-500";
-              } else if (correct === 0) {
-                scoreTextClass = "text-red-500";
-              } else {
-                scoreTextClass = "text-amber-500";
-              }
-              return (
-                <div
-                  key={topic}
-                  className="bg-card rounded-xl p-3 border border-border"
-                >
-                  <div className="text-xs font-bold text-foreground mb-1 truncate">
-                    {topic}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="h-1.5 flex-1 mr-2 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${Math.round((correct / total) * 100)}%`,
-                          background:
-                            correct === total ? "#10B981" : "#ea580c",
-                        }}
-                      />
-                    </div>
-                    <span className={`text-xs font-bold ${scoreTextClass}`}>
-                      {correct}/{total}
-                    </span>
-                  </div>
+          {Object.entries(topicBreakdown).map(([topic, { correct, total }]) => {
+            let scoreTextClass;
+            if (correct === total) {
+              scoreTextClass = "text-emerald-500";
+            } else if (correct === 0) {
+              scoreTextClass = "text-red-500";
+            } else {
+              scoreTextClass = "text-amber-500";
+            }
+            return (
+              <div
+                key={topic}
+                className="bg-card rounded-xl p-3 border border-border"
+              >
+                <div className="text-xs font-bold text-foreground mb-1 truncate">
+                  {topic}
                 </div>
-              );
-            },
-          )}
+                <div className="flex items-center justify-between">
+                  <div className="h-1.5 flex-1 mr-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${Math.round((correct / total) * 100)}%`,
+                        background: correct === total ? "#10B981" : "#ea580c",
+                      }}
+                    />
+                  </div>
+                  <span className={`text-xs font-bold ${scoreTextClass}`}>
+                    {correct}/{total}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

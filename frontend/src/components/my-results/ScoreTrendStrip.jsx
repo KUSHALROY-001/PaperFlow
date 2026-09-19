@@ -40,7 +40,7 @@ export default function ScoreTrendStrip({ submittedAttempts }) {
                   {pct}%
                 </span>
                 <div
-                  className="w-full rounded-t-lg transition-all"
+                  className="w-full rounded-t-md transition-all"
                   style={{
                     height: `${(pct / 100) * 56}px`,
                     background: barColor,

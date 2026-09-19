@@ -2,8 +2,41 @@ import { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
 
 export function scorePercent(attempt) {
-  if (!attempt || !attempt.totalQuestions) return 0;
+  if (!attempt) return 0;
+  // % = marks obtained / total marks of the exam (sum of question max marks).
+  // Never use totalQuestions as the denominator — that produced values like
+  // 188% when score was 77 and there were 41 questions.
+  const maxMarks = Number(attempt.maxMarks);
+  if (Number.isFinite(maxMarks) && maxMarks > 0) {
+    return Math.max(0, Math.round((Number(attempt.score) / maxMarks) * 100));
+  }
+  // Fallback only if API did not send maxMarks yet.
+  const marksEach = Number(attempt.marksPerCorrect);
+  if (
+    attempt.totalQuestions &&
+    Number.isFinite(marksEach) &&
+    marksEach > 0
+  ) {
+    const approx = attempt.totalQuestions * marksEach;
+    return Math.max(0, Math.round((Number(attempt.score) / approx) * 100));
+  }
+  if (!attempt.totalQuestions) return 0;
   return Math.round((attempt.correctCount / attempt.totalQuestions) * 100);
+}
+
+/** Total marks available on the paper for this attempt. */
+export function maxMarksForAttempt(attempt) {
+  const maxMarks = Number(attempt?.maxMarks);
+  if (Number.isFinite(maxMarks) && maxMarks > 0) return maxMarks;
+  const marksEach = Number(attempt?.marksPerCorrect);
+  if (
+    attempt?.totalQuestions &&
+    Number.isFinite(marksEach) &&
+    marksEach > 0
+  ) {
+    return attempt.totalQuestions * marksEach;
+  }
+  return null;
 }
 
 export function formatDateTime(iso) {

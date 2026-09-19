@@ -8,7 +8,11 @@ import {
   Trash2,
 } from "lucide-react";
 import { api } from "@/lib/api";
-import { scorePercent, formatDateTime } from "@/hooks/useMyResults";
+import {
+  scorePercent,
+  formatDateTime,
+  maxMarksForAttempt,
+} from "@/hooks/useMyResults";
 import TopicBreakdownGrid from "./TopicBreakdownGrid";
 import QuestionReviewList from "./QuestionReviewList";
 import { ConfirmDialog } from "@/components/design-system/ConfirmDialog";
@@ -31,10 +35,12 @@ export default function AttemptCard({ attempt, onDeleteAttempt }) {
     scoreIconClass = "bg-muted text-muted-foreground border border-border";
     scoreBarColor = null;
   } else if (pct >= 80) {
-    scoreIconClass = "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20";
+    scoreIconClass =
+      "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20";
     scoreBarColor = "#10B981";
   } else if (pct >= 60) {
-    scoreIconClass = "bg-amber-500/15 text-amber-500 border border-amber-500/20";
+    scoreIconClass =
+      "bg-amber-500/15 text-amber-500 border border-amber-500/20";
     scoreBarColor = "#F59E0B";
   } else {
     scoreIconClass = "bg-red-500/15 text-red-500 border border-red-500/20";
@@ -90,7 +96,7 @@ export default function AttemptCard({ attempt, onDeleteAttempt }) {
       {/* Header row */}
       <div className="p-2 sm:p-5 flex items-center gap-4">
         <div
-          className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${scoreIconClass}`}
+          className={`w-12 h-12 rounded-md flex items-center justify-center shrink-0 ${scoreIconClass}`}
         >
           {isSubmitted ? (
             <span className="text-lg font-black">{pct}%</span>
@@ -150,16 +156,22 @@ export default function AttemptCard({ attempt, onDeleteAttempt }) {
           {isSubmitted && (
             <div className="text-right">
               <div className="text-sm md:text-lg font-bold text-foreground">
-                {attempt.correctCount}/{attempt.totalQuestions}
+                {attempt.score}
+                {maxMarksForAttempt(attempt) != null
+                  ? `/${maxMarksForAttempt(attempt)}`
+                  : ""}
               </div>
               <div className="text-xs text-muted-foreground font-medium">
-                correct
+                marks
+              </div>
+              <div className="text-[10px] text-muted-foreground">
+                {attempt.correctCount}/{attempt.totalQuestions} correct
               </div>
             </div>
           )}
           <button
             onClick={handleToggle}
-            className="w-9 h-9 rounded-xl border border-border bg-card flex items-center justify-center text-muted-foreground hover:text-orange-500 hover:border-orange-500/40 transition-all"
+            className="w-9 h-9 rounded-full border border-border bg-card flex items-center justify-center text-muted-foreground hover:text-orange-500 hover:border-orange-500/40 transition-all"
           >
             {expanded ? (
               <ChevronUp className="w-4 h-4" />
@@ -193,7 +205,11 @@ export default function AttemptCard({ attempt, onDeleteAttempt }) {
           {isSubmitted && review && (
             <>
               <TopicBreakdownGrid topicBreakdown={topicBreakdown} />
-              <QuestionReviewList questions={review.questions} />
+              <QuestionReviewList
+                questions={review.questions}
+                defaultMarksPerCorrect={attempt.marksPerCorrect}
+                defaultNegativeMarksPerWrong={attempt.negativeMarksPerWrong}
+              />
 
               <div className="sm:hidden">
                 <button

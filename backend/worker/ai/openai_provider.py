@@ -2,7 +2,11 @@ import json
 from urllib import request
 
 from ..config import AI_MODEL, AI_TIMEOUT_SECONDS, OPENAI_API_KEY
-from .schemas import OPENAI_QUESTION_RESPONSE_SCHEMA, OPENAI_TEMPLATE_RESPONSE_SCHEMA
+from .schemas import (
+    OPENAI_GRADING_RESPONSE_SCHEMA,
+    OPENAI_QUESTION_RESPONSE_SCHEMA,
+    OPENAI_TEMPLATE_RESPONSE_SCHEMA,
+)
 
 
 OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
@@ -26,6 +30,15 @@ TEMPLATE_TEXT_FORMAT = {
         "type": "json_schema",
         "name": "template_generation",
         "schema": OPENAI_TEMPLATE_RESPONSE_SCHEMA,
+        "strict": True,
+    }
+}
+
+GRADING_TEXT_FORMAT = {
+    "format": {
+        "type": "json_schema",
+        "name": "written_answer_grading",
+        "schema": OPENAI_GRADING_RESPONSE_SCHEMA,
         "strict": True,
     }
 }
@@ -80,6 +93,11 @@ class OpenAIProvider:
     def generate_json(self, system_prompt, user_prompt):
         return self._request(
             system_prompt, user_prompt, QUESTION_TEXT_FORMAT, 12000
+        )
+
+    def generate_grading_json(self, system_prompt, user_prompt):
+        return self._request(
+            system_prompt, user_prompt, GRADING_TEXT_FORMAT, 4000
         )
 
     # A template draft is one small object - kept modest so a wandering

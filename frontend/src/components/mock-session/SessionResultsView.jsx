@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
 import { CheckCircle, XCircle, Home, LogIn } from "lucide-react";
-import { getOptionText } from "@/utils/mockTestHelpers";
 import QuestionContent, {
   QuestionExplanation,
 } from "../shared/QuestionContent";
-import MathText from "../shared/MathText";
+import QuestionAnswerReview, {
+  getAnswerOutcome,
+} from "../shared/QuestionAnswerReview";
 import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
 
 export default function SessionResultsView({
@@ -18,9 +19,17 @@ export default function SessionResultsView({
   saveLabel = "Log in to save",
 }) {
   const { attempt, questions: reviewQuestions } = review;
-  const percentage = attempt.totalQuestions
-    ? Math.round((attempt.correctCount / attempt.totalQuestions) * 100)
-    : 0;
+  const marksEach = Number(attempt.marksPerCorrect);
+  const maxMarks =
+    attempt.totalQuestions && Number.isFinite(marksEach) && marksEach > 0
+      ? attempt.totalQuestions * marksEach
+      : null;
+  const percentage =
+    maxMarks != null
+      ? Math.max(0, Math.round((Number(attempt.score) / maxMarks) * 100))
+      : attempt.totalQuestions
+        ? Math.round((attempt.correctCount / attempt.totalQuestions) * 100)
+        : 0;
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-2 md:p-6 font-sans">
@@ -39,7 +48,9 @@ export default function SessionResultsView({
             {attempt.correctCount} / {attempt.totalQuestions} correct
           </p>
           <p className="text-muted-foreground text-xs font-normal mb-8">
-            Score: {attempt.score} marks (negative marking applied)
+            Score: {attempt.score}
+            {maxMarks != null ? ` / ${maxMarks}` : ""} marks
+            (negative marking applied)
           </p>
 
           {showSaveResultBanner && claimStatus !== "saved" && (
@@ -97,17 +108,16 @@ export default function SessionResultsView({
           </div>
           <div className="space-y-3 text-left mb-8">
             {reviewQuestions.map((rq) => {
-              const skipped = rq.selectedOptionIndexes.length === 0;
-              const correct = rq.isCorrect === true;
+              const outcome = getAnswerOutcome(rq);
 
               let cardClass;
               let statusIcon;
-              if (correct) {
+              if (outcome === "positive") {
                 cardClass = "bg-emerald-500/10 border-emerald-500/30";
                 statusIcon = (
                   <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
                 );
-              } else if (skipped) {
+              } else if (outcome === "skipped") {
                 cardClass = "bg-card border-border";
                 statusIcon = (
                   <span className="w-4 h-4 rounded-full border-2 border-muted-foreground mt-0.5 shrink-0 block" />
@@ -157,7 +167,12 @@ export default function SessionResultsView({
                             >
                               {rq.marksAwarded > 0
                                 ? `+${rq.marksAwarded}`
-                                : `${rq.marksAwarded}`}{" "}
+                                : `${rq.marksAwarded}`}
+                              {rq.marksPerCorrect != null
+                                ? ` / ${rq.marksPerCorrect}`
+                                : attempt.marksPerCorrect != null
+                                  ? ` / ${attempt.marksPerCorrect}`
+                                  : ""}{" "}
                               marks
                             </span>
                           )}
@@ -168,28 +183,7 @@ export default function SessionResultsView({
                           passage={rq.passage}
                           textClassName="text-sm font-normal text-foreground leading-relaxed"
                         />
-                        {!correct && !skipped && (
-                          <p className="text-xs text-red-500 font-normal mt-1">
-                            Your answer:{" "}
-                            <MathText
-                              text={getOptionText(
-                                rq.options,
-                                rq.selectedOptionIndexes[0],
-                              )}
-                            />
-                          </p>
-                        )}
-                        {!correct && rq.correctOptionIndexes?.length > 0 && (
-                          <p className="text-xs text-emerald-500 font-normal mt-0.5">
-                            Correct:{" "}
-                            {rq.correctOptionIndexes.map((i, idx) => (
-                              <span key={i}>
-                                {idx > 0 && ", "}
-                                <MathText text={getOptionText(rq.options, i)} />
-                              </span>
-                            ))}
-                          </p>
-                        )}
+                        <QuestionAnswerReview question={rq} />
                         <QuestionExplanation explanation={rq.explanation} />
                       </DiagramAssetsProvider>
                     </div>

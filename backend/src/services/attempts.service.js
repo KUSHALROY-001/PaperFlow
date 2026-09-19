@@ -658,6 +658,16 @@ export async function getAttempt({
       selectedOptionIndexes: row.selected_option_indexes || [],
       answerText: row.answer_text || "",
       gradingStatus: row.grading_status || "not_applicable",
+      marksPerCorrect:
+        row.question_marks_per_correct !== null &&
+        row.question_marks_per_correct !== undefined
+          ? Number(row.question_marks_per_correct)
+          : null,
+      negativeMarksPerWrong:
+        row.question_negative_marks_per_wrong !== null &&
+        row.question_negative_marks_per_wrong !== undefined
+          ? Number(row.question_negative_marks_per_wrong)
+          : null,
       // Correct answers, explanations, and per-question correctness are
       // ONLY included once the attempt is submitted - resuming an
       // in-progress attempt (e.g. after a page refresh) must never leak
@@ -856,6 +866,22 @@ function serializeAttemptWithMockTest(row) {
   return {
     ...serializeAttempt(row),
     mockTestName: row.mock_test_name,
+    // Sum of each question's max marks on this attempt's paper (topic-scoped
+    // for practice). Used for % = score / maxMarks — NOT totalQuestions.
+    maxMarks:
+      row.max_marks !== null && row.max_marks !== undefined
+        ? Number(row.max_marks)
+        : null,
+    marksPerCorrect:
+      row.mock_test_marks_per_correct !== null &&
+      row.mock_test_marks_per_correct !== undefined
+        ? Number(row.mock_test_marks_per_correct)
+        : null,
+    negativeMarksPerWrong:
+      row.mock_test_negative_marks_per_wrong !== null &&
+      row.mock_test_negative_marks_per_wrong !== undefined
+        ? Number(row.mock_test_negative_marks_per_wrong)
+        : null,
     // row.duration_minutes is the SESSION's own duration (see migration
     // 019) - proportionally shorter than the full mock test for a
     // topic-scoped practice attempt. Falls back to

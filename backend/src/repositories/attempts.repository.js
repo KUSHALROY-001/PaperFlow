@@ -62,7 +62,19 @@ export async function insertAttempt(
 export async function findAttemptById(attemptId, workspaceId) {
   const result = await pool.query(
     `
-    SELECT ea.*, mt.name AS mock_test_name, mt.duration_minutes AS mock_test_duration_minutes, mt.status AS mock_test_status
+    SELECT ea.*, mt.name AS mock_test_name, mt.duration_minutes AS mock_test_duration_minutes, mt.status AS mock_test_status,
+      mt.marks_per_correct AS mock_test_marks_per_correct,
+      mt.negative_marks_per_wrong AS mock_test_negative_marks_per_wrong,
+      (
+        SELECT COALESCE(SUM(COALESCE(q.marks_per_correct, mt.marks_per_correct, 0)), 0)
+        FROM questions q
+        WHERE q.mock_test_id = ea.mock_test_id
+          AND (
+            ea.topics IS NULL
+            OR cardinality(ea.topics) = 0
+            OR q.topic = ANY(ea.topics)
+          )
+      ) AS max_marks
     FROM exam_attempts ea
     JOIN mock_tests mt ON mt.id = ea.mock_test_id
     WHERE ea.id = $1
@@ -86,7 +98,19 @@ export async function findAttemptById(attemptId, workspaceId) {
 export async function findAttemptByIdForUser(attemptId, userId) {
   const result = await pool.query(
     `
-    SELECT ea.*, mt.name AS mock_test_name, mt.duration_minutes AS mock_test_duration_minutes, mt.status AS mock_test_status
+    SELECT ea.*, mt.name AS mock_test_name, mt.duration_minutes AS mock_test_duration_minutes, mt.status AS mock_test_status,
+      mt.marks_per_correct AS mock_test_marks_per_correct,
+      mt.negative_marks_per_wrong AS mock_test_negative_marks_per_wrong,
+      (
+        SELECT COALESCE(SUM(COALESCE(q.marks_per_correct, mt.marks_per_correct, 0)), 0)
+        FROM questions q
+        WHERE q.mock_test_id = ea.mock_test_id
+          AND (
+            ea.topics IS NULL
+            OR cardinality(ea.topics) = 0
+            OR q.topic = ANY(ea.topics)
+          )
+      ) AS max_marks
     FROM exam_attempts ea
     JOIN mock_tests mt ON mt.id = ea.mock_test_id
     WHERE ea.id = $1
@@ -131,7 +155,19 @@ export async function listAttemptsForUser(userId) {
     SELECT
       ea.*,
       mt.name AS mock_test_name,
-      mt.duration_minutes AS mock_test_duration_minutes
+      mt.duration_minutes AS mock_test_duration_minutes,
+      mt.marks_per_correct AS mock_test_marks_per_correct,
+      mt.negative_marks_per_wrong AS mock_test_negative_marks_per_wrong,
+      (
+        SELECT COALESCE(SUM(COALESCE(q.marks_per_correct, mt.marks_per_correct, 0)), 0)
+        FROM questions q
+        WHERE q.mock_test_id = ea.mock_test_id
+          AND (
+            ea.topics IS NULL
+            OR cardinality(ea.topics) = 0
+            OR q.topic = ANY(ea.topics)
+          )
+      ) AS max_marks
     FROM exam_attempts ea
     JOIN mock_tests mt ON mt.id = ea.mock_test_id
     WHERE ea.user_id = $1
@@ -289,6 +325,8 @@ export async function listQuestionsWithAnswersForAttempt(
       q.numeric_answer,
       q.numeric_tolerance,
       q.options,
+      q.marks_per_correct AS question_marks_per_correct,
+      q.negative_marks_per_wrong AS question_negative_marks_per_wrong,
       ea.selected_option_indexes,
       ea.answer_text,
       ea.is_correct,

@@ -351,6 +351,57 @@ GEMINI_TEMPLATE_RESPONSE_SCHEMA = _template_response_schema(nullable_as_union=Fa
 OPENAI_TEMPLATE_RESPONSE_SCHEMA = _template_response_schema(nullable_as_union=True)
 
 
+def _grading_response_schema(*, nullable_as_union):
+    # Key order matters: analysis and criteria_scores come BEFORE the overall
+    # percentage so the score is derived from the criteria, not the other way
+    # round. (Alphabetical order is identical, on purpose.)
+    score_item = {
+        "type": "object",
+        "properties": {
+            "criterion_id": {"type": "string"},
+            "score": {"type": "number"},
+        },
+        "required": ["criterion_id", "score"],
+    }
+    item = {
+        "type": "object",
+        "properties": {
+            "analysis": {"type": "string"},
+            "criteria_scores": {"type": "array", "items": score_item},
+            "percentage": {"type": "number"},
+            "points_hit": {"type": "array", "items": {"type": "string"}},
+            "question_index": {"type": "integer"},
+        },
+        "required": [
+            "analysis",
+            "criteria_scores",
+            "percentage",
+            "points_hit",
+            "question_index",
+        ],
+    }
+    if nullable_as_union:
+        score_item["additionalProperties"] = False
+        item["additionalProperties"] = False
+    schema = {
+        "type": "object",
+        "properties": {
+            "grades": {
+                "type": "array",
+                "items": item,
+            }
+        },
+        "required": ["grades"],
+    }
+    if nullable_as_union:
+        schema["additionalProperties"] = False
+    return schema
+
+
+GEMINI_GRADING_RESPONSE_SCHEMA = _grading_response_schema(nullable_as_union=False)
+OPENAI_GRADING_RESPONSE_SCHEMA = _grading_response_schema(nullable_as_union=True)
+
+
 def _find_balanced_objects(text):
     """
     Scans text for every balanced {...} substring, at any nesting depth -

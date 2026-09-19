@@ -19,7 +19,11 @@ from ..config import (
     AI_VISION_CHUNK_CONCURRENCY,
     GEMINI_API_KEY,
 )
-from .schemas import GEMINI_QUESTION_RESPONSE_SCHEMA, GEMINI_TEMPLATE_RESPONSE_SCHEMA
+from .schemas import (
+    GEMINI_GRADING_RESPONSE_SCHEMA,
+    GEMINI_QUESTION_RESPONSE_SCHEMA,
+    GEMINI_TEMPLATE_RESPONSE_SCHEMA,
+)
 
 QUESTION_GENERATION_CONFIG = {
     "responseMimeType": "application/json",
@@ -37,6 +41,11 @@ QUESTION_GENERATION_CONFIG = {
 TEMPLATE_GENERATION_CONFIG = {
     "responseMimeType": "application/json",
     "responseSchema": GEMINI_TEMPLATE_RESPONSE_SCHEMA,
+}
+
+GRADING_GENERATION_CONFIG = {
+    "responseMimeType": "application/json",
+    "responseSchema": GEMINI_GRADING_RESPONSE_SCHEMA,
 }
 
 # Step 1 of generate_template_json's two-call flow (see that method's own
@@ -389,6 +398,11 @@ class GeminiProvider:
     def generate_json(self, system_prompt, user_prompt):
         return self._generate_with_config(
             system_prompt, user_prompt, QUESTION_GENERATION_CONFIG
+        )
+
+    def generate_grading_json(self, system_prompt, user_prompt):
+        return self._generate_with_config(
+            system_prompt, user_prompt, GRADING_GENERATION_CONFIG
         )
 
     # Same call shape as _generate_with_config above, minus generationConfig
