@@ -13,6 +13,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
+import { openGmailCompose } from "@/utils/gmailCompose";
 
 const TARGET_EMAIL = "kushalroy235@gmail.com";
 
@@ -58,7 +59,10 @@ export default function ContactUs() {
   const [errorMessage, setErrorMessage] = useState("");
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState(null);
-  const [lastGmailUrl, setLastGmailUrl] = useState("");
+  // Holds the composed message so "Re-open in Gmail" can retry through
+  // openGmailCompose (app-first on mobile) instead of just re-opening
+  // whatever the web-only fallback happened to be.
+  const [lastCompose, setLastCompose] = useState(null);
 
   useEffect(() => {
     if (user?.name && !name) {
@@ -110,22 +114,24 @@ Sender Information:
 • Workspace User: ${user?.name ? `${user.name} (${user.email || ""})` : "Guest / Direct Contact"}
 • Sent via: PaperFlow Web App (${new Date().toLocaleString()})`;
 
-      // Native Gmail Web Compose URL ONLY - no mailto
-      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
-        TARGET_EMAIL,
-      )}&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(
-        emailBody,
-      )}`;
-
-      setLastGmailUrl(gmailUrl);
-
-      // Open Gmail in a new tab
-      window.open(gmailUrl, "_blank");
+      // Always Gmail specifically - never a generic mailto: handoff to
+      // whatever the device's default mail app happens to be. On mobile,
+      // openGmailCompose tries the native Gmail app first and only falls
+      // back to the web compose tab if the app doesn't take over; on
+      // desktop it's the same web compose tab as before.
+      const composePayload = {
+        to: TARGET_EMAIL,
+        subject: emailSubject,
+        body: emailBody,
+      };
+      setLastCompose(composePayload);
+      openGmailCompose(composePayload);
 
       // crypto.getRandomValues() rather than Math.random() (javascript:S2245) -
       // Math.random() isn't cryptographically strong, so avoid it even for a
       // display-only ticket number.
-      const ticketNumber = 100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000);
+      const ticketNumber =
+        100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000);
       const generatedId = `TKT-${ticketNumber}`;
       setTicketId(generatedId);
       setIsSubmitted(true);
@@ -142,7 +148,7 @@ Sender Information:
     setMessage("");
     setTicketId("");
     setErrorMessage("");
-    setLastGmailUrl("");
+    setLastCompose(null);
   };
 
   return (
@@ -228,10 +234,10 @@ Sender Information:
                 </div>
 
                 <div className="pt-2 flex flex-col sm:flex-row justify-center gap-3">
-                  {lastGmailUrl && (
+                  {lastCompose && (
                     <button
                       type="button"
-                      onClick={() => window.open(lastGmailUrl, "_blank")}
+                      onClick={() => openGmailCompose(lastCompose)}
                       className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold text-xs sm:text-sm rounded-md transition-all shadow-xs"
                     >
                       <ExternalLink className="w-4 h-4" /> Re-open in Gmail

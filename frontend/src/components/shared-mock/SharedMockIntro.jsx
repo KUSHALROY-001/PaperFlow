@@ -22,7 +22,7 @@ export default function SharedMockIntro({
             <Sparkles className="w-7 h-7 text-white" />
           </div>
           <div className="text-xs font-bold text-orange-500 mb-1 uppercase tracking-wider">
-            Powered by MockCraft
+            Powered by PaperFlow
           </div>
           <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
             {info.name}
@@ -34,7 +34,7 @@ export default function SharedMockIntro({
           )}
         </div>
 
-        <div className="surface-card rounded-3xl p-6 border border-border mb-6">
+        <div className="surface-card rounded-xl p-6 border border-border mb-6">
           <div className="grid grid-cols-2 gap-3 mb-6">
             {[
               { label: "Questions", value: mockTestInfo?.questionCount },
@@ -42,7 +42,7 @@ export default function SharedMockIntro({
             ].map((s) => (
               <div
                 key={s.label}
-                className="bg-muted border border-border rounded-xl p-3 text-center"
+                className="bg-muted border border-border rounded-md p-3 text-center"
               >
                 <div className="text-sm font-bold text-foreground">
                   {s.value}
@@ -66,7 +66,7 @@ export default function SharedMockIntro({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter your name to start"
-              className="w-full px-4 py-2.5 rounded-xl border border-border bg-card text-foreground text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all"
+              className="w-full px-4 py-2.5 rounded-md border border-border bg-card text-foreground text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all"
             />
           </div>
 
@@ -83,7 +83,7 @@ export default function SharedMockIntro({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email to start"
-              className="w-full px-4 py-2.5 rounded-xl border border-border bg-card text-foreground text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all"
+              className="w-full px-4 py-2.5 rounded-md border border-border bg-card text-foreground text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all"
             />
           </div>
 
@@ -96,7 +96,7 @@ export default function SharedMockIntro({
           <button
             onClick={handleStart}
             disabled={!name.trim() || !email.trim() || starting}
-            className="w-full py-3 bg-[#ea580c] hover:bg-[#c2410c] text-white font-bold rounded-xl shadow-xs transition-all text-xs sm:text-sm disabled:opacity-40"
+            className="w-full py-3 border border-black dark:border-white bg-transparent hover:bg-black dark:hover:bg-white text-foreground hover:text-white dark:hover:text-black shadow-xs transition-all text-sm disabled:opacity-40"
           >
             {starting ? "Starting…" : "Start Test →"}
           </button>

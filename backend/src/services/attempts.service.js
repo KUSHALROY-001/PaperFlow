@@ -863,9 +863,19 @@ function serializeSubmission(row) {
 }
 
 function serializeAttemptWithMockTest(row) {
+  // Shared-link / public-catalog attempts stash the share token in
+  // metadata at start (shared.service.js#startSharedAttempt). Surface it
+  // so My Results can restart via /shared/:token instead of /session/:id
+  // (which requires workspace membership the taker may not have).
+  const metadata = row.metadata || {};
+  const shareToken =
+    typeof metadata.shareToken === "string" && metadata.shareToken
+      ? metadata.shareToken
+      : null;
   return {
     ...serializeAttempt(row),
     mockTestName: row.mock_test_name,
+    shareToken,
     // Sum of each question's max marks on this attempt's paper (topic-scoped
     // for practice). Used for % = score / maxMarks — NOT totalQuestions.
     maxMarks:

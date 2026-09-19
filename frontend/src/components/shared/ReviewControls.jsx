@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import {
   ChevronDown,
   ChevronsDownUp,
@@ -115,78 +116,166 @@ export function ReviewToolbar({
   sticky = false,
   className = "",
 }) {
+  // Compact short labels (SARA / CA) only when this bar is actually stuck as
+  // a sticky navbar AND the viewport is below Tailwind's `sm` breakpoint —
+  // at the top of the results list the full labels can stack on two rows.
+  const sentinelRef = useRef(null);
+  const [isStuck, setIsStuck] = useState(false);
+  const [isNarrow, setIsNarrow] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return undefined;
+    const media = window.matchMedia("(max-width: 639px)");
+    const sync = () => setIsNarrow(media.matches);
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
+    if (!sticky || !sentinelRef.current) {
+      setIsStuck(false);
+      return undefined;
+    }
+    const sentinel = sentinelRef.current;
+    // rootMargin top matches sticky top-2 (0.5rem) so "stuck" flips when the
+    // bar pins under the viewport edge rather than when the sentinel barely
+    // leaves the visible area.
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsStuck(!entry.isIntersecting);
+      },
+      { threshold: 0, rootMargin: "-8px 0px 0px 0px" },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [sticky, totalQuestions]);
+
   if (totalQuestions === 0) return null;
 
   const allRevealed = revealState === "all";
   const allCollapsed = collapseState === "all";
   const noneCollapsed = collapseState === "none";
+  const compact = sticky && isStuck && isNarrow;
 
-  const revealLabel = allRevealed
+  const revealLabelFull = allRevealed
     ? "Hide All Real Answers"
     : "Show All Real Answers";
-  const collapseLabel = noneCollapsed ? "Collapse All" : "Expand All";
+  const collapseLabelFull = noneCollapsed ? "Collapse All" : "Expand All";
+  // Abbreviations only used while stuck on small screens (see compact).
+  const revealLabelCompact = allRevealed ? "HARA" : "SARA";
+  const collapseLabelCompact = noneCollapsed ? "CA" : "EA";
+  const revealLabel = compact ? revealLabelCompact : revealLabelFull;
+  const collapseLabel = compact ? collapseLabelCompact : collapseLabelFull;
 
   return (
-    <div
-      className={`rounded-2xl border border-border bg-card/90 backdrop-blur px-3 py-2.5 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 ${
-        sticky ? "sticky top-2 z-20" : ""
-      } ${className}`}
-    >
-      <div className="text-left min-w-0 sm:flex-1">
-        <div className="text-xs font-bold text-foreground">Review answers</div>
+    <>
+      {sticky && (
         <div
-          className="text-[11px] text-muted-foreground tabular-nums"
-          role="status"
-          aria-live="polite"
+          ref={sentinelRef}
+          className="h-px w-full pointer-events-none"
+          aria-hidden="true"
+        />
+      )}
+      <div
+        className={`rounded-2xl border border-border bg-card/90 backdrop-blur px-3 py-2.5 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 ${
+          sticky ? "sticky top-2 z-20" : ""
+        } ${compact ? "shadow-md" : ""} ${className}`}
+      >
+        <div
+          className={`text-left min-w-0 sm:flex-1 ${
+            compact ? "hidden" : ""
+          }`}
         >
-          {revealableTotal > 0
-            ? `${revealedCount} of ${revealableTotal} real answers shown`
-            : "No real answers available"}
-          {" · "}
-          {allCollapsed
-            ? "all collapsed"
-            : `${totalQuestions - collapsedCount} of ${totalQuestions} expanded`}
+          <div className="text-xs font-bold text-foreground">Review answers</div>
+          <div
+            className="text-[11px] text-muted-foreground tabular-nums"
+            role="status"
+            aria-live="polite"
+          >
+            {revealableTotal > 0
+              ? `${revealedCount} of ${revealableTotal} real answers shown`
+              : "No real answers available"}
+            {" · "}
+            {allCollapsed
+              ? "all collapsed"
+              : `${totalQuestions - collapsedCount} of ${totalQuestions} expanded`}
+          </div>
+        </div>
+
+        <div
+          className={`flex gap-2 w-full sm:w-auto ${
+            compact
+              ? "flex-row"
+              : "flex-col sm:flex-row flex-wrap"
+          }`}
+        >
+          <button
+            type="button"
+            onClick={onToggleAllReveal}
+            disabled={revealableTotal === 0}
+            title={revealLabelFull}
+            aria-label={
+              compact
+                ? `${revealedCount} of ${revealableTotal} · ${revealLabelFull}`
+                : revealLabelFull
+            }
+            className={`${CHIP_BASE} h-9 px-3 text-xs justify-center border-transparent bg-black/90 dark:bg-white text-white dark:text-black hover:bg-black/80 dark:hover:bg-white/90 shadow-xs whitespace-nowrap ${
+              compact ? "flex-1 min-w-0" : "w-full sm:w-auto"
+            }`}
+          >
+            {compact && (
+              <span className="tabular-nums font-bold shrink-0">
+                {revealableTotal > 0
+                  ? `${revealedCount} of ${revealableTotal}`
+                  : "—"}
+              </span>
+            )}
+            {allRevealed ? (
+              <EyeOff className="w-4 h-4 shrink-0" aria-hidden="true" />
+            ) : (
+              <Eye className="w-4 h-4 shrink-0" aria-hidden="true" />
+            )}
+            <span>{revealLabel}</span>
+            {!compact && revealState === "some" && (
+              <CountPill>
+                {revealedCount}/{revealableTotal}
+              </CountPill>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={onToggleAllCollapse}
+            title={collapseLabelFull}
+            aria-label={
+              compact
+                ? `${totalQuestions - collapsedCount} of ${totalQuestions} · ${collapseLabelFull}`
+                : collapseLabelFull
+            }
+            className={`${CHIP_BASE} h-9 px-3 text-xs justify-center border-transparent bg-black/90 dark:bg-white text-white dark:text-black hover:bg-black/80 dark:hover:bg-white/90 shadow-xs whitespace-nowrap ${
+              compact ? "flex-1 min-w-0" : "w-full sm:w-auto"
+            }`}
+          >
+            {compact && (
+              <span className="tabular-nums font-bold shrink-0">
+                {`${totalQuestions - collapsedCount} of ${totalQuestions}`}
+              </span>
+            )}
+            {noneCollapsed ? (
+              <ChevronsDownUp className="w-4 h-4 shrink-0" aria-hidden="true" />
+            ) : (
+              <ChevronsUpDown className="w-4 h-4 shrink-0" aria-hidden="true" />
+            )}
+            <span>{collapseLabel}</span>
+            {!compact && collapseState === "some" && (
+              <CountPill>
+                {collapsedCount}/{totalQuestions}
+              </CountPill>
+            )}
+          </button>
         </div>
       </div>
-
-      <div className="flex flex-col sm:flex-row flex-wrap gap-2 w-full sm:w-auto">
-        <button
-          type="button"
-          onClick={onToggleAllReveal}
-          disabled={revealableTotal === 0}
-          className={`${CHIP_BASE} h-9 px-3 text-xs w-full sm:w-auto justify-center border-transparent bg-black/90 dark:bg-white text-white dark:text-black hover:bg-black/80 dark:hover:bg-white/90 shadow-xs whitespace-nowrap`}
-        >
-          {allRevealed ? (
-            <EyeOff className="w-4 h-4 shrink-0" aria-hidden="true" />
-          ) : (
-            <Eye className="w-4 h-4 shrink-0" aria-hidden="true" />
-          )}
-          <span>{revealLabel}</span>
-          {revealState === "some" && (
-            <CountPill>
-              {revealedCount}/{revealableTotal}
-            </CountPill>
-          )}
-        </button>
-
-        <button
-          type="button"
-          onClick={onToggleAllCollapse}
-          className={`${CHIP_BASE} h-9 px-3 text-xs w-full sm:w-auto justify-center border-transparent bg-black/90 dark:bg-white text-white dark:text-black hover:bg-black/80 dark:hover:bg-white/90 shadow-xs whitespace-nowrap`}
-        >
-          {noneCollapsed ? (
-            <ChevronsDownUp className="w-4 h-4 shrink-0" aria-hidden="true" />
-          ) : (
-            <ChevronsUpDown className="w-4 h-4 shrink-0" aria-hidden="true" />
-          )}
-          <span>{collapseLabel}</span>
-          {collapseState === "some" && (
-            <CountPill>
-              {collapsedCount}/{totalQuestions}
-            </CountPill>
-          )}
-        </button>
-      </div>
-    </div>
+    </>
   );
 }

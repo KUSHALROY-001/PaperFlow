@@ -50,6 +50,9 @@ export default function MockSession() {
 
   const [slideDirection, setSlideDirection] = useState("");
   const [showShortcuts, setShowShortcuts] = useState(false);
+  // Shared between SessionHeader's "Q" button and SessionQuestionNav's
+  // mobile sheet - see that component's mobileOpen/onMobileClose props.
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const {
     showExitConfirm,
@@ -162,6 +165,8 @@ export default function MockSession() {
         onSelectQuestion={handleSelectQuestion}
         answers={answers}
         flagged={flagged}
+        mobileOpen={mobileNavOpen}
+        onMobileClose={() => setMobileNavOpen(false)}
       />
       <div className="flex-1 lg:ml-56 flex flex-col min-w-0 relative">
         <SessionHeader
@@ -173,6 +178,7 @@ export default function MockSession() {
           submitting={submitting}
           handleSubmit={handleSubmit}
           onCancelSession={handleCancel}
+          onOpenQuestionNav={() => setMobileNavOpen(true)}
         />
 
         {/* Shortcut Info Bar */}

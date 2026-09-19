@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ChevronDown,
   ChevronUp,
@@ -6,6 +7,7 @@ import {
   Loader2,
   AlertTriangle,
   Trash2,
+  Play,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import {
@@ -19,6 +21,7 @@ import { ConfirmDialog } from "@/components/design-system/ConfirmDialog";
 import { SkeletonRowList } from "@/components/ui/skeleton-row";
 
 export default function AttemptCard({ attempt, onDeleteAttempt }) {
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [review, setReview] = useState(null);
   const [loadingReview, setLoadingReview] = useState(false);
@@ -89,6 +92,28 @@ export default function AttemptCard({ attempt, onDeleteAttempt }) {
     } finally {
       setDeleting(false);
     }
+  };
+
+  const handleRestart = (event) => {
+    event.stopPropagation();
+    const topics = Array.isArray(attempt.topics)
+      ? attempt.topics.filter(Boolean)
+      : [];
+    const query =
+      topics.length > 0
+        ? `?${topics
+            .map((topic) => `topics=${encodeURIComponent(topic)}`)
+            .join("&")}`
+        : "";
+
+    // Public / shared-link attempts must go through /shared/:token —
+    // /session/:mockTestId requires workspace membership.
+    if (attempt.shareToken) {
+      navigate(`/shared/${attempt.shareToken}${query}`);
+      return;
+    }
+    if (!attempt.mockTestId) return;
+    navigate(`/session/${attempt.mockTestId}${query}`);
   };
 
   return (
@@ -170,6 +195,28 @@ export default function AttemptCard({ attempt, onDeleteAttempt }) {
             </div>
           )}
           <button
+            type="button"
+            onClick={handleRestart}
+            title={
+              attempt.shareToken
+                ? "Restart this shared mock test"
+                : attempt.topics?.length
+                  ? "Restart this topic practice"
+                  : "Restart this mock test"
+            }
+            aria-label={
+              attempt.shareToken
+                ? "Restart this shared mock test"
+                : attempt.topics?.length
+                  ? "Restart this topic practice"
+                  : "Restart this mock test"
+            }
+            className="w-9 h-9 rounded-full border border-emerald-500/40 bg-emerald-500/10 flex items-center justify-center text-emerald-600 hover:bg-emerald-500/20 hover:border-emerald-500/60 dark:text-emerald-400 transition-all"
+          >
+            <Play className="w-4 h-4 fill-current" />
+          </button>
+          <button
+            type="button"
             onClick={handleToggle}
             className="w-9 h-9 rounded-full border border-border bg-card flex items-center justify-center text-muted-foreground hover:text-orange-500 hover:border-orange-500/40 transition-all"
           >

@@ -12,6 +12,7 @@ export default function SessionHeader({
   submitting,
   handleSubmit,
   onCancelSession,
+  onOpenQuestionNav,
 }) {
   const navigate = useNavigate();
 
@@ -49,6 +50,19 @@ export default function SessionHeader({
             title="Cancel test session"
           >
             <XCircle className="w-4 h-4" /> Cancel
+          </button>
+          {/* Opens the mobile question-navigator sheet (SessionQuestionNav)
+              - desktop already has the full question grid as a permanent
+              sidebar, so this only ever needs to show below the lg
+              breakpoint. */}
+          <button
+            type="button"
+            onClick={() => onOpenQuestionNav?.()}
+            className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 font-bold text-sm border border-orange-500/20 transition-all shrink-0"
+            title="Question navigator"
+            aria-label="Open question navigator"
+          >
+            Q
           </button>
           <button
             onClick={handleSubmit}

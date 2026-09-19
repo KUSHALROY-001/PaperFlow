@@ -50,13 +50,15 @@ export default function RecentMockTestsList({ mockTests, isLoading }) {
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-500">
               <FileText className="h-7 w-7" />
             </div>
-            <h3 className="text-sm font-bold text-foreground">No mock tests yet</h3>
+            <h3 className="text-sm font-bold text-foreground">
+              No mock tests yet
+            </h3>
             <p className="mt-1.5 text-xs text-muted-foreground">
               Create a cluster and upload a PDF to get started.
             </p>
             <Link
               to="/clusters"
-              className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-[#ea580c] px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-[#c2410c]"
+              className="mt-5 inline-flex items-center justify-center gap-2 rounded-full border border-black dark:border-white bg-transparent hover:bg-black dark:hover:bg-white text-foreground hover:text-white dark:hover:text-black px-4 py-2.5 text-sm font-semibold  shadow-sm transition-all"
             >
               Go to Clusters
             </Link>
@@ -74,7 +76,9 @@ export default function RecentMockTestsList({ mockTests, isLoading }) {
               <div
                 key={mockTest.id}
                 onClick={() =>
-                  navigate(`/cluster/${mockTest.cluster_id}/mocktest/${mockTest.id}`)
+                  navigate(
+                    `/cluster/${mockTest.cluster_id}/mocktest/${mockTest.id}`,
+                  )
                 }
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
