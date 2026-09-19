@@ -32,6 +32,7 @@ const filters = [
   { id: "review", label: "Needs Review" },
   { id: "rejected", label: "Flagged" },
   { id: "low_confidence", label: "Low Confidence" },
+  { id: "stale_reprocess", label: "Not in Latest Reprocess" },
 ];
 
 function getConfidenceTone(confidence) {
@@ -109,6 +110,9 @@ export default function ReviewTab({
         (question) => Number(question.confidence || 0) < 70,
       );
     }
+    if (activeFilter === "stale_reprocess") {
+      return questions.filter((question) => question.staleFromReprocess);
+    }
 
     return questions.filter((question) => question.status === activeFilter);
   }, [activeFilter, questions]);
@@ -123,6 +127,9 @@ export default function ReviewTab({
         .length,
       lowConfidence: questions.filter(
         (question) => Number(question.confidence || 0) < 70,
+      ).length,
+      staleReprocess: questions.filter(
+        (question) => question.staleFromReprocess,
       ).length,
     }),
     [questions],
@@ -219,6 +226,16 @@ export default function ReviewTab({
               {summary.lowConfidence}
             </div>
           </div>
+          {summary.staleReprocess > 0 && (
+            <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-3 py-3 text-sm sm:px-4">
+              <div className="text-xs font-bold uppercase tracking-wide text-rose-500">
+                Not in Latest Reprocess
+              </div>
+              <div className="mt-1 text-xl font-bold text-foreground">
+                {summary.staleReprocess}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -325,6 +342,18 @@ export default function ReviewTab({
                       {isFlagged && (
                         <span className="rounded-full bg-amber-500/15 border border-amber-500/20 px-3 py-1 text-xs font-semibold text-amber-500 flex items-center gap-1">
                           <Flag className="w-3 h-3" /> Flagged
+                        </span>
+                      )}
+                      {question.staleFromReprocess && (
+                        <span
+                          className="rounded-full bg-rose-500/15 border border-rose-500/20 px-3 py-1 text-xs font-semibold text-rose-500 flex items-center gap-1"
+                          title={
+                            question.staleReason ||
+                            "Not found in the most recent reprocess of this PDF"
+                          }
+                        >
+                          <ShieldAlert className="w-3 h-3" /> Not in latest
+                          reprocess
                         </span>
                       )}
                     </div>

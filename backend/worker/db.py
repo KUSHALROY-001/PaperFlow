@@ -502,6 +502,77 @@ def count_questions_for_mock_test(connection, mock_test_id):
     return row["count"] if row else 0
 
 
+# Snapshot of question_no values a mock test already has, taken once at
+# the very start of a reprocess job - see worker.py#process_job. This
+# replaced an upfront delete_existing_questions call that used to wipe
+# every slot before the new extraction had produced a single replacement,
+# which was the actual cause of "my questions vanish the instant I click
+# reprocess, and a cancelled reprocess loses them permanently". Nothing is
+# deleted here; this only remembers what existed so the job can later tell
+# which of those question numbers this run's extraction never touched
+# (see flag_orphaned_question_slots below) - upsert_question_batch
+# already replaces a slot in place the moment its new content actually
+# arrives, so no explicit "clear" step is needed at all.
+def get_existing_question_numbers(connection, mock_test_id):
+    rows = connection.execute(
+        "SELECT question_no FROM question_slots WHERE mock_test_id = %s",
+        [mock_test_id],
+    ).fetchall()
+    return {row["question_no"] for row in rows}
+
+
+# Called once, only after a reprocess job has fully and successfully
+# completed (never on a cancelled or failed run - an incomplete run hasn't
+# earned the right to claim any question number is genuinely gone from the
+# paper). pre_existing_question_numbers is this mock test's
+# get_existing_question_numbers() snapshot from before the run started;
+# touched_question_numbers is every question_no this run's final saved
+# result actually covers. Anything in the former but not the latter is a
+# slot the new extraction never reached or reproduced - flagged for a
+# human to look at rather than silently kept forever or silently deleted
+# (deleting risks throwing away a real question the new extraction simply
+# missed; keeping it unflagged risks a stale question quietly surviving in
+# a paper that no longer actually contains it).
+#
+# Deliberately skips already-'rejected' slots (a human already decided
+# that one doesn't belong, so re-flagging it teaches nothing new) and
+# never touches status on a slot it doesn't flag. Flips 'approved' back to
+# 'needs_review' - an approval made against the PREVIOUS extraction's
+# version of this slot doesn't carry over to "still approved even though
+# the latest reprocess found no trace of it" - but leaves an
+# already-needs_review slot's status alone (it was already going to
+# surface in review; only the flags are new information here).
+def flag_orphaned_question_slots(
+    connection, mock_test_id, pre_existing_question_numbers, touched_question_numbers
+):
+    orphaned_numbers = pre_existing_question_numbers - touched_question_numbers
+    if not orphaned_numbers:
+        return 0
+
+    rows = connection.execute(
+        """
+        UPDATE question_slots
+        SET status = CASE WHEN status = 'approved' THEN 'needs_review' ELSE status END,
+            review_flags = review_flags || %s::jsonb
+        WHERE mock_test_id = %s
+          AND question_no = ANY(%s::int[])
+          AND status <> 'rejected'
+        RETURNING id
+        """,
+        [
+            json.dumps(
+                {
+                    "staleFromReprocess": True,
+                    "staleReason": "Not found in the most recent reprocess of this PDF",
+                }
+            ),
+            mock_test_id,
+            sorted(orphaned_numbers),
+        ],
+    ).fetchall()
+    return len(rows)
+
+
 def mark_mock_test_after_processing(connection, mock_test_id, question_count):
     next_status = "review" if question_count > 0 else "draft"
     connection.execute(

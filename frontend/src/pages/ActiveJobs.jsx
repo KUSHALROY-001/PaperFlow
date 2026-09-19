@@ -94,7 +94,7 @@ export default function ActiveJobs() {
                   </div>
                   <Link
                     to={`/cluster/${job.cluster_id}/mocktest/${job.mock_test_id}`}
-                    className="flex w-full sm:w-auto items-center justify-center gap-1.5 text-xs sm:text-sm px-4 py-2 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-md shadow-xs transition-all shrink-0"
+                    className="flex w-full sm:w-auto items-center justify-center gap-1.5 text-xs sm:text-sm px-4 py-2 bg-black dark:bg-white text-white dark:text-black font-semibold rounded-md shadow-xs transition-all shrink-0"
                   >
                     View Job <ArrowRight className="w-3.5 h-3.5" />
                   </Link>

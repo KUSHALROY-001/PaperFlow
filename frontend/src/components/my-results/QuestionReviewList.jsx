@@ -1,12 +1,20 @@
 import { useMemo, useState } from "react";
 import { CheckCircle, XCircle, ChevronRight, ChevronDown } from "lucide-react";
-import QuestionContent, {
-  QuestionExplanation,
-} from "../shared/QuestionContent";
+import QuestionContent from "../shared/QuestionContent";
 import QuestionAnswerReview, {
   getAnswerOutcome,
+  hasRealAnswer,
   isQuestionSkipped,
 } from "../shared/QuestionAnswerReview";
+import QuestionRealAnswer from "../shared/QuestionRealAnswer";
+import AnimatedBlock from "../shared/AnimatedBlock";
+import {
+  CollapsedPreview,
+  QuestionCardControls,
+  QuestionNumberChip,
+  ReviewToolbar,
+} from "../shared/ReviewControls";
+import { useQuestionReviewState } from "@/hooks/useQuestionReviewState";
 import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
 
 function resolveQuestionMarks(
@@ -78,6 +86,8 @@ function MarksBadge({ question, defaultMarksPerCorrect, defaultNegative }) {
   );
 }
 
+const EMPTY_QUESTIONS = [];
+
 export default function QuestionReviewList({
   questions,
   defaultMarksPerCorrect = null,
@@ -86,24 +96,18 @@ export default function QuestionReviewList({
   const [isOpen, setIsOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState("all");
 
-  if (!questions || questions.length === 0) return null;
+  const allQuestions = questions || EMPTY_QUESTIONS;
 
   const { wrongQuestions, untouchedQuestions } = useMemo(() => {
     const wrong = [];
     const untouched = [];
-    for (const q of questions) {
+    for (const q of allQuestions) {
       const outcome = getAnswerOutcome(q);
       if (outcome === "skipped") untouched.push(q);
       else if (outcome === "wrong") wrong.push(q);
     }
     return { wrongQuestions: wrong, untouchedQuestions: untouched };
-  }, [questions]);
-
-  const filters = [
-    { id: "all", label: "All", count: questions.length },
-    { id: "wrong", label: "Wrong", count: wrongQuestions.length },
-    { id: "untouched", label: "Untouched", count: untouchedQuestions.length },
-  ];
+  }, [allQuestions]);
 
   let visibleQuestions;
   if (activeFilter === "wrong") {
@@ -111,22 +115,39 @@ export default function QuestionReviewList({
   } else if (activeFilter === "untouched") {
     visibleQuestions = untouchedQuestions;
   } else {
-    visibleQuestions = questions;
+    visibleQuestions = allQuestions;
   }
 
+  // Original position of each question, so "Q7" stays Q7 under a filter.
+  const questionNumbers = useMemo(
+    () => new Map(allQuestions.map((q, i) => [q.questionId, i + 1])),
+    [allQuestions],
+  );
+
+  // View-only state. The global buttons act on what is currently visible.
+  const reviewState = useQuestionReviewState(visibleQuestions);
+
+  if (allQuestions.length === 0) return null;
+
+  const filters = [
+    { id: "all", label: "All", count: allQuestions.length },
+    { id: "wrong", label: "Wrong", count: wrongQuestions.length },
+    { id: "untouched", label: "Untouched", count: untouchedQuestions.length },
+  ];
+
   return (
-    <div className="border border-border/60 rounded-md p-3 sm:p-4 bg-card/50">
+    <div className="border border-border/60 rounded-md p-1 sm:p-2 bg-card/50">
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         className="w-full flex items-center justify-between text-left focus:outline-none group"
       >
         <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider group-hover:text-foreground transition-colors flex items-center gap-1.5">
-          Question Review ({questions.length})
+          Question Review ({allQuestions.length})
         </h4>
         <div className="p-1 rounded-lg hover:bg-muted text-muted-foreground transition-colors">
           {isOpen ? (
-            <ChevronDown className="w-4 h-4 text-orange-500" />
+            <ChevronDown className="w-4 h-4 text-foreground" />
           ) : (
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
           )}
@@ -145,7 +166,7 @@ export default function QuestionReviewList({
                   onClick={() => setActiveFilter(filter.id)}
                   className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
                     active
-                      ? "bg-[#ea580c] text-white shadow-xs"
+                      ? "bg-black/90 dark:bg-white text-white dark:text-black shadow-xs"
                       : "bg-card text-muted-foreground border border-border hover:bg-muted hover:text-foreground"
                   }`}
                 >
@@ -154,6 +175,10 @@ export default function QuestionReviewList({
               );
             })}
           </div>
+
+          {visibleQuestions.length > 0 && (
+            <ReviewToolbar {...reviewState.toolbarProps} className="mt-3" />
+          )}
 
           {visibleQuestions.length === 0 ? (
             <div className="mt-3 rounded-xl border border-border bg-card px-4 py-6 text-center text-xs font-semibold text-muted-foreground">
@@ -165,6 +190,10 @@ export default function QuestionReviewList({
             <div className="space-y-2 mt-3">
               {visibleQuestions.map((q) => {
                 const outcome = getAnswerOutcome(q);
+                const questionNumber = questionNumbers.get(q.questionId);
+                const collapsed = reviewState.isCollapsed(q.questionId);
+                const revealed = reviewState.isRevealed(q.questionId);
+                const contentId = `review-question-${q.questionId}`;
 
                 let cardClass;
                 let statusIcon;
@@ -209,7 +238,8 @@ export default function QuestionReviewList({
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <QuestionNumberChip number={questionNumber} />
                           {q.topic && (
                             <span className="hidden sm:inline-block text-xs bg-orange-500/15 text-orange-500 border border-orange-500/20 px-2 py-0.5 rounded-lg font-bold">
                               {q.topic}
@@ -225,17 +255,42 @@ export default function QuestionReviewList({
                             defaultMarksPerCorrect={defaultMarksPerCorrect}
                             defaultNegative={defaultNegativeMarksPerWrong}
                           />
-                        </div>
-
-                        <DiagramAssetsProvider assets={q.diagramAssets}>
-                          <QuestionContent
-                            text={q.text}
-                            passage={q.passage}
-                            textClassName="font-bold text-foreground text-xs leading-relaxed"
+                          <QuestionCardControls
+                            className="ml-auto"
+                            number={questionNumber}
+                            collapsed={collapsed}
+                            onToggleCollapse={() =>
+                              reviewState.toggleCollapse(q.questionId)
+                            }
+                            revealed={revealed}
+                            onToggleReveal={() =>
+                              reviewState.toggleReveal(q.questionId)
+                            }
+                            canReveal={hasRealAnswer(q)}
+                            contentId={contentId}
                           />
-                          <QuestionAnswerReview question={q} />
-                          <QuestionExplanation explanation={q.explanation} />
-                        </DiagramAssetsProvider>
+                        </div>
+                        {collapsed && <CollapsedPreview question={q} />}
+
+                        <AnimatedBlock open={!collapsed} id={contentId}>
+                          <div className="pt-1.5">
+                            <DiagramAssetsProvider assets={q.diagramAssets}>
+                              <QuestionContent
+                                text={q.text}
+                                passage={q.passage}
+                                textClassName="font-bold text-foreground text-xs leading-relaxed"
+                              />
+                              <QuestionAnswerReview
+                                question={q}
+                                showRealAnswer={revealed}
+                              />
+                              <QuestionRealAnswer
+                                question={q}
+                                open={revealed}
+                              />
+                            </DiagramAssetsProvider>
+                          </div>
+                        </AnimatedBlock>
                       </div>
                     </div>
                   </div>

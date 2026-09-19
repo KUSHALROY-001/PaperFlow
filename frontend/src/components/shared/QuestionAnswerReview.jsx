@@ -58,11 +58,94 @@ function formatAcceptedAnswers(acceptedAnswers) {
   });
 }
 
+function normalizeOption(option, optionIndex) {
+  return typeof option === "string"
+    ? { optionIndex, optionText: option }
+    : option;
+}
+
+/** MCQ: the option(s) that are correct, as { idx, text }. */
+export function getCorrectOptions(question) {
+  const correctIdx = question.correctOptionIndexes || [];
+  return (question.options || [])
+    .map((option, i) => {
+      const normalized = normalizeOption(option, i);
+      return {
+        idx: normalized.optionIndex ?? i,
+        text: normalized.optionText,
+      };
+    })
+    .filter((option) => correctIdx.includes(option.idx));
+}
+
 /**
- * Renders the student's own answer + answer key for any question type.
- * MCQs keep the full option list; written/numerical/fill-blank show text.
+ * Non-MCQ answer key (numerical / fill-blank / written model answer) as JSX,
+ * or null when the question has none. Same content the old inline
+ * "Correct" / "Model answer" box rendered.
  */
-export default function QuestionAnswerReview({ question }) {
+export function getRealAnswerBody(question) {
+  const type = question.questionType || "single";
+  if (type === "numerical" && question.numericAnswer != null) {
+    const tol =
+      question.numericTolerance != null && question.numericTolerance !== 0
+        ? ` ± ${question.numericTolerance}`
+        : "";
+    return <MathText text={`${question.numericAnswer}${tol}`} />;
+  }
+  if (type === "fill_blank") {
+    const groups = formatAcceptedAnswers(question.acceptedAnswers);
+    if (!groups) return null;
+    return (
+      <span className="whitespace-pre-wrap wrap-break-word">
+        {groups.map((g, i) => (
+          <span key={i}>
+            {groups.length > 1 && (
+              <span className="font-semibold mr-1">{g.label}:</span>
+            )}
+            <MathText text={g.text} />
+            {i < groups.length - 1 ? <br /> : null}
+          </span>
+        ))}
+      </span>
+    );
+  }
+  if (
+    (type === "short_answer" || type === "long_answer") &&
+    question.expectedAnswer
+  ) {
+    return (
+      <span className="whitespace-pre-wrap wrap-break-word">
+        <MathText text={String(question.expectedAnswer)} />
+      </span>
+    );
+  }
+  return null;
+}
+
+/** True when there is anything to reveal: an answer key or an explanation. */
+export function hasRealAnswer(question) {
+  const type = question.questionType || "single";
+  if (type === "single" || type === "multi") {
+    if (getCorrectOptions(question).length > 0) return true;
+  } else if (getRealAnswerBody(question) != null) {
+    return true;
+  }
+  return Boolean(question.explanation);
+}
+
+/**
+ * Renders the student's own answer for any question type. MCQs keep the full
+ * option list; written/numerical/fill-blank show the answer text.
+ *
+ * The real answer is NOT rendered here (see QuestionRealAnswer). The only
+ * thing `showRealAnswer` changes is the MCQ option list: the correct option
+ * is highlighted only once revealed. The student's own pick keeps its
+ * existing styling either way.
+ */
+export default function QuestionAnswerReview({
+  question,
+  showRealAnswer = false,
+}) {
   const type = question.questionType || "single";
   const skipped = isQuestionSkipped(question);
   const correct = question.isCorrect === true;
@@ -74,12 +157,10 @@ export default function QuestionAnswerReview({ question }) {
     return (
       <div className="mt-2 space-y-1.5">
         {options.map((option, optionIndex) => {
-          const normalizedOption =
-            typeof option === "string"
-              ? { optionIndex, optionText: option }
-              : option;
+          const normalizedOption = normalizeOption(option, optionIndex);
           const idx = normalizedOption.optionIndex ?? optionIndex;
-          const isCorrectOption = question.correctOptionIndexes?.includes(idx);
+          const isCorrectOption =
+            showRealAnswer && question.correctOptionIndexes?.includes(idx);
           const isYourWrongPick =
             !skipped && !correct && selected.includes(idx);
           const isYourCorrectPick =
@@ -156,40 +237,6 @@ export default function QuestionAnswerReview({ question }) {
     );
   }
 
-  let correctBody = null;
-  if (type === "numerical" && question.numericAnswer != null) {
-    const tol =
-      question.numericTolerance != null && question.numericTolerance !== 0
-        ? ` ± ${question.numericTolerance}`
-        : "";
-    correctBody = <MathText text={`${question.numericAnswer}${tol}`} />;
-  } else if (type === "fill_blank") {
-    const groups = formatAcceptedAnswers(question.acceptedAnswers);
-    if (groups) {
-      correctBody = (
-        <span className="whitespace-pre-wrap wrap-break-word">
-          {groups.map((g, i) => (
-            <span key={i}>
-              {groups.length > 1 && (
-                <span className="font-semibold mr-1">{g.label}:</span>
-              )}
-              <MathText text={g.text} />
-              {i < groups.length - 1 ? <br /> : null}
-            </span>
-          ))}
-        </span>
-      );
-    }
-  } else if (type === "short_answer" || type === "long_answer") {
-    if (question.expectedAnswer) {
-      correctBody = (
-        <span className="whitespace-pre-wrap wrap-break-word">
-          <MathText text={String(question.expectedAnswer)} />
-        </span>
-      );
-    }
-  }
-
   const pendingAi =
     isWrittenQuestion(question) &&
     question.gradingStatus === "pending_grading";
@@ -210,15 +257,6 @@ export default function QuestionAnswerReview({ question }) {
         </div>
         <div className={yourAnswerClass}>{yourAnswerBody}</div>
       </div>
-
-      {correctBody && (
-        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-emerald-600 dark:text-emerald-400">
-          <div className="font-semibold mb-0.5">
-            {isWrittenQuestion(question) ? "Model answer" : "Correct"}
-          </div>
-          <div>{correctBody}</div>
-        </div>
-      )}
 
       {pendingAi && (
         <p className="text-muted-foreground italic px-1">

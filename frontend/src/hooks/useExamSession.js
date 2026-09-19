@@ -7,6 +7,24 @@ import { useAuth } from "@/lib/AuthContext";
 const DEFAULT_DURATION_SECONDS = 20 * 60;
 export const PENDING_CLAIM_KEY = "paperflow_pending_claim";
 
+// How long an AI-graded written answer is allowed to sit at
+// gradingStatus 'pending_grading' before the results screen stops polling
+// automatically and tells the person to check back. A batch that keeps
+// failing is split into two smaller batches by the worker
+// (grading.py#_split_failed_batch_into_halves) rather than retried
+// forever, but a single-question batch that still fails after that split
+// is marked 'failed' terminally with NO further retry - so a naive
+// poll-until-none-pending loop could otherwise spin indefinitely on a
+// genuinely stuck question.
+const GRADING_POLL_INTERVAL_MS = 4000;
+const GRADING_POLL_TIMEOUT_MS = 60000;
+
+function countPendingGrading(reviewData) {
+  return (reviewData?.questions || []).filter(
+    (question) => question.gradingStatus === "pending_grading",
+  ).length;
+}
+
 /*
  * Single hook powering both exam-taking entry points:
  *   - mode: 'member' -> /session/:id  (logged in, /api/attempts, requireAuth)
@@ -67,6 +85,17 @@ export function useExamSession({ mode }) {
   const [review, setReview] = useState(null); // attempt result once submitted
 
   const [claimStatus, setClaimStatus] = useState("idle"); // idle | claiming | saved | error
+
+  // Written-answer (short/long-answer) AI grading finishes after the
+  // results screen is already showing - see the module comment above.
+  // pendingGradingCount drives the per-question spinners and the global
+  // banner in SessionResultsView; gradingTimedOut switches that banner
+  // from "still grading" to "check again" once GRADING_POLL_TIMEOUT_MS
+  // has passed with no change.
+  const [gradingTimedOut, setGradingTimedOut] = useState(false);
+  const gradingPollIntervalRef = useRef(null);
+  const gradingDeadlineRef = useRef(null);
+  const pendingGradingCount = countPendingGrading(review);
 
   const timerRef = useRef(null);
   const answersRef = useRef(answers);
@@ -199,6 +228,81 @@ export function useExamSession({ mode }) {
       setSubmitting(false);
     }
   }, [session, submitting, review, flushPendingAnswers, mode, shareToken]);
+
+  // --- Poll for AI grading of written (short/long-answer) questions ---
+  // handleSubmit's own getAttempt/getSharedAttempt call above only ever
+  // reflects the instant of submission - MCQ/fill-blank/numerical are
+  // already scored by then, but a short/long-answer question is still
+  // sitting at gradingStatus 'pending_grading' at that point (the AI
+  // grading batch worker.py kicked off hasn't run yet). Without this,
+  // the results screen would show that question's marks as permanently
+  // missing, and attempt.score would stay short by however many marks
+  // those questions are worth, until the person happened to reload the
+  // page. This re-fetches the same attempt on an interval, replacing
+  // `review` wholesale each time - which is enough on its own to fix
+  // BOTH the per-question state (gradingStatus flips to 'ai_graded') AND
+  // the total score, since grading.py#_recompute_attempt already
+  // recomputes score/correctCount/wrongCount server-side the moment a
+  // batch finishes; nothing needs recomputing client-side.
+  useEffect(() => {
+    if (!review || pendingGradingCount === 0 || gradingTimedOut) return undefined;
+    const attemptId = review.attempt.id;
+    // Anchored to the first render that has something pending, not reset
+    // on every poll tick - otherwise a question that never finishes
+    // grading would never trip the timeout, since each successful poll
+    // (even one that changes nothing) would push the deadline forward.
+    if (gradingDeadlineRef.current === null) {
+      gradingDeadlineRef.current = Date.now() + GRADING_POLL_TIMEOUT_MS;
+    }
+
+    const poll = async () => {
+      try {
+        const fresh =
+          mode === "guest"
+            ? await api.getSharedAttempt(shareToken, attemptId)
+            : await api.getAttempt(attemptId);
+        setReview(fresh);
+        if (countPendingGrading(fresh) === 0) {
+          gradingDeadlineRef.current = null;
+          return;
+        }
+      } catch {
+        // Transient network error - fall through to the deadline check
+        // below and just try again on the next tick rather than giving
+        // up on one failed poll.
+      }
+      if (Date.now() >= gradingDeadlineRef.current) {
+        setGradingTimedOut(true);
+      }
+    };
+
+    gradingPollIntervalRef.current = setInterval(poll, GRADING_POLL_INTERVAL_MS);
+    return () => clearInterval(gradingPollIntervalRef.current);
+  }, [review, pendingGradingCount, gradingTimedOut, mode, shareToken]);
+
+  // Manual retry from the results screen once the 60s window above has
+  // elapsed. Deliberately NOT a page reload: reloading /session/:id
+  // re-runs startAttempt, which - since this attempt's status is now
+  // 'submitted', not 'in_progress' - would start a brand NEW attempt
+  // rather than reshow this result (startAttempt has no "resume an
+  // already-submitted attempt" path). A plain re-fetch of the same
+  // attempt is what the person actually wants here.
+  const checkGradingAgain = useCallback(async () => {
+    if (!review) return;
+    const attemptId = review.attempt.id;
+    try {
+      const fresh =
+        mode === "guest"
+          ? await api.getSharedAttempt(shareToken, attemptId)
+          : await api.getAttempt(attemptId);
+      setReview(fresh);
+      gradingDeadlineRef.current =
+        countPendingGrading(fresh) === 0 ? null : Date.now() + GRADING_POLL_TIMEOUT_MS;
+      setGradingTimedOut(false);
+    } catch {
+      // Leave the timed-out state as-is - the person can just try again.
+    }
+  }, [review, mode, shareToken]);
 
   // --- Countdown timer ---
   useEffect(() => {
@@ -387,6 +491,9 @@ export function useExamSession({ mode }) {
     submitting,
     submitError,
     review,
+    pendingGradingCount,
+    gradingTimedOut,
+    checkGradingAgain,
     questions,
     q,
     answeredCount,

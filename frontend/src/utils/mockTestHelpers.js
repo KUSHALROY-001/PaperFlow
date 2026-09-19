@@ -147,6 +147,15 @@ export function mapQuestion(question) {
     negativeMarksPerWrong: coerceMark(
       question.negativeMarksPerWrong ?? question.negative_marks_per_wrong,
     ),
+    // review_flags (migrations/052_question_slot_review_flags.sql) is how
+    // worker.py#flag_orphaned_question_slots marks a slot that a
+    // completed reprocess run never touched - see that function's own
+    // comment for why it's flagged rather than silently kept or deleted.
+    // Only this one flag exists today, but read generically off the bag
+    // rather than a dedicated column so a future flag doesn't need its
+    // own migration + mapper change.
+    staleFromReprocess: Boolean(question.review_flags?.staleFromReprocess),
+    staleReason: question.review_flags?.staleReason || null,
   };
 }
 

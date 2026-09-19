@@ -174,7 +174,7 @@ export default function OutputTab({
                 onClick={() => setActiveView(view)}
                 className={`rounded-3xl px-3 py-2 text-xs sm:px-4 sm:text-sm font-semibold transition-all ${
                   active
-                    ? "bg-[#ea580c] text-white shadow-xs"
+                    ? "bg-black/90 dark:bg-white text-white dark:text-black shadow-xs"
                     : "text-muted-foreground hover:bg-card hover:text-foreground"
                 }`}
               >

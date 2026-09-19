@@ -1,12 +1,27 @@
 import { Link } from "react-router-dom";
-import { CheckCircle, XCircle, Home, LogIn } from "lucide-react";
-import QuestionContent, {
-  QuestionExplanation,
-} from "../shared/QuestionContent";
+import { CheckCircle, XCircle, Home, LogIn, Loader2 } from "lucide-react";
+import QuestionContent from "../shared/QuestionContent";
 import QuestionAnswerReview, {
   getAnswerOutcome,
+  hasRealAnswer,
 } from "../shared/QuestionAnswerReview";
+import QuestionRealAnswer from "../shared/QuestionRealAnswer";
+import AnimatedBlock from "../shared/AnimatedBlock";
+import {
+  CollapsedPreview,
+  QuestionCardControls,
+  QuestionNumberChip,
+  ReviewToolbar,
+} from "../shared/ReviewControls";
+import { useQuestionReviewState } from "@/hooks/useQuestionReviewState";
 import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
+
+// A written answer that is still being AI-graded shows a "Grading…" state
+// instead of its answer review, so there is nothing to reveal yet. Module
+// level so the reference is stable for the review-state hook.
+function canRevealRealAnswer(question) {
+  return question.gradingStatus !== "pending_grading" && hasRealAnswer(question);
+}
 
 export default function SessionResultsView({
   review,
@@ -17,13 +32,40 @@ export default function SessionResultsView({
   onSaveResult,
   claimStatus = "idle",
   saveLabel = "Log in to save",
+  // Written-answer (short/long-answer) AI grading finishing after this
+  // screen is already showing - see useExamSession.js's polling effect,
+  // which is what keeps `review` (and therefore these two props) moving
+  // without the person doing anything.
+  pendingGradingCount = 0,
+  gradingTimedOut = false,
+  onCheckGradingAgain,
 }) {
   const { attempt, questions: reviewQuestions } = review;
-  const marksEach = Number(attempt.marksPerCorrect);
-  const maxMarks =
-    attempt.totalQuestions && Number.isFinite(marksEach) && marksEach > 0
-      ? attempt.totalQuestions * marksEach
-      : null;
+  // View-only state (reveal real answers / collapse cards). Scoring below is
+  // untouched.
+  const reviewState = useQuestionReviewState(
+    reviewQuestions,
+    canRevealRealAnswer,
+  );
+  // Each question's own marksPerCorrect (falling back to the paper's
+  // default when a question doesn't override it - the same fallback
+  // resolveQuestionMarks applies server-side at scoring time) summed
+  // across every question, not just the ones actually attempted - this
+  // is "how many marks the paper is out of", the same meaning maxMarks
+  // has always had here.
+  //
+  // The previous version used totalQuestions * attempt.marksPerCorrect,
+  // which assumed one uniform per-question mark value for the whole
+  // paper. That was already wrong for any paper where an individual
+  // question overrides marksPerCorrect, and became wrong far more often
+  // once written-answer questions existed alongside MCQ ones on the same
+  // paper, since a short/long-answer question is graded out of its own
+  // marksPerCorrect just like any other question type - there's no
+  // separate "written-answer max marks" concept to account for.
+  const maxMarks = reviewQuestions.reduce((sum, rq) => {
+    const perQuestion = Number(rq.marksPerCorrect ?? attempt.marksPerCorrect);
+    return sum + (Number.isFinite(perQuestion) ? perQuestion : 0);
+  }, 0) || null;
   const percentage =
     maxMarks != null
       ? Math.max(0, Math.round((Number(attempt.score) / maxMarks) * 100))
@@ -52,6 +94,31 @@ export default function SessionResultsView({
             {maxMarks != null ? ` / ${maxMarks}` : ""} marks
             (negative marking applied)
           </p>
+
+          {pendingGradingCount > 0 && !gradingTimedOut && (
+            <div className="flex items-center gap-2.5 mb-8 px-4 py-3 rounded-2xl border border-sky-500/20 bg-sky-500/10 text-sky-600 dark:text-sky-400 text-xs sm:text-sm font-medium text-left">
+              <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+              Grading {pendingGradingCount} written{" "}
+              {pendingGradingCount === 1 ? "answer" : "answers"} with AI - your
+              score above will update automatically once{" "}
+              {pendingGradingCount === 1 ? "it's" : "they're"} done.
+            </div>
+          )}
+          {pendingGradingCount > 0 && gradingTimedOut && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-8 px-4 py-3.5 rounded-2xl border border-amber-500/20 bg-amber-500/10 text-left">
+              <p className="text-xs sm:text-sm font-medium text-amber-700 dark:text-amber-400">
+                Still grading {pendingGradingCount} written{" "}
+                {pendingGradingCount === 1 ? "answer" : "answers"} - this is
+                taking longer than usual. Check again shortly.
+              </p>
+              <button
+                onClick={onCheckGradingAgain}
+                className="flex items-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-xl text-xs sm:text-sm shrink-0"
+              >
+                Check again
+              </button>
+            </div>
+          )}
 
           {showSaveResultBanner && claimStatus !== "saved" && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-8 px-4 py-3.5 rounded-2xl border border-orange-500/20 bg-orange-500/10 text-left">
@@ -106,13 +173,33 @@ export default function SessionResultsView({
               </div>
             ))}
           </div>
-          <div className="space-y-3 text-left mb-8">
-            {reviewQuestions.map((rq) => {
-              const outcome = getAnswerOutcome(rq);
+          <div className="text-left mb-8">
+            <ReviewToolbar
+              {...reviewState.toolbarProps}
+              sticky
+              className="mb-3"
+            />
+            <div className="space-y-3">
+            {reviewQuestions.map((rq, questionIndex) => {
+              const questionNumber = questionIndex + 1;
+              const collapsed = reviewState.isCollapsed(rq.questionId);
+              const revealed = reviewState.isRevealed(rq.questionId);
+              const contentId = `session-question-${rq.questionId}`;
+              const isPendingGrading = rq.gradingStatus === "pending_grading";
+              const outcome = isPendingGrading ? null : getAnswerOutcome(rq);
 
               let cardClass;
               let statusIcon;
-              if (outcome === "positive") {
+              if (isPendingGrading) {
+                // Neutral, not the "positive" green isWrittenQuestion would
+                // otherwise give an answered-but-ungraded question -
+                // there's no outcome to show yet, so nothing here should
+                // look like one.
+                cardClass = "bg-card border-border";
+                statusIcon = (
+                  <Loader2 className="w-4 h-4 text-sky-500 mt-0.5 shrink-0 animate-spin" />
+                );
+              } else if (outcome === "positive") {
                 cardClass = "bg-emerald-500/10 border-emerald-500/30";
                 statusIcon = (
                   <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
@@ -148,8 +235,9 @@ export default function SessionResultsView({
                 >
                   <div className="flex items-start gap-2">
                     {statusIcon}
-                    <div>
-                      <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <QuestionNumberChip number={questionNumber} />
                         {rq.topic && (
                           <span className="text-[11px] font-normal text-muted-foreground bg-muted border border-border px-2 py-0.5 rounded-full">
                             {rq.topic}
@@ -160,7 +248,12 @@ export default function SessionResultsView({
                             {rq.subtopic}
                           </span>
                         )}
-                        {rq.marksAwarded !== undefined &&
+                        {isPendingGrading ? (
+                          <span className="text-[11px] font-semibold text-sky-600 dark:text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded-full">
+                            Grading…
+                          </span>
+                        ) : (
+                          rq.marksAwarded !== undefined &&
                           rq.marksAwarded !== null && (
                             <span
                               className={`text-[11px] font-semibold tabular-nums px-2 py-0.5 rounded-full border ${marksBadgeClass}`}
@@ -175,22 +268,58 @@ export default function SessionResultsView({
                                   : ""}{" "}
                               marks
                             </span>
-                          )}
-                      </div>
-                      <DiagramAssetsProvider assets={rq.diagramAssets}>
-                        <QuestionContent
-                          text={rq.text}
-                          passage={rq.passage}
-                          textClassName="text-sm font-normal text-foreground leading-relaxed"
+                          )
+                        )}
+                        <QuestionCardControls
+                          className="ml-auto"
+                          number={questionNumber}
+                          collapsed={collapsed}
+                          onToggleCollapse={() =>
+                            reviewState.toggleCollapse(rq.questionId)
+                          }
+                          revealed={revealed}
+                          onToggleReveal={() =>
+                            reviewState.toggleReveal(rq.questionId)
+                          }
+                          canReveal={canRevealRealAnswer(rq)}
+                          contentId={contentId}
                         />
-                        <QuestionAnswerReview question={rq} />
-                        <QuestionExplanation explanation={rq.explanation} />
-                      </DiagramAssetsProvider>
+                      </div>
+                      {collapsed && <CollapsedPreview question={rq} />}
+                      <AnimatedBlock open={!collapsed} id={contentId}>
+                        <div className="pt-1.5">
+                          <DiagramAssetsProvider assets={rq.diagramAssets}>
+                            <QuestionContent
+                              text={rq.text}
+                              passage={rq.passage}
+                              textClassName="text-sm font-normal text-foreground leading-relaxed"
+                            />
+                            {isPendingGrading ? (
+                              <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                                <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" />
+                                Grading your answer with AI…
+                              </div>
+                            ) : (
+                              <>
+                                <QuestionAnswerReview
+                                  question={rq}
+                                  showRealAnswer={revealed}
+                                />
+                                <QuestionRealAnswer
+                                  question={rq}
+                                  open={revealed}
+                                />
+                              </>
+                            )}
+                          </DiagramAssetsProvider>
+                        </div>
+                      </AnimatedBlock>
                     </div>
                   </div>
                 </div>
               );
             })}
+            </div>
           </div>
           <div className="flex gap-3 justify-center">
             {isGuest ? (

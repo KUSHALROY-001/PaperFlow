@@ -147,7 +147,7 @@ export default function Sidebar({
       <div className="p-4 border-t border-border">
         <button
           onClick={onCreateCluster}
-          className="w-full flex items-center justify-center gap-2 py-3 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-md shadow-sm transition-all text-sm"
+          className="w-full flex items-center justify-center gap-2 py-3 border border-black dark:border-white bg-transparent hover:bg-black dark:hover:bg-white text-foreground hover:text-white dark:hover:text-black font-semibold rounded-md shadow-sm transition-all text-sm"
         >
           <Plus className="w-4 h-4" /> New Cluster
         </button>

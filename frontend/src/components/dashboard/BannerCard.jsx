@@ -50,7 +50,7 @@ export default function BannerCard({ onCreateCluster }) {
         <div className="pt-1">
           <button
             onClick={onCreateCluster}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold rounded-3xl text-xs sm:text-sm shadow-sm transition-all"
+            className="inline-flex items-center gap-2 px-4 py-2.5 border border-black dark:border-white bg-transparent hover:bg-black dark:hover:bg-white text-foreground hover:text-white dark:hover:text-black font-semibold rounded-3xl text-xs sm:text-sm shadow-sm transition-all"
           >
             <Plus className="w-4 h-4" /> Create Cluster
           </button>

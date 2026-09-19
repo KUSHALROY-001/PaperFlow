@@ -28,12 +28,12 @@ from .db import (
     claim_next_job,
     delete_duplicate_pair,
     find_flagged_duplicate_slots,
+    flag_orphaned_question_slots,
     get_connection,
+    get_existing_question_numbers,
     is_job_cancelled,
     mark_mock_test_after_processing,
     replace_questions,
-    delete_existing_questions,
-    insert_question_batch,
     upsert_question_batch,
     count_questions_for_mock_test,
     replace_slot_content,
@@ -367,9 +367,25 @@ def process_job(job):
         # swallow anything raised here.
         check_not_cancelled(job["id"])
 
-    # Clear the previous extraction before the first vision response arrives.
-    # Each following response can now become visible immediately instead of
-    # waiting for a complete 100-page paper to be merged in memory.
+    # Snapshot which question numbers this mock test already has, BEFORE
+    # touching anything - this used to be an upfront delete_existing_
+    # questions call that wiped every slot immediately, well before the
+    # new extraction had produced a single replacement. That's what made
+    # a reprocess look like it instantly deleted the paper (the Review tab
+    # just reflects the DB truth, and the truth was "zero questions" the
+    # moment this job started), and made a cancelled reprocess lose
+    # everything permanently - nothing ever restored what the delete had
+    # already committed.
+    #
+    # Nothing is deleted here. persist_vision_chunk below already replaces
+    # a slot in place, per question_no, via upsert_question_batch, the
+    # instant that number's new content actually arrives - an old
+    # question's content now survives untouched until its own replacement
+    # is ready, and a cancelled run simply stops before reaching whatever
+    # it hasn't gotten to yet, leaving that old content exactly as it was.
+    # This snapshot only exists so the end of this function can tell which
+    # of these question numbers the run never touched at all (see
+    # flag_orphaned_question_slots below).
     with get_connection() as connection:
         with connection.transaction():
             row = connection.execute(
@@ -378,7 +394,9 @@ def process_job(job):
             ).fetchone()
             if row is None or row["status"] == "cancelled":
                 raise JobCancelled(job["id"])
-            delete_existing_questions(connection, job["mock_test_id"])
+            pre_existing_question_numbers = get_existing_question_numbers(
+                connection, job["mock_test_id"]
+            )
 
     streamed_question_numbers = set()
     streamed_inserted = 0
@@ -530,7 +548,15 @@ def process_job(job):
                     if row is None or row["status"] == "cancelled":
                         raise JobCancelled(job["id"])
 
-                    batch_inserted, pending_diagram_writes, batch_diagrams = insert_question_batch(
+                    # upsert, not insert: this mock test's old questions are
+                    # no longer wiped up front (see the snapshot comment
+                    # above), so a question_no already occupied by a
+                    # previous run's slot must be replaced in place here
+                    # exactly like persist_vision_chunk already does for
+                    # the streamed path - a plain insert would collide with
+                    # question_slots' (mock_test_id, question_no) unique
+                    # constraint instead.
+                    batch_inserted, pending_diagram_writes, batch_diagrams = upsert_question_batch(
                         connection,
                         workspace_id=job["workspace_id"],
                         mock_test_id=job["mock_test_id"],
@@ -624,10 +650,27 @@ def process_job(job):
 
     # Phase 3: every batch committed - flip the mock test and the job to
     # their final state.
+    #
+    # This is also the only point flag_orphaned_question_slots is called -
+    # deliberately: it only runs once this job has reached genuine,
+    # successful completion (every earlier failure/cancellation path above
+    # raises before this line), because an incomplete run hasn't earned
+    # the right to claim a question number is actually gone from the
+    # paper. touched_question_numbers is every question_no this run's
+    # final result covers - both the streamed and the fallback-batch
+    # paths land in `questions` by this point - compared against the
+    # pre-run snapshot taken at the very start of this function.
+    touched_question_numbers = {q["question_no"] for q in questions}
     with get_connection() as connection:
         with connection.transaction():
             mark_mock_test_after_processing(
                 connection, job["mock_test_id"], saved_question_count
+            )
+            flagged_count = flag_orphaned_question_slots(
+                connection,
+                job["mock_test_id"],
+                pre_existing_question_numbers,
+                touched_question_numbers,
             )
             update_job(
                 connection,
@@ -639,6 +682,7 @@ def process_job(job):
                     **base_summary,
                     "questionsInserted": saved_question_count,
                     "diagramsExtracted": diagrams_extracted,
+                    **({"questionsFlaggedStale": flagged_count} if flagged_count else {}),
                 },
             )
 

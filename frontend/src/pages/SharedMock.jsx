@@ -34,6 +34,9 @@ export default function SharedMock() {
     submitting,
     submitError,
     review,
+    pendingGradingCount,
+    gradingTimedOut,
+    checkGradingAgain,
     questions,
     q,
     answeredCount,
@@ -170,6 +173,9 @@ export default function SharedMock() {
         onSaveResult={handleSaveResult}
         claimStatus={claimStatus}
         saveLabel={isAuthenticated ? "Save result" : "Log in to save"}
+        pendingGradingCount={pendingGradingCount}
+        gradingTimedOut={gradingTimedOut}
+        onCheckGradingAgain={checkGradingAgain}
       />
     );
   }

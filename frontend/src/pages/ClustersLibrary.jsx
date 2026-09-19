@@ -162,7 +162,7 @@ export default function ClustersLibrary() {
           className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-3xl text-sm shadow-sm transition-all sm:w-auto shrink-0 ${
             isViewer
               ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50 font-semibold"
-              : "bg-[#ea580c] hover:bg-[#c2410c] text-white font-semibold"
+              : "border border-black dark:border-white bg-transparent hover:bg-black dark:hover:bg-white text-foreground hover:text-white dark:hover:text-black font-semibold"
           }`}
         >
           <Plus className="w-4 h-4" /> New Cluster
@@ -185,7 +185,7 @@ export default function ClustersLibrary() {
             onClick={() => setView("grid")}
             className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
               view === "grid"
-                ? "bg-[#ea580c] text-white font-semibold"
+                ? "bg-black dark:bg-white text-white dark:text-black font-semibold"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -195,7 +195,7 @@ export default function ClustersLibrary() {
             onClick={() => setView("list")}
             className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
               view === "list"
-                ? "bg-[#ea580c] text-white font-semibold"
+                ? "bg-black dark:bg-white text-white dark:text-black font-semibold"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >

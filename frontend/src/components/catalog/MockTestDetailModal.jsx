@@ -263,7 +263,7 @@ export default function MockTestDetailModal({
             <button
               type="button"
               onClick={() => startAttempt(null)}
-              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-orange-500/40 text-orange-500 px-4 py-3 text-sm font-bold transition-colors hover:bg-[#ea580c] hover:text-white hover:border-[#ea580c]"
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-black text-foreground px-4 py-3 text-sm font-bold transition-colors dark:border-white hover:bg-black/90 dark:hover:bg-white/90 hover:text-white dark:hover:text-black"
             >
               <Play className="w-4 h-4" />
               Start Full Test
@@ -364,7 +364,7 @@ export default function MockTestDetailModal({
                   type="button"
                   onClick={() => startAttempt([...selectedTopics])}
                   disabled={selectedTopicsCount === 0}
-                  className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-orange-500 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-orange-500"
+                  className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-md border border-black text-foreground px-4 py-3 text-sm font-bold transition-colors dark:border-white hover:bg-black/90 dark:hover:bg-white/90 hover:text-white dark:hover:text-black disabled:hover:bg-black/10 disabled:hover:text-foreground disabled:dark:hover:bg-white/10 disabled:dark:hover:text-foreground"
                 >
                   <Play className="w-4 h-4" />
                   {startPracticeLabel}

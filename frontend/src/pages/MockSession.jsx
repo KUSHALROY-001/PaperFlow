@@ -34,6 +34,9 @@ export default function MockSession() {
     submitting,
     submitError,
     review,
+    pendingGradingCount,
+    gradingTimedOut,
+    checkGradingAgain,
     questions,
     q,
     answeredCount,
@@ -134,7 +137,15 @@ export default function MockSession() {
     return <SessionError loadError={loadError} />;
   }
   if (review) {
-    return <SessionResultsView review={review} session={session} />;
+    return (
+      <SessionResultsView
+        review={review}
+        session={session}
+        pendingGradingCount={pendingGradingCount}
+        gradingTimedOut={gradingTimedOut}
+        onCheckGradingAgain={checkGradingAgain}
+      />
+    );
   }
   if (!q) {
     return null;

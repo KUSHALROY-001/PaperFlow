@@ -184,7 +184,7 @@ export default function AttemptCard({ attempt, onDeleteAttempt }) {
 
       {/* Expanded detail */}
       {expanded && (
-        <div className="border-t border-border p-3 sm:p-5 space-y-5 bg-muted/40">
+        <div className="border-t border-border p-1 sm:p-2 space-y-5 bg-muted/40">
           {!isSubmitted && (
             <p className="text-sm text-muted-foreground">
               This attempt was never submitted, so there's no scored review to

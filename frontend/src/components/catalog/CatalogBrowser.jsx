@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Clock, FileText, UserCheck } from "lucide-react";
+import { Search, Clock, FileText } from "lucide-react";
 import { api } from "@/lib/api";
 import { useSubscriptions } from "@/lib/useSubscriptions";
 import MockTestDetailModal from "../catalog/MockTestDetailModal";
@@ -99,7 +99,8 @@ export default function CatalogBrowser({
   } else if (mockTests.length === 0) {
     let emptyMessage;
     if (selectedSubscriber) {
-      emptyMessage = "No mock tests found for the selected subscription filter.";
+      emptyMessage =
+        "No mock tests found for the selected subscription filter.";
     } else if (search || examYear) {
       emptyMessage = "No mock tests match your search.";
     } else if (isInstituteMode) {
@@ -175,7 +176,7 @@ export default function CatalogBrowser({
                 event.stopPropagation();
                 handleStart(mockTest);
               }}
-              className="mt-4 w-full py-2 border border-orange-500/40 text-orange-500 hover:bg-[#ea580c] hover:border-[#ea580c] hover:text-white disabled:opacity-60 disabled:hover:bg-transparent disabled:hover:text-orange-500 text-xs font-semibold rounded-xl transition-colors"
+              className="mt-4 w-full py-2 border border-blue-500/40 text-foreground hover:bg-blue-500 hover:text-white disabled:opacity-60 disabled:hover:bg-transparent disabled:hover:text-blue-500 text-xs font-semibold rounded-xl transition-colors"
             >
               {startingId === mockTest.id ? "Starting…" : "Start Test"}
             </button>

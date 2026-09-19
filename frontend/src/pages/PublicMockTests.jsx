@@ -26,7 +26,7 @@ export default function PublicMockTests() {
           onClick={() => setActiveTab("public")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-3xl text-xs font-semibold transition-colors ${
             isPublicTab
-              ? "bg-orange-500 text-white"
+              ? "bg-black dark:bg-white text-white dark:text-black"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -38,7 +38,7 @@ export default function PublicMockTests() {
           onClick={() => setActiveTab("own")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-3xl text-xs font-semibold transition-colors ${
             !isPublicTab
-              ? "bg-orange-500 text-white"
+              ? "bg-black dark:bg-white text-white dark:text-black"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >

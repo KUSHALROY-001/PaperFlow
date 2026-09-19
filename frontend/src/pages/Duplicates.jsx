@@ -114,7 +114,7 @@ export default function Duplicates() {
                     onClick={() => setSimilarityFilter(filter.id)}
                     className={`min-w-16 rounded-md px-2.5 py-1.5 text-xs font-bold transition-colors ${
                       isActive
-                        ? "bg-orange-500 text-white"
+                        ? "bg-black/90 dark:bg-white text-white dark:text-black shadow-xs"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     }`}
                   >
