@@ -269,7 +269,12 @@ export const api = {
   // the processing job. Three requests instead of one, but only the
   // first and third are small JSON - the actual PDF only travels once,
   // browser -> B2, instead of browser -> backend -> B2.
-  async uploadMockTestDocument(mockTestId, file, documentType = "questions") {
+  async uploadMockTestDocument(
+    mockTestId,
+    file,
+    documentType = "questions",
+    desiredQuestionCount,
+  ) {
     const { uploadUrl, storageKey } = await apiRequest(
       `/api/mock-tests/${mockTestId}/upload-url`,
       {
@@ -298,6 +303,9 @@ export const api = {
         storageKey,
         originalFilename: file.name,
         documentType,
+        ...(desiredQuestionCount != null
+          ? { desiredQuestionCount }
+          : {}),
       }),
     });
   },

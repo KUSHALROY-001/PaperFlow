@@ -29,7 +29,7 @@ export default function MultiFileList({ files, onReorder, onRemove }) {
       {files.map((file, index) => (
         <li
           key={`${file.name}-${file.lastModified}-${index}`}
-          className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs"
+          className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-xs"
         >
           <span className="shrink-0 text-muted-foreground tabular-nums">
             {index + 1}.

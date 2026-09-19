@@ -225,10 +225,15 @@ export function useMockTestWorkspace() {
   // existing file is a separate action (handleReprocess) that requires no
   // file input at all - this is specifically for a template-created mock
   // test that has never had a PDF attached.
-  const handleUpload = async (file, documentType) => {
+  const handleUpload = async (file, documentType, desiredQuestionCount) => {
     try {
       setActionError("");
-      await api.uploadMockTestDocument(mocktest.id, file, documentType);
+      await api.uploadMockTestDocument(
+        mocktest.id,
+        file,
+        documentType,
+        desiredQuestionCount,
+      );
       await queryClient.invalidateQueries({
         queryKey: ["mock-test", mockTestId],
       });

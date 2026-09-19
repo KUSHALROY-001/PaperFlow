@@ -165,6 +165,8 @@ export async function deleteMockTest(mockTestId, workspaceId) {
 // a small local list rather than pulling in a shared enum helper - promote
 // this alongside requiredEnum if/when validators.js gains one.
 const DOCUMENT_TYPES = ["questions", "notes"];
+const NOTES_QUESTION_COUNT_MIN = 1;
+const NOTES_QUESTION_COUNT_MAX = 500;
 
 function normalizeDocumentType(value) {
   if (value === undefined || value === null || value === "") {
@@ -177,6 +179,30 @@ function normalizeDocumentType(value) {
     );
   }
   return value;
+}
+
+// Optional target for "Study Notes" generation. Blank/omitted keeps the
+// worker's default (AI_NOTES_QUESTIONS_PER_CHUNK per chunk). Bounds match
+// worker/config.py#AI_NOTES_MAX_QUESTIONS so the UI and the hard cap agree.
+function normalizeDesiredQuestionCount(value, documentType) {
+  if (documentType !== "notes") {
+    return undefined;
+  }
+  if (value === undefined || value === null || value === "") {
+    return undefined;
+  }
+  const count = Number(value);
+  if (
+    !Number.isInteger(count) ||
+    count < NOTES_QUESTION_COUNT_MIN ||
+    count > NOTES_QUESTION_COUNT_MAX
+  ) {
+    throw httpError(
+      400,
+      `desiredQuestionCount must be an integer between ${NOTES_QUESTION_COUNT_MIN} and ${NOTES_QUESTION_COUNT_MAX}`,
+    );
+  }
+  return count;
 }
 
 // Pulled out of mockTest.settings (snapshotted at apply time - see
@@ -553,8 +579,13 @@ async function finalizeUpload({
   mimeType,
   fileSizeBytes,
   documentType,
+  desiredQuestionCount,
 }) {
   const normalizedDocumentType = normalizeDocumentType(documentType);
+  const normalizedDesiredCount = normalizeDesiredQuestionCount(
+    desiredQuestionCount,
+    normalizedDocumentType,
+  );
   const client = await pool.connect();
 
   let uploadedFile;
@@ -577,6 +608,9 @@ async function finalizeUpload({
       metadata: {
         uploadedVia: "mock-test-create-modal",
         documentType: normalizedDocumentType,
+        ...(normalizedDesiredCount != null
+          ? { desiredQuestionCount: normalizedDesiredCount }
+          : {}),
       },
     });
 
@@ -600,6 +634,10 @@ async function finalizeUpload({
       originalFilename,
       storageKey,
       documentType: normalizedDocumentType,
+      extraInputConfig:
+        normalizedDesiredCount != null
+          ? { desiredQuestionCount: normalizedDesiredCount }
+          : {},
     },
   );
 
@@ -612,6 +650,7 @@ export async function uploadDocument({
   userId,
   file,
   documentType,
+  desiredQuestionCount,
 }) {
   if (!file) {
     throw httpError(400, "PDF document is required");
@@ -638,6 +677,7 @@ export async function uploadDocument({
     mimeType: file.mimetype,
     fileSizeBytes: file.size,
     documentType,
+    desiredQuestionCount,
   });
 }
 
@@ -678,6 +718,7 @@ export async function completeUpload({
   storageKey,
   originalFilename,
   documentType,
+  desiredQuestionCount,
 }) {
   if (
     !storageKey ||
@@ -706,6 +747,7 @@ export async function completeUpload({
     mimeType: info.mimeType,
     fileSizeBytes: info.sizeBytes,
     documentType,
+    desiredQuestionCount,
   });
 }
 
@@ -788,6 +830,10 @@ export async function reprocessMockTest({ mockTest, workspaceId, userId }) {
   // at all - normalizeDocumentType's undefined-defaults-to-'questions'
   // behavior keeps those working exactly as they did before this change.
   const documentType = normalizeDocumentType(latestFile.metadata?.documentType);
+  const desiredQuestionCount = normalizeDesiredQuestionCount(
+    latestFile.metadata?.desiredQuestionCount,
+    documentType,
+  );
 
   return queueProcessingJob({
     mockTest,
@@ -797,7 +843,12 @@ export async function reprocessMockTest({ mockTest, workspaceId, userId }) {
     originalFilename: latestFile.original_filename,
     storageKey: latestFile.storage_key,
     documentType,
-    extraInputConfig: { reprocess: true },
+    extraInputConfig: {
+      reprocess: true,
+      ...(desiredQuestionCount != null
+        ? { desiredQuestionCount }
+        : {}),
+    },
   });
 }
 

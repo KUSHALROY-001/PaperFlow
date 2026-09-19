@@ -62,6 +62,7 @@ export async function upload(req, res) {
     file: req.file,
     // multer parses non-file multipart fields into req.body alongside req.file
     documentType: req.body.documentType,
+    desiredQuestionCount: req.body.desiredQuestionCount,
   });
   res.status(201).json(result);
 }
@@ -91,6 +92,7 @@ export async function completeUpload(req, res) {
     storageKey: req.body.storageKey,
     originalFilename: req.body.originalFilename,
     documentType: req.body.documentType,
+    desiredQuestionCount: req.body.desiredQuestionCount,
   });
   res.status(201).json(result);
 }

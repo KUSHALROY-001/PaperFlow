@@ -10,6 +10,11 @@ import {
   PdfAssemblyError,
 } from "@/lib/pdfAssembly";
 import MultiFileList from "./MultiFileList";
+import {
+  NOTES_QUESTION_COUNT_MAX,
+  NOTES_QUESTION_COUNT_MIN,
+  parseDesiredQuestionCount,
+} from "@/utils/notesQuestionCount";
 
 // Shown on the Overview tab when a mock test exists but no PDF has ever
 // been uploaded to it - the gap left by the "Apply Template" flow, which
@@ -40,6 +45,7 @@ export default function UploadPdfPanel({
   const queryClient = useQueryClient();
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [documentType, setDocumentType] = useState("questions");
+  const [desiredQuestionCount, setDesiredQuestionCount] = useState("");
   // Only meaningful once 2+ files are selected - see the toggle rendered
   // below. Mirrors CreateMockTestModal's uploadMode exactly.
   const [uploadMode, setUploadMode] = useState("combine");
@@ -210,7 +216,11 @@ export default function UploadPdfPanel({
           : await mergeFilesToPdf(selectedFiles);
 
       setSubmitStage("uploading");
-      await onUpload(fileToUpload, documentType);
+      await onUpload(
+        fileToUpload,
+        documentType,
+        parseDesiredQuestionCount(documentType, desiredQuestionCount),
+      );
     } catch (err) {
       setUploadError(
         err instanceof PdfAssemblyError
@@ -350,7 +360,10 @@ export default function UploadPdfPanel({
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => setDocumentType("questions")}
+                onClick={() => {
+                  setDocumentType("questions");
+                  setDesiredQuestionCount("");
+                }}
                 className={`rounded-2xl border-2 px-4 py-3 text-left transition-all ${
                   documentType === "questions"
                     ? "border-orange-500/60 bg-orange-500/10"

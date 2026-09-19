@@ -324,6 +324,9 @@ def process_job(job):
     # job, in which case enhance_questions_with_ai's prompt and summary are
     # completely unchanged from before this existed.
     template_context = (job.get("input_config") or {}).get("templateContext")
+    desired_question_count = (job.get("input_config") or {}).get(
+        "desiredQuestionCount"
+    )
 
     check_not_cancelled(job["id"])
 
@@ -457,6 +460,7 @@ def process_job(job):
         on_progress=report_ai_progress,
         on_vision_chunk=persist_vision_chunk,
         template_context=template_context,
+        desired_question_count=desired_question_count,
     )
 
     total_parsed = len(questions)

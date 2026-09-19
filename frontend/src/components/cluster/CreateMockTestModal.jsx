@@ -14,6 +14,11 @@ import {
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 import {
+  NOTES_QUESTION_COUNT_MAX,
+  NOTES_QUESTION_COUNT_MIN,
+  parseDesiredQuestionCount,
+} from "@/utils/notesQuestionCount";
+import {
   mergeFilesToPdf,
   ensureSingleFileIsPdf,
   isPdfFile,
@@ -60,6 +65,7 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
   // file - see handleSubmit's batch branch.
   const [uploadMode, setUploadMode] = useState("combine");
   const [documentType, setDocumentType] = useState("questions");
+  const [desiredQuestionCount, setDesiredQuestionCount] = useState("");
   const [selectedSourceIds, setSelectedSourceIds] = useState([]);
   const [targetQuestionCount, setTargetQuestionCount] = useState(50);
   const [difficultyHint, setDifficultyHint] = useState("Variable");
@@ -158,6 +164,7 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
               result.mockTest.id,
               pdfFile,
               documentType,
+              parseDesiredQuestionCount(documentType, desiredQuestionCount),
             );
             created.push(result.mockTest);
           } catch (fileError) {
@@ -229,6 +236,7 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
           result.mockTest.id,
           fileToUpload,
           documentType,
+          parseDesiredQuestionCount(documentType, desiredQuestionCount),
         );
       } else if (mode === "generate") {
         await api.generateMockTestFromExisting(result.mockTest.id, {
@@ -642,7 +650,10 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => setDocumentType("questions")}
+                  onClick={() => {
+                    setDocumentType("questions");
+                    setDesiredQuestionCount("");
+                  }}
                   className={`rounded-2xl border-2 px-4 py-3 text-left transition-all ${
                     documentType === "questions"
                       ? "border-orange-500/60 bg-orange-500/10"
@@ -673,6 +684,34 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
                   </span>
                 </button>
               </div>
+              {documentType === "notes" && (
+                <div className="mt-3">
+                  <label
+                    htmlFor="create-notes-desired-question-count"
+                    className="mb-2 block text-sm font-semibold text-foreground"
+                  >
+                    How many questions? (optional)
+                  </label>
+                  <input
+                    id="create-notes-desired-question-count"
+                    type="number"
+                    min={NOTES_QUESTION_COUNT_MIN}
+                    max={NOTES_QUESTION_COUNT_MAX}
+                    inputMode="numeric"
+                    value={desiredQuestionCount}
+                    onChange={(event) =>
+                      setDesiredQuestionCount(event.target.value)
+                    }
+                    placeholder="Leave blank to auto-size"
+                    className="w-full rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-orange-500/50 focus:outline-none"
+                  />
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    {NOTES_QUESTION_COUNT_MIN}–{NOTES_QUESTION_COUNT_MAX}.
+                    Questions are sampled across the whole document, not just
+                    the first pages.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

@@ -10,6 +10,7 @@ from ..config import (
     AI_MAX_CHARS_PER_CHUNK,
     AI_NOTES_MAX_QUESTIONS,
     AI_NOTES_QUESTIONS_PER_CHUNK,
+    AI_PDF_PAGES_PER_CHUNK,
     AI_PROVIDER,
     AI_TEXT_CHUNK_CONCURRENCY,
 )
@@ -387,62 +388,236 @@ def _check_template_match(template_context, final_questions):
 # a dict merge would silently overwrite chunk 2's "question_no: 1" over
 # chunk 1's. Instead every chunk's questions are concatenated into a list
 # and renumbered sequentially once, at the end.
-def generate_questions_from_notes(pages, provider, pdf_path=None):
-    if not AI_GENERATE_FROM_NOTES or not pages:
-        return [], {"attempted": False, "questionsGenerated": 0, "errors": []}
+def _spread_indices(k, n):
+    """Pick k indices evenly spaced across range(n).
 
-    all_questions = []
-    errors = []
+    First and last are always included when k > 1 so a small sample of a
+    long document still covers start and end rather than clustering at the
+    front. Integer division guarantees uniqueness whenever k <= n.
+    """
+    if k <= 0 or n <= 0:
+        return []
+    k = min(int(k), int(n))
+    if k == 1:
+        return [0]
+    return [i * (n - 1) // (k - 1) for i in range(k)]
 
-    # Split into pages with a real text layer (handled exactly as before -
-    # chunk_pages + build_notes_generation_prompt, reading page["text"])
-    # and pages with none. A page with no text layer used to silently
-    # contribute nothing here - chunk_pages would still "chunk" it, but as
-    # an empty `[PAGE N]` marker with no actual content behind it, so the
-    # prompt sent to Gemini looked like real notes while actually being
-    # blank. That's exactly what a fully scanned/handwritten PDF with OCR
-    # unavailable produces on EVERY page (confirmed on a real job: 34/34
-    # pages empty, OCR skipped - Tesseract not installed - and only 1
-    # question survived out of ~8/chunk requested). Those pages now go
-    # through generate_json_from_pdf_images instead, the same vision path
-    # the main extraction pipeline already uses for needsVision pages, so
-    # the model actually sees the page content instead of blank markers.
+
+def _allocate_counts(total, n):
+    """Split `total` into n non-negative ints whose sum is total.
+
+    Each slot gets total // n; the remainder is +1 on slots chosen by
+    _spread_indices so extras aren't dumped on the first few items.
+    """
+    if n <= 0:
+        return []
+    total = max(0, int(total))
+    base, remainder = divmod(total, n)
+    counts = [base] * n
+    for index in _spread_indices(remainder, n):
+        counts[index] += 1
+    return counts
+
+
+def _spread_keep(items, keep):
+    """Keep `keep` items spread across the list instead of cutting the tail."""
+    if keep >= len(items):
+        return list(items)
+    if keep <= 0:
+        return []
+    indices = set(_spread_indices(keep, len(items)))
+    return [item for index, item in enumerate(items) if index in indices]
+
+
+def _normalize_desired_count(value):
+    if value is None or value is False or value == "":
+        return None
+    try:
+        count = int(value)
+    except (TypeError, ValueError):
+        return None
+    if count < 1:
+        return None
+    return min(count, AI_NOTES_MAX_QUESTIONS)
+
+
+def _group_consecutive_pages(page_numbers, chunk_size):
+    if not page_numbers:
+        return []
+    runs = []
+    current_run = [page_numbers[0]]
+    for page in page_numbers[1:]:
+        if page == current_run[-1] + 1:
+            current_run.append(page)
+        else:
+            runs.append(current_run)
+            current_run = [page]
+    runs.append(current_run)
+
+    chunks = []
+    for run in runs:
+        for start in range(0, len(run), chunk_size):
+            chunks.append(run[start : start + chunk_size])
+    return chunks
+
+
+def _text_work_items(pages):
+    items = []
+    current = []
+    current_size = 0
+    current_start = None
+
+    for page in pages:
+        page_text = f"\n\n[PAGE {page['page']}]\n{page['text']}"
+        if current and current_size + len(page_text) > AI_MAX_CHARS_PER_CHUNK:
+            items.append(
+                {
+                    "kind": "text",
+                    "start_page": current_start,
+                    "chunk": "".join(current),
+                }
+            )
+            current = []
+            current_size = 0
+            current_start = None
+
+        if current_start is None:
+            current_start = page["page"]
+        current.append(page_text)
+        current_size += len(page_text)
+
+    if current:
+        items.append(
+            {
+                "kind": "text",
+                "start_page": current_start,
+                "chunk": "".join(current),
+            }
+        )
+    return items
+
+
+def _notes_work_items(pages, provider, pdf_path):
+    """Vision groups and text chunks, ordered by first page in the document."""
     text_pages = [page for page in pages if (page.get("text") or "").strip()]
     vision_page_numbers = sorted(
         page["page"] for page in pages if not (page.get("text") or "").strip()
     )
+    items = []
+    can_vision = bool(
+        vision_page_numbers
+        and pdf_path
+        and hasattr(provider, "generate_json_from_pdf_images")
+    )
+    if can_vision:
+        for group in _group_consecutive_pages(
+            vision_page_numbers, AI_PDF_PAGES_PER_CHUNK
+        ):
+            items.append(
+                {
+                    "kind": "vision",
+                    "start_page": group[0],
+                    "page_numbers": group,
+                }
+            )
+    items.extend(_text_work_items(text_pages))
+    items.sort(key=lambda item: item["start_page"])
+    return items
 
-    if vision_page_numbers and pdf_path and hasattr(provider, "generate_json_from_pdf_images"):
-        chunk_results = provider.generate_json_from_pdf_images(
-            GENERATION_SYSTEM_PROMPT,
-            build_notes_generation_vision_prompt(AI_NOTES_QUESTIONS_PER_CHUNK),
-            pdf_path,
-            page_numbers=vision_page_numbers,
-        )
-        for result in chunk_results:
-            if len(all_questions) >= AI_NOTES_MAX_QUESTIONS:
-                break
-            pages_label = f"notes_vision_pages_{result['start_page']}-{result['end_page']}"
-            if result["error"] or not result["response_text"]:
-                errors.append({"chunk": pages_label, "message": result["error"] or "empty response"})
-                continue
+
+def _select_notes_work(items, desired_count):
+    """Choose which chunks to call and how many questions each should write.
+
+    No desired_count: every chunk, AI_NOTES_QUESTIONS_PER_CHUNK each
+    (today's behavior). A small requested count picks evenly spaced
+    chunks instead of only the start of the PDF.
+    """
+    total_chunks = len(items)
+    if total_chunks == 0:
+        return [], []
+
+    if desired_count is None:
+        return list(items), [AI_NOTES_QUESTIONS_PER_CHUNK] * total_chunks
+
+    if desired_count >= total_chunks:
+        return list(items), _allocate_counts(desired_count, total_chunks)
+
+    selected_indexes = _spread_indices(desired_count, total_chunks)
+    selected = [items[index] for index in selected_indexes]
+    return selected, _allocate_counts(desired_count, len(selected))
+
+
+def generate_questions_from_notes(
+    pages, provider, pdf_path=None, desired_count=None
+):
+    if not AI_GENERATE_FROM_NOTES or not pages:
+        return [], {"attempted": False, "questionsGenerated": 0, "errors": []}
+
+    desired_count = _normalize_desired_count(desired_count)
+    all_questions = []
+    errors = []
+    work_items, per_item_counts = _select_notes_work(
+        _notes_work_items(pages, provider, pdf_path), desired_count
+    )
+    cap = desired_count if desired_count is not None else AI_NOTES_MAX_QUESTIONS
+
+    for item_index, (item, count) in enumerate(
+        zip(work_items, per_item_counts), start=1
+    ):
+        if count <= 0:
+            continue
+        # Default (no user count): stop once we hit the hard ceiling so we
+        # don't keep paying for chunks whose output would be tail-trimmed.
+        # A user-specified count must visit every selected chunk first so
+        # a spread-trim can keep questions from later pages too.
+        if desired_count is None and len(all_questions) >= cap:
+            break
+
+        if item["kind"] == "vision":
+            pages_label = (
+                f"notes_vision_pages_{item['page_numbers'][0]}"
+                f"-{item['page_numbers'][-1]}"
+            )
             try:
-                payload = extract_json_payload(result["response_text"])
-                chunk_questions = normalize_ai_questions(
-                    payload, source=f"{provider.name}_notes_generated_vision_v1"
+                chunk_results = provider.generate_json_from_pdf_images(
+                    GENERATION_SYSTEM_PROMPT,
+                    build_notes_generation_vision_prompt(count),
+                    pdf_path,
+                    page_numbers=item["page_numbers"],
                 )
-                all_questions.extend(chunk_questions)
+            except GeminiDailyQuotaExceededError as error:
+                errors.append(
+                    {"chunk": pages_label, "message": f"Stopped early: {error}"}
+                )
+                break
             except Exception as error:
                 errors.append({"chunk": pages_label, "message": str(error)})
+                continue
 
-    for chunk_index, chunk in enumerate(chunk_pages(text_pages), start=1):
-        if len(all_questions) >= AI_NOTES_MAX_QUESTIONS:
-            break
+            for result in chunk_results:
+                if result["error"] or not result["response_text"]:
+                    errors.append(
+                        {
+                            "chunk": pages_label,
+                            "message": result["error"] or "empty response",
+                        }
+                    )
+                    continue
+                try:
+                    payload = extract_json_payload(result["response_text"])
+                    chunk_questions = normalize_ai_questions(
+                        payload,
+                        source=f"{provider.name}_notes_generated_vision_v1",
+                    )
+                    all_questions.extend(chunk_questions)
+                except Exception as error:
+                    errors.append({"chunk": pages_label, "message": str(error)})
+            continue
 
         try:
             response_text = provider.generate_json(
                 GENERATION_SYSTEM_PROMPT,
-                build_notes_generation_prompt(chunk, AI_NOTES_QUESTIONS_PER_CHUNK),
+                build_notes_generation_prompt(item["chunk"], count),
             )
             payload = extract_json_payload(response_text)
             chunk_questions = normalize_ai_questions(
@@ -450,27 +625,34 @@ def generate_questions_from_notes(pages, provider, pdf_path=None):
             )
             all_questions.extend(chunk_questions)
         except GeminiDailyQuotaExceededError as error:
-            # The day's quota can't come back mid-job the way a per-minute
-            # one can (see gemini_provider.py's rate limiter/retry) - every
-            # remaining chunk would fail identically, so stop here instead
-            # of burning through each one's own retry cycle for nothing.
             errors.append(
-                {"chunk": f"text_{chunk_index}", "message": f"Stopped early: {error}"}
+                {
+                    "chunk": f"text_{item_index}",
+                    "message": f"Stopped early: {error}",
+                }
             )
             break
         except Exception as error:
-            errors.append({"chunk": f"text_{chunk_index}", "message": str(error)})
+            errors.append({"chunk": f"text_{item_index}", "message": str(error)})
 
-    all_questions = all_questions[:AI_NOTES_MAX_QUESTIONS]
+    if desired_count is not None:
+        all_questions = _spread_keep(all_questions, cap)
+    else:
+        all_questions = all_questions[:cap]
+
     for index, question in enumerate(all_questions, start=1):
         question["question_no"] = index
         question["metadata"]["generatedFromNotes"] = True
 
-    return all_questions, {
+    summary = {
         "attempted": True,
         "questionsGenerated": len(all_questions),
         "errors": errors,
+        "chunksConsidered": len(work_items),
     }
+    if desired_count is not None:
+        summary["requestedQuestionCount"] = desired_count
+    return all_questions, summary
 
 
 # "Generate from existing tests" feature (see mock-tests.service.js
@@ -1194,6 +1376,7 @@ def _enhance_questions_with_ai_inner(
     on_progress=None,
     on_vision_chunk=None,
     template_context=None,
+    desired_question_count=None,
 ):
     def report(message):
         # Best-effort progress checkpoint - never let a progress-reporting
@@ -1228,7 +1411,12 @@ def _enhance_questions_with_ai_inner(
     # extraction attempts entirely instead of paying for 1-3 AI calls that
     # are almost certain to come back empty before falling back anyway.
     if document_type == "notes":
-        generated_questions, generation_summary = generate_questions_from_notes(pages, provider, pdf_path)
+        generated_questions, generation_summary = generate_questions_from_notes(
+            pages,
+            provider,
+            pdf_path,
+            desired_count=desired_question_count,
+        )
         return generated_questions or regex_questions, {
             "enabled": True,
             "provider": provider.name,
@@ -1884,6 +2072,7 @@ def enhance_questions_with_ai(
     on_progress=None,
     on_vision_chunk=None,
     template_context=None,
+    desired_question_count=None,
 ):
     questions, summary = _enhance_questions_with_ai_inner(
         pages,
@@ -1894,6 +2083,7 @@ def enhance_questions_with_ai(
         on_progress=on_progress,
         on_vision_chunk=on_vision_chunk,
         template_context=template_context,
+        desired_question_count=desired_question_count,
     )
 
     # _apply_section_marks needs question_type to match
