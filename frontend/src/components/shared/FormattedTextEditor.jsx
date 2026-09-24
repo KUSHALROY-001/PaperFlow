@@ -8,31 +8,15 @@ import {
   useState,
 } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
-import { Node as TiptapNode } from "@tiptap/core";
-import { TextSelection } from "@tiptap/pm/state";
-import StarterKit from "@tiptap/starter-kit";
-import { TableKit } from "@tiptap/extension-table";
-import {
-  Bold,
-  ChevronDown,
-  Italic,
-  Strikethrough,
-  Underline,
-} from "lucide-react";
-import { MathNode } from "./MathNode";
-import { ImageNode } from "./ImageNode";
 import { markdownToDoc, docToMarkdown } from "@/utils/richTextDoc";
-
-// The document shape mirrors richTextDoc.js: a sequence of paragraph and
-// heading blocks, so the formatted editor can apply headings to a line.
-const FormattedDocument = TiptapNode.create({
-  name: "doc",
-  topNode: true,
-  content: "block+",
-});
-
-const sizingClassName =
-  "min-h-12 px-4 py-3 text-xs sm:text-sm leading-relaxed rounded-xl border border-border bg-card text-foreground focus-within:ring-2 focus-within:ring-orange-500/30 transition-all";
+import { buildEditorExtensions, sizingClassName } from "./formattedTextEditor.extensions";
+import {
+  applyPartialBlockTextStyle,
+  insertImageNode,
+  insertMathNode,
+} from "./formattedTextEditor.commands";
+import { useSelectionPreservingCommand } from "./useSelectionPreservingCommand";
+import { FormattedTextEditorToolbar } from "./FormattedTextEditorToolbar";
 
 // The "Formatted" alternative to a plain <textarea> for Question Text /
 // Explanation. Built on TipTap/ProseMirror rather than a hand-rolled
@@ -69,6 +53,15 @@ const sizingClassName =
 //
 // Code fences and GFM tables are plain, unstyled text in this editor for
 // now (not corrupted, just not specially rendered) - see richTextDoc.js.
+//
+// This file is the orchestration layer only: TipTap setup, sync with the
+// controlled `value` prop, and the imperative ref API. The extension/
+// schema config lives in formattedTextEditor.extensions.js, the
+// ProseMirror-only command logic (heading-split, math/image insertion)
+// in formattedTextEditor.commands.js, the selection-preserving command
+// wrapper in useSelectionPreservingCommand.js, and the toolbar's JSX in
+// FormattedTextEditorToolbar.jsx - split out once this file grew past the
+// point where the mix of concerns made any one of them hard to find.
 function FormattedTextEditor(
   {
     value,
@@ -105,51 +98,7 @@ function FormattedTextEditor(
     // immediatelyRender path uses flushSync when mounting the editor (and
     // again when ReactNodeViewRenderer mounts ImageNode/MathNode views).
     immediatelyRender: false,
-    extensions: [
-      FormattedDocument,
-      StarterKit.configure({
-        document: false,
-        blockquote: false,
-        bulletList: false,
-        code: false,
-        codeBlock: {
-          enableTabIndentation: true,
-          tabSize: 4,
-          HTMLAttributes: {
-            class:
-              "my-3 overflow-x-auto rounded-xl border border-border bg-muted/60 p-3 font-mono text-xs sm:text-sm leading-relaxed",
-          },
-        },
-        horizontalRule: false,
-        link: false,
-        listItem: false,
-        listKeymap: false,
-        orderedList: false,
-        trailingNode: false,
-      }),
-      TableKit.configure({
-        table: {
-          renderWrapper: true,
-          HTMLAttributes: {
-            class: "my-3 w-full border-collapse text-xs sm:text-sm",
-          },
-        },
-        tableHeader: {
-          HTMLAttributes: {
-            class:
-              "border-b border-border bg-muted px-3 py-2 text-left font-bold text-foreground",
-          },
-        },
-        tableCell: {
-          HTMLAttributes: {
-            class:
-              "border-b border-border/60 px-3 py-2 align-top text-foreground",
-          },
-        },
-      }),
-      MathNode,
-      ImageNode,
-    ],
+    extensions: buildEditorExtensions(),
     content: markdownToDoc(value),
     editable: !disabled,
     editorProps: {
@@ -191,99 +140,13 @@ function FormattedTextEditor(
     editor.storage.image = { questionId, mockTestId };
   }, [editor, questionId, mockTestId]);
 
-  const runWithSelectionPreserved = useCallback(
-    (command) => {
-      if (!editor || disabled) return false;
-
-      const { from, to } = editor.state.selection;
-      const hasTextRange = from !== to;
-      const didRun = command(editor.chain().focus()).run();
-
-      // Toolbar clicks must not make people select the same words again
-      // before applying another mark or a heading. Mark/block commands do
-      // not change document positions, so restoring this exact range is
-      // safe and also covers option-menu commands invoked through the ref.
-      if (didRun && hasTextRange) {
-        editor.commands.setTextSelection({ from, to });
-        // Parent state receives the serialized markdown on every update.
-        // Restore once more after that controlled update settles; otherwise
-        // some browsers collapse the highlight after the first toolbar click.
-        requestAnimationFrame(() => {
-          if (!editor.isDestroyed) {
-            editor.commands.setTextSelection({ from, to });
-          }
-        });
-      }
-
-      return didRun;
-    },
-    [disabled, editor],
-  );
+  const runWithSelectionPreserved = useSelectionPreservingCommand(editor, disabled);
 
   const applyTextStyle = useCallback(
     (level) => {
       if (!editor || disabled) return;
 
-      const { selection } = editor.state;
-      const { $from, $to } = selection;
-      const isSinglePartialBlockSelection =
-        selection.from !== selection.to &&
-        $from.parent === $to.parent &&
-        $from.parent.isTextblock &&
-        (selection.from > $from.start() || selection.to < $to.end());
-
-      if (isSinglePartialBlockSelection) {
-        const targetIsCurrentHeading =
-          level && editor.isActive("heading", { level });
-        let targetType;
-        if (targetIsCurrentHeading) {
-          targetType = editor.schema.nodes.paragraph;
-        } else if (level) {
-          targetType = editor.schema.nodes.heading;
-        } else {
-          targetType = editor.schema.nodes.paragraph;
-        }
-        const selectedContent = $from.parent.content.cut(
-          $from.parentOffset,
-          $to.parentOffset,
-        );
-        const beforeContent = $from.parent.content.cut(0, $from.parentOffset);
-        const afterContent = $from.parent.content.cut($to.parentOffset);
-        const originalType = $from.parent.type;
-        const originalAttrs = $from.parent.attrs;
-        const blocks = [];
-
-        if (beforeContent.size) {
-          blocks.push(originalType.create(originalAttrs, beforeContent));
-        }
-        blocks.push(
-          targetType.create(
-            level && !targetIsCurrentHeading ? { level } : null,
-            selectedContent,
-          ),
-        );
-        if (afterContent.size) {
-          blocks.push(originalType.create(originalAttrs, afterContent));
-        }
-
-        const blockStart = $from.before();
-        const selectionStart =
-          blockStart + (beforeContent.size ? blocks[0].nodeSize : 0) + 1;
-        const transaction = editor.state.tr.replaceWith(
-          blockStart,
-          $from.after(),
-          blocks,
-        );
-        transaction.setSelection(
-          TextSelection.create(
-            transaction.doc,
-            selectionStart,
-            selectionStart + selectedContent.size,
-          ),
-        );
-        editor.view.dispatch(transaction.scrollIntoView());
-        return;
-      }
+      if (applyPartialBlockTextStyle(editor, level)) return;
 
       if (!level || editor.isActive("heading", { level })) {
         runWithSelectionPreserved((chain) => chain.setParagraph());
@@ -298,44 +161,10 @@ function FormattedTextEditor(
     ref,
     () => ({
       insertMath() {
-        if (!editor || !editor.isEditable) return;
-
-        // Keep the new empty formula selected so MathNodeView opens its
-        // MathLive field immediately. The editor can then accept input
-        // straight away instead of leaving a blank inert placeholder.
-        const position = editor.state.selection.from;
-        editor
-          .chain()
-          .focus()
-          .insertContent({
-            type: "math",
-            attrs: { latex: "", displayMode: false },
-          })
-          .setNodeSelection(position)
-          .run();
+        insertMathNode(editor);
       },
       insertImage() {
-        if (!editor || !editor.isEditable) return;
-
-        const usedSlotKeys = new Set();
-        editor.state.doc.descendants((node) => {
-          if (node.type.name === "image") usedSlotKeys.add(node.attrs.slotKey);
-        });
-        let slotKey;
-        do {
-          // crypto.randomUUID() rather than Math.random() (javascript:S2245) -
-          // Math.random() isn't cryptographically strong; a UUID-derived
-          // suffix keeps this collision-proof without that weakness.
-          slotKey = `img-${Date.now().toString(36)}${crypto.randomUUID().replace(/-/g, "").slice(0, 6)}`;
-        } while (usedSlotKeys.has(slotKey));
-
-        const position = editor.state.selection.from;
-        editor
-          .chain()
-          .focus()
-          .insertContent({ type: "image", attrs: { slotKey } })
-          .setNodeSelection(position)
-          .run();
+        insertImageNode(editor);
       },
       toggleBold() {
         runWithSelectionPreserved((chain) => chain.toggleBold());
@@ -404,18 +233,6 @@ function FormattedTextEditor(
     runWithSelectionPreserved(command);
   };
 
-  const toolButtonClassName = (isActive) => {
-    let tone;
-    if (disabled) {
-      tone = "cursor-not-allowed text-muted-foreground/40";
-    } else if (isActive) {
-      tone = "bg-orange-500 text-white shadow-sm";
-    } else {
-      tone = "text-foreground hover:bg-muted";
-    }
-    return `flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${tone}`;
-  };
-
   const textStyle = [1, 2, 3].find((level) =>
     editor.isActive("heading", { level }),
   );
@@ -428,92 +245,16 @@ function FormattedTextEditor(
   return (
     <div className="relative">
       {showToolbar && (
-        <div className="mb-2 flex flex-wrap items-center gap-1  border border-border bg-muted/40 p-1.5">
-          <button
-            type="button"
-            disabled={disabled}
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => runCommand((chain) => chain.toggleBold())}
-            title="Bold (Ctrl+B)"
-            className={toolButtonClassName(editor.isActive("bold"))}
-          >
-            <Bold className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            disabled={disabled}
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => runCommand((chain) => chain.toggleItalic())}
-            title="Italic (Ctrl+I)"
-            className={toolButtonClassName(editor.isActive("italic"))}
-          >
-            <Italic className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            disabled={disabled}
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => runCommand((chain) => chain.toggleUnderline())}
-            title="Underline"
-            className={toolButtonClassName(editor.isActive("underline"))}
-          >
-            <Underline className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            disabled={disabled}
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => runCommand((chain) => chain.toggleStrike())}
-            title="Strikethrough"
-            className={toolButtonClassName(editor.isActive("strike"))}
-          >
-            <Strikethrough className="h-4 w-4" />
-          </button>
-          <div
-            ref={styleMenuRef}
-            className="relative ml-1 border-l border-border pl-1"
-          >
-            <button
-              type="button"
-              disabled={disabled}
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => setIsStyleMenuOpen((open) => !open)}
-              title="Text style"
-              className={`flex h-8 items-center gap-1 rounded-lg px-2 text-xs font-bold transition-colors ${
-                disabled
-                  ? "cursor-not-allowed text-muted-foreground/40"
-                  : "text-foreground hover:bg-muted"
-              }`}
-            >
-              {textStyle ? `Heading ${textStyle}` : "Text"}
-              <ChevronDown className="h-3.5 w-3.5" />
-            </button>
-            {isStyleMenuOpen && !disabled && (
-              <div className="absolute left-0 top-10 z-20 min-w-40 overflow-hidden rounded-xl border border-border bg-card p-1 shadow-xl">
-                {[
-                  { label: "Text", level: null },
-                  { label: "Heading 1", level: 1 },
-                  { label: "Heading 2", level: 2 },
-                  { label: "Heading 3", level: 3 },
-                ].map((item) => (
-                  <button
-                    type="button"
-                    key={item.label}
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => setTextStyle(item.level)}
-                    className={`block w-full rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-muted ${
-                      textStyle === item.level
-                        ? "bg-muted font-bold text-foreground"
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <FormattedTextEditorToolbar
+          editor={editor}
+          disabled={disabled}
+          runCommand={runCommand}
+          textStyle={textStyle}
+          setTextStyle={setTextStyle}
+          isStyleMenuOpen={isStyleMenuOpen}
+          setIsStyleMenuOpen={setIsStyleMenuOpen}
+          styleMenuRef={styleMenuRef}
+        />
       )}
       <div className="relative">
         <EditorContent editor={editor} />

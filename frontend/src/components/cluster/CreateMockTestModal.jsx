@@ -1,274 +1,35 @@
-import { useId, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { X } from "lucide-react";
 import {
-  Upload,
-  X,
-  Sparkles,
-  FileText,
-  FilePlus,
-  Loader2,
-  Layers,
-  Rows3,
-} from "lucide-react";
-import { api } from "@/lib/api";
-import { useAuth } from "@/lib/AuthContext";
-import {
-  NOTES_QUESTION_COUNT_MAX,
-  NOTES_QUESTION_COUNT_MIN,
-  parseDesiredQuestionCount,
-} from "@/utils/notesQuestionCount";
-import {
-  mergeFilesToPdf,
-  ensureSingleFileIsPdf,
-  isPdfFile,
-  PdfAssemblyError,
-} from "@/lib/pdfAssembly";
-import MultiFileList from "./MultiFileList";
+  useCreateMockTestForm,
+  CREATE_MOCK_TEST_STEPS,
+} from "@/hooks/useCreateMockTestForm";
+import CreateMockTestStepIndicator from "./CreateMockTestStepIndicator";
+import CreateMockTestModeSelector from "./CreateMockTestModeSelector";
+import CreateMockTestUploadPanel from "./CreateMockTestUploadPanel";
+import CreateMockTestGeneratePanel from "./CreateMockTestGeneratePanel";
+import CreateMockTestBasicsStep from "./CreateMockTestBasicsStep";
+import CreateMockTestSettingsStep from "./CreateMockTestSettingsStep";
+import CreateMockTestReviewStep from "./CreateMockTestReviewStep";
+import CreateMockTestFooter from "./CreateMockTestFooter";
 
-const MIN_GENERATED_QUESTIONS = 5;
-const MAX_GENERATED_QUESTIONS = 200;
-const DIFFICULTY_OPTIONS = ["Variable", "Easy", "Medium", "Hard"];
-
-// Promoted from an inline component inside pages/ClusterWorkspace.jsx — no behavior changes.
+// Promoted from an inline component inside pages/ClusterWorkspace.jsx - no
+// behavior change from that. Split further once this crossed 1000 lines
+// as one file: all state/derived-values/submit logic now lives in
+// useCreateMockTestForm.js (mirrors how useTemplateForm.js/
+// useQuestionForm.js already split their own modals), each step's fields
+// live in their own CreateMockTest*.jsx component, and this file is left
+// as pure wiring - render the header, the step indicator, whichever
+// step's component is current, and the footer.
+//
+// Content Source is step 1, not Basics, because it decides what several
+// LATER fields even mean - e.g. whether "Name" (step 2) is required or
+// just an optional batch-mode prefix (isBatchMode, from
+// useCreateMockTestForm). Asking it first means every later step can
+// react to what was already decided instead of the old single-page form,
+// where the mode picker sat near the bottom despite driving fields above
+// it.
 export default function CreateMockTestModal({ clusterId, onClose }) {
-  const uid = useId();
-  const { isViewer } = useAuth();
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const [form, setForm] = useState({
-    name: "",
-    description: "",
-    durationMinutes: 120,
-    marksPerCorrect: 1,
-    negativeMarksPerWrong: 0.25,
-    showMarksToStudents: false,
-    // "sequential" = same order as in the uploaded/generated paper
-    // (questionNo ASC); "random" = shuffled per student per attempt, same
-    // shuffle kept for that attempt's whole lifetime (resume, review) -
-    // see attempts.service.js#startAttempt. Changeable later from
-    // MockTestScoringPanel, which is why this lives in settings rather
-    // than its own mock_tests column - same pattern showMarksToStudents
-    // already uses.
-    questionOrder: "sequential",
-  });
-  // "blank" - no content attached, same as leaving the file picker empty
-  // always used to mean. "upload" / "generate" just swap which panel
-  // below collects the extra input each mode needs.
-  const [mode, setMode] = useState("upload");
-  const [selectedFiles, setSelectedFiles] = useState([]);
-  // Only meaningful once 2+ files are selected in "upload" mode - see the
-  // toggle rendered below. "combine" merges everything into the ONE mock
-  // test this form is already creating (lib/pdfAssembly.js#mergeFilesToPdf).
-  // "batch" instead creates a SEPARATE mock test per file, looping the
-  // same create-then-upload calls this form already makes for a single
-  // file - see handleSubmit's batch branch.
-  const [uploadMode, setUploadMode] = useState("combine");
-  const [documentType, setDocumentType] = useState("questions");
-  const [desiredQuestionCount, setDesiredQuestionCount] = useState("");
-  const [selectedSourceIds, setSelectedSourceIds] = useState([]);
-  const [targetQuestionCount, setTargetQuestionCount] = useState(50);
-  const [difficultyHint, setDifficultyHint] = useState("Variable");
-  const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  // Only used mid-batch, to show "Creating 3 of 6..." instead of a single
-  // opaque spinner for what can be a several-second loop of N create+
-  // upload round trips.
-  const [batchProgress, setBatchProgress] = useState(null);
-
-  const isBatchMode =
-    mode === "upload" && uploadMode === "batch" && selectedFiles.length > 1;
-
-  // Workspace-wide, not cluster-scoped - a generated test can draw its
-  // shape from a source test in any cluster, not just this one. Only
-  // fetched once the user actually opens the "Generate" panel, since
-  // most modal opens never need this list at all.
-  const { data: allMockTestsData, isLoading: isLoadingSources } = useQuery({
-    queryKey: ["mock-tests", "all"],
-    queryFn: () => api.listAllMockTests(),
-    enabled: mode === "generate",
-  });
-  // Only tests that actually have questions are worth offering as a
-  // source - getTopicDistributionForMockTests would just come back empty
-  // for one with none, and generateFromExisting rejects that server-side
-  // anyway (see mock-tests.service.js), so filtering here is purely to
-  // stop the user from selecting a source that's guaranteed to fail.
-  const availableSources = (allMockTestsData?.mockTests || []).filter(
-    (test) => Number(test.total_questions || 0) > 0,
-  );
-
-  const toggleSource = (mockTestId) => {
-    setSelectedSourceIds((current) =>
-      current.includes(mockTestId)
-        ? current.filter((id) => id !== mockTestId)
-        : [...current, mockTestId],
-    );
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setError("");
-
-    if (mode === "generate" && selectedSourceIds.length === 0) {
-      setError("Select at least one source mock test to generate from");
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    // Shared by both branches below - the settings every created mock
-    // test (one, in combine/generate/blank mode, or several in batch
-    // mode) gets, only the name itself differs per branch.
-    const buildCreatePayload = (name) => ({
-      name,
-      description: form.description,
-      durationMinutes: Number(form.durationMinutes),
-      // Pre-existing bug fixed alongside adding questionOrder below: this
-      // call never sent marksPerCorrect/negativeMarksPerWrong/
-      // showMarksToStudents at all despite the form collecting them -
-      // every newly created mock test silently got the backend's
-      // defaults (1/0.25, marks hidden) regardless of what was chosen
-      // here. Sending them now; MockTestScoringPanel remains the way to
-      // change any of this later.
-      marksPerCorrect: Number(form.marksPerCorrect),
-      negativeMarksPerWrong: Number(form.negativeMarksPerWrong),
-      settings: {
-        showMarksToStudents: Boolean(form.showMarksToStudents),
-        questionOrder: form.questionOrder,
-      },
-    });
-
-    try {
-      if (isBatchMode) {
-        const prefix = form.name.trim();
-        const created = [];
-        const failures = [];
-        setBatchProgress({ done: 0, total: selectedFiles.length });
-
-        // Sequential, not Promise.all - these are real create+upload API
-        // calls per file, and a batch of many files hammering the backend
-        // concurrently isn't worth the speedup for what's normally a
-        // handful of files at a time. Errors are per-file: one bad file
-        // (a corrupt image, a failed upload) doesn't lose the mock tests
-        // already successfully created for the files before it.
-        for (const file of selectedFiles) {
-          const baseName = file.name.replace(/\.[^.]+$/, "");
-          const testName = prefix ? `${prefix} - ${baseName}` : baseName;
-          try {
-            const pdfFile = await ensureSingleFileIsPdf(file);
-            const result = await api.createMockTest(
-              clusterId,
-              buildCreatePayload(testName),
-            );
-            await api.uploadMockTestDocument(
-              result.mockTest.id,
-              pdfFile,
-              documentType,
-              parseDesiredQuestionCount(documentType, desiredQuestionCount),
-            );
-            created.push(result.mockTest);
-          } catch (fileError) {
-            failures.push({
-              fileName: file.name,
-              message: fileError.message || "Failed",
-            });
-          } finally {
-            setBatchProgress((current) => ({
-              done: (current?.done || 0) + 1,
-              total: selectedFiles.length,
-            }));
-          }
-        }
-
-        await queryClient.invalidateQueries({
-          queryKey: ["mock-tests", clusterId],
-        });
-        await queryClient.invalidateQueries({ queryKey: ["clusters"] });
-        await queryClient.invalidateQueries({
-          queryKey: ["dashboard-summary"],
-        });
-
-        if (created.length === 0) {
-          setError(
-            `Could not create any mock tests: ` +
-              failures.map((f) => `${f.fileName} (${f.message})`).join("; "),
-          );
-          return;
-        }
-
-        if (failures.length > 0) {
-          // Some tests were created despite the failures - don't hide
-          // that by staying on the (now half-wrong) form; navigate away
-          // like the success path, but keep the failure detail visible
-          // via a toast-style message would be nicer, but this form has
-          // no toast plumbing, so surface it the same way any other
-          // partial failure here does and let the cluster view show what
-          // actually landed.
-          window.alert(
-            `Created ${created.length} of ${selectedFiles.length} mock tests.\n\nFailed:\n` +
-              failures.map((f) => `- ${f.fileName}: ${f.message}`).join("\n"),
-          );
-        }
-
-        onClose();
-        navigate(`/cluster/${clusterId}`);
-        return;
-      }
-
-      const result = await api.createMockTest(
-        clusterId,
-        buildCreatePayload(form.name),
-      );
-
-      if (mode === "upload" && selectedFiles.length > 0) {
-        // Single already-PDF file: pass through unchanged, no pdf-lib
-        // round-trip, exactly today's behavior. Anything else (a lone
-        // image, or 2+ files being combined) needs assembly first.
-        const singleFile = selectedFiles.length === 1 ? selectedFiles[0] : null;
-        const fileToUpload =
-          singleFile && isPdfFile(singleFile)
-            ? singleFile
-            : singleFile
-              ? await ensureSingleFileIsPdf(singleFile)
-              : await mergeFilesToPdf(selectedFiles);
-
-        await api.uploadMockTestDocument(
-          result.mockTest.id,
-          fileToUpload,
-          documentType,
-          parseDesiredQuestionCount(documentType, desiredQuestionCount),
-        );
-      } else if (mode === "generate") {
-        await api.generateMockTestFromExisting(result.mockTest.id, {
-          sourceMockTestIds: selectedSourceIds,
-          targetQuestionCount: Number(targetQuestionCount),
-          difficultyHint,
-        });
-      }
-
-      const willProcess =
-        (mode === "upload" && selectedFiles.length > 0) || mode === "generate";
-
-      await queryClient.invalidateQueries({
-        queryKey: ["mock-tests", clusterId],
-      });
-      await queryClient.invalidateQueries({ queryKey: ["clusters"] });
-      await queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
-      onClose();
-      navigate(
-        `/cluster/${clusterId}/mocktest/${result.mockTest.id}?tab=${willProcess ? "processing" : "overview"}`,
-      );
-    } catch (submitError) {
-      setError(
-        submitError instanceof PdfAssemblyError
-          ? submitError.message
-          : submitError.message || "Could not create mock test",
-      );
-    } finally {
-      setIsSubmitting(false);
-      setBatchProgress(null);
-    }
-  };
+  const f = useCreateMockTestForm({ clusterId, onClose });
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-3 sm:p-4 py-4 sm:py-8 backdrop-blur-xs sm:items-center">
@@ -291,573 +52,114 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
           </button>
         </div>
 
+        <CreateMockTestStepIndicator
+          steps={CREATE_MOCK_TEST_STEPS}
+          currentStep={f.currentStep}
+        />
+
         <form
-          onSubmit={handleSubmit}
+          onSubmit={f.handleSubmit}
+          onKeyDown={(event) => {
+            // A single-line <input>'s native Enter behavior is to submit
+            // the nearest form - fine on the final step (that's literally
+            // the submit action), but on every earlier step it would fire
+            // handleSubmit before the user ever reaches Review. Textareas
+            // don't trigger this (Enter inserts a newline there), so
+            // nothing needs excluding for Description.
+            if (
+              event.key === "Enter" &&
+              f.currentStep !== CREATE_MOCK_TEST_STEPS.length
+            ) {
+              event.preventDefault();
+            }
+          }}
           className="min-h-0 flex-1 space-y-4 sm:space-y-5 overflow-y-auto p-4 sm:p-6 overscroll-contain"
         >
-          <div>
-            <label
-              htmlFor={`${uid}-name`}
-              className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-semibold text-foreground"
-            >
-              {isBatchMode ? "Name Prefix (optional)" : "Mock Test Name *"}
-            </label>
-            <input
-              id={`${uid}-name`}
-              required={!isBatchMode}
-              value={form.name}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, name: event.target.value }))
-              }
-              placeholder={
-                isBatchMode
-                  ? 'e.g. JECA PYQ (each test is named "prefix - filename")'
-                  : "e.g. JECA PYQ 2024"
-              }
-              className="w-full rounded-md border border-border bg-card px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor={`${uid}-description`}
-              className="mb-2 block text-sm font-semibold text-foreground"
-            >
-              Description
-            </label>
-            <textarea
-              id={`${uid}-description`}
-              value={form.description}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  description: event.target.value,
-                }))
-              }
-              rows={3}
-              placeholder="Optional notes for this mock test"
-              className="w-full resize-none rounded-md border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor={`${uid}-duration`}
-              className="mb-2 block text-sm font-semibold text-foreground"
-            >
-              Duration Minutes
-            </label>
-            <input
-              id={`${uid}-duration`}
-              type="number"
-              min="1"
-              value={form.durationMinutes}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  durationMinutes: event.target.value,
-                }))
-              }
-              className="w-full rounded-md border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label
-                htmlFor={`${uid}-marks-per-correct`}
-                className="mb-2 block text-sm font-semibold text-foreground"
-              >
-                Marks per correct
-              </label>
-              <input
-                id={`${uid}-marks-per-correct`}
-                type="number"
-                min="0"
-                step="any"
-                value={form.marksPerCorrect}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    marksPerCorrect: event.target.value,
-                  }))
-                }
-                className="w-full rounded-md border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor={`${uid}-negative-marks`}
-                className="mb-2 block text-sm font-semibold text-foreground"
-              >
-                −ve marks per wrong
-              </label>
-              <input
-                id={`${uid}-negative-marks`}
-                type="number"
-                min="0"
-                step="any"
-                value={form.negativeMarksPerWrong}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    negativeMarksPerWrong: event.target.value,
-                  }))
-                }
-                className="w-full rounded-md border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
-              />
-            </div>
-          </div>
-
-          <label
-            htmlFor={`${uid}-show-marks`}
-            className="flex items-start gap-3 rounded-md border border-border bg-muted/30 px-3 py-3 cursor-pointer"
-          >
-            <input
-              id={`${uid}-show-marks`}
-              type="checkbox"
-              className="mt-0.5 rounded border-border"
-              checked={form.showMarksToStudents}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  showMarksToStudents: event.target.checked,
-                }))
-              }
-            />
-            <span>
-              <span className="block text-sm font-semibold text-foreground">
-                Show marking to students
-              </span>
-              <span className="block text-xs text-muted-foreground mt-0.5">
-                Off by default. When on, students see +/− marks on each question
-                during the attempt.
-              </span>
-            </span>
-          </label>
-
-          <div>
-            <p className="mb-2 block text-sm font-semibold text-foreground">
-              Question order
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() =>
-                  setForm((current) => ({
-                    ...current,
-                    questionOrder: "sequential",
-                  }))
-                }
-                className={`rounded-md border-2 px-3 py-2.5 text-left transition-all ${
-                  form.questionOrder === "sequential"
-                    ? "border-orange-500/60 bg-orange-500/10"
-                    : "border-border bg-muted/40 hover:border-orange-500/30"
-                }`}
-              >
-                <span className="block text-sm font-semibold text-foreground">
-                  Sequential
-                </span>
-                <span className="block text-xs text-muted-foreground mt-0.5">
-                  Same order as the uploaded paper
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  setForm((current) => ({
-                    ...current,
-                    questionOrder: "random",
-                  }))
-                }
-                className={`rounded-md border-2 px-3 py-2.5 text-left transition-all ${
-                  form.questionOrder === "random"
-                    ? "border-orange-500/60 bg-orange-500/10"
-                    : "border-border bg-muted/40 hover:border-orange-500/30"
-                }`}
-              >
-                <span className="block text-sm font-semibold text-foreground">
-                  Random
-                </span>
-                <span className="block text-xs text-muted-foreground mt-0.5">
-                  Shuffled per student, kept for their whole attempt
-                </span>
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <p className="mb-2 block text-sm font-semibold text-foreground">
-              How should this test get its questions?
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => setMode("upload")}
-                className={`flex flex-col items-center gap-1.5 rounded-md border-2 px-2 py-3 text-center transition-all ${
-                  mode === "upload"
-                    ? "border-orange-500/60 bg-orange-500/10"
-                    : "border-border bg-muted/40 hover:border-orange-500/30"
-                }`}
-              >
-                <FileText className="h-4 w-4 text-orange-500" />
-                <span className="text-xs font-semibold text-foreground">
-                  Upload PDF
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("generate")}
-                className={`flex flex-col items-center gap-1.5 rounded-md border-2 px-2 py-3 text-center transition-all ${
-                  mode === "generate"
-                    ? "border-orange-500/60 bg-orange-500/10"
-                    : "border-border bg-muted/40 hover:border-orange-500/30"
-                }`}
-              >
-                <Sparkles className="h-4 w-4 text-orange-500" />
-                <span className="text-xs font-semibold text-foreground">
-                  Generate New
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("blank")}
-                className={`flex flex-col items-center gap-1.5 rounded-md border-2 px-2 py-3 text-center transition-all ${
-                  mode === "blank"
-                    ? "border-orange-500/60 bg-orange-500/10"
-                    : "border-border bg-muted/40 hover:border-orange-500/30"
-                }`}
-              >
-                <FilePlus className="h-4 w-4 text-orange-500" />
-                <span className="text-xs font-semibold text-foreground">
-                  Start Blank
-                </span>
-              </button>
-            </div>
-          </div>
-
-          {mode === "upload" && (
-            <div>
-              <p className="mb-2 block text-sm font-semibold text-foreground">
-                Upload Document{selectedFiles.length > 1 ? "s" : ""}
-              </p>
-              <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/40 px-4 py-6 text-center transition-all hover:border-orange-500/40 hover:bg-muted">
-                <Upload className="mb-3 h-6 w-6 text-orange-500" />
-                <span className="max-w-full break-all text-sm font-semibold text-foreground">
-                  {selectedFiles.length > 0
-                    ? `${selectedFiles.length} file${selectedFiles.length === 1 ? "" : "s"} selected`
-                    : "Choose PDF or image files"}
-                </span>
-                <span className="mt-1 text-xs text-muted-foreground">
-                  We'll extract questions automatically after upload.
-                </span>
-                <input
-                  type="file"
-                  accept="application/pdf,.pdf,image/*"
-                  multiple
-                  className="hidden"
-                  onChange={(event) => {
-                    const picked = Array.from(event.target.files || []);
-                    // Selection is additive (repeated picks keep adding, not
-                    // replacing) - reset so choosing the same file(s) again
-                    // still fires onChange.
-                    event.target.value = "";
-                    if (picked.length === 0) return;
-
-                    setSelectedFiles((current) => [...current, ...picked]);
-                    // Only auto-fill the name from a single file's name, the
-                    // same as before - with several files there's no one
-                    // obvious name to guess, and batch mode below derives
-                    // each created test's name from its own file anyway.
-                    if (
-                      selectedFiles.length === 0 &&
-                      picked.length === 1 &&
-                      !form.name.trim()
-                    ) {
-                      setForm((current) => ({
-                        ...current,
-                        name: picked[0].name.replace(/\.[^.]+$/, ""),
-                      }));
-                    }
-                  }}
+          {f.currentStep === 1 && (
+            <>
+              <CreateMockTestModeSelector mode={f.mode} setMode={f.setMode} />
+              {f.mode === "upload" && (
+                <CreateMockTestUploadPanel
+                  selectedFiles={f.selectedFiles}
+                  onFilesPicked={f.handleFilesPicked}
+                  onReorderFiles={f.setSelectedFiles}
+                  onRemoveFile={f.removeFile}
+                  uploadMode={f.uploadMode}
+                  setUploadMode={f.setUploadMode}
+                  isBatchMode={f.isBatchMode}
+                  documentType={f.documentType}
+                  setDocumentType={f.setDocumentType}
+                  desiredQuestionCount={f.desiredQuestionCount}
+                  setDesiredQuestionCount={f.setDesiredQuestionCount}
                 />
-              </label>
-
-              <MultiFileList
-                files={selectedFiles}
-                onReorder={setSelectedFiles}
-                onRemove={(index) =>
-                  setSelectedFiles((current) =>
-                    current.filter((_, i) => i !== index),
-                  )
-                }
-              />
-
-              {selectedFiles.length > 1 && (
-                <div className="mt-3">
-                  <p className="mb-2 block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Multiple files - how should these become mock tests?
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setUploadMode("combine")}
-                      className={`flex flex-col items-center gap-1.5 rounded-md border-2 px-2 py-3 text-center transition-all ${
-                        uploadMode === "combine"
-                          ? "border-orange-500/60 bg-orange-500/10"
-                          : "border-border bg-muted/40 hover:border-orange-500/30"
-                      }`}
-                    >
-                      <Layers className="h-4 w-4 text-orange-500" />
-                      <span className="text-xs font-semibold text-foreground">
-                        Combine into this one test
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setUploadMode("batch")}
-                      className={`flex flex-col items-center gap-1.5 rounded-md border-2 px-2 py-3 text-center transition-all ${
-                        uploadMode === "batch"
-                          ? "border-orange-500/60 bg-orange-500/10"
-                          : "border-border bg-muted/40 hover:border-orange-500/30"
-                      }`}
-                    >
-                      <Rows3 className="h-4 w-4 text-orange-500" />
-                      <span className="text-xs font-semibold text-foreground">
-                        Separate test per file
-                      </span>
-                    </button>
-                  </div>
-                  {isBatchMode && (
-                    <p className="mt-2 text-[11px] text-muted-foreground">
-                      Each file becomes its own mock test, named after the file
-                      (the Name field above is used as an optional prefix).
-                      Duration, marking and other settings below apply to all of
-                      them.
-                    </p>
-                  )}
-                </div>
               )}
-            </div>
-          )}
-
-          {mode === "upload" && selectedFiles.length > 0 && (
-            <div>
-              <p className="mb-2 block text-sm font-semibold text-foreground">
-                What's in{" "}
-                {selectedFiles.length > 1 ? "these files" : "this PDF"}?
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDocumentType("questions");
-                    setDesiredQuestionCount("");
-                  }}
-                  className={`rounded-2xl border-2 px-4 py-3 text-left transition-all ${
-                    documentType === "questions"
-                      ? "border-orange-500/60 bg-orange-500/10"
-                      : "border-border bg-muted/40 hover:border-orange-500/30"
-                  }`}
-                >
-                  <span className="block text-sm font-semibold text-foreground">
-                    Question Paper
-                  </span>
-                  <span className="mt-1 block text-xs text-muted-foreground">
-                    Already has ready-made questions &amp; options
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDocumentType("notes")}
-                  className={`rounded-2xl border-2 px-4 py-3 text-left transition-all ${
-                    documentType === "notes"
-                      ? "border-orange-500/60 bg-orange-500/10"
-                      : "border-border bg-muted/40 hover:border-orange-500/30"
-                  }`}
-                >
-                  <span className="block text-sm font-semibold text-foreground">
-                    Study Notes
-                  </span>
-                  <span className="mt-1 block text-xs text-muted-foreground">
-                    No questions yet — generate a quiz from this
-                  </span>
-                </button>
-              </div>
-              {documentType === "notes" && (
-                <div className="mt-3">
-                  <label
-                    htmlFor="create-notes-desired-question-count"
-                    className="mb-2 block text-sm font-semibold text-foreground"
-                  >
-                    How many questions? (optional)
-                  </label>
-                  <input
-                    id="create-notes-desired-question-count"
-                    type="number"
-                    min={NOTES_QUESTION_COUNT_MIN}
-                    max={NOTES_QUESTION_COUNT_MAX}
-                    inputMode="numeric"
-                    value={desiredQuestionCount}
-                    onChange={(event) =>
-                      setDesiredQuestionCount(event.target.value)
-                    }
-                    placeholder="Leave blank to auto-size"
-                    className="w-full rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-orange-500/50 focus:outline-none"
-                  />
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    {NOTES_QUESTION_COUNT_MIN}–{NOTES_QUESTION_COUNT_MAX}.
-                    Questions are sampled across the whole document, not just
-                    the first pages.
-                  </p>
-                </div>
+              {f.mode === "generate" && (
+                <CreateMockTestGeneratePanel
+                  uid={f.uid}
+                  isLoadingSources={f.isLoadingSources}
+                  availableSources={f.availableSources}
+                  selectedSourceIds={f.selectedSourceIds}
+                  toggleSource={f.toggleSource}
+                  targetQuestionCount={f.targetQuestionCount}
+                  setTargetQuestionCount={f.setTargetQuestionCount}
+                  difficultyHint={f.difficultyHint}
+                  setDifficultyHint={f.setDifficultyHint}
+                />
               )}
-            </div>
+            </>
           )}
 
-          {mode === "generate" && (
-            <div className="space-y-4">
-              <div>
-                <p className="mb-2 block text-sm font-semibold text-foreground">
-                  Generate from which mock test(s)? *
-                </p>
-                <p className="mb-2 text-xs text-muted-foreground">
-                  The AI only sees these tests' topic breakdown and marking
-                  scheme — never the actual questions — so it writes a brand-new
-                  test with the same shape, not copies.
-                </p>
-                <div className="max-h-44 space-y-1.5 overflow-y-auto rounded-2xl border border-border bg-muted/30 p-2">
-                  {isLoadingSources && (
-                    <p className="px-2 py-3 text-center text-xs text-muted-foreground">
-                      Loading mock tests…
-                    </p>
-                  )}
-                  {!isLoadingSources && availableSources.length === 0 && (
-                    <p className="px-2 py-3 text-center text-xs text-muted-foreground">
-                      No mock tests with questions yet to generate from.
-                    </p>
-                  )}
-                  {availableSources.map((test) => (
-                    <label
-                      key={test.id}
-                      className={`flex cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2 text-sm transition-all ${
-                        selectedSourceIds.includes(test.id)
-                          ? "border-orange-500/50 bg-orange-500/10"
-                          : "border-transparent hover:bg-muted"
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedSourceIds.includes(test.id)}
-                        onChange={() => toggleSource(test.id)}
-                        className="h-4 w-4 shrink-0 rounded border-border accent-orange-500"
-                      />
-                      <span className="min-w-0 flex-1 truncate font-medium text-foreground">
-                        {test.name}
-                      </span>
-                      <span className="shrink-0 text-xs text-muted-foreground">
-                        {test.total_questions} question(s)
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label
-                    htmlFor={`${uid}-question-count`}
-                    className="mb-2 block text-sm font-semibold text-foreground"
-                  >
-                    Question Count
-                  </label>
-                  <input
-                    id={`${uid}-question-count`}
-                    type="number"
-                    min={MIN_GENERATED_QUESTIONS}
-                    max={MAX_GENERATED_QUESTIONS}
-                    value={targetQuestionCount}
-                    onChange={(event) =>
-                      setTargetQuestionCount(event.target.value)
-                    }
-                    className="w-full rounded-md border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
-                  />
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    {MIN_GENERATED_QUESTIONS}–{MAX_GENERATED_QUESTIONS}
-                  </p>
-                </div>
-                <div>
-                  <label
-                    htmlFor={`${uid}-difficulty`}
-                    className="mb-2 block text-sm font-semibold text-foreground"
-                  >
-                    Difficulty
-                  </label>
-                  <select
-                    id={`${uid}-difficulty`}
-                    value={difficultyHint}
-                    onChange={(event) => setDifficultyHint(event.target.value)}
-                    className="w-full rounded-md border border-border bg-card px-4 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/40"
-                  >
-                    {DIFFICULTY_OPTIONS.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
+          {f.currentStep === 2 && (
+            <CreateMockTestBasicsStep
+              uid={f.uid}
+              isBatchMode={f.isBatchMode}
+              form={f.form}
+              updateForm={f.updateForm}
+            />
           )}
 
-          {error && (
+          {f.currentStep === 3 && (
+            <CreateMockTestSettingsStep
+              uid={f.uid}
+              form={f.form}
+              updateForm={f.updateForm}
+            />
+          )}
+
+          {f.currentStep === 4 && (
+            <CreateMockTestReviewStep
+              mode={f.mode}
+              isBatchMode={f.isBatchMode}
+              selectedFiles={f.selectedFiles}
+              documentType={f.documentType}
+              desiredQuestionCount={f.desiredQuestionCount}
+              form={f.form}
+              targetQuestionCount={f.targetQuestionCount}
+              difficultyHint={f.difficultyHint}
+              selectedSourceIds={f.selectedSourceIds}
+              availableSources={f.availableSources}
+            />
+          )}
+
+          {f.error && (
             <div className="rounded-md border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs font-medium text-red-500">
-              {error}
+              {f.error}
             </div>
           )}
 
-          <div className="flex flex-col-reverse sm:flex-row gap-2.5 sm:gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 rounded-md border border-border py-2.5 text-xs sm:text-sm font-semibold text-muted-foreground transition-all hover:bg-muted"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || isViewer}
-              title={
-                isViewer
-                  ? "Editor role is required to add mock tests"
-                  : undefined
-              }
-              className={`flex-1 flex items-center justify-center gap-2 rounded-md py-2.5 text-xs sm:text-sm font-semibold text-white transition-all shadow-sm ${
-                isViewer
-                  ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50"
-                  : "bg-blue-500 hover:bg-blue-600"
-              }`}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-                  <span>
-                    {batchProgress
-                      ? `Creating ${batchProgress.done} of ${batchProgress.total}...`
-                      : mode === "generate"
-                        ? "Generating..."
-                        : "Creating..."}
-                  </span>
-                </>
-              ) : (
-                <span>
-                  {isBatchMode
-                    ? `Add ${selectedFiles.length} Mock Tests`
-                    : "Add Mock Test"}
-                </span>
-              )}
-            </button>
-          </div>
+          <CreateMockTestFooter
+            currentStep={f.currentStep}
+            totalSteps={CREATE_MOCK_TEST_STEPS.length}
+            onClose={onClose}
+            onBack={f.goToPreviousStep}
+            onNext={f.goToNextStep}
+            isSubmitting={f.isSubmitting}
+            isViewer={f.isViewer}
+            isBatchMode={f.isBatchMode}
+            selectedFilesCount={f.selectedFiles.length}
+            mode={f.mode}
+            batchProgress={f.batchProgress}
+          />
         </form>
       </div>
     </div>

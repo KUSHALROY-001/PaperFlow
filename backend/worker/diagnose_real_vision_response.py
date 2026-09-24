@@ -18,7 +18,7 @@ import sys
 
 from .ai.gemini_provider import GeminiProvider
 from .ai.provider import SYSTEM_PROMPT, build_pdf_prompt, _attach_diagram_crops
-from .ai.schemas import extract_json_payload, normalize_ai_questions
+from .ai.schema import extract_json_payload, normalize_ai_questions
 from .pdf_extract import extract_pdf_pages
 
 

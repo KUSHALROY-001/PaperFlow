@@ -24,7 +24,7 @@ import json
 import re
 
 from .ai import get_provider
-from .ai.schemas import extract_json_payload
+from .ai.schema import extract_json_payload
 from .db import get_connection
 
 

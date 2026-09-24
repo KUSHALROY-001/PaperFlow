@@ -64,13 +64,13 @@ The API key is used only by the Python worker. Never expose it in frontend `.env
 ## Run Once
 
 ```bash
-python -m worker.worker --once
+python -m worker.worker.worker --once
 ```
 
 ## Run Continuously
 
 ```bash
-python -m worker.worker
+python -m worker.worker.worker
 ```
 
 ## Supported PDF Pattern

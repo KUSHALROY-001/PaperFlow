@@ -19,7 +19,7 @@ from ..config import (
     AI_VISION_CHUNK_CONCURRENCY,
     GEMINI_API_KEY,
 )
-from .schemas import (
+from .schema import (
     GEMINI_GRADING_RESPONSE_SCHEMA,
     GEMINI_QUESTION_RESPONSE_SCHEMA,
     GEMINI_TEMPLATE_RESPONSE_SCHEMA,

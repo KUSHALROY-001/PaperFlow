@@ -74,9 +74,17 @@ export default function MockTestCard({ mocktest, clusterId }) {
             : "surface-card rounded-2xl p-4 sm:p-5 border border-border hover:border-orange-500/40 flex flex-col justify-between"
         }`}
       >
-        {/* Continuous Rotating RGB Border Glow when mocktest is in running/processing phase */}
+        {/* Running-state border: a single soft highlight (black in light
+            mode, white in dark mode) covering ~half the perimeter,
+            continuously sweeping around the card - replaces the previous
+            multicolor RGB conic-gradient. Same oversized-rotating-square
+            trick as before: this div is 3x the card size and centered
+            behind it, so rotating it sweeps the gradient's arc around the
+            card's edge; only the p-0.5 gap between this and the inner
+            rounded-[14px] card (below) is visible, which is what reads as
+            the "border". */}
         {isProcessing && (
-          <div className="absolute inset-[-200%] animate-rgb-border bg-[conic-gradient(from_0deg,#ff4500,#ffaa00,#00e5ff,#7600ff,#ff007f,#ff4500)] opacity-100" />
+          <div className="absolute inset-[-200%] animate-border-sweep border-sweep opacity-100" />
         )}
 
         <div
@@ -92,7 +100,10 @@ export default function MockTestCard({ mocktest, clusterId }) {
                 <FileText className="w-5 h-5" />
               </div>
               <div className="flex items-center gap-2">
-                {/* Blinking / Pulsing "Processing" status badge when in running phase */}
+                {/* Running-state status badge: keeps its orange color
+                    (text-shimmer layers on top via currentColor, see
+                    index.css) and adds the AI-style shimmer sweep +
+                    existing pulse/ring treatment. */}
                 <span
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
                     isProcessing
@@ -105,7 +116,9 @@ export default function MockTestCard({ mocktest, clusterId }) {
                       isProcessing ? "bg-orange-500 animate-ping" : status.dot
                     }`}
                   />
-                  {status.label}
+                  <span className={isProcessing ? "text-shimmer" : undefined}>
+                    {status.label}
+                  </span>
                 </span>
                 <CardActionMenu
                   onRename={() => setShowRename(true)}
@@ -113,7 +126,11 @@ export default function MockTestCard({ mocktest, clusterId }) {
                 />
               </div>
             </div>
-            <h3 className="font-bold text-foreground mb-1 truncate text-sm sm:text-base group-hover:text-orange-500 transition-colors">
+            <h3
+              className={`font-bold text-foreground mb-1 truncate text-sm sm:text-base transition-colors ${
+                isProcessing ? "text-shimmer" : "group-hover:text-orange-500"
+              }`}
+            >
               {mocktest.name}
             </h3>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">

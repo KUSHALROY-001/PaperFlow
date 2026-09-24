@@ -64,6 +64,13 @@
   --motion-base: 200ms;
   --motion-slow: 320ms;
   --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Running-state border sweep (MockTestCard) + text shimmer - black in
+     light mode, flipped to white below in .dark. Kept as an rgba (not a
+     flat color) so the conic-gradient stops it feeds into can fade the
+     highlight in/out smoothly rather than cutting it off hard. */
+  --sweep-highlight: rgba(15, 23, 42, 0.55);
+  --sweep-highlight-soft: rgba(15, 23, 42, 0);
 }
 
 .dark {
@@ -101,6 +108,9 @@
   --disabled: #18181c;
   --disabled-foreground: #64748b;
   --selection: #431407;
+
+  --sweep-highlight: rgba(255, 255, 255, 0.85);
+  --sweep-highlight-soft: rgba(255, 255, 255, 0);
 }
 
 @theme inline {
@@ -327,7 +337,7 @@
   animation: progress-indeterminate 1.8s ease-in-out infinite;
 }
 
-@keyframes rgb-border-spin {
+@keyframes border-sweep-spin {
   0% {
     transform: rotate(0deg);
   }
@@ -336,8 +346,68 @@
   }
 }
 
-.animate-rgb-border {
-  animation: rgb-border-spin 3.5s linear infinite;
+/* Running-state card border (MockTestCard) - a single soft highlight arc
+   covering ~50% of the perimeter (peaks at 90deg, fades to fully
+   transparent by 180deg either side, leaving the remaining half of the
+   circle - 180deg to 360deg - inactive) that continuously rotates. Colour
+   comes from --sweep-highlight (black in light mode, white in dark mode -
+   see index.css :root/.dark). Linear timing keeps the rotation's angular
+   speed constant so the loop has no visible seam. */
+.border-sweep {
+  background: conic-gradient(
+    from 0deg,
+    var(--sweep-highlight-soft) 0deg,
+    var(--sweep-highlight) 90deg,
+    var(--sweep-highlight-soft) 180deg,
+    var(--sweep-highlight-soft) 360deg
+  );
+}
+
+.animate-border-sweep {
+  animation: border-sweep-spin 4.5s linear infinite;
+}
+
+@keyframes text-shimmer-sweep {
+  0% {
+    background-position: 150% 0;
+  }
+  100% {
+    background-position: -50% 0;
+  }
+}
+
+/* Running-state text (MockTestCard's status badge + mock test name) - an
+   AI-style luminous highlight that sweeps left to right across the letters
+   and loops, the same technique ChatGPT/Claude-style "thinking" labels
+   use. Deliberately does NOT hardcode a text color or use Tailwind's
+   text-transparent utility (which sets `color: transparent` and would
+   break the `currentColor` stops below) - it layers on top of whatever
+   color the element already has (orange badge, foreground heading, etc.)
+   via -webkit-text-fill-color instead, which only swaps the glyph fill
+   and leaves `color`/currentColor intact for the gradient to read.
+   Applied alongside the element's normal Tailwind text-color class, not
+   instead of it. */
+.text-shimmer {
+  /* Dims the element's own color to ~45% at rest, sweeps back up to its
+     full color as the highlight passes, then dims again - rather than
+     mixing in a separate black/white tone. That's deliberate: this badge
+     is already orange and the heading is already near-black/near-white
+     depending on theme, so overlaying a flat black/white highlight (as
+     used for the border) would barely register against text that's
+     already that dark/light. Dim-to-full-to-dim of the same hue stays
+     legible and visible in both themes without introducing a color that
+     doesn't belong to the element. */
+  background-image: linear-gradient(
+    100deg,
+    color-mix(in srgb, currentColor 45%, transparent) 35%,
+    currentColor 50%,
+    color-mix(in srgb, currentColor 45%, transparent) 65%
+  );
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: text-shimmer-sweep 2.6s linear infinite;
 }
 
 @keyframes slide-in-from-right {
