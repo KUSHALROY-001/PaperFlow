@@ -38,6 +38,11 @@ export async function remove(req, res) {
   res.status(204).send();
 }
 
+export async function restoreStale(req, res) {
+  const question = await questionsService.restoreStaleQuestion(req.params.questionId, req.workspaceId);
+  res.json({ question });
+}
+
 export async function reorder(req, res) {
   await questionsService.reorderQuestions(
     req.params.mockTestId,

@@ -217,6 +217,12 @@ export const api = {
   me() {
     return apiRequest("/api/auth/me");
   },
+  saveOnboarding(payload) {
+    return apiRequest("/api/auth/onboarding", {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+  },
   listClusters() {
     return apiRequest("/api/clusters");
   },
@@ -371,10 +377,11 @@ export const api = {
   // Called with { limit, offset } it returns one page as
   // { questions, total, limit, offset, nextOffset } - see
   // mock-tests.controller.js#listQuestions.
-  listQuestions(mockTestId, { limit, offset } = {}) {
+  listQuestions(mockTestId, { limit, offset, includeStale = false } = {}) {
     const params = new URLSearchParams();
     if (limit != null) params.set("limit", String(limit));
     if (offset != null) params.set("offset", String(offset));
+    if (includeStale) params.set("includeStale", "true");
     const query = params.toString();
     return apiRequest(
       `/api/mock-tests/${mockTestId}/questions${query ? `?${query}` : ""}`,
@@ -397,6 +404,9 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify(payload),
     });
+  },
+  restoreStaleQuestion(questionId) {
+    return apiRequest(`/api/questions/${questionId}/restore-stale`, { method: "POST" });
   },
   bulkUpdateQuestionStatus(questionIds, status) {
     return apiRequest("/api/questions/bulk-status", {

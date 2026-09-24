@@ -2,7 +2,7 @@ import { FileText, Sparkles, FilePlus } from "lucide-react";
 
 export default function CreateMockTestModeSelector({ mode, setMode }) {
   return (
-    <div>
+    <div data-tour="mock-mode">
       <p className="mb-2 block text-sm font-semibold text-foreground">
         How should this test get its questions?
       </p>

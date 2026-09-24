@@ -24,7 +24,11 @@ export default function CreateMockTestUploadPanel({
         <p className="mb-2 block text-sm font-semibold text-foreground">
           Upload Document{selectedFiles.length > 1 ? "s" : ""}
         </p>
-        <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/40 px-4 py-6 text-center transition-all hover:border-orange-500/40 hover:bg-muted">
+        <label
+          data-tour="mock-upload"
+          data-has-files={selectedFiles.length > 0}
+          className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/40 px-4 py-6 text-center transition-all hover:border-orange-500/40 hover:bg-muted"
+        >
           <Upload className="mb-3 h-6 w-6 text-orange-500" />
           <span className="max-w-full break-all text-sm font-semibold text-foreground">
             {selectedFiles.length > 0

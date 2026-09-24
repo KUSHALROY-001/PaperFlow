@@ -382,6 +382,21 @@ export async function deleteQuestion(questionId, workspaceId) {
   return result.rowCount > 0;
 }
 
+// Makes a review-only stale slot part of the live mock test again. The
+// worker owns setting this flag after reprocessing; an editor owns the
+// explicit decision to keep it.
+export async function restoreStaleQuestion(questionId, workspaceId) {
+  const result = await pool.query(
+    `UPDATE question_slots
+     SET review_flags = review_flags - 'staleFromReprocess' - 'staleReason'
+     WHERE id = $1 AND workspace_id = $2
+       AND review_flags->>'staleFromReprocess' = 'true'
+     RETURNING id`,
+    [questionId, workspaceId],
+  );
+  return result.rows[0] || null;
+}
+
 // Bulk approve/reject for the Review Queue's list view (Phase 3 - "these
 // 10 are all obviously fine"). Scoped to `status = 'needs_review'` so a
 // stale selection (e.g. someone else already decided one of these

@@ -860,11 +860,12 @@ export async function getQuestionStats(mockTestId, workspaceId) {
 // Unbounded: still what the PDF export needs (it renders the whole paper
 // in one document, so there is no page to fetch). Everything interactive
 // should use listQuestionsPage below instead.
-export async function listQuestions(mockTestId, workspaceId) {
+export async function listQuestions(mockTestId, workspaceId, { includeStale = false } = {}) {
   await getMockTestOrFail(mockTestId, workspaceId);
   const questions = await mockTestsRepo.listQuestionsWithOptions(
     mockTestId,
     workspaceId,
+    { includeStale },
   );
   const withDiagrams = await attachDiagramUrls(questions, workspaceId, {
     idField: "id",
@@ -882,7 +883,7 @@ export async function listQuestions(mockTestId, workspaceId) {
 export async function listQuestionsPage(
   mockTestId,
   workspaceId,
-  { limit, offset = 0 } = {},
+  { limit, offset = 0, includeStale = false } = {},
 ) {
   await getMockTestOrFail(mockTestId, workspaceId);
 
@@ -890,8 +891,9 @@ export async function listQuestionsPage(
     mockTestsRepo.listQuestionsWithOptions(mockTestId, workspaceId, {
       limit,
       offset,
+      includeStale,
     }),
-    mockTestsRepo.countQuestions(mockTestId, workspaceId),
+    mockTestsRepo.countQuestions(mockTestId, workspaceId, { includeStale }),
   ]);
 
   const withDiagrams = await attachDiagramUrls(rows, workspaceId, {

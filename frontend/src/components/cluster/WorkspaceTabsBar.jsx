@@ -10,6 +10,8 @@ export default function WorkspaceTabsBar({
         return (
           <button
             key={tab.id}
+            data-tour={`tab-${tab.id}`}
+            data-active={active}
             onClick={() => setActiveTab(tab.id)}
             className={`min-w-0 flex-1 py-2.5 px-2 sm:px-4 rounded-md text-xs sm:text-sm font-semibold transition-all ${
               active

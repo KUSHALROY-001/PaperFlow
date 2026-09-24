@@ -279,6 +279,7 @@ export default function ClusterWorkspace() {
           )}
 
           <button
+            data-tour="add-mock-test"
             disabled={isViewer}
             onClick={() => !isViewer && setShowModal(true)}
             title={
@@ -317,7 +318,7 @@ export default function ClusterWorkspace() {
             className={`w-full sm:w-auto px-4 py-2.5 font-semibold rounded-full text-xs shadow-xs transition-all ${
               isViewer
                 ? "bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50"
-                : "bg-[#ea580c] hover:bg-[#c2410c] text-white"
+                : "border border-black dark:border-white bg-transparent hover:bg-black dark:hover:bg-white text-foreground hover:text-white dark:hover:text-black"
             }`}
           >
             Add Mock Test

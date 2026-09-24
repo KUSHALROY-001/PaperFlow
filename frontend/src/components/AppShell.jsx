@@ -7,6 +7,7 @@ import Sidebar from "./app-shell/Sidebar";
 import MobileNavDrawer from "./app-shell/MobileNavDrawer";
 import TopBar from "./app-shell/TopBar";
 import GuestWorkspaceBanner from "./app-shell/GuestWorkspaceBanner";
+import { GuideProvider } from "@/guide/GuideProvider";
 
 // Restructured from a single 793-line file into components/app-shell/ -
 // this component now only owns what's genuinely cross-cutting (mobile nav
@@ -62,51 +63,53 @@ export default function AppShell() {
   const isEditorRoute = location.pathname.includes("/editor");
 
   return (
-    <div className="min-h-screen bg-background font-sans">
-      {/* Sidebar */}
-      {!isEditorRoute && (
-        <aside className="hidden lg:flex w-55 bg-card border-r border-border flex-col fixed h-full z-40">
-          <Sidebar
+    <GuideProvider>
+      <div className="min-h-screen bg-background font-sans">
+        {/* Sidebar */}
+        {!isEditorRoute && (
+          <aside className="hidden lg:flex w-55 bg-card border-r border-border flex-col fixed h-full z-40">
+            <Sidebar
+              location={location}
+              onNavigate={() => {}}
+              onCreateCluster={openClusterModal}
+              badges={navBadges}
+            />
+          </aside>
+        )}
+
+        {!isEditorRoute && (
+          <MobileNavDrawer
+            isOpen={mobileNavOpen}
+            onClose={() => setMobileNavOpen(false)}
             location={location}
-            onNavigate={() => {}}
             onCreateCluster={openClusterModal}
             badges={navBadges}
           />
-        </aside>
-      )}
-
-      {!isEditorRoute && (
-        <MobileNavDrawer
-          isOpen={mobileNavOpen}
-          onClose={() => setMobileNavOpen(false)}
-          location={location}
-          onCreateCluster={openClusterModal}
-          badges={navBadges}
-        />
-      )}
-
-      {/* Main content */}
-      <div
-        className={`min-h-screen flex flex-col ${isEditorRoute ? "" : "lg:ml-55"}`}
-      >
-        {!isEditorRoute && (
-          <TopBar
-            location={location}
-            onOpenMobileNav={() => setMobileNavOpen(true)}
-            pendingInviteCount={pendingInviteCount}
-          />
         )}
 
-        {!isEditorRoute && <GuestWorkspaceBanner />}
-
-        <main
-          className={`flex-1 min-w-0 ${isEditorRoute ? "p-0" : "p-2 sm:p-6"}`}
+        {/* Main content */}
+        <div
+          className={`min-h-screen flex flex-col ${isEditorRoute ? "" : "lg:ml-55"}`}
         >
-          <Outlet />
-        </main>
-      </div>
+          {!isEditorRoute && (
+            <TopBar
+              location={location}
+              onOpenMobileNav={() => setMobileNavOpen(true)}
+              pendingInviteCount={pendingInviteCount}
+            />
+          )}
 
-      {showModal && <CreateClusterModal onClose={() => setShowModal(false)} />}
-    </div>
+          {!isEditorRoute && <GuestWorkspaceBanner />}
+
+          <main
+            className={`flex-1 min-w-0 ${isEditorRoute ? "p-0" : "p-2 sm:p-6"}`}
+          >
+            <Outlet />
+          </main>
+        </div>
+
+        {showModal && <CreateClusterModal onClose={() => setShowModal(false)} />}
+      </div>
+    </GuideProvider>
   );
 }

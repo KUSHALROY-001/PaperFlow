@@ -69,6 +69,7 @@ export async function findAttemptById(attemptId, workspaceId) {
         SELECT COALESCE(SUM(COALESCE(q.marks_per_correct, mt.marks_per_correct, 0)), 0)
         FROM questions q
         WHERE q.mock_test_id = ea.mock_test_id
+          AND q.review_flags->>'staleFromReprocess' IS DISTINCT FROM 'true'
           AND (
             ea.topics IS NULL
             OR cardinality(ea.topics) = 0
@@ -105,6 +106,7 @@ export async function findAttemptByIdForUser(attemptId, userId) {
         SELECT COALESCE(SUM(COALESCE(q.marks_per_correct, mt.marks_per_correct, 0)), 0)
         FROM questions q
         WHERE q.mock_test_id = ea.mock_test_id
+          AND q.review_flags->>'staleFromReprocess' IS DISTINCT FROM 'true'
           AND (
             ea.topics IS NULL
             OR cardinality(ea.topics) = 0
@@ -162,6 +164,7 @@ export async function listAttemptsForUser(userId) {
         SELECT COALESCE(SUM(COALESCE(q.marks_per_correct, mt.marks_per_correct, 0)), 0)
         FROM questions q
         WHERE q.mock_test_id = ea.mock_test_id
+          AND q.review_flags->>'staleFromReprocess' IS DISTINCT FROM 'true'
           AND (
             ea.topics IS NULL
             OR cardinality(ea.topics) = 0
@@ -338,6 +341,7 @@ export async function listQuestionsWithAnswersForAttempt(
     FROM questions q
     LEFT JOIN exam_answers ea ON ea.question_id = q.id AND ea.attempt_id = $1
     WHERE q.mock_test_id = $2
+      AND q.review_flags->>'staleFromReprocess' IS DISTINCT FROM 'true'
       -- Same topic-scoping as listQuestionsForScoring above - a
       -- topic-practice attempt's review must only ever show its own
       -- topics' questions, not the whole mock test's.
@@ -374,6 +378,7 @@ export async function listQuestionsForScoring(mockTestId, attemptId, topics) {
     FROM questions q
     LEFT JOIN exam_answers ea ON ea.question_id = q.id AND ea.attempt_id = $2
     WHERE q.mock_test_id = $1
+      AND q.review_flags->>'staleFromReprocess' IS DISTINCT FROM 'true'
       AND ($3::text[] IS NULL OR q.topic = ANY($3::text[]))
     `,
     [mockTestId, attemptId, topics && topics.length ? topics : null],
@@ -508,7 +513,10 @@ export async function findActiveAttemptForUser(
 
 export async function findQuestionForAttempt(questionId) {
   const result = await pool.query(
-    "SELECT mock_test_id, question_type FROM questions WHERE id = $1",
+    `SELECT mock_test_id, question_type
+     FROM questions
+     WHERE id = $1
+       AND review_flags->>'staleFromReprocess' IS DISTINCT FROM 'true'`,
     [questionId],
   );
 

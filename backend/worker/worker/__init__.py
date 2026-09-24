@@ -1,9 +1,16 @@
-"""Re-exports this subpackage's public surface - just process_next_job,
-the one thing http_server.py needs (`from .worker import process_next_job`)
-- so that import keeps working unchanged even though worker.py now lives a
-level deeper, inside this subpackage. See backend/worker/ARCHITECTURE.md.
+"""Public surface for worker job processing.
+
+``process_next_job`` is imported lazily so running ``python -m
+worker.worker.worker`` does not load the target module while Python is still
+initializing this package.
 """
 
-from .worker import process_next_job
-
 __all__ = ["process_next_job"]
+
+
+def __getattr__(name):
+    if name == "process_next_job":
+        from .worker import process_next_job
+
+        return process_next_job
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

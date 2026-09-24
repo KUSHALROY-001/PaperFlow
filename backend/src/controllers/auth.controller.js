@@ -42,7 +42,18 @@ export async function googleAuth(req, res) {
 
 export async function me(req, res) {
   const workspaces = await authService.listWorkspacesForUser(req.user.id);
-  res.json({ user: req.user, workspaceId: req.workspaceId, workspaces });
+  const onboarding = await authService.getOnboarding(req.user.id);
+  res.json({
+    user: req.user,
+    workspaceId: req.workspaceId,
+    workspaces,
+    onboarding,
+  });
+}
+
+export async function updateOnboarding(req, res) {
+  const onboarding = await authService.saveOnboarding(req.user.id, req.body);
+  res.json({ onboarding });
 }
 
 export async function getProfile(req, res) {

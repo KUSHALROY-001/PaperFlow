@@ -31,7 +31,7 @@ const QUESTIONS_PAGE_SIZE = 50;
  */
 export function useStreamingQuestions(
   mockTestId,
-  { enabled = true, autoLoad = true, total = 0, resetToken = null } = {},
+  { enabled = true, autoLoad = true, total = 0, resetToken = null, includeStale = false } = {},
 ) {
   const [questions, setQuestions] = useState([]);
   const [isFetching, setIsFetching] = useState(false);
@@ -46,7 +46,7 @@ export function useStreamingQuestions(
   // number moves.
   const blockedRef = useRef(null);
 
-  const streamKey = `${mockTestId || ""}::${resetToken ?? ""}`;
+  const streamKey = `${mockTestId || ""}::${resetToken ?? ""}::${includeStale}`;
 
   // Full restart: different mock test, or the caller signalled that what's
   // on the server has been replaced rather than appended to. The second
@@ -94,7 +94,7 @@ export function useStreamingQuestions(
     setIsFetching(true);
 
     api
-      .listQuestions(mockTestId, { limit: QUESTIONS_PAGE_SIZE, offset })
+      .listQuestions(mockTestId, { limit: QUESTIONS_PAGE_SIZE, offset, includeStale })
       .then((page) => {
         if (cancelled) return;
         const incoming = Array.isArray(page?.questions) ? page.questions : [];
@@ -143,7 +143,7 @@ export function useStreamingQuestions(
     // questions.length is a dependency on purpose: in automatic mode it
     // drains the list page by page; in manual mode it stops when it reaches
     // the caller's requested page boundary.
-  }, [autoLoad, enabled, mockTestId, requestedCount, total, questions.length]);
+  }, [autoLoad, enabled, mockTestId, requestedCount, total, questions.length, includeStale]);
 
   const loadMoreQuestions = useCallback(() => {
     blockedRef.current = null;

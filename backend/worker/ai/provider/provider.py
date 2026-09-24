@@ -317,7 +317,7 @@ def get_provider():
         return OpenAIProvider()
 
     if AI_PROVIDER == "gemini":
-        from .gemini_provider import GeminiProvider
+        from ..gemini_provider import GeminiProvider
 
         return GeminiProvider()
 
@@ -798,4 +798,3 @@ such as "Reasoning question 21" with options A/B/C/D.
 Regex parser preview:
 {regex_preview}
 """.strip()
-

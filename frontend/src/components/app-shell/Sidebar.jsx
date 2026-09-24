@@ -47,7 +47,10 @@ export default function Sidebar({
         </Link>
       </div>
 
-      <nav className="flex-1 space-y-4 overflow-y-auto scrollbar-hidden">
+      <nav
+        data-tour="nav"
+        className="flex-1 space-y-4 overflow-y-auto scrollbar-hidden"
+      >
         {navSections.map((section) => (
           <div key={section.items[0]?.to ?? section.label}>
             {section.label && (

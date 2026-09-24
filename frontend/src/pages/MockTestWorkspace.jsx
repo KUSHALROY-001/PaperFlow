@@ -53,6 +53,7 @@ export default function MockTestWorkspace() {
     handlePublish,
     handleQuestionStatusChange,
     handleQuestionDelete,
+    handleRestoreStaleQuestion,
     handleDelete,
   } = useMockTestWorkspace();
 
@@ -174,6 +175,7 @@ export default function MockTestWorkspace() {
         aiSummary={aiSummary}
         handleQuestionStatusChange={handleQuestionStatusChange}
         handleQuestionDelete={handleQuestionDelete}
+        handleRestoreStaleQuestion={handleRestoreStaleQuestion}
         metadata={metadata}
         submissions={submissions}
         isLoadingSubmissions={isLoadingSubmissions}

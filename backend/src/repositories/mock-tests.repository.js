@@ -289,14 +289,16 @@ export async function insertProcessingJobEvent(
 // MockTestCard.jsx). Deliberately the same "no status filter" as
 // playable_mock_test_questions (see migrations/017) and the catalog
 // version - a student picking topics here should see counts that match
-// what a session actually delivers, not a subset filtered by review
-// status that the session itself doesn't filter by either.
+// what a session actually delivers. Reprocess-orphaned questions stay
+// available to reviewers, but are deliberately excluded from a new session.
 export async function getMockTestTopicCounts(mockTestId) {
   const result = await pool.query(
     `
     SELECT topic, COUNT(*)::int AS count
     FROM questions
-    WHERE mock_test_id = $1 AND topic IS NOT NULL
+    WHERE mock_test_id = $1
+      AND topic IS NOT NULL
+      AND review_flags->>'staleFromReprocess' IS DISTINCT FROM 'true'
     GROUP BY topic
     ORDER BY topic ASC
     `,
@@ -319,7 +321,7 @@ export async function getMockTestTopicCounts(mockTestId) {
 export async function listQuestionsWithOptions(
   mockTestId,
   workspaceId,
-  { limit = null, offset = 0 } = {},
+  { limit = null, offset = 0, includeStale = false } = {},
 ) {
   const result = await pool.query(
     `
@@ -327,11 +329,12 @@ export async function listQuestionsWithOptions(
     FROM questions q
     WHERE q.mock_test_id = $1
       AND q.workspace_id = $2
+      AND ($5::boolean OR q.review_flags->>'staleFromReprocess' IS DISTINCT FROM 'true')
     ORDER BY q.question_no ASC
     LIMIT $3::int
     OFFSET $4::int
     `,
-    [mockTestId, workspaceId, limit, offset],
+    [mockTestId, workspaceId, limit, offset, includeStale],
   );
 
   return result.rows;
@@ -355,10 +358,18 @@ export async function getMockTestQuestionStats(mockTestId, workspaceId) {
       COUNT(*)::int AS total,
       COUNT(*) FILTER (WHERE q.status = 'approved')::int AS approved,
       COUNT(*) FILTER (WHERE q.confidence < 75)::int AS low_confidence,
+      (
+        SELECT COUNT(*)::int
+        FROM questions stale_q
+        WHERE stale_q.mock_test_id = $1
+          AND stale_q.workspace_id = $2
+          AND stale_q.review_flags->>'staleFromReprocess' = 'true'
+      ) AS stale_reprocess,
       COUNT(DISTINCT q.topic) FILTER (WHERE q.topic IS NOT NULL)::int AS topics_found
     FROM questions q
     WHERE q.mock_test_id = $1
       AND q.workspace_id = $2
+      AND q.review_flags->>'staleFromReprocess' IS DISTINCT FROM 'true'
     `,
     [mockTestId, workspaceId],
   );
@@ -369,21 +380,23 @@ export async function getMockTestQuestionStats(mockTestId, workspaceId) {
     approved: row.approved ?? 0,
     lowConfidence: row.low_confidence ?? 0,
     topicsFound: row.topics_found ?? 0,
+    staleReprocess: row.stale_reprocess ?? 0,
   };
 }
 
 // Total row count for a paginated listQuestionsWithOptions call, so the
 // client can show "42 of 3000" and know when to stop fetching without
 // having to request a page past the end first.
-export async function countQuestions(mockTestId, workspaceId) {
+export async function countQuestions(mockTestId, workspaceId, { includeStale = false } = {}) {
   const result = await pool.query(
     `
     SELECT COUNT(*)::int AS count
     FROM questions q
     WHERE q.mock_test_id = $1
       AND q.workspace_id = $2
+      AND ($3::boolean OR q.review_flags->>'staleFromReprocess' IS DISTINCT FROM 'true')
     `,
-    [mockTestId, workspaceId],
+    [mockTestId, workspaceId, includeStale],
   );
 
   return result.rows[0]?.count ?? 0;
@@ -467,6 +480,7 @@ export async function getTopicDistributionForMockTests(mockTestIds) {
     JOIN questions q ON q.content_id = qc.id
     WHERE q.mock_test_id = ANY($1::uuid[])
       AND q.status <> 'rejected'
+      AND q.review_flags->>'staleFromReprocess' IS DISTINCT FROM 'true'
     GROUP BY qc.topic, qc.subtopic, qc.question_type
     ORDER BY question_count DESC
     `,

@@ -150,6 +150,7 @@ function parsePositiveInt(value, fallback) {
 }
 
 export async function listQuestions(req, res) {
+  const includeStale = req.query.includeStale === "true";
   // No ?limit= means the original unpaginated response shape
   // ({ questions: [...] }), which existing callers still depend on.
   // Passing a limit opts into the paged envelope (total / nextOffset).
@@ -157,6 +158,7 @@ export async function listQuestions(req, res) {
     const questions = await mockTestsService.listQuestions(
       req.params.mockTestId,
       req.workspaceId,
+      { includeStale },
     );
     res.json({ questions });
     return;
@@ -171,7 +173,7 @@ export async function listQuestions(req, res) {
   const page = await mockTestsService.listQuestionsPage(
     req.params.mockTestId,
     req.workspaceId,
-    { limit, offset },
+    { limit, offset, includeStale },
   );
   res.json(page);
 }

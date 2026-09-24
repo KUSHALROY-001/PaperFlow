@@ -37,6 +37,7 @@ export default function WorkspaceTabPanels({
   aiSummary,
   handleQuestionStatusChange,
   handleQuestionDelete,
+  handleRestoreStaleQuestion,
   metadata,
   submissions = [],
   isLoadingSubmissions,
@@ -83,6 +84,7 @@ export default function WorkspaceTabPanels({
           mocktest={mocktest}
           onStatusChange={handleQuestionStatusChange}
           onDelete={handleQuestionDelete}
+          onRestoreStale={handleRestoreStaleQuestion}
           clusterId={clusterId}
           mockTestId={mocktest.id}
         />

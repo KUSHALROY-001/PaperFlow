@@ -44,6 +44,29 @@ export function isImageFile(file) {
   return file.type.startsWith("image/");
 }
 
+const OFFICE_DOC_MIME_TYPES = new Set([
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+]);
+const OFFICE_DOC_EXTENSIONS = [".doc", ".docx", ".ppt", ".pptx"];
+
+// Word/PowerPoint files - matches the accept list on the file input in
+// CreateMockTestUploadPanel.jsx. Never routed through pdf-lib
+// (mergeFilesToPdf/ensureSingleFileIsPdf only understand PDF and image
+// bytes; an Office file would hit their "isn't a PDF or image file"
+// branch and throw). Only meaningful for the single-file pass-through
+// case in useCreateMockTestForm.js - a lone Office doc goes straight to
+// the backend as-is, same as a lone PDF, and is out of scope for
+// combine/batch assembly, which stays PDF+image only.
+export function isOfficeDocFile(file) {
+  return (
+    OFFICE_DOC_MIME_TYPES.has(file.type) ||
+    OFFICE_DOC_EXTENSIONS.some((ext) => file.name.toLowerCase().endsWith(ext))
+  );
+}
+
 // Decodes any browser-supported image format via an offscreen canvas and
 // re-encodes it as PNG bytes, so appendImagePage below only ever deals
 // with one image format regardless of what the user actually selected.

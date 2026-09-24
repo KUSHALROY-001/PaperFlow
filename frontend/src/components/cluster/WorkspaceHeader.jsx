@@ -68,6 +68,7 @@ export default function WorkspaceHeader({
               {mocktest.name}
             </h1>
             <span
+              data-tour="mock-status"
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${status.color}`}
             >
               <span className={`w-2 h-2 rounded-full ${status.dot}`} />
@@ -117,6 +118,7 @@ export default function WorkspaceHeader({
           </Link>
           {mocktest.status !== "published" && (
             <button
+              data-tour="publish"
               disabled={publishDisabled}
               onClick={() => !isViewer && questionsCount > 0 && onPublish()}
               title={publishTitle}
@@ -126,12 +128,14 @@ export default function WorkspaceHeader({
             </button>
           )}
           <button
+            data-tour="share"
             onClick={onShare}
             className="flex flex-1 items-center justify-center gap-2 px-4 py-2 border border-orange-500/30 text-orange-600 dark:text-orange-400 font-semibold rounded-md hover:bg-orange-500/20 transition-all text-xs sm:text-sm sm:flex-none"
           >
             <Share2 className="w-4 h-4 text-orange-500" /> Share
           </button>
           <button
+            data-tour="reprocess"
             disabled={isViewer}
             onClick={() => !isViewer && onReprocessOrCancel()}
             className={`w-9 h-9 rounded-3xl border flex items-center justify-center transition-all ${reprocessClass}`}

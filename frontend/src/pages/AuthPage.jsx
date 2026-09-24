@@ -226,7 +226,7 @@ export default function AuthPage({ mode, title, description }) {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex w-full items-center border border-border justify-center gap-2 rounded-3xl px-4 sm:px-6 py-3 sm:py-3.5 text-xs sm:text-sm font-semibold text-foreground transition-all hover:bg-green-500/80 dark:hover:bg-emerald-500 dark:border-white/25 disabled:opacity-60 shadow-sm cursor-pointer"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full px-4 sm:px-6 py-3 sm:py-3.5 text-xs sm:text-sm font-semibold border border-black dark:border-white bg-transparent hover:bg-black dark:hover:bg-white text-foreground hover:text-white dark:hover:text-black disabled:opacity-60 shadow-sm cursor-pointer"
             >
               {isSubmitting ? (
                 <>

@@ -345,6 +345,12 @@ export async function deleteQuestion(questionId, workspaceId) {
   }
 }
 
+export async function restoreStaleQuestion(questionId, workspaceId) {
+  const restored = await questionsRepo.restoreStaleQuestion(questionId, workspaceId);
+  if (!restored) throw httpError(404, "Stale question not found");
+  return getQuestion(questionId, workspaceId);
+}
+
 const BULK_STATUS_LIMIT = 100;
 
 export async function bulkUpdateStatus(workspaceId, body) {

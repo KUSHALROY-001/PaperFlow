@@ -38,7 +38,10 @@ export default function ProcessingTab({
 
   return (
     <div className="space-y-6 font-inter">
-      <div className="rounded-3xl p-5 sm:p-6 surface-card border border-border">
+      <div
+        data-tour="processing-live"
+        className="rounded-3xl p-5 sm:p-6 surface-card border border-border"
+      >
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="font-bold text-foreground text-base sm:text-lg flex items-center gap-2">

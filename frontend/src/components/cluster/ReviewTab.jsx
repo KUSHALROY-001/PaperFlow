@@ -9,6 +9,7 @@ import {
   Flag,
   Loader2,
   ShieldAlert,
+  Plus,
   Trash2,
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
@@ -57,6 +58,7 @@ export default function ReviewTab({
   mocktest,
   onStatusChange,
   onDelete,
+  onRestoreStale,
   clusterId: propClusterId,
   mockTestId: propMockTestId,
 }) {
@@ -246,7 +248,7 @@ export default function ReviewTab({
             unchanged.
           </p>
         )}
-        {filteredQuestions.map((question) => {
+        {filteredQuestions.map((question, questionIndex) => {
           const marks =
             question.effectiveMarks || resolveQuestionMarks(question, mocktest);
           const listNumber = isRandomOrder
@@ -301,6 +303,7 @@ export default function ReviewTab({
             <div
               key={question.id}
               id={`question-${question.questionNo}`}
+              data-tour={questionIndex === 0 ? "review-first-card" : undefined}
               className={`rounded-3xl p-3 sm:p-5 surface-card border transition-all ${borderClass}`}
             >
               <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
@@ -358,13 +361,30 @@ export default function ReviewTab({
                       )}
                     </div>
                     {clusterId && mockTestId && (
+                      <div className="flex items-center gap-2 shrink-0">
+                      {question.staleFromReprocess && (
+                        <button
+                          type="button"
+                          disabled={isViewer}
+                          onClick={() => !isViewer && onRestoreStale?.(question.id)}
+                          className={`flex h-9 w-9 items-center justify-center rounded-full border border-emerald-500/30 text-emerald-500 transition-all ${isViewer ? "opacity-50 cursor-not-allowed" : "hover:bg-emerald-500/10"}`}
+                          title={isViewer ? "Editor role is required to add this question" : "Add this question back to the current mock test"}
+                          aria-label="Add question back to current mock test"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </button>
+                      )}
                       <Link
                         to={`/cluster/${clusterId}/mock/${mockTestId}/editor?qId=${question.id}`}
+                        data-tour={
+                          questionIndex === 0 ? "review-edit" : undefined
+                        }
                         className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all hover:border-orange-500/40 hover:text-orange-500 hover:bg-orange-500/10 shrink-0"
                         title={`Edit Question ${question.questionNo} in Question Editor`}
                       >
                         <Edit2 className="h-4 w-4 text-orange-500" />
                       </Link>
+                      </div>
                     )}
                   </div>
                   <div
@@ -392,7 +412,10 @@ export default function ReviewTab({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div
+                  className="flex items-center gap-2 shrink-0"
+                  data-tour={questionIndex === 0 ? "review-actions" : undefined}
+                >
                   <button
                     type="button"
                     disabled={isViewer}

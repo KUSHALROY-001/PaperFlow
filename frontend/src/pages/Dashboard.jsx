@@ -34,6 +34,7 @@ export default function Dashboard() {
           </p>
         </div>
         <button
+          data-tour="new-cluster"
           onClick={() => setShowModal(true)}
           className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-md text-sm shadow-sm transition-all shrink-0"
         >

@@ -261,6 +261,90 @@ export async function updateProfile(userId, body) {
   return shapeProfile(profile);
 }
 
+// --- In-app product guide (frontend/src/guide/) -----------------------
+//
+// The client owns the guide's step-by-step logic; this endpoint just
+// persists a small "where the user left off" blob so it survives
+// reloads and follows them across devices. Validated defensively since
+// it's an arbitrary-shaped JSON payload accepted straight from the
+// client - a whitelist of chapter ids and enum-like statuses, capped
+// size, and UUID-shaped entity ids only.
+const GUIDE_CHAPTER_IDS = [
+  "welcome",
+  "cluster",
+  "add-mock-test",
+  "wizard",
+  "processing",
+  "review",
+];
+const GUIDE_STATUSES = ["in_progress", "parked", "completed", "dismissed"];
+const GUIDE_STEP_ID_RE = /^[a-z0-9-]{1,64}$/;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const GUIDE_ENTITY_KEYS = ["clusterId", "mockTestId"];
+const GUIDE_MAX_BYTES = 4096;
+
+export async function getOnboarding(userId) {
+  const onboarding = await authRepo.findOnboardingById(userId);
+  if (onboarding === null) {
+    throw httpError(404, "Account not found");
+  }
+  return onboarding;
+}
+
+function sanitizeOnboardingPayload(body) {
+  if (Buffer.byteLength(JSON.stringify(body ?? {}), "utf8") > GUIDE_MAX_BYTES) {
+    throw httpError(400, "onboarding payload is too large");
+  }
+
+  const out = { v: 1 };
+
+  out.autoStartSeen = Boolean(body?.autoStartSeen);
+
+  const chapters = {};
+  if (body?.chapters && typeof body.chapters === "object") {
+    for (const [chapterId, entry] of Object.entries(body.chapters)) {
+      if (!GUIDE_CHAPTER_IDS.includes(chapterId)) continue;
+      if (!entry || typeof entry !== "object") continue;
+      if (!GUIDE_STATUSES.includes(entry.status)) continue;
+
+      const chapter = { status: entry.status };
+      if (entry.step !== undefined) {
+        chapter.step = requiredString(entry.step, "step");
+        if (!GUIDE_STEP_ID_RE.test(chapter.step)) {
+          throw httpError(400, "invalid onboarding step id");
+        }
+      }
+      chapters[chapterId] = chapter;
+    }
+  }
+  out.chapters = chapters;
+
+  const entities = {};
+  if (body?.entities && typeof body.entities === "object") {
+    for (const key of GUIDE_ENTITY_KEYS) {
+      const value = body.entities[key];
+      if (value === undefined) continue;
+      if (typeof value !== "string" || !UUID_RE.test(value)) {
+        throw httpError(400, `onboarding entities.${key} must be a UUID`);
+      }
+      entities[key] = value;
+    }
+  }
+  out.entities = entities;
+
+  return out;
+}
+
+export async function saveOnboarding(userId, body) {
+  const sanitized = sanitizeOnboardingPayload(body);
+  const saved = await authRepo.saveOnboarding(userId, sanitized);
+  if (saved === null) {
+    throw httpError(404, "Account not found");
+  }
+  return saved;
+}
+
 // Uploads/replaces the user's custom avatar. Always overwrites the same
 // Cloudinary public_id (buildAvatarPublicId is keyed only on userId), so
 // there's no separate "delete the old one first" step the way question

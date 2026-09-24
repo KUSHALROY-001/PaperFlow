@@ -27,6 +27,7 @@ export default function CreateMockTestFooter({
       {!isLastStep ? (
         <button
           type="button"
+          data-tour="mock-next"
           onClick={onNext}
           className="flex-1 rounded-md bg-blue-500 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-600"
         >
@@ -35,6 +36,7 @@ export default function CreateMockTestFooter({
       ) : (
         <button
           type="submit"
+          data-tour="mock-next"
           disabled={isSubmitting || isViewer}
           title={
             isViewer ? "Editor role is required to add mock tests" : undefined

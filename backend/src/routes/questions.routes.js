@@ -43,6 +43,11 @@ questionsRouter.patch(
   requireRole("editor"),
   asyncHandler(questionsController.bulkUpdateStatus),
 );
+questionsRouter.post(
+  "/:questionId/restore-stale",
+  requireRole("editor"),
+  asyncHandler(questionsController.restoreStale),
+);
 questionsRouter.patch(
   "/:questionId",
   requireRole("editor"),

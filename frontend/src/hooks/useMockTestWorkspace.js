@@ -135,8 +135,11 @@ export function useMockTestWorkspace() {
     // Review and Output are deliberately user-paced. Overview retains its
     // live, automatic loading behavior.
     autoLoad: activeTab === "overview",
-    total: questionStats?.total ?? 0,
+    total:
+      (questionStats?.total ?? 0) +
+      (activeTab === "review" ? questionStats?.staleReprocess ?? 0 : 0),
     resetToken: questionStreamToken,
+    includeStale: activeTab === "review",
   });
   const jobSummary = latestJob?.output_summary || {};
   const ocrSummary = jobSummary.ocr || {};
@@ -349,6 +352,63 @@ export function useMockTestWorkspace() {
     }
   };
 
+  const handleRestoreStaleQuestion = async (questionId) => {
+    try {
+      setActionError("");
+      // mapQuestion derives the Review UI's stale state from the nested
+      // `review_flags` object. Merge the server's updated raw row into the
+      // stream immediately; patching a derived `staleFromReprocess` field
+      // here would be ignored by that mapper and made the editor refresh.
+      const restored = await api.restoreStaleQuestion(questionId);
+      patchQuestion(questionId, restored.question);
+
+      // Keep visible totals responsive as well. The invalidations below
+      // still reconcile with the database, but they must not be the first
+      // time the user sees the question become part of the live paper.
+      queryClient.setQueryData(["question-stats", mockTestId], (current) => {
+        if (!current?.stats) return current;
+        const stats = current.stats;
+        return {
+          ...current,
+          stats: {
+            ...stats,
+            total: Number(stats.total || 0) + 1,
+            staleReprocess: Math.max(0, Number(stats.staleReprocess || 0) - 1),
+          },
+        };
+      });
+      queryClient.setQueryData(["mock-test", mockTestId], (current) => {
+        if (!current?.mockTest) return current;
+        return {
+          ...current,
+          mockTest: {
+            ...current.mockTest,
+            total_questions: Number(current.mockTest.total_questions || 0) + 1,
+          },
+        };
+      });
+      queryClient.setQueryData(["mock-tests", clusterId], (current) => {
+        if (!Array.isArray(current?.mockTests)) return current;
+        return {
+          ...current,
+          mockTests: current.mockTests.map((test) =>
+            test.id === mockTestId
+              ? { ...test, total_questions: Number(test.total_questions || 0) + 1 }
+              : test,
+          ),
+        };
+      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["questions", mockTestId] }),
+        queryClient.invalidateQueries({ queryKey: ["question-stats", mockTestId] }),
+        queryClient.invalidateQueries({ queryKey: ["mock-test", mockTestId] }),
+        queryClient.invalidateQueries({ queryKey: ["mock-tests", clusterId] }),
+      ]);
+    } catch (error) {
+      setActionError(error.message || "Could not add the question back to this mock test");
+    }
+  };
+
   const handleDelete = async () => {
     try {
       await api.deleteMockTest(mocktest.id);
@@ -411,6 +471,7 @@ export function useMockTestWorkspace() {
     handlePublish,
     handleQuestionStatusChange,
     handleQuestionDelete,
+    handleRestoreStaleQuestion,
     handleDelete,
   };
 }

@@ -229,7 +229,9 @@ export async function getCatalogMockTestTopics(mockTestId) {
     `
     SELECT topic, COUNT(*)::int AS count
     FROM questions
-    WHERE mock_test_id = $1 AND topic IS NOT NULL
+    WHERE mock_test_id = $1
+      AND topic IS NOT NULL
+      AND review_flags->>'staleFromReprocess' IS DISTINCT FROM 'true'
     GROUP BY topic
     ORDER BY topic ASC
     `,

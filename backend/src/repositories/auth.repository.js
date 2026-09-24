@@ -199,6 +199,27 @@ export async function updatePassword(userId, passwordHash) {
 // own account would silently destroy a shared workspace out from under
 // your team. This surfaces that risk so the service layer can block it
 // rather than let it happen implicitly.
+export async function findOnboardingById(userId) {
+  const result = await pool.query(
+    "SELECT onboarding FROM users WHERE id = $1",
+    [userId],
+  );
+  return result.rows[0]?.onboarding ?? null;
+}
+
+export async function saveOnboarding(userId, onboarding) {
+  const result = await pool.query(
+    `
+    UPDATE users
+    SET onboarding = $2::jsonb
+    WHERE id = $1
+    RETURNING onboarding
+    `,
+    [userId, JSON.stringify(onboarding)],
+  );
+  return result.rows[0]?.onboarding ?? null;
+}
+
 export async function findOwnedWorkspacesWithOtherMembers(userId) {
   const result = await pool.query(
     `

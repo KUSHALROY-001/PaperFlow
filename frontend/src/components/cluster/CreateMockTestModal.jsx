@@ -33,7 +33,10 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-3 sm:p-4 py-4 sm:py-8 backdrop-blur-xs sm:items-center">
-      <div className="flex max-h-[90dvh] sm:max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl sm:rounded-3xl surface-card border border-border shadow-2xl">
+      <div
+        data-tour="mock-wizard"
+        className="flex max-h-[90dvh] sm:max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl sm:rounded-3xl surface-card border border-border shadow-2xl"
+      >
         <div className="flex items-center justify-between border-b border-border p-4 sm:p-6 shrink-0">
           <div>
             <h2 className="text-base sm:text-lg font-bold text-foreground">

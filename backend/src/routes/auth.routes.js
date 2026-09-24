@@ -45,6 +45,11 @@ authRouter.post(
 authRouter.post("/login", asyncHandler(authController.login));
 authRouter.post("/google", asyncHandler(authController.googleAuth));
 authRouter.get("/me", requireAuth, asyncHandler(authController.me));
+authRouter.patch(
+  "/onboarding",
+  requireAuth,
+  asyncHandler(authController.updateOnboarding),
+);
 authRouter.get(
   "/profile",
   requireAuth,

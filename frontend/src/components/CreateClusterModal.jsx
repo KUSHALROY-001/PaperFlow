@@ -62,6 +62,7 @@ export default function CreateClusterModal({ onClose, onCreated }) {
         </div>
 
         <form
+          data-tour="cluster-form"
           onSubmit={handleSubmit}
           className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5 sm:p-6 overscroll-contain"
         >
@@ -74,6 +75,7 @@ export default function CreateClusterModal({ onClose, onCreated }) {
             </label>
             <input
               id={`${uid}-name`}
+              data-tour="cluster-name"
               required
               type="text"
               value={form.name}
@@ -144,6 +146,7 @@ export default function CreateClusterModal({ onClose, onCreated }) {
             </button>
             <button
               type="submit"
+              data-tour="cluster-submit"
               disabled={isSubmitting || isViewer}
               title={
                 isViewer

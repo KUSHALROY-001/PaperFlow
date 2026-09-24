@@ -20,6 +20,12 @@ export function AuthProvider({ children }) {
     () => getStoredAuth().workspaceId,
   );
   const [workspaces, setWorkspaces] = useState([]);
+  // The in-app guide's "where the user left off" blob (see
+  // frontend/src/guide/). Comes back from /api/auth/me alongside the
+  // rest of the session so GuideProvider has it on first paint with no
+  // extra request; GuideProvider calls setOnboarding after every save so
+  // this stays in sync without another checkUserAuth() round trip.
+  const [onboarding, setOnboarding] = useState(null);
 
   const checkUserAuth = useCallback(async () => {
     const { token } = getStoredAuth();
@@ -36,6 +42,7 @@ export function AuthProvider({ children }) {
       setUser(session.user);
       setWorkspaceId(session.workspaceId);
       setWorkspaces(session.workspaces || []);
+      setOnboarding(session.onboarding || {});
       setIsAuthenticated(true);
       setAuthChecked(true);
       return true;
@@ -44,6 +51,7 @@ export function AuthProvider({ children }) {
       setUser(null);
       setWorkspaceId(null);
       setWorkspaces([]);
+      setOnboarding(null);
       setIsAuthenticated(false);
       setAuthChecked(true);
       return false;
@@ -178,6 +186,8 @@ export function AuthProvider({ children }) {
       role,
       isViewer,
       isAdmin,
+      onboarding,
+      setOnboarding,
     }),
     [
       authChecked,
@@ -198,6 +208,7 @@ export function AuthProvider({ children }) {
       role,
       isViewer,
       isAdmin,
+      onboarding,
     ],
   );
 
