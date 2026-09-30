@@ -90,6 +90,31 @@ def find_math_errors(text):
         if problem:
             errors.append({"expr": latex.strip(), "error": problem})
 
+    # Everything OUTSIDE a recognised math span (and outside fenced code,
+    # where a backslash is source code) is rendered as literal prose. A
+    # LaTeX command there shows up on the page exactly as typed - the
+    # failure the brace-balance check above can never see, because there
+    # is no span to check. Seen on real saved questions whose whole stem
+    # was bare \\frac / \\hat / \\text with no $ at all.
+    prose = re.sub(r"```[\s\S]*?```", " ", text)
+    prose = MATH_SPAN_RE.sub(" ", prose)
+    bare = re.search(r"\\[A-Za-z]{2,}", prose)
+    if bare:
+        start = max(0, bare.start() - 20)
+        errors.append(
+            {
+                "expr": prose[start : bare.end() + 25].strip(),
+                "error": "LaTeX command outside math delimiters - will render as literal text",
+            }
+        )
+    if prose.count("$$") % 2:
+        errors.append(
+            {
+                "expr": "$$",
+                "error": "unpaired $$ - a display equation is opened but never closed with $$",
+            }
+        )
+
     return errors
 
 

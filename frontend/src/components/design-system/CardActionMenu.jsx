@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { MoreVertical, Edit2, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 
@@ -12,10 +13,37 @@ export default function CardActionMenu({
   const isDisabled = disabled ?? isViewer;
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
+  const triggerRef = useRef(null);
+  const [menuPosition, setMenuPosition] = useState(null);
+
+  const updateMenuPosition = useCallback(() => {
+    const trigger = triggerRef.current;
+    if (!trigger) return;
+
+    const rect = trigger.getBoundingClientRect();
+    const menuWidth = 144;
+    const menuHeight = 84;
+    const gutter = 8;
+    const shouldOpenUpward =
+      window.innerHeight - rect.bottom < menuHeight + gutter &&
+      rect.top >= menuHeight + gutter;
+
+    setMenuPosition({
+      top: shouldOpenUpward
+        ? rect.top - menuHeight - 4
+        : rect.bottom + 4,
+      left: Math.min(
+        window.innerWidth - menuWidth - gutter,
+        Math.max(gutter, rect.right - menuWidth),
+      ),
+    });
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
+      const clickedMenu = menuRef.current?.contains(event.target);
+      const clickedTrigger = triggerRef.current?.contains(event.target);
+      if (!clickedMenu && !clickedTrigger) {
         setOpen(false);
       }
     }
@@ -27,10 +55,26 @@ export default function CardActionMenu({
     };
   }, [open]);
 
+  // Table views need horizontal scrolling on small screens. Rendering the
+  // menu in a portal keeps it outside that overflow boundary, and choosing
+  // the upper side near the viewport bottom keeps the last row actionable.
+  useEffect(() => {
+    if (!open) return undefined;
+
+    updateMenuPosition();
+    window.addEventListener("resize", updateMenuPosition);
+    window.addEventListener("scroll", updateMenuPosition, true);
+    return () => {
+      window.removeEventListener("resize", updateMenuPosition);
+      window.removeEventListener("scroll", updateMenuPosition, true);
+    };
+  }, [open, updateMenuPosition]);
+
   const handleToggle = (e) => {
     e.stopPropagation();
     e.preventDefault();
     if (isDisabled) return;
+    updateMenuPosition();
     setOpen((prev) => !prev);
   };
 
@@ -68,8 +112,9 @@ export default function CardActionMenu({
   }
 
   return (
-    <div className={`relative inline-block ${className}`} ref={menuRef}>
+    <div className={`relative inline-block ${className}`}>
       <button
+        ref={triggerRef}
         onClick={handleToggle}
         className="w-8 h-8 rounded-xl border border-transparent hover:border-border hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all shrink-0"
         title="Options"
@@ -77,24 +122,34 @@ export default function CardActionMenu({
         <MoreVertical className="w-4 h-4" />
       </button>
 
-      {open && (
-        <div className="absolute right-0 top-9 w-36 bg-card border border-border rounded-xl shadow-lg p-1 z-30 space-y-0.5 animate-in fade-in zoom-in-95 duration-100">
-          <button
-            onClick={handleRenameClick}
-            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted hover:text-orange-500 rounded-lg transition-colors text-left"
+      {open &&
+        menuPosition &&
+        createPortal(
+          <div
+            ref={menuRef}
+            role="menu"
+            style={{ top: menuPosition.top, left: menuPosition.left }}
+            className="fixed w-36 bg-card border border-border rounded-xl shadow-lg p-1 z-50 space-y-0.5 animate-in fade-in zoom-in-95 duration-100"
           >
-            <Edit2 className="w-3.5 h-3.5" />
-            Rename
-          </button>
-          <button
-            onClick={handleDeleteClick}
-            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-red-500 hover:bg-red-500/10 rounded-lg transition-colors text-left"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            Delete
-          </button>
-        </div>
-      )}
+            <button
+              role="menuitem"
+              onClick={handleRenameClick}
+              className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted hover:text-orange-500 rounded-lg transition-colors text-left"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+              Rename
+            </button>
+            <button
+              role="menuitem"
+              onClick={handleDeleteClick}
+              className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-red-500 hover:bg-red-500/10 rounded-lg transition-colors text-left"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </button>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

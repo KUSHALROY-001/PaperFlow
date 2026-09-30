@@ -8,6 +8,7 @@ diagram_crops.py, marking_scheme.py, topic_batching.py) - see
 backend/worker/ARCHITECTURE.md for what lives where and why.
 """
 
+import json
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
@@ -19,6 +20,41 @@ from .diagram_crops import _attach_diagram_crops
 from .marking_scheme import prepare_questions_for_persistence
 from .notes_generation import generate_questions_from_notes
 from .question_matching import _missing_question_numbers, _put_extracted_question
+
+# Appended to SYSTEM_PROMPT below. A RAW string on purpose: what is typed here
+# is exactly what the model sees, so the backslash counts in the examples are
+# the real JSON-text backslash counts, not Python escapes.
+#
+# Why this exists: the LaTeX rule above shows commands like \\frac but never
+# says the reply is a JSON document, so the model has to guess the escaping.
+# It guessed wrong in three repeatable ways on saved questions: line breaks
+# written as \\n (shown on the page as a literal backslash-n, then wrapped in
+# its own $...$ because the rule above says any backslash command needs
+# delimiters), matrix/cases row separators losing a backslash, and display
+# math opened with $$ but closed with a single $.
+_LATEX_JSON_RULES = r"""
+JSON escaping and math delimiters (your reply is a JSON document, so every
+string value in it follows JSON escaping):
+- A line break inside a string is the JSON escape \n (backslash, n). Never
+  write \\n - that reaches the page as a literal backslash-n. Never put a line
+  break, or the characters \n, inside $...$ or $$...$$.
+- Every LaTeX backslash is doubled in the JSON text: LaTeX \frac is written
+  \\frac, \beta is written \\beta, \text is written \\text, \to is written
+  \\to. A LaTeX row separator \\ is written as four backslashes \\\\ in the
+  JSON text, and ONLY inside a math environment that actually has rows to
+  separate: \begin{matrix}, \begin{cases}, \begin{aligned}, \begin{array}.
+  A row separator has no meaning anywhere else. NEVER write \\ (or its
+  doubled JSON form \\\\) as a paragraph break, a sentence break, or any
+  other kind of line break in ordinary prose - outside a math environment
+  it does not start a new line, it shows up on the page as two literal
+  backslash characters sitting on their own line. A real line break in
+  prose is a plain newline in the JSON string (the ordinary \n escape,
+  written once, not doubled) - nothing else is needed.
+- Open and close display math with the same delimiter: $$ ... $$. Never open
+  with $$ and close with a single $. Never leave a stray $ in prose.
+- Math in options and in List-I/List-II answer combinations is still math:
+  write $\\rightarrow$ or $\\to$, never a bare \\rightarrow or \\to.
+"""
 
 SYSTEM_PROMPT = """
 You convert extracted exam PDF text into clean mock-test question JSON.
@@ -131,7 +167,7 @@ Expected shape:
     }
   ]
 }
-""".strip()
+""".strip() + "\n\n" + _LATEX_JSON_RULES.strip()
 
 # template_context comes from processing_jobs.input_config.templateContext
 # (see mock-tests.service.js#buildTemplateContext) - present only when this
@@ -334,6 +370,7 @@ def _enhance_questions_with_ai_inner(
     on_vision_chunk=None,
     template_context=None,
     desired_question_count=None,
+    paper_sections=None,
 ):
     def report(message):
         # Best-effort progress checkpoint - never let a progress-reporting
@@ -574,11 +611,20 @@ def _enhance_questions_with_ai_inner(
                 chunk_diagram_stats = _attach_diagram_crops(ai_questions, result.get("page_images") or {})
                 for key in diagram_stats:
                     diagram_stats[key] += chunk_diagram_stats[key]
-                # Gap-fill / second opinion only; subject restarts still
-                # preserved under a new global number.
+                # Gap-fill / second opinion only; a mismatch against
+                # something the vision-first or text-chunk pass already
+                # found is skipped (allow_new_subject_slot=False), not
+                # duplicated as a "subject restart" - this pass exists to
+                # re-try pages that may have gone uncovered, not to
+                # introduce competing re-transcriptions of pages that
+                # weren't. See _put_extracted_question's docstring for the
+                # duplication incident this prevents.
                 for question in ai_questions:
                     _put_extracted_question(
-                        questions_by_no, question, prefer_new=False
+                        questions_by_no,
+                        question,
+                        prefer_new=False,
+                        allow_new_subject_slot=False,
                     )
             except Exception as error:
                 errors.append({"chunk": f"{pages_label}_parse", "message": str(error)})
@@ -594,11 +640,23 @@ def _enhance_questions_with_ai_inner(
             payload = extract_json_payload(response_text)
             ai_questions = normalize_ai_questions(payload, source=f"{provider.name}_pdf_ai_v1")
             # Last-resort PDF text pass: never clobber an earlier vision
-            # result for the same body; still keeps subject-restart
-            # collisions under new global numbers.
+            # result for the same body. This pass re-transcribes the
+            # ENTIRE document from scratch via a different method (raw PDF
+            # bytes, not page images) - including subjects/pages an
+            # earlier pass already fully covered - so a mismatch here is
+            # skipped (allow_new_subject_slot=False) rather than kept as a
+            # "subject restart". See _put_extracted_question's docstring:
+            # a real 51-question paper came back as 63/73/79 across
+            # separate runs purely from this pass's re-transcriptions
+            # occasionally drifting just far enough from the original to
+            # miss the fingerprint match and get duplicated instead of
+            # recognized as the same question.
             for question in ai_questions:
                 _put_extracted_question(
-                    questions_by_no, question, prefer_new=False
+                    questions_by_no,
+                    question,
+                    prefer_new=False,
+                    allow_new_subject_slot=False,
                 )
         except Exception as error:
             errors.append({"chunk": "pdf", "message": str(error)})
@@ -687,6 +745,7 @@ def enhance_questions_with_ai(
     on_vision_chunk=None,
     template_context=None,
     desired_question_count=None,
+    paper_sections=None,
 ):
     questions, summary = _enhance_questions_with_ai_inner(
         pages,
@@ -711,9 +770,12 @@ def enhance_questions_with_ai(
     if template_match:
         summary["templateMatch"] = template_match
 
-    section_marks = prepare_questions_for_persistence(questions, template_context)
+    section_marks = prepare_questions_for_persistence(
+        questions, template_context, paper_sections
+    )
     if (
-        section_marks["sectionsWithOverrides"]
+        section_marks["matchedByPaperSections"]
+        or section_marks["sectionsWithOverrides"]
         or section_marks["typesWithOverrides"]
         or section_marks["unmappedQuestionTypes"]
     ):
@@ -764,7 +826,7 @@ detection only happens on the vision extraction path,
 which has the actual page image to look at.
 
 Regex parser preview:
-{regex_preview}
+{json.dumps(regex_preview, ensure_ascii=False, default=str)}
 
 PDF text chunk:
 {chunk}
@@ -796,5 +858,5 @@ with no stems), return an empty questions list. Do not invent filler
 such as "Reasoning question 21" with options A/B/C/D.
 
 Regex parser preview:
-{regex_preview}
+{json.dumps(regex_preview, ensure_ascii=False, default=str)}
 """.strip()

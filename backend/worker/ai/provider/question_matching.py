@@ -3,88 +3,13 @@ against the regex-extracted question list during the main extraction
 pass. Split out of provider.py - see backend/worker/ARCHITECTURE.md.
 """
 
-import difflib
-import re
-import unicodedata
-
 from ...placeholders import is_placeholder_question
-
-def _question_text_fingerprint(question):
-    """
-    Normalized prefix of the question body used to decide whether two
-    extractions with the SAME paper question_no are the same question (e.g.
-    overlapping vision chunks of one subject, or the SAME question
-    re-transcribed by a different extraction backend) or genuinely
-    different ones (e.g. JEE Advanced Physics Q.1 vs Chemistry Q.1 vs
-    Mathematics Q.1 - each subject restarts numbering at 1).
-
-    NFKC-normalized before comparison, not just lowercased/whitespace-
-    collapsed - this matters specifically because the two backends that
-    can produce competing results for the same question
-    (generate_json_from_pdf_images, reading rendered page images, vs
-    generate_json_from_pdf, the last-resort call that hands Gemini the
-    raw PDF bytes to read natively) transcribe math notation differently
-    even when they agree on the actual question text. Unicode's
-    Mathematical Alphanumeric Symbols block (the math-italic 𝑎, 𝑏, ℝ, etc.
-    that fill a real JEE Advanced PDF) has compatibility decompositions to
-    plain ASCII letters for exactly this kind of case - NFKC collapses
-    "𝑎𝑖" and "ai" (or "ℝ" and "R") to the same string, so two transcriptions
-    of the identical question fingerprint the same instead of silently
-    failing the comparison below and being misread as a subject-boundary
-    restart (see the real incident this caused: a JEE paper's true 48
-    questions came back as 69, because ~23 re-transcriptions from the
-    whole-PDF fallback didn't fingerprint-match their already-found
-    counterpart from the page-image vision pass and got renumbered as new
-    questions instead of recognized as duplicates).
-    """
-    text = (question.get("text") or "")
-    text = unicodedata.normalize("NFKC", text)
-    text = text.strip().lower()
-    text = re.sub(r"\s+", " ", text)
-    return text[:200]
+from ...text_similarity import is_same_extracted_question
 
 
-def _is_same_extracted_question(existing, new):
-    """
-    True when two results with the same paper number are almost certainly
-    the same physical question (chunk overlap / fuller re-extraction, or a
-    re-transcription of the same question through a different extraction
-    backend), not a subject-boundary restart.
-    """
-    fp_a = _question_text_fingerprint(existing)
-    fp_b = _question_text_fingerprint(new)
-    if not fp_a or not fp_b:
-        # No body to compare - treat as same number collision that should
-        # follow prefer_new, not as a guaranteed subject restart (empty
-        # bodies are more often parse failures than new subjects).
-        return True
-    if fp_a == fp_b:
-        return True
-    # Partial page-split: one extraction has a stub, the other the rest.
-    # Threshold is intentionally low (~24 chars) so short stems still match
-    # a fuller re-extraction of the same question across chunk boundaries.
-    if len(fp_a) >= 24 and fp_a[:80] in fp_b:
-        return True
-    if len(fp_b) >= 24 and fp_b[:80] in fp_a:
-        return True
-    # Exact/substring matching catches near-identical transcriptions, but
-    # NFKC normalization alone doesn't close the whole gap between
-    # extraction backends - generate_json_from_pdf and
-    # generate_json_from_pdf_images can still transcribe fractions,
-    # spacing around operators, or a leading "Q.1" label differently for
-    # the SAME question. Fall back to overall similarity rather than
-    # treating any remaining difference as proof of a subject restart.
-    # A genuine subject restart (Math Q.1 vs Physics Q.1 vs Chemistry Q.1)
-    # shares at most a short boilerplate opener ("let r denote the set of
-    # all real numbers." - several questions in a real JEE Advanced paper
-    # open with exactly that) before diverging completely, which scores
-    # well under this threshold; a re-transcription of the SAME question
-    # scores well above it even with formatting noise spread throughout.
-    similarity = difflib.SequenceMatcher(None, fp_a, fp_b).ratio()
-    return similarity >= 0.72
-
-
-def _put_extracted_question(questions_by_no, question, *, prefer_new):
+def _put_extracted_question(
+    questions_by_no, question, *, prefer_new, allow_new_subject_slot=True
+):
     """
     Insert one extracted question into the question_no-keyed pool.
 
@@ -92,12 +17,39 @@ def _put_extracted_question(questions_by_no, question, *, prefer_new):
     which). Same paper number + DIFFERENT body -> subject restart (JEE
     Advanced Physics/Chemistry/Mathematics each use Q.1..Q.N independently);
     assign the next free global number and remember the paper-local number
-    in metadata so nothing is silently overwritten.
+    in metadata so nothing is silently overwritten. This is the fix for the
+    incident where Mathematics was extracted, then Chemistry's Q.1-17
+    overwrote those keys, and gap-fill padded 18-51 so the job reported 51
+    questions with Math content gone and Chemistry duplicated.
 
-    This is the fix for the incident where Mathematics was extracted, then
-    Chemistry's Q.1-17 overwrote those keys, and gap-fill padded 18-51 so
-    the job reported 51 questions with Math content gone and Chemistry
-    duplicated.
+    allow_new_subject_slot=False disables that "different body -> new
+    slot" branch: a mismatch is simply skipped instead of duplicated. Pass
+    this from any call site that is re-covering ground an EARLIER pass in
+    the same run may have already extracted (the vision-fallback and
+    whole-PDF last-resort passes in provider.py, both of which can
+    re-transcribe pages/subjects the vision-first or text-chunk pass
+    already got) - NOT from a call site that is the first and only attempt
+    at a given page's content (vision-first, text-chunk), where a mismatch
+    really can be a genuine subject restart.
+
+    This exists because of a second incident distinct from the one above:
+    the SAME already-correctly-extracted question, re-transcribed by a
+    later fallback pass through a different extraction method (raw PDF
+    bytes vs rendered page images), doesn't always fingerprint-match its
+    earlier counterpart closely enough (is_same_extracted_question is a
+    similarity threshold, not a guarantee - LLM output isn't perfectly
+    deterministic between calls, so how close two transcriptions of the
+    identical text land varies run to run). Before this flag existed, a
+    near-miss there was indistinguishable from a real subject restart and
+    got duplicated into a new slot - non-deterministically, since it
+    depended on how much that run's transcription happened to drift. A
+    real JEE Advanced paper with exactly 51 questions came back as 63, 73,
+    and 79 across separate reprocessing runs of the identical PDF, purely
+    from this. Skipping the mismatch here instead of duplicating it does
+    mean a genuine subject restart that ONLY a later fallback pass
+    happens to catch - one that both the first pass AND regex missed
+    entirely - is dropped rather than kept; that combination is far rarer
+    than the duplication it prevents.
     """
     if not question:
         return
@@ -112,9 +64,12 @@ def _put_extracted_question(questions_by_no, question, *, prefer_new):
         return
 
     existing = questions_by_no[no]
-    if _is_same_extracted_question(existing, question):
+    if is_same_extracted_question(existing, question):
         if prefer_new:
             questions_by_no[no] = question
+        return
+
+    if not allow_new_subject_slot:
         return
 
     # Different question, same paper number - namespace into a free slot.

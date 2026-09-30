@@ -341,7 +341,62 @@ def flag_orphaned_question_slots(
 ):
     orphaned_numbers = pre_existing_question_numbers - touched_question_numbers
     if not orphaned_numbers:
-        return 0
+        return 0, 0
+
+    # Orphaned slots that only exist because a PREVIOUS run's dedup pass
+    # (ai/provider/question_matching.py#_put_extracted_question) mistook a
+    # re-transcription of an already-extracted question for a genuine
+    # subject-boundary restart and invented a new slot number for it.
+    # Those numbers were never real paper content - they're pure artifacts
+    # of that bug - and since the renumbering scheme picks "next free
+    # slot" based on THIS run's processing order and the AI's exact
+    # output, a later reprocess essentially never reproduces the same
+    # bogus number again, even once the underlying dedup bug is fixed.
+    # Left merely flagged (the behavior below, for everything else), these
+    # accumulate forever across every reprocess instead of ever being
+    # cleaned up - confirmed on a real job that went 73 -> 79 questions
+    # across two reprocesses of the same PDF, purely from this
+    # accumulation, even though the second run's own extraction was more
+    # accurate than the first's.
+    #
+    # Safe to actually DELETE (not just flag) only when BOTH: a human has
+    # never acted on the slot (status is still the untouched default
+    # 'needs_review' - not 'approved' or 'rejected'), AND its content is
+    # tagged as a renumbering artifact. Anything a human has reviewed, or
+    # any orphaned slot NOT tagged this way (content the new extraction
+    # may have simply missed and is worth a human's attention), still only
+    # gets flagged below - never deleted automatically.
+    artifact_rows = connection.execute(
+        """
+        DELETE FROM question_slots
+        WHERE mock_test_id = %s
+          AND question_no = ANY(%s::int[])
+          AND status = 'needs_review'
+          AND content_id IN (
+            SELECT id FROM question_contents
+            WHERE metadata->>'renumbered_due_to_subject_restart' = 'true'
+          )
+        RETURNING id, content_id, question_no
+        """,
+        [mock_test_id, sorted(orphaned_numbers)],
+    ).fetchall()
+
+    for row in artifact_rows:
+        connection.execute(
+            """
+            DELETE FROM question_contents
+            WHERE id = %s
+              AND NOT EXISTS (
+                SELECT 1 FROM question_slots WHERE content_id = %s
+              )
+            """,
+            [row["content_id"], row["content_id"]],
+        )
+
+    deleted_count = len(artifact_rows)
+    remaining_orphaned = orphaned_numbers - {row["question_no"] for row in artifact_rows}
+    if not remaining_orphaned:
+        return 0, deleted_count
 
     rows = connection.execute(
         """
@@ -361,10 +416,10 @@ def flag_orphaned_question_slots(
                 }
             ),
             mock_test_id,
-            sorted(orphaned_numbers),
+            sorted(remaining_orphaned),
         ],
     ).fetchall()
-    return len(rows)
+    return len(rows), deleted_count
 
 
 def mark_mock_test_after_processing(connection, mock_test_id, question_count):

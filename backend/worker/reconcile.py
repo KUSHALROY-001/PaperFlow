@@ -26,37 +26,29 @@ options A/B/C/D) are not real AI extractions. Those used to beat the
 regex body because AI-priority is unconditional. They now lose to regex
 on the same paper number, and are dropped if regex has nothing either.
 
-Subject-restart handling (JEE Advanced Physics/Chemistry/Mathematics each
-restart at Q.1): when both sources report the same paper number but the
-bodies are clearly different questions, keep BOTH - the AI one stays on
-its number and the regex one is assigned the next free global number,
-mirroring _put_extracted_question in provider.py. A naive dict merge by
-question_no alone used to drop entire subjects.
+Same number, different body: AI wins and the regex copy is dropped (and
+recorded in the decisions list as regex_dropped_ai_owns_this_number).
+This used to keep BOTH, with the regex one moved to the next free global
+number, on the theory that it was a subject restart (JEE Advanced
+Physics/Chemistry/Mathematics each restart at Q.1). That no longer holds:
+the AI side renumbers restarts itself (_put_extracted_question in
+provider.py) and so does question_parser.py, so both sources already share
+one global numbering. Keeping the regex copy only ever added garbled
+fragments - it turned a real 51-question paper into 54.
 """
 
-import re
-
 from .placeholders import is_placeholder_question
-
-
-def _fingerprint(question):
-    text = (question.get("text") or "").strip().lower()
-    text = re.sub(r"\s+", " ", text)
-    return text[:160]
-
-
-def _is_same_question(a, b):
-    fp_a = _fingerprint(a)
-    fp_b = _fingerprint(b)
-    if not fp_a or not fp_b:
-        return True
-    if fp_a == fp_b:
-        return True
-    if len(fp_a) >= 24 and fp_a[:80] in fp_b:
-        return True
-    if len(fp_b) >= 24 and fp_b[:80] in fp_a:
-        return True
-    return False
+# is_same_extracted_question replaces this module's own, much cruder
+# fingerprint match (lowercase + collapse whitespace only - no NFKC
+# normalization, no LaTeX noise stripping). Regex extracts raw PDF text
+# and AI produces clean LaTeX for the same printed question, so the old
+# comparison here routinely judged genuinely-identical questions
+# "different" and kept the regex copy as a fake subject-restart duplicate
+# - visible as both an inflated question count AND a badly-formatted
+# extra copy (regex output never gets marks/subtopic applied, unlike the
+# AI-covered path) sitting right next to a perfectly good AI version of
+# the same question. See text_similarity.py for the full history.
+from .text_similarity import is_same_extracted_question as _is_same_question
 
 
 def reconcile_questions(regex_questions, ai_questions):
@@ -83,6 +75,7 @@ def reconcile_questions(regex_questions, ai_questions):
         merged_by_no[no] = question
 
     decisions = []
+    dropped_regex = []
 
     for question in regex_questions:
         no = question.get("question_no")
@@ -101,13 +94,24 @@ def reconcile_questions(regex_questions, ai_questions):
             # AI already has this question - regex never overrides.
             continue
 
-        # Same paper number, different body: keep regex under a free slot.
-        new_no = max(merged_by_no.keys()) + 1
-        metadata = dict(question.get("metadata") or {})
-        metadata["paper_question_no"] = no
-        metadata["renumbered_due_to_subject_restart"] = True
-        renumbered = {**question, "question_no": new_no, "metadata": metadata}
-        merged_by_no[new_no] = renumbered
+        # Same number, different body. Both extractors number in the same
+        # global space by this point (the AI side renumbers subject
+        # restarts in _put_extracted_question, and question_parser.py does
+        # the same for regex), so a collision means one of the two is
+        # wrong - and per the rule at the top of this file, AI wins.
+        # Keeping the regex copy "alongside" as a fake subject restart was
+        # what turned a real 51-question JEE paper into 54: its regex pass
+        # only finds 3 questions at all, all garbled (option text mixed
+        # with a "[PAGE 2]" marker, numbered 1/3/2), and each was kept as
+        # an extra question next to the good AI version. Regex still
+        # contributes any number the AI never produced (handled above).
+        dropped_regex.append(
+            {
+                "question_no": no,
+                "source": _source_of(question),
+                "reason": "regex_dropped_ai_owns_this_number",
+            }
+        )
 
     for question_no in sorted(merged_by_no):
         q = merged_by_no[question_no]
@@ -130,6 +134,7 @@ def reconcile_questions(regex_questions, ai_questions):
             {"question_no": question_no, "source": source, "reason": reason}
         )
 
+    decisions.extend(dropped_regex)
     merged_questions = [merged_by_no[question_no] for question_no in sorted(merged_by_no)]
     return merged_questions, decisions
 

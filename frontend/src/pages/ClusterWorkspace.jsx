@@ -6,6 +6,8 @@ import {
   Edit2,
   FileText,
   FolderOpen,
+  Grid3X3,
+  List,
   Plus,
   Trash2,
   Zap,
@@ -13,6 +15,7 @@ import {
 import { useClusterWorkspace } from "@/hooks/useClusterWorkspace";
 import { useAuth } from "@/lib/AuthContext";
 import MockTestCard from "../components/cluster/MockTestCard";
+import MockTestRow from "../components/cluster/MockTestRow";
 import CreateMockTestModal from "../components/cluster/CreateMockTestModal";
 import { ConfirmDialog } from "../components/design-system/ConfirmDialog";
 
@@ -26,6 +29,17 @@ export default function ClusterWorkspace() {
   const { isViewer } = useAuth();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [sortBy, setSortBy] = useState("recently_changed");
+  // Remembered per-browser, same pattern as ClustersLibrary.jsx's cluster
+  // grid/list toggle, so a preference set on one page doesn't reset every
+  // visit.
+  const [view, setView] = useState(
+    () => localStorage.getItem("clusterWorkspaceView") || "grid",
+  );
+
+  const handleViewChange = (nextView) => {
+    setView(nextView);
+    localStorage.setItem("clusterWorkspaceView", nextView);
+  };
 
   const {
     id,
@@ -248,7 +262,7 @@ export default function ClusterWorkspace() {
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
           <h2 className="text-base sm:text-lg font-bold text-foreground">
             Mock Tests
           </h2>
@@ -256,6 +270,34 @@ export default function ClusterWorkspace() {
             <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-muted text-muted-foreground">
               {mocktests.length}
             </span>
+          )}
+          {mocktests.length > 0 && (
+            <div className="flex items-center gap-1 surface-card border border-border rounded-3xl p-1 shrink-0">
+              <button
+                onClick={() => handleViewChange("grid")}
+                aria-label="Grid view"
+                title="Grid view"
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                  view === "grid"
+                    ? "bg-black dark:bg-white text-white dark:text-black font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Grid3X3 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => handleViewChange("table")}
+                aria-label="Table view"
+                title="Table view"
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                  view === "table"
+                    ? "bg-black dark:bg-white text-white dark:text-black font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
           )}
         </div>
 
@@ -324,7 +366,7 @@ export default function ClusterWorkspace() {
             Add Mock Test
           </button>
         </div>
-      ) : (
+      ) : view === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
           {sortedMockTests.map((mocktest) => (
             <MockTestCard
@@ -332,6 +374,19 @@ export default function ClusterWorkspace() {
               mocktest={mocktest}
               clusterId={id}
             />
+          ))}
+        </div>
+      ) : (
+        <div className="surface-card rounded-2xl overflow-x-auto border border-border">
+          <div className="grid min-w-180 grid-cols-[2.5fr_1fr_1fr_1fr_auto] gap-4 px-5 py-3 bg-muted/40 border-b border-border text-xs font-bold text-muted-foreground uppercase tracking-wide">
+            <span>Mock Test</span>
+            <span>Status</span>
+            <span>Questions</span>
+            <span>Created</span>
+            <span></span>
+          </div>
+          {sortedMockTests.map((mocktest) => (
+            <MockTestRow key={mocktest.id} mocktest={mocktest} clusterId={id} />
           ))}
         </div>
       )}

@@ -77,7 +77,7 @@ def _section_name_for_question_no(section_ranges, question_no):
     return None
 
 
-def _apply_section_marks(template_context, questions):
+def _apply_section_marks(template_context, questions, paper_sections=None):
     """Assign per-question marks from template settings / sections.
 
     Priority per question, filling only whatever fields are still missing
@@ -120,8 +120,20 @@ def _apply_section_marks(template_context, questions):
         "sectionMatchedByRange": 0,
         "sectionMatchedByTopicFallback": 0,
     }
-    if not template_context:
+    if not template_context and not paper_sections:
         return empty_stats
+    template_context = template_context or {}
+
+    # The paper's own printed section headers (paper_sections.py) - highest
+    # tier after marks the AI actually read, because they can't be wrong
+    # the way the other two sources can: the AI writes 0 / 0 for any
+    # question whose header sat on another page chunk, and a template's
+    # ranges assume ITS total question count (a 54-question JEE template
+    # misplaces every boundary on a 51-question paper).
+    from ...paper_sections import section_ranges as _paper_ranges
+
+    paper_ranges = _paper_ranges(paper_sections or [])
+    paper_matched = 0
 
     sections = template_context.get("sections") or []
     marking_scheme = template_context.get("markingScheme") or {}
@@ -199,6 +211,23 @@ def _apply_section_marks(template_context, questions):
     ai_kept = 0
 
     for question in questions:
+        # A correct answer that awards 0 marks is never a real scheme - it's
+        # the model returning 0 instead of null when it couldn't read the
+        # marking instructions for this question (e.g. the section header
+        # sat on a different page chunk). parse_optional_number keeps 0 as
+        # 0 (correctly - negative marking of 0 is legitimate for numerical
+        # questions), so without this the check below saw "AI already set
+        # both fields" and skipped every template tier, leaving the
+        # question showing +0 / -0 instead of its section's real marks.
+        # Treat marks_per_correct <= 0 as unset, and drop a paired
+        # negative of 0 with it since that 0 came from the same non-answer
+        # (a genuine "+4 / -0" keeps its 0: marks_per_correct is positive).
+        marks_value = question.get("marks_per_correct")
+        if marks_value is not None and float(marks_value) <= 0:
+            question["marks_per_correct"] = None
+            if float(question.get("negative_marks_per_wrong") or 0) == 0:
+                question["negative_marks_per_wrong"] = None
+
         had_marks = question.get("marks_per_correct") is not None
         had_negative = question.get("negative_marks_per_wrong") is not None
         had_any_ai_marks = had_marks or had_negative
@@ -213,6 +242,17 @@ def _apply_section_marks(template_context, questions):
             # question, which any template-level config is only a hint
             # towards).
             continue
+
+        paper_override = None
+        question_no = question.get("question_no")
+        if paper_ranges and question_no is not None:
+            for start, end, plus, minus in paper_ranges:
+                if start <= question_no <= end:
+                    paper_override = {
+                        "marks_per_correct": plus,
+                        "negative_marks_per_wrong": minus,
+                    }
+                    break
 
         range_name = _section_name_for_question_no(
             section_ranges, question.get("question_no")
@@ -242,6 +282,7 @@ def _apply_section_marks(template_context, questions):
         resolved_negative = None
         resolved_from = None
         for tier_name, tier in (
+            ("paper", paper_override),
             ("section", section_override),
             ("type", type_override),
             (
@@ -278,6 +319,8 @@ def _apply_section_marks(template_context, questions):
 
         if not filled_something:
             continue
+        if resolved_from == "paper":
+            paper_matched += 1
         if resolved_from == "default":
             defaults_applied += 1
         elif not had_any_ai_marks:
@@ -302,6 +345,8 @@ def _apply_section_marks(template_context, questions):
         # user-visible wrong mark with no diagnostic trail.
         "sectionMatchedByRange": ranges_matched,
         "sectionMatchedByTopicFallback": topic_fallback_matched,
+        "paperSectionsFound": len(paper_sections or []),
+        "matchedByPaperSections": paper_matched,
     }
 
 
@@ -335,7 +380,9 @@ def _classify_question_type_label(label):
 # needing the same few lines duplicated at each of those five-plus return
 # statements individually, with the real risk of a future one added there
 # getting missed.
-def prepare_questions_for_persistence(questions, template_context=None):
+def prepare_questions_for_persistence(
+    questions, template_context=None, paper_sections=None
+):
     """Apply deterministic fields required before an incremental DB write."""
     for question in questions:
         if question.get("question_type"):
@@ -344,6 +391,6 @@ def prepare_questions_for_persistence(questions, template_context=None):
         question["question_type"] = (
             "multi" if len(correct_option_indexes) > 1 else "single"
         )
-    return _apply_section_marks(template_context, questions)
+    return _apply_section_marks(template_context, questions, paper_sections)
 
 

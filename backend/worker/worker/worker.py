@@ -43,6 +43,7 @@ from .job_helpers import (
     friendly_job_error_message,
 )
 from .job_pdf_intake import ingest_job_pdf
+from ..paper_sections import parse_paper_sections
 from ..question_parser import parse_questions
 from ..storage import upload_diagram
 
@@ -88,6 +89,12 @@ def process_job(job):
     # job, in which case enhance_questions_with_ai's prompt and summary are
     # completely unchanged from before this existed.
     template_context = (job.get("input_config") or {}).get("templateContext")
+    # The paper's own printed section headers (question counts + marks per
+    # section) - see paper_sections.py. Kept out of template_context on
+    # purpose: a non-None template_context switches on template-specific
+    # prompting and the templateMatch check for jobs that never applied a
+    # template.
+    paper_sections = parse_paper_sections(pages)
     desired_question_count = (job.get("input_config") or {}).get(
         "desiredQuestionCount"
     )
@@ -172,7 +179,9 @@ def process_job(job):
 
         # The provider invokes this in page order. A later page-boundary
         # correction can therefore safely replace its earlier slot.
-        prepare_questions_for_persistence(chunk_questions, template_context)
+        prepare_questions_for_persistence(
+            chunk_questions, template_context, paper_sections
+        )
 
         for batch in _batched(chunk_questions, QUESTION_WRITE_BATCH_SIZE):
             with get_connection() as connection:
@@ -243,6 +252,7 @@ def process_job(job):
         on_vision_chunk=persist_vision_chunk,
         template_context=template_context,
         desired_question_count=desired_question_count,
+        paper_sections=paper_sections,
     )
 
     total_parsed = len(questions)
@@ -405,8 +415,11 @@ def process_job(job):
                 connection.commit()
 
     # A streamed page-boundary correction replaces an existing slot and is
-    # deliberately counted as a write above. The database count is the
-    # authoritative final paper length, not the number of write operations.
+    # deliberately counted as a write above. The count used in the final
+    # summary below is recomputed AFTER flag_orphaned_question_slots runs
+    # (see that call), not here - this snapshot predates the renumbering-
+    # artifact cleanup that call can now do, so it can't be the number
+    # reported as this run's final result.
     with get_connection() as connection:
         saved_question_count = count_questions_for_mock_test(
             connection, job["mock_test_id"]
@@ -427,14 +440,22 @@ def process_job(job):
     touched_question_numbers = {q["question_no"] for q in questions}
     with get_connection() as connection:
         with connection.transaction():
-            mark_mock_test_after_processing(
-                connection, job["mock_test_id"], saved_question_count
-            )
-            flagged_count = flag_orphaned_question_slots(
+            flagged_count, deleted_artifact_count = flag_orphaned_question_slots(
                 connection,
                 job["mock_test_id"],
                 pre_existing_question_numbers,
                 touched_question_numbers,
+            )
+            # Re-read now, inside the same transaction as the delete above
+            # - flag_orphaned_question_slots can remove rows the earlier
+            # snapshot still counted, so that snapshot is stale the moment
+            # any artifact slot gets deleted.
+            if deleted_artifact_count:
+                saved_question_count = count_questions_for_mock_test(
+                    connection, job["mock_test_id"]
+                )
+            mark_mock_test_after_processing(
+                connection, job["mock_test_id"], saved_question_count
             )
             update_job(
                 connection,
@@ -447,6 +468,11 @@ def process_job(job):
                     "questionsInserted": saved_question_count,
                     "diagramsExtracted": diagrams_extracted,
                     **({"questionsFlaggedStale": flagged_count} if flagged_count else {}),
+                    **(
+                        {"questionsRemovedAsDuplicateArtifacts": deleted_artifact_count}
+                        if deleted_artifact_count
+                        else {}
+                    ),
                 },
             )
 

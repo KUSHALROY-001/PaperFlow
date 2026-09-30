@@ -10,6 +10,7 @@ import math
 import re
 
 from ...placeholders import is_placeholder_question
+from .latex_repair import repair_latex
 
 def normalize_ai_questions(payload, *, source="ai"):
     raw_questions = payload.get("questions", payload) if isinstance(payload, dict) else payload
@@ -23,7 +24,9 @@ def normalize_ai_questions(payload, *, source="ai"):
         if not isinstance(item, dict):
             continue
 
-        question_text = str(item.get("text") or item.get("question_text") or "").strip()
+        question_text = repair_latex(
+            str(item.get("text") or item.get("question_text") or "").strip()
+        )
         question_type = str(item.get("question_type") or item.get("questionType") or "single").strip()
         if question_type not in {"single", "multi", "fill_blank", "short_answer", "long_answer", "numerical"}:
             question_type = "single"
@@ -31,7 +34,11 @@ def normalize_ai_questions(payload, *, source="ai"):
         if not question_text or not isinstance(options, list):
             continue
 
-        options = [str(option).strip() for option in options if str(option).strip()]
+        options = [
+            repair_latex(str(option).strip())
+            for option in options
+            if str(option).strip()
+        ]
         if question_type in {"single", "multi"} and len(options) < 2:
             continue
 
@@ -166,7 +173,7 @@ def normalize_ai_questions(payload, *, source="ai"):
                     renamed_slot_keys[raw_slot_key_value] = slot_key
                 diagrams.append({"slot_key": slot_key, "bbox": bbox})
 
-        explanation = clean_optional_text(item.get("explanation"))
+        explanation = repair_latex(clean_optional_text(item.get("explanation")))
         if renamed_slot_keys:
             question_text, options, explanation = _rewrite_diagram_markers(
                 question_text, options, explanation, renamed_slot_keys
@@ -252,7 +259,7 @@ def normalize_ai_questions(payload, *, source="ai"):
                 "question_no": question_no,
                 "topic": clean_optional_text(item.get("topic")),
                 "subtopic": clean_optional_text(item.get("subtopic")),
-                "passage": clean_optional_text(item.get("passage")),
+                "passage": repair_latex(clean_optional_text(item.get("passage"))),
                 "text": question_text,
                 "explanation": explanation,
                 "options": options,
