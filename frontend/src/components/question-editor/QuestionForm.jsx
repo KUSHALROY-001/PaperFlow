@@ -53,6 +53,7 @@ export default function QuestionForm({
     handleCleanUpMath,
     handleIndentCode,
     handleIndentExplanationCode,
+    handleInsertCodeBlock,
     handleOptionAction,
     handleKeyDownTextarea,
     handleQuestionTypeChange,
@@ -111,6 +112,7 @@ export default function QuestionForm({
             handleInsertMath={handleInsertMath}
             handleInsertImage={handleInsertImage}
             handleIndentCode={handleIndentCode}
+            handleInsertCodeBlock={handleInsertCodeBlock}
             handleCleanUpMath={handleCleanUpMath}
             handleKeyDownTextarea={handleKeyDownTextarea}
             isViewer={isViewer}
@@ -136,6 +138,7 @@ export default function QuestionForm({
             handleInsertMath={handleInsertMath}
             handleInsertImage={handleInsertImage}
             handleIndentExplanationCode={handleIndentExplanationCode}
+            handleInsertCodeBlock={handleInsertCodeBlock}
             handleKeyDownTextarea={handleKeyDownTextarea}
             isViewer={isViewer}
           />

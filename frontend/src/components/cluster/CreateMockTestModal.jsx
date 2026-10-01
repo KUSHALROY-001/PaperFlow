@@ -35,7 +35,7 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-3 sm:p-4 py-4 sm:py-8 backdrop-blur-xs sm:items-center">
       <div
         data-tour="mock-wizard"
-        className="flex max-h-[90dvh] sm:max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl sm:rounded-3xl surface-card border border-border shadow-2xl"
+        className="flex max-h-[90dvh] sm:max-h-[85vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl sm:rounded-3xl surface-card border border-border shadow-2xl"
       >
         <div className="flex items-center justify-between border-b border-border p-4 sm:p-6 shrink-0">
           <div>
@@ -126,6 +126,12 @@ export default function CreateMockTestModal({ clusterId, onClose }) {
               uid={f.uid}
               form={f.form}
               updateForm={f.updateForm}
+              templates={f.templates}
+              selectedTemplateId={f.selectedTemplateId}
+              onSelectTemplate={f.selectTemplate}
+              templateSearch={f.templateSearch}
+              setTemplateSearch={f.setTemplateSearch}
+              isLoadingTemplates={f.isLoadingTemplates}
             />
           )}
 

@@ -186,38 +186,34 @@ export function useQuestionEditor() {
           }
           return serverQ;
         }
-        const entry = snap.get(serverQ.id);
-        const isContentDirty =
-          !entry ||
-          !local.persisted ||
-          contentFingerprint(local) !== entry.content;
-        const isOrderDirty =
-          Boolean(entry) &&
-          Number(local.questionNo) !== Number(entry.questionNo);
-        if (!isContentDirty && !isOrderDirty) return serverQ;
+        // Content/order fields come from `local` unconditionally, not only
+        // when dirty - when clean, local already equals the snapshot
+        // (either because nothing changed, or because it's the value our
+        // own save just wrote and confirmed), so it is always at least as
+        // current as this particular response and taking it is a no-op in
+        // the common case. Everything else (diagram info, sourcePage,
+        // confidence, id/persisted) still always comes fresh from the
+        // server, so a PDF-fetch upload keeps showing up without waiting
+        // for a save.
         return {
           ...serverQ,
-          ...(isContentDirty
-            ? {
-                text: local.text,
-                options: local.options,
-                correctOptionIndexes: local.correctOptionIndexes,
-                topic: local.topic,
-                subtopic: local.subtopic,
-                passage: local.passage,
-                explanation: local.explanation,
-                questionType: local.questionType,
-                marksPerCorrect: local.marksPerCorrect,
-                negativeMarksPerWrong: local.negativeMarksPerWrong,
-                acceptedAnswers: local.acceptedAnswers,
-                gradingRubric: local.gradingRubric,
-                expectedAnswer: local.expectedAnswer,
-                answerWordLimit: local.answerWordLimit,
-                numericAnswer: local.numericAnswer,
-                numericTolerance: local.numericTolerance,
-              }
-            : {}),
-          ...(isOrderDirty ? { questionNo: local.questionNo } : {}),
+          text: local.text,
+          options: local.options,
+          correctOptionIndexes: local.correctOptionIndexes,
+          topic: local.topic,
+          subtopic: local.subtopic,
+          passage: local.passage,
+          explanation: local.explanation,
+          questionType: local.questionType,
+          marksPerCorrect: local.marksPerCorrect,
+          negativeMarksPerWrong: local.negativeMarksPerWrong,
+          acceptedAnswers: local.acceptedAnswers,
+          gradingRubric: local.gradingRubric,
+          expectedAnswer: local.expectedAnswer,
+          answerWordLimit: local.answerWordLimit,
+          numericAnswer: local.numericAnswer,
+          numericTolerance: local.numericTolerance,
+          questionNo: local.questionNo,
         };
       });
 
@@ -552,13 +548,14 @@ export function useQuestionEditor() {
   /**
    * After a successful save, mark the given questions (and optional order
    * items) as clean in the snapshot so hasUnsavedChanges shrinks without
-   * a full refetch. For brand-new drafts we still invalidate so the
-   * server-assigned id replaces `draft-*`.
+   * a full refetch. New drafts are replaced with the server response before
+   * reaching this helper, so their temporary `draft-*` IDs never remain in
+   * local state after a successful create.
    */
   const markSnapshotClean = useCallback((savedQuestions, orderItems = []) => {
     const snap = initialSnapshotRef.current;
     for (const q of savedQuestions) {
-      if (!q.persisted) continue; // draft still has temp id until refetch
+      if (!q.persisted) continue;
       snap.set(q.id, {
         content: contentFingerprint(q),
         questionNo: Number(q.questionNo) || 0,
@@ -600,8 +597,9 @@ export function useQuestionEditor() {
    * plus any pending reorder delta.
    *
    * Order: reorder first (minimal {id, questionNo} pairs), then PATCH/create
-   * each dirty question. If any brand-new draft is created, full list
-   * invalidate replaces draft-* ids; otherwise snapshot is marked clean.
+   * each dirty question. Create responses replace their local draft rows
+   * immediately, then an ordinary cache invalidation reconciles any
+   * server-side defaults without making the editor wait for a reload.
    */
   const handleSave = useCallback(async () => {
     setError("");
@@ -635,30 +633,56 @@ export function useQuestionEditor() {
       }
 
       // 2) Content for every dirty / draft question (not only the selection)
-      let createdNeedsRefetch = false;
+      const createdByDraftId = new Map();
       for (const q of toSave) {
-        await saveQuestion(q);
+        const response = await saveQuestion(q);
         if (!q.persisted) {
-          createdNeedsRefetch = true;
+          const created = response?.question;
+          if (!created) {
+            throw new Error(
+              "Question was created but the server returned no question data",
+            );
+          }
+          createdByDraftId.set(q.id, toEditorQuestion(created));
         }
       }
 
-      if (createdNeedsRefetch) {
-        // New row got a real id from the server — full list refresh is the
-        // simplest way to pick it up and replace draft-* in local state.
-        await queryClient.invalidateQueries({
-          queryKey: ["questions", mockTestId],
-        });
-        await queryClient.invalidateQueries({
-          queryKey: ["mock-tests", clusterId],
-        });
-      } else {
-        markSnapshotClean(toSave, orderItems);
-        // Soft-invalidate so other views stay fresh without blocking UI
-        void queryClient.invalidateQueries({
-          queryKey: ["questions", mockTestId],
-        });
+      const savedQuestions = toSave.map(
+        (question) => createdByDraftId.get(question.id) || question,
+      );
+      if (createdByDraftId.size > 0) {
+        // The create API returns the canonical row. Replace the temporary
+        // draft now rather than waiting for pagination/refetch to discover
+        // it (which can be a different page), otherwise the old draft stays
+        // dirty and prompts the user about "unsaved" changes on exit.
+        setQuestions((previous) =>
+          previous
+            .map((question) => createdByDraftId.get(question.id) || question)
+            .sort(
+              (a, b) =>
+                (Number(a.questionNo) || 0) - (Number(b.questionNo) || 0),
+            ),
+        );
+        setSelectedId(
+          (current) => createdByDraftId.get(current)?.id || current,
+        );
       }
+
+      markSnapshotClean(savedQuestions, orderItems);
+
+      // Reconcile paged editor data plus all counts/cards outside it. These
+      // requests are deliberately not awaited: the local replacement above
+      // is already complete and must not make the editor look unsaved.
+      void Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["questions", mockTestId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["question-stats", mockTestId],
+        }),
+        queryClient.invalidateQueries({ queryKey: ["mock-test", mockTestId] }),
+        queryClient.invalidateQueries({ queryKey: ["mock-tests", clusterId] }),
+      ]);
 
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);

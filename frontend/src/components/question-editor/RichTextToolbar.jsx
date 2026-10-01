@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   Bold,
   ChevronDown,
+  Code2,
   Italic,
   Strikethrough,
   Underline,
@@ -105,6 +106,37 @@ function applyBlockStyle(textarea, style, updateValue) {
   });
 }
 
+function toggleCodeBlock(textarea, updateValue) {
+  if (!textarea) return;
+
+  const { start, end } = selectionRange(textarea);
+  const value = textarea.value;
+  const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+  const lineEndIndex = value.indexOf("\n", end);
+  const lineEnd = lineEndIndex === -1 ? value.length : lineEndIndex;
+  const selected = value.slice(lineStart, lineEnd);
+  const startsWithFence = value.slice(lineStart - 4, lineStart) === "```\n";
+  const endsWithFence = value.slice(lineEnd, lineEnd + 4) === "\n```";
+
+  if (startsWithFence && endsWithFence) {
+    const next = `${value.slice(0, lineStart - 4)}${selected}${value.slice(lineEnd + 4)}`;
+    updateValue(next);
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(lineStart - 4, lineEnd - 4);
+    });
+    return;
+  }
+
+  const replacement = `\`\`\`\n${selected || "// Write code here"}\n\`\`\``;
+  const next = `${value.slice(0, lineStart)}${replacement}${value.slice(lineEnd)}`;
+  updateValue(next);
+  requestAnimationFrame(() => {
+    textarea.focus();
+    textarea.setSelectionRange(lineStart + 4, lineStart + 4 + (selected || "// Write code here").length);
+  });
+}
+
 export default function RichTextToolbar({ textareaRef, disabled, onChange }) {
   const [isStyleMenuOpen, setIsStyleMenuOpen] = useState(false);
   const [style, setStyle] = useState("text");
@@ -202,6 +234,16 @@ export default function RichTextToolbar({ textareaRef, disabled, onChange }) {
         className={buttonClassName}
       >
         <Strikethrough className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        disabled={disabled}
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() => !disabled && toggleCodeBlock(textareaRef.current, onChange)}
+        title="Insert code block"
+        className={buttonClassName}
+      >
+        <Code2 className="h-4 w-4" />
       </button>
 
       <div ref={menuRef} className="relative ml-1 border-l border-border pl-1">

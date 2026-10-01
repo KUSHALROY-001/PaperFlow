@@ -83,6 +83,34 @@ export function useCreateMockTestForm({ clusterId, onClose }) {
   // upload round trips.
   const [batchProgress, setBatchProgress] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
+  const [selectedTemplateId, setSelectedTemplateId] = useState(null);
+  const [templateSearch, setTemplateSearch] = useState("");
+
+  // Templates are only needed on Settings. Fetching lazily keeps the common
+  // upload-first path light while still making the complete template list
+  // available to its searchable picker.
+  const { data: templatesData, isLoading: isLoadingTemplates } = useQuery({
+    queryKey: ["extraction-templates", "mock-test-picker"],
+    queryFn: () => api.listExtractionTemplates({ sortBy: "usage" }),
+    enabled: currentStep === 3,
+  });
+  const templates = templatesData?.templates || [];
+  const selectedTemplate = templates.find(
+    (template) => template.id === selectedTemplateId,
+  );
+
+  const selectTemplate = (template) => {
+    setSelectedTemplateId(template?.id || null);
+    if (!template) return;
+
+    // A template establishes sensible defaults, but the inputs below remain
+    // editable. Its full extraction context is attached on submit.
+    updateForm({
+      durationMinutes: template.durationMinutes ?? 120,
+      marksPerCorrect: template.marksPerCorrect ?? 1,
+      negativeMarksPerWrong: template.negativeMarksPerWrong ?? 0,
+    });
+  };
 
   const isBatchMode =
     mode === "upload" && uploadMode === "batch" && selectedFiles.length > 1;
@@ -190,6 +218,17 @@ export function useCreateMockTestForm({ clusterId, onClose }) {
       marksPerCorrect: Number(form.marksPerCorrect),
       negativeMarksPerWrong: Number(form.negativeMarksPerWrong),
       settings: {
+        ...(selectedTemplate?.settings || {}),
+        ...(selectedTemplate
+          ? {
+              templateId: selectedTemplate.id,
+              templateSlug: selectedTemplate.slug,
+              templateName: selectedTemplate.name,
+              sections: selectedTemplate.sections ?? [],
+              tags: selectedTemplate.tags ?? [],
+              expectedQuestionCount: selectedTemplate.questionCount ?? null,
+            }
+          : {}),
         showMarksToStudents: Boolean(form.showMarksToStudents),
         questionOrder: form.questionOrder,
       },
@@ -361,6 +400,12 @@ export function useCreateMockTestForm({ clusterId, onClose }) {
     isSubmitting,
     batchProgress,
     currentStep,
+    templates,
+    isLoadingTemplates,
+    selectedTemplateId,
+    selectTemplate,
+    templateSearch,
+    setTemplateSearch,
     goToNextStep,
     goToPreviousStep,
     handleSubmit,

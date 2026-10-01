@@ -29,6 +29,8 @@ const cases = [
   "Multiple\nline\nbreaks\nin\na\nrow.",
   "Let $z_{1}$, $z_{2}$ and $z_{3}$ be three complex numbers on the circle\n$|z| = 1$ with ${arg}(z_{1}) = -\\frac{\\pi}{4}$, ${arg}(z_{2})\n= 0$ and ${arg}(z_{3}) = \\frac{\\pi}{4}$. If $|z_{1}\\bar{z}_{2}\n+ z_{2}\\bar{z}_{3} + z_{3}\\bar{z}_{1}|^{2} = \\alpha +\n\\beta\\sqrt{2}$, $\\alpha, \\beta \\in \\mathbf{Z}$, then the value of\n$\\alpha^{2} + \\beta^{2}$ is :",
   "```c\n#include <stdio.h>\nint main() {\n    return 0;\n}\n```",
+  "| List-I | List-II |\n| --- | --- |\n| Item A | Item B |",
+  "| Name | Value | <!-- colwidths: 40%, 60% -->\n| --- | --- |\n| Alpha | Beta |",
   "A trailing newline case\n",
   String.raw`$$\alpha^{2} + \beta^{2}$$ display math alone on a line`,
   "5 * 3 = 15 with a single literal asterisk",

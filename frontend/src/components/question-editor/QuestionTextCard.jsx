@@ -25,6 +25,7 @@ export default function QuestionTextCard({
   handleInsertMath,
   handleInsertImage,
   handleIndentCode,
+  handleInsertCodeBlock,
   handleCleanUpMath,
   handleKeyDownTextarea,
   isViewer,
@@ -119,6 +120,19 @@ export default function QuestionTextCard({
               >
                 <ImagePlus className="w-3.5 h-3.5 text-orange-500" />
                 Insert image
+              </button>
+              <button
+                type="button"
+                disabled={isViewer}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  setIsQuestionMenuOpen(false);
+                  handleInsertCodeBlock("text");
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted hover:text-orange-500 rounded-lg transition-colors text-left"
+              >
+                <Code2 className="w-3.5 h-3.5 text-orange-500" />
+                Insert code block
               </button>
               <button
                 type="button"

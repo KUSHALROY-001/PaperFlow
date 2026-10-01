@@ -40,7 +40,7 @@ export default function QueueQuestionCard({
   isBusy,
   isViewer,
 }) {
-  const editHref = `/cluster/${question.clusterId}/mock/${question.mockTestId}/editor?qId=${question.id}&returnTo=/review-queue`;
+  const editHref = `/cluster/${question.clusterId}/mock/${question.mockTestId}/editor?qId=${question.id}&returnTab=review&returnTo=/review-queue`;
 
   return (
     <div className="surface-card rounded-3xl border border-border p-4 sm:p-6 space-y-5">

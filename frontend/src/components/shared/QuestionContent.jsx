@@ -4,8 +4,6 @@ import CodeText from "./CodeText";
 export function QuestionExplanation({
   explanation,
   className = "",
-  editable = false,
-  onUpdateExplanation,
 }) {
   if (!explanation) return null;
   return (
@@ -19,8 +17,6 @@ export function QuestionExplanation({
         <CodeText
           text={explanation}
           textClassName="text-sm text-foreground"
-          editable={editable}
-          onUpdateText={onUpdateExplanation}
         />
       </div>
     </div>
@@ -38,8 +34,6 @@ export default function QuestionContent({
   text,
   passage,
   textClassName = "text-sm text-foreground",
-  editable = false,
-  onUpdateText,
 }) {
   return (
     <div className="space-y-3">
@@ -60,8 +54,6 @@ export default function QuestionContent({
         <CodeText
           text={text}
           textClassName={textClassName}
-          editable={editable}
-          onUpdateText={onUpdateText}
         />
       )}
     </div>

@@ -53,15 +53,15 @@ export async function createQuestion(workspaceId, body) {
   const questionNo = Number(body.questionNo);
   const questionText = requiredString(body.questionText, "questionText");
   const questionType = parseQuestionType(body.questionType);
+  const isMcq = ["single", "multi"].includes(questionType);
+  const isWritten = ["short_answer", "long_answer"].includes(questionType);
   const rawOptions =
-    questionType === "single" || questionType === "multi"
-      ? requiredArray(body.options, "options")
-      : body.options || [];
+    isMcq ? requiredArray(body.options, "options") : [];
   const options = rawOptions.map((option, index) =>
     requiredString(option, `options[${index}]`),
   );
   const correctOptionIndexes =
-    questionType === "single" || questionType === "multi"
+    isMcq
       ? requiredArray(body.correctOptionIndexes, "correctOptionIndexes").map(
           Number,
         )
@@ -109,12 +109,24 @@ export async function createQuestion(workspaceId, body) {
       confidence: optionalNumber(body.confidence, null),
       status: body.status || "needs_review",
       metadata: body.metadata || {},
-      acceptedAnswers: body.acceptedAnswers || null,
-      gradingRubric: body.gradingRubric || null,
-      expectedAnswer: optionalString(body.expectedAnswer),
-      answerWordLimit: optionalNumber(body.answerWordLimit, null),
-      numericAnswer: optionalNumber(body.numericAnswer, null),
-      numericTolerance: optionalNumber(body.numericTolerance, null),
+      // Keep answer data canonical: values belonging to another answer
+      // type must never be stored alongside the selected type, even when
+      // this API is called without the editor.
+      acceptedAnswers:
+        questionType === "fill_blank" ? body.acceptedAnswers || null : null,
+      gradingRubric: isWritten ? body.gradingRubric || null : null,
+      expectedAnswer: isWritten ? optionalString(body.expectedAnswer) : null,
+      answerWordLimit: isWritten
+        ? optionalNumber(body.answerWordLimit, null)
+        : null,
+      numericAnswer:
+        questionType === "numerical"
+          ? optionalNumber(body.numericAnswer, null)
+          : null,
+      numericTolerance:
+        questionType === "numerical"
+          ? optionalNumber(body.numericTolerance, null)
+          : null,
     });
 
     await client.query("COMMIT");
@@ -169,6 +181,17 @@ export async function updateQuestion(questionId, workspaceId, body) {
     questionType = parseQuestionType(body.questionType);
   }
   const effectiveQuestionType = questionType || existing.question_type;
+  const isMcq = ["single", "multi"].includes(effectiveQuestionType);
+  const isWritten = ["short_answer", "long_answer"].includes(
+    effectiveQuestionType,
+  );
+  const answerTypeChanged =
+    questionType !== undefined && questionType !== existing.question_type;
+  const shouldClearMcqData =
+    !isMcq &&
+    (answerTypeChanged ||
+      body.options !== undefined ||
+      body.correctOptionIndexes !== undefined);
 
   // Bug fix: this used requiredArray(body.options, "options") unconditionally
   // whenever options was present in the body, rejecting anything with an
@@ -179,28 +202,35 @@ export async function updateQuestion(questionId, workspaceId, body) {
   // numerical/fill_blank/short_answer/long_answer questions - so every save
   // of any non-MCQ question 400'd here with "options must be a non-empty
   // array", even when nothing about options had actually changed.
-  const requiresNonEmptyOptions = ["single", "multi"].includes(
-    effectiveQuestionType,
-  );
+  const requiresNonEmptyOptions = isMcq;
   const options =
-    body.options === undefined
-      ? undefined
-      : (requiresNonEmptyOptions
+    !isMcq
+      ? shouldClearMcqData
+        ? []
+        : undefined
+      : body.options === undefined
+        ? undefined
+        : (requiresNonEmptyOptions
           ? requiredArray(body.options, "options")
           : body.options || []
         ).map((option, index) => requiredString(option, `options[${index}]`));
-  const correctOptionIndexes = body.correctOptionIndexes?.map(Number);
+  const correctOptionIndexes = isMcq
+    ? body.correctOptionIndexes?.map(Number)
+    : shouldClearMcqData
+      ? []
+      : undefined;
 
   if (
     correctOptionIndexes &&
     correctOptionIndexes.length === 0 &&
-    ["single", "multi"].includes(questionType || existing.question_type)
+    isMcq
   ) {
     throw httpError(400, "correctOptionIndexes must not be empty");
   }
 
-  const effectiveCorrectOptionIndexes =
-    correctOptionIndexes || existing.correct_option_indexes || [];
+  const effectiveCorrectOptionIndexes = isMcq
+    ? correctOptionIndexes || existing.correct_option_indexes || []
+    : [];
   const effectiveOptionCount =
     options?.length ??
     (Array.isArray(existing.options) ? existing.options.length : 0);
@@ -273,25 +303,42 @@ export async function updateQuestion(questionId, workspaceId, body) {
         explanationProvided: body.explanation !== undefined,
         explanation: optionalString(body.explanation),
         questionType: questionType || null,
-        correctOptionIndexes: correctOptionIndexes || null,
+        correctOptionIndexes,
         options,
         marksPerCorrectProvided: body.marksPerCorrect !== undefined,
         marksPerCorrect: optionalNumber(body.marksPerCorrect, null),
         negativeMarksPerWrongProvided: body.negativeMarksPerWrong !== undefined,
         negativeMarksPerWrong: optionalNumber(body.negativeMarksPerWrong, null),
         metadata: body.metadata || null,
-        acceptedAnswersProvided: body.acceptedAnswers !== undefined,
-        acceptedAnswers: body.acceptedAnswers || null,
-        gradingRubricProvided: body.gradingRubric !== undefined,
-        gradingRubric: body.gradingRubric || null,
-        expectedAnswerProvided: body.expectedAnswer !== undefined,
-        expectedAnswer: optionalString(body.expectedAnswer),
-        answerWordLimitProvided: body.answerWordLimit !== undefined,
-        answerWordLimit: optionalNumber(body.answerWordLimit, null),
-        numericAnswerProvided: body.numericAnswer !== undefined,
-        numericAnswer: optionalNumber(body.numericAnswer, null),
-        numericToleranceProvided: body.numericTolerance !== undefined,
-        numericTolerance: optionalNumber(body.numericTolerance, null),
+        acceptedAnswersProvided:
+          answerTypeChanged || body.acceptedAnswers !== undefined,
+        acceptedAnswers:
+          effectiveQuestionType === "fill_blank"
+            ? body.acceptedAnswers || null
+            : null,
+        gradingRubricProvided:
+          answerTypeChanged || body.gradingRubric !== undefined,
+        gradingRubric: isWritten ? body.gradingRubric || null : null,
+        expectedAnswerProvided:
+          answerTypeChanged || body.expectedAnswer !== undefined,
+        expectedAnswer: isWritten ? optionalString(body.expectedAnswer) : null,
+        answerWordLimitProvided:
+          answerTypeChanged || body.answerWordLimit !== undefined,
+        answerWordLimit: isWritten
+          ? optionalNumber(body.answerWordLimit, null)
+          : null,
+        numericAnswerProvided:
+          answerTypeChanged || body.numericAnswer !== undefined,
+        numericAnswer:
+          effectiveQuestionType === "numerical"
+            ? optionalNumber(body.numericAnswer, null)
+            : null,
+        numericToleranceProvided:
+          answerTypeChanged || body.numericTolerance !== undefined,
+        numericTolerance:
+          effectiveQuestionType === "numerical"
+            ? optionalNumber(body.numericTolerance, null)
+            : null,
       });
     }
 

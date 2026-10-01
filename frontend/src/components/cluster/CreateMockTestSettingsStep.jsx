@@ -1,6 +1,26 @@
-export default function CreateMockTestSettingsStep({ uid, form, updateForm }) {
+import CreateMockTestTemplatePicker from "./CreateMockTestTemplatePicker";
+
+export default function CreateMockTestSettingsStep({
+  uid,
+  form,
+  updateForm,
+  templates,
+  selectedTemplateId,
+  onSelectTemplate,
+  templateSearch,
+  setTemplateSearch,
+  isLoadingTemplates,
+}) {
   return (
     <>
+      <CreateMockTestTemplatePicker
+        templates={templates}
+        selectedTemplateId={selectedTemplateId}
+        onSelect={onSelectTemplate}
+        search={templateSearch}
+        onSearchChange={setTemplateSearch}
+        isLoading={isLoadingTemplates}
+      />
       <div>
         <label
           htmlFor={`${uid}-duration`}

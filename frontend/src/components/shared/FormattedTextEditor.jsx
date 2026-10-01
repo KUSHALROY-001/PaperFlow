@@ -51,8 +51,10 @@ import { FormattedTextEditorToolbar } from "./FormattedTextEditorToolbar";
 // interaction feel, and cross-browser rendering. That needs real
 // interactive testing, not just this file compiling.
 //
-// Code fences and GFM tables are plain, unstyled text in this editor for
-// now (not corrupted, just not specially rendered) - see richTextDoc.js.
+// GFM tables are real TableKit nodes: click a cell to edit it, use the
+// table controls in the toolbar for structural changes, and drag a column
+// edge to resize it. richTextDoc.js serializes the result back to the
+// stored Markdown format used by the rest of the application.
 //
 // This file is the orchestration layer only: TipTap setup, sync with the
 // controlled `value` prop, and the imperative ref API. The extension/
@@ -177,6 +179,9 @@ function FormattedTextEditor(
       },
       toggleStrike() {
         runWithSelectionPreserved((chain) => chain.toggleStrike());
+      },
+      toggleCodeBlock() {
+        runWithSelectionPreserved((chain) => chain.toggleCodeBlock());
       },
       setTextStyle(level) {
         applyTextStyle(level);

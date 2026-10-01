@@ -19,6 +19,7 @@ export default function QuestionExplanationCard({
   handleInsertMath,
   handleInsertImage,
   handleIndentExplanationCode,
+  handleInsertCodeBlock,
   handleKeyDownTextarea,
   isViewer,
 }) {
@@ -88,6 +89,19 @@ export default function QuestionExplanationCard({
               >
                 <ImagePlus className="w-3.5 h-3.5 text-orange-500" />
                 Insert image
+              </button>
+              <button
+                type="button"
+                disabled={isViewer}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  setIsExplanationMenuOpen(false);
+                  handleInsertCodeBlock("explanation");
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted hover:text-orange-500 rounded-lg transition-colors text-left"
+              >
+                <Code2 className="w-3.5 h-3.5 text-orange-500" />
+                Insert code block
               </button>
               <button
                 type="button"

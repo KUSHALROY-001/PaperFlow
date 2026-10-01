@@ -111,6 +111,20 @@ export function getIssues(q) {
     if (q.options.some((o) => !o.trim())) issues++;
     if (!q.correctOptionIndexes.length) issues++;
   }
+  if (
+    q.questionType === "fill_blank" &&
+    !q.acceptedAnswers?.some((answers) => answers?.some((answer) => answer?.trim()))
+  ) {
+    issues++;
+  }
+  if (
+    q.questionType === "numerical" &&
+    (q.numericAnswer === null ||
+      q.numericAnswer === "" ||
+      !Number.isFinite(Number(q.numericAnswer)))
+  ) {
+    issues++;
+  }
   return issues;
 }
 

@@ -1,10 +1,11 @@
 import MarksBadge from "@/components/shared/MarksBadge";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Copy, Download, Edit2, Loader2 } from "lucide-react";
 import QuestionContent, {
   QuestionExplanation,
 } from "../shared/QuestionContent";
+import QuestionAnswerKey from "../shared/QuestionAnswerKey";
 import MathText from "../shared/MathText";
 import QuestionJumpInput from "../shared/QuestionJumpInput";
 import { api } from "@/lib/api";
@@ -30,6 +31,8 @@ export default function OutputTab({
   hasMoreQuestions = false,
   onLoadMoreQuestions,
   onLoadThroughQuestion,
+  targetQuestionNo = null,
+  onReturnTargetHandled,
 }) {
   const isRandomOrder = getQuestionOrderMode(mocktest) === "random";
   const [activeView, setActiveView] = useState("Visual");
@@ -43,6 +46,36 @@ export default function OutputTab({
   // scroll has to be driven by a real effect dependency (activeView),
   // not a timing guess.
   const [pendingScrollTo, setPendingScrollTo] = useState(null);
+  const completedReturnTargetRef = useRef(null);
+  const questionListRef = useRef(null);
+  const legacyAnswerKey = null;
+
+  useEffect(() => {
+    if (
+      !targetQuestionNo ||
+      completedReturnTargetRef.current === targetQuestionNo
+    ) {
+      return;
+    }
+
+    const target = questions.find(
+      (question) => Number(question.questionNo) === targetQuestionNo,
+    );
+    if (!target) {
+      onLoadThroughQuestion?.(targetQuestionNo);
+      return;
+    }
+
+    setActiveView("Visual");
+    setPendingScrollTo(target.questionNo);
+    completedReturnTargetRef.current = targetQuestionNo;
+    onReturnTargetHandled?.();
+  }, [
+    targetQuestionNo,
+    questions,
+    onLoadThroughQuestion,
+    onReturnTargetHandled,
+  ]);
 
   // Returns true/false (found or not) - QuestionJumpInput owns showing
   // the "not found" message itself based on this return value.
@@ -63,7 +96,11 @@ export default function OutputTab({
 
   useEffect(() => {
     if (pendingScrollTo == null) return undefined;
-    const el = document.getElementById(`question-${pendingScrollTo}`);
+    // Keep the lookup within the active visual list so a same-numbered
+    // question elsewhere in the page cannot win a global ID lookup.
+    const el = questionListRef.current?.querySelector(
+      `[data-question-no="${pendingScrollTo}"]`,
+    );
     // Not found yet on this render (e.g. we just switched activeView to
     // "Visual" this same tick and the Visual list hasn't painted) - do
     // nothing and let the next run of this effect (triggered by
@@ -71,13 +108,16 @@ export default function OutputTab({
     // actually succeeds.
     if (!el) return undefined;
 
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    const headerHeight = document.querySelector("header")?.offsetHeight || 0;
+    const targetTop =
+      window.scrollY + el.getBoundingClientRect().top - headerHeight - 16;
+    window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
     el.classList.add("ring-2", "ring-orange-500", "ring-offset-2");
-    const timeoutId = window.setTimeout(() => {
+    window.setTimeout(() => {
       el.classList.remove("ring-2", "ring-orange-500", "ring-offset-2");
     }, 1600);
     setPendingScrollTo(null);
-    return () => window.clearTimeout(timeoutId);
+    return undefined;
   }, [pendingScrollTo, activeView, questions]);
 
   const exportPayload = useMemo(
@@ -220,7 +260,7 @@ export default function OutputTab({
       </div>
 
       {activeView === "Visual" && (
-        <div className="grid gap-4 w-full min-w-0">
+        <div ref={questionListRef} className="grid gap-4 w-full min-w-0">
           {isRandomOrder && questions.length > 0 && (
             <p className="text-xs font-semibold text-muted-foreground rounded-xl border border-border bg-muted/40 px-3 py-2">
               Showing questions in random student order. Paper numbers are
@@ -238,7 +278,8 @@ export default function OutputTab({
               <div
                 key={question.id}
                 id={`question-${question.questionNo}`}
-                className="rounded-3xl p-3 sm:p-5 surface-card border border-border transition-all w-full min-w-0 overflow-hidden"
+                data-question-no={question.questionNo}
+                className="scroll-mt-24 rounded-3xl p-3 sm:p-5 surface-card border border-border transition-all w-full min-w-0 overflow-hidden"
               >
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2 flex-wrap min-w-0">
@@ -266,7 +307,7 @@ export default function OutputTab({
                     )}
                   </div>
                   <Link
-                    to={`/cluster/${metadata.clusterId}/mock/${metadata.mockTestId}/editor?qId=${question.id}`}
+                    to={`/cluster/${metadata.clusterId}/mock/${metadata.mockTestId}/editor?qId=${question.id}&returnTab=output`}
                     className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all hover:border-orange-500/40 hover:text-orange-500 hover:bg-orange-500/10 shrink-0"
                     title={`Edit Question ${question.questionNo} in Question Editor`}
                   >
@@ -286,6 +327,9 @@ export default function OutputTab({
                     textClassName="text-base sm:text-lg text-foreground break-words"
                   />
 
+                  <QuestionAnswerKey question={question} />
+                  {legacyAnswerKey && (
+                    <>
                   <div className="mt-5 grid gap-3 md:grid-cols-2 w-full min-w-0">
                     {question.questionType === "numerical" && (
                       // No options for a numerical question - the answer
@@ -371,6 +415,8 @@ export default function OutputTab({
                       );
                     })}
                   </div>
+                    </>
+                  )}
                   <QuestionExplanation explanation={question.explanation} />
                 </DiagramAssetsProvider>
               </div>
@@ -398,6 +444,9 @@ export default function OutputTab({
               </button>
             </div>
           )}
+          {/* Reserve trailing room so a late question can align beneath the
+              sticky top bar instead of stopping early at the page bottom. */}
+          <div aria-hidden="true" className="h-[calc(100dvh-6rem)]" />
         </div>
       )}
 

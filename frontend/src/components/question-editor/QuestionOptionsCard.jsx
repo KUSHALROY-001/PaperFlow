@@ -1,5 +1,16 @@
+import { useState } from "react";
 import { FileCode, Plus } from "lucide-react";
 import QuestionOptionRow from "./QuestionOptionRow";
+import { ConfirmDialog } from "../design-system/ConfirmDialog";
+
+const QUESTION_TYPE_LABELS = {
+  single: "Single choice",
+  multi: "Multiple choice",
+  fill_blank: "Fill in the blank",
+  short_answer: "Short answer",
+  long_answer: "Long answer",
+  numerical: "Numerical",
+};
 
 export default function QuestionOptionsCard({
   options = [],
@@ -30,8 +41,22 @@ export default function QuestionOptionsCard({
   updateSelected,
 }) {
   const isMcq = questionType === "single" || questionType === "multi";
+  const [pendingQuestionType, setPendingQuestionType] = useState(null);
+
+  const requestQuestionTypeChange = (nextType) => {
+    if (nextType === questionType) return;
+    setPendingQuestionType(nextType);
+  };
+
+  const confirmQuestionTypeChange = () => {
+    if (!pendingQuestionType) return;
+    handleQuestionTypeChange(pendingQuestionType);
+    setPendingQuestionType(null);
+  };
+
   return (
-    <div className="surface-card rounded-2xl p-3 sm:p-6 border border-border">
+    <>
+      <div className="surface-card rounded-2xl p-3 sm:p-6 border border-border">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
         <span className="text-xs sm:text-sm font-bold text-foreground">
           Answer Options
@@ -54,7 +79,7 @@ export default function QuestionOptionsCard({
           <select
             disabled={isViewer}
             value={questionType}
-            onChange={(event) => handleQuestionTypeChange(event.target.value)}
+            onChange={(event) => requestQuestionTypeChange(event.target.value)}
             className={`w-full sm:w-36 rounded-md border border-border bg-card text-foreground px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 ${
               isViewer ? "cursor-not-allowed opacity-60" : ""
             }`}
@@ -140,6 +165,17 @@ export default function QuestionOptionsCard({
           <input disabled={isViewer} type="number" min="0" step="any" value={numericTolerance ?? ""} placeholder="Tolerance" onChange={(event) => updateSelected("numericTolerance", event.target.value === "" ? null : Number(event.target.value))} className="rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-orange-500 disabled:opacity-60" />
         </div>
       )}
-    </div>
+      </div>
+      <ConfirmDialog
+        open={Boolean(pendingQuestionType)}
+        onOpenChange={(open) => !open && setPendingQuestionType(null)}
+        title="Change answer type?"
+        description={`Changing from ${QUESTION_TYPE_LABELS[questionType]} to ${QUESTION_TYPE_LABELS[pendingQuestionType]} resets the answer configuration. MCQ options are removed when switching to a non-MCQ type. You will need to enter an answer for the new type before saving.`}
+        confirmLabel="Change type and clear data"
+        cancelLabel="Keep current type"
+        warning={true}
+        onConfirm={confirmQuestionTypeChange}
+      />
+    </>
   );
 }

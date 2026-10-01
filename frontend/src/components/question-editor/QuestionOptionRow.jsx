@@ -157,6 +157,15 @@ export default function QuestionOptionRow({
                   <button
                     type="button"
                     onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => onOptionAction(index, "toggleCodeBlock")}
+                    className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-xs font-semibold text-foreground transition-colors hover:bg-muted hover:text-orange-500"
+                  >
+                    <Code2 className="h-3.5 w-3.5 text-orange-500" />
+                    Insert code block
+                  </button>
+                  <button
+                    type="button"
+                    onMouseDown={(event) => event.preventDefault()}
                     onClick={() => onOptionAction(index, "indentCode")}
                     className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-xs font-semibold text-foreground transition-colors hover:bg-muted hover:text-orange-500"
                   >

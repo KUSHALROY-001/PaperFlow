@@ -112,20 +112,28 @@ export function useQuestionForm({
   const handleIndentCode = () => {
     const current = selected?.text || "";
     if (!current.trim()) {
-      const template =
-        "```c\n#include <stdio.h>\n\nint main() {\n    return 0;\n}\n```";
-      updateSelected("text", template);
+      updateSelected("text", "```c\n#include <stdio.h>\n\nint main() {\n    return 0;\n}\n```");
       return;
     }
-    const indented = autoIndentMarkdown(current);
-    updateSelected("text", indented);
+    updateSelected("text", autoIndentMarkdown(current));
   };
 
   const handleIndentExplanationCode = () => {
     const current = selected?.explanation || "";
     if (!current.trim()) return;
-    const indented = autoIndentMarkdown(current);
-    updateSelected("explanation", indented);
+    updateSelected("explanation", autoIndentMarkdown(current));
+  };
+
+  const handleInsertCodeBlock = (field) => {
+    const isQuestion = field === "text";
+    const isRaw = isQuestion ? isQuestionRaw : isExplanationRaw;
+    if (!isRaw) {
+      (isQuestion ? formattedQuestionRef : formattedExplanationRef).current?.toggleCodeBlock();
+      return;
+    }
+    const current = selected?.[field] || "";
+    const separator = current.trim() ? "\n\n" : "";
+    updateSelected(field, `${current}${separator}\`\`\`\n// Write code here\n\`\`\``);
   };
 
   const handleOptionAction = (index, action) => {
@@ -136,6 +144,8 @@ export function useQuestionForm({
       editor?.insertMath();
     } else if (action === "insertImage") {
       editor?.insertImage();
+    } else if (action === "toggleCodeBlock") {
+      editor?.toggleCodeBlock();
     } else if (action === "indentCode") {
       updateOption(index, autoIndentMarkdown(selected?.options?.[index] || ""));
     } else if (action === "cleanMath") {
@@ -158,12 +168,35 @@ export function useQuestionForm({
 
   const handleQuestionTypeChange = (nextType) => {
     if (isViewer) return;
-    updateSelected("questionType", nextType);
-    if (nextType === "single") {
-      updateSelected("correctOptionIndexes", [
-        selected?.correctOptionIndexes?.[0] || 0,
-      ]);
-    }
+    const wasMcq = ["single", "multi"].includes(selected?.questionType);
+    const becomesMcq = ["single", "multi"].includes(nextType);
+    const existingOptions = selected?.options || [];
+
+    // Answer data belongs to exactly one question type. Keeping MCQ
+    // options after a conversion is what made the preview render both an
+    // answer field and the old choices. Reset incompatible fields here;
+    // the API repeats the same rule for non-browser callers.
+    updateSelected({
+      questionType: nextType,
+      options: becomesMcq
+        ? wasMcq && existingOptions.length
+          ? existingOptions
+          : ["Option A", "Option B", "Option C", "Option D"]
+        : [],
+      correctOptionIndexes: becomesMcq
+        ? nextType === "single"
+          ? [selected?.correctOptionIndexes?.[0] || 0]
+          : selected?.correctOptionIndexes?.length
+            ? selected.correctOptionIndexes
+            : [0]
+        : [],
+      acceptedAnswers: [],
+      gradingRubric: [],
+      expectedAnswer: "",
+      answerWordLimit: null,
+      numericAnswer: null,
+      numericTolerance: null,
+    });
   };
 
   return {
@@ -196,6 +229,7 @@ export function useQuestionForm({
     handleCleanUpMath,
     handleIndentCode,
     handleIndentExplanationCode,
+    handleInsertCodeBlock,
     handleOptionAction,
     handleKeyDownTextarea,
     handleQuestionTypeChange,

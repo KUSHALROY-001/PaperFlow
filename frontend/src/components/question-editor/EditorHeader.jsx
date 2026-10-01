@@ -12,7 +12,6 @@ export default function EditorHeader({
   isViewer,
   onShowLatexReference,
   returnTo,
-  selectedIsDirty,
   hasUnsavedChanges,
   dirtyContentCount,
   orderChangeCount,
@@ -38,7 +37,7 @@ export default function EditorHeader({
 
   return (
     <header className="min-h-14 bg-card/80 backdrop-blur-md border-b border-border flex flex-col gap-3 sm:flex-row sm:items-center px-4 sm:px-6 py-3 sticky top-0 z-20">
-      <div className="flex-1 flex items-center gap-3 min-w-0">
+      <div className="flex-1 flex flex-wrap sm:flex-nowrap items-center gap-3 min-w-0">
         {returnTo && (
           <Link
             to={returnTo}
@@ -67,6 +66,16 @@ export default function EditorHeader({
         {/* Counted over loaded questions only - see the note above. */}
         <span className="text-xs text-muted-foreground">
           {issueCount} with issues
+        </span>
+        <span
+          className={`text-xs font-semibold sm:hidden ${
+            hasUnsavedChanges && (dirtyContentCount > 0 || orderChangeCount > 0)
+              ? "text-amber-600 dark:text-amber-400"
+              : "text-muted-foreground"
+          }`}
+          title="Unsaved question edits and order changes"
+        >
+          {dirtyContentCount} edited · {orderChangeCount} reordered
         </span>
         {dirtyHint && (
           <span

@@ -190,6 +190,70 @@
 }
 
 @layer components {
+  /* TableKit's generated elements need a small visual affordance while a
+     table is being edited. The persisted Markdown remains unchanged; this
+     only makes cell selection and column-resize handles discoverable. */
+  .ProseMirror .tableWrapper {
+    margin: 0.75rem 0;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+
+  .ProseMirror .selectedCell {
+    position: relative;
+  }
+
+  .ProseMirror .selectedCell::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    pointer-events: none;
+    background: color-mix(in srgb, var(--primary) 16%, transparent);
+  }
+
+  .ProseMirror .column-resize-handle {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    right: -5px;
+    bottom: 0;
+    width: 10px;
+    cursor: col-resize;
+  }
+
+  /* ProseMirror detects the border hit area itself, then applies this class
+     to the editor root. The resize handle is pointer-events:none by design,
+     so styling the root is what makes the double-arrow cursor dependable. */
+  .ProseMirror.resize-cursor {
+    cursor: col-resize !important;
+  }
+
+  /* Keep the pointer target pleasantly wide, but show only a fine guide
+     until it is hovered or dragged. `col-resize` is the platform-standard
+     left-right double-arrow cursor, making table-column resizing obvious. */
+  .ProseMirror .column-resize-handle::after {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 2px;
+    content: "";
+    transform: translateX(-50%);
+    background: color-mix(in srgb, var(--primary) 40%, transparent);
+    opacity: 0;
+    transition:
+      opacity 120ms ease,
+      background-color 120ms ease;
+  }
+
+  .ProseMirror .column-resize-handle:hover::after,
+  .ProseMirror .column-resize-handle:active::after,
+  .ProseMirror .column-resize-dragging .column-resize-handle::after {
+    opacity: 1;
+    background: var(--primary);
+  }
+
   .surface-card,
   .card-lavender {
     background: var(--card);

@@ -1,10 +1,7 @@
 import { useMemo } from "react";
 import MathText from "./MathText";
 import QuestionTable from "./QuestionTable";
-import {
-  splitIntoTextBlocks,
-  updateTableColWidthsInMarkdown,
-} from "@/utils/textBlocks";
+import { splitIntoTextBlocks } from "@/utils/textBlocks";
 
 const CODE_FENCE_RE = /```(\w*)\n([\s\S]*?)```/g;
 
@@ -12,29 +9,17 @@ function renderProseSegment(
   segment,
   textClassName,
   keyPrefix,
-  editable,
-  onUpdateText,
-  getTableIndex,
 ) {
   if (!segment) return null;
   const blocks = splitIntoTextBlocks(segment);
   return blocks.flatMap((block, index) => {
     if (block.type === "table") {
-      const tableIdx = getTableIndex();
       return (
         <QuestionTable
           key={`${keyPrefix}-tbl-${index}`}
           header={block.header}
           rows={block.rows}
           colWidths={block.colWidths}
-          editable={editable}
-          onColWidthsChange={(newWidths) => {
-            if (onUpdateText) {
-              onUpdateText((prevText) =>
-                updateTableColWidthsInMarkdown(prevText, tableIdx, newWidths),
-              );
-            }
-          }}
         />
       );
     }
@@ -84,17 +69,11 @@ function renderProseSegment(
   });
 }
 
-function buildNodes(text, textClassName, editable, onUpdateText) {
+function buildNodes(text, textClassName) {
   if (!text) return null;
   const str = String(text);
   const parts = str.split(CODE_FENCE_RE);
   const nodes = [];
-  let tableCounter = 0;
-  const getTableIndex = () => {
-    const idx = tableCounter;
-    tableCounter += 1;
-    return idx;
-  };
 
   for (let i = 0; i < parts.length; i += 3) {
     const prose = parts[i];
@@ -104,9 +83,6 @@ function buildNodes(text, textClassName, editable, onUpdateText) {
           prose,
           textClassName,
           `prose-${i}`,
-          editable,
-          onUpdateText,
-          getTableIndex,
         ),
       );
     }
@@ -139,12 +115,10 @@ function buildNodes(text, textClassName, editable, onUpdateText) {
 export default function CodeText({
   text,
   textClassName = "text-sm text-foreground",
-  editable = false,
-  onUpdateText,
 }) {
   const nodes = useMemo(
-    () => buildNodes(text, textClassName, editable, onUpdateText),
-    [text, textClassName, editable, onUpdateText],
+    () => buildNodes(text, textClassName),
+    [text, textClassName],
   );
   return <>{nodes}</>;
 }

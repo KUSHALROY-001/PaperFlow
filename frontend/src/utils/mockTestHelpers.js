@@ -62,7 +62,7 @@ export function mapQuestion(question) {
   const normalizedStatus = ["approved", "rejected"].includes(question.status)
     ? question.status
     : "review";
-  const questionType = question.question_type || "single";
+  const questionType = question.question_type || question.questionType || "single";
   // Bug fix: numeric_answer/numeric_tolerance were never mapped through at
   // all (same shape of miss as diagramUrl/marks below), and `answer` was
   // unconditionally derived from `options[correctIndex]` - which is empty
@@ -71,8 +71,9 @@ export function mapQuestion(question) {
   // toEditorQuestion (questionEditorHelpers.js), a separate mapper that
   // already handled these two fields - only OutputTab/ReviewTab, which
   // render mapQuestion's output, showed a blank answer.
-  const numericAnswer = question.numeric_answer ?? null;
-  const numericTolerance = question.numeric_tolerance ?? null;
+  const numericAnswer = question.numeric_answer ?? question.numericAnswer ?? null;
+  const numericTolerance =
+    question.numeric_tolerance ?? question.numericTolerance ?? null;
   // Same gap as numericAnswer/numericTolerance above, for the other three
   // non-MCQ types (fill_blank, short_answer, long_answer) - these were
   // never mapped through at all, so OutputTab/ReviewTab had literally
@@ -80,14 +81,17 @@ export function mapQuestion(question) {
   // these types), and no answer-key field either. useQuestionEditor.js
   // was unaffected for the same reason as before - it reads the raw API
   // response via toEditorQuestion, a separate mapper.
-  const acceptedAnswers = Array.isArray(question.accepted_answers)
-    ? question.accepted_answers
+  const acceptedAnswerSource = question.accepted_answers ?? question.acceptedAnswers;
+  const acceptedAnswers = Array.isArray(acceptedAnswerSource)
+    ? acceptedAnswerSource
     : null;
-  const gradingRubric = Array.isArray(question.grading_rubric)
-    ? question.grading_rubric
+  const gradingRubricSource = question.grading_rubric ?? question.gradingRubric;
+  const gradingRubric = Array.isArray(gradingRubricSource)
+    ? gradingRubricSource
     : null;
-  const expectedAnswer = question.expected_answer ?? null;
-  const answerWordLimit = question.answer_word_limit ?? null;
+  const expectedAnswer = question.expected_answer ?? question.expectedAnswer ?? null;
+  const answerWordLimit =
+    question.answer_word_limit ?? question.answerWordLimit ?? null;
 
   return {
     id: question.id,
@@ -110,6 +114,7 @@ export function mapQuestion(question) {
         : options[correctIndex] || "",
     correctOptionIndexes:
       question.correct_option_indexes ||
+      question.correctOptionIndexes ||
       (["single", "multi"].includes(questionType) ? [correctIndex] : []),
     numericAnswer,
     numericTolerance,

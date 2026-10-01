@@ -42,6 +42,8 @@ export default function MockTestWorkspace() {
     aiSummary,
     activeTab,
     setActiveTab,
+    targetQuestionNo,
+    consumeReturnTarget,
     actionError,
     status,
     isProcessing,
@@ -154,6 +156,8 @@ export default function MockTestWorkspace() {
 
       <WorkspaceTabPanels
         activeTab={activeTab}
+        targetQuestionNo={targetQuestionNo}
+        onReturnTargetHandled={consumeReturnTarget}
         mocktest={mocktest}
         questions={questions}
         questionCount={questionCount}

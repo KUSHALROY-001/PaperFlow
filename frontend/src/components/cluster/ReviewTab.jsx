@@ -1,5 +1,5 @@
 import MarksBadge from "@/components/shared/MarksBadge";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   Check,
@@ -17,6 +17,7 @@ import { ConfirmDialog } from "../design-system/ConfirmDialog";
 import QuestionContent, {
   QuestionExplanation,
 } from "../shared/QuestionContent";
+import QuestionAnswerKey from "../shared/QuestionAnswerKey";
 import MathText from "../shared/MathText";
 import { DiagramAssetsProvider } from "@/lib/diagramAssetsContext";
 import {
@@ -55,6 +56,8 @@ export default function ReviewTab({
   hasMoreQuestions = false,
   onLoadMoreQuestions,
   onLoadThroughQuestion,
+  targetQuestionNo = null,
+  onReturnTargetHandled,
   mocktest,
   onStatusChange,
   onDelete,
@@ -79,6 +82,44 @@ export default function ReviewTab({
   // if collapsed - and the scroll has to wait for whichever of those
   // actually happens.
   const [pendingScrollTo, setPendingScrollTo] = useState(null);
+  const completedReturnTargetRef = useRef(null);
+  const questionListRef = useRef(null);
+  // Retained only while this component's legacy markup is removed in a
+  // follow-up cleanup; the shared renderer above is the rendered UI.
+  const legacyAnswerKey = null;
+
+  // Back from the editor: qNo identifies the exact card to restore. The
+  // streaming list might not have fetched that page yet, so use the same
+  // load-through path as the manual question jump before scrolling.
+  useEffect(() => {
+    if (
+      !targetQuestionNo ||
+      completedReturnTargetRef.current === targetQuestionNo
+    ) {
+      return;
+    }
+
+    const target = questions.find(
+      (question) => Number(question.questionNo) === targetQuestionNo,
+    );
+    if (!target) {
+      onLoadThroughQuestion?.(targetQuestionNo);
+      return;
+    }
+
+    setActiveFilter("all");
+    setExpandedIds((current) =>
+      current.includes(target.id) ? current : [...current, target.id],
+    );
+    setPendingScrollTo(target.questionNo);
+    completedReturnTargetRef.current = targetQuestionNo;
+    onReturnTargetHandled?.();
+  }, [
+    targetQuestionNo,
+    questions,
+    onLoadThroughQuestion,
+    onReturnTargetHandled,
+  ]);
 
   // Returns true/false (found or not) - QuestionJumpInput owns showing
   // the "not found" message itself based on this return value. Searches
@@ -147,20 +188,30 @@ export default function ReviewTab({
 
   useEffect(() => {
     if (pendingScrollTo == null) return undefined;
-    const el = document.getElementById(`question-${pendingScrollTo}`);
+    // Limit the lookup to this tab. A document-wide ID lookup can select a
+    // same-numbered card outside the currently visible review list.
+    const el = questionListRef.current?.querySelector(
+      `[data-question-no="${pendingScrollTo}"]`,
+    );
     // Not in the DOM yet on this render (filter/expand state just
     // changed and hasn't repainted) - do nothing and let the next run of
     // this effect, triggered by activeFilter/filteredQuestions changing,
     // try again.
     if (!el) return undefined;
 
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    // Position the card explicitly below the sticky application header.
+    // scrollIntoView can stop at the document's maximum scroll position,
+    // which is why a late target used to leave Q48 at the top for Q52.
+    const headerHeight = document.querySelector("header")?.offsetHeight || 0;
+    const targetTop =
+      window.scrollY + el.getBoundingClientRect().top - headerHeight - 16;
+    window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
     el.classList.add("ring-2", "ring-orange-500", "ring-offset-2");
-    const timeoutId = window.setTimeout(() => {
+    window.setTimeout(() => {
       el.classList.remove("ring-2", "ring-orange-500", "ring-offset-2");
     }, 1600);
     setPendingScrollTo(null);
-    return () => window.clearTimeout(timeoutId);
+    return undefined;
   }, [pendingScrollTo, activeFilter, filteredQuestions]);
 
   return (
@@ -241,7 +292,7 @@ export default function ReviewTab({
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div ref={questionListRef} className="space-y-4">
         {isRandomOrder && questions.length > 0 && (
           <p className="text-xs font-semibold text-muted-foreground rounded-xl border border-border bg-muted/40 px-3 py-2">
             Showing questions in random student order. Paper numbers are
@@ -303,8 +354,9 @@ export default function ReviewTab({
             <div
               key={question.id}
               id={`question-${question.questionNo}`}
+              data-question-no={question.questionNo}
               data-tour={questionIndex === 0 ? "review-first-card" : undefined}
-              className={`rounded-3xl p-3 sm:p-5 surface-card border transition-all ${borderClass}`}
+              className={`scroll-mt-24 rounded-3xl p-3 sm:p-5 surface-card border transition-all ${borderClass}`}
             >
               <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div className="flex-1 min-w-0">
@@ -375,7 +427,7 @@ export default function ReviewTab({
                         </button>
                       )}
                       <Link
-                        to={`/cluster/${clusterId}/mock/${mockTestId}/editor?qId=${question.id}`}
+                        to={`/cluster/${clusterId}/mock/${mockTestId}/editor?qId=${question.id}&returnTab=review`}
                         data-tour={
                           questionIndex === 0 ? "review-edit" : undefined
                         }
@@ -482,6 +534,13 @@ export default function ReviewTab({
               {expanded && (
                 <div className="mt-5 space-y-3 rounded-2xl border border-border bg-muted/40 p-2 sm:p-4">
                   <DiagramAssetsProvider assets={question.diagramAssets}>
+                    <QuestionAnswerKey question={question} compact />
+                    {legacyAnswerKey && (
+                      <>
+                    {/* Keep Review's answer presentation in step with Output:
+                        each non-MCQ type has its own answer-key fields, while
+                        single/multi questions render their options in a grid. */}
+                    <div className="grid gap-3 md:grid-cols-2">
                     {question.questionType === "numerical" && (
                       // This tab only ever rendered question.options - fine
                       // for MCQs, but numerical questions have no options at
@@ -491,7 +550,7 @@ export default function ReviewTab({
                       // and question editor needed separate fixes: three
                       // different consumers of the same underlying field,
                       // each with its own gap.
-                      <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/15 px-3 py-3 text-xs text-emerald-500 sm:px-4 sm:text-sm">
+                      <div className="md:col-span-2 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/15 px-3 py-3 text-xs text-emerald-500 sm:px-4 sm:text-sm">
                         <span className="font-semibold">
                           Answer: {question.numericAnswer ?? "Not set"}
                           {question.numericTolerance
@@ -511,7 +570,7 @@ export default function ReviewTab({
                       // strings PER BLANK, in blank order (see
                       // worker/ai/schemas.py's accepted_answers field).
                       (question.acceptedAnswers?.length ? (
-                        <div className="space-y-2">
+                        <div className="grid gap-2 md:grid-cols-2 md:col-span-2">
                           {question.acceptedAnswers.map((group, blankIndex) => (
                             <div
                               key={`${question.id}-blank-${blankIndex}`}
@@ -529,7 +588,7 @@ export default function ReviewTab({
                           ))}
                         </div>
                       ) : (
-                        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-3 py-3 text-xs text-amber-500 sm:px-4 sm:text-sm">
+                        <div className="md:col-span-2 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-3 py-3 text-xs text-amber-500 sm:px-4 sm:text-sm">
                           No accepted answers set for this blank
                         </div>
                       ))}
@@ -541,7 +600,7 @@ export default function ReviewTab({
                       // marking scheme was detailed enough to derive one,
                       // else a single model answer (question.expectedAnswer).
                       (question.gradingRubric?.length ? (
-                        <div className="space-y-1.5">
+                        <div className="grid gap-1.5 md:grid-cols-2 md:col-span-2">
                           {question.gradingRubric.map((entry, pointIndex) => (
                             <div
                               key={`${question.id}-rubric-${pointIndex}`}
@@ -556,7 +615,7 @@ export default function ReviewTab({
                           ))}
                         </div>
                       ) : question.expectedAnswer ? (
-                        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/15 px-3 py-3 text-xs text-emerald-500 whitespace-pre-wrap sm:px-4 sm:text-sm">
+                        <div className="md:col-span-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/15 px-3 py-3 text-xs text-emerald-500 whitespace-pre-wrap sm:px-4 sm:text-sm">
                           <span className="font-bold">Model answer: </span>
                           {question.expectedAnswer}
                           {question.answerWordLimit
@@ -564,11 +623,12 @@ export default function ReviewTab({
                             : ""}
                         </div>
                       ) : (
-                        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-3 py-3 text-xs text-amber-500 sm:px-4 sm:text-sm">
+                        <div className="md:col-span-2 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-3 py-3 text-xs text-amber-500 sm:px-4 sm:text-sm">
                           No model answer or rubric set
                         </div>
                       ))}
-                    {question.options.map((option, optionIndex) => {
+                    {["single", "multi"].includes(question.questionType) &&
+                      question.options.map((option, optionIndex) => {
                       const correct = option === question.answer;
                       return (
                         <div
@@ -590,7 +650,10 @@ export default function ReviewTab({
                           )}
                         </div>
                       );
-                    })}
+                      })}
+                    </div>
+                      </>
+                    )}
                     <QuestionExplanation explanation={question.explanation} />
                   </DiagramAssetsProvider>
                   {question.status === "rejected" && (
@@ -636,6 +699,11 @@ export default function ReviewTab({
             </button>
           </div>
         )}
+        {/* Gives the final questions enough room to become the top visible
+            card after a jump. Without this, the document's max scroll
+            position leaves earlier cards (for example Q48) at the top when
+            jumping to a late target such as Q52. */}
+        <div aria-hidden="true" className="h-[calc(100dvh-6rem)]" />
       </div>
 
       {deleteTarget && (

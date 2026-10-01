@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -16,11 +16,33 @@ import {
 export function useMockTestWorkspace() {
   const { clusterId, mockTestId } = useParams();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState(
     searchParams.get("tab") || "overview",
   );
+  // qNo is a one-time return instruction from the question editor, not
+  // persistent workspace state. Keep it in memory long enough for the
+  // selected tab to focus the card, then remove it from the URL so a page
+  // reload or later tab visit opens normally.
+  const [targetQuestionNo, setTargetQuestionNo] = useState(() => {
+    const returnQuestionNo = Number(searchParams.get("qNo"));
+    return Number.isInteger(returnQuestionNo) && returnQuestionNo > 0
+      ? returnQuestionNo
+      : null;
+  });
+  const consumeReturnTarget = useCallback(() => {
+    setTargetQuestionNo(null);
+  }, []);
+
+  useEffect(() => {
+    if (!searchParams.has("qNo") && !searchParams.has("qId")) return;
+
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.delete("qNo");
+    nextSearchParams.delete("qId");
+    setSearchParams(nextSearchParams, { replace: true });
+  }, [searchParams, setSearchParams]);
   const [actionError, setActionError] = useState("");
   const [openedOutputJobId, setOpenedOutputJobId] = useState(null);
 
@@ -460,6 +482,8 @@ export function useMockTestWorkspace() {
     aiSummary,
     activeTab,
     setActiveTab,
+    targetQuestionNo,
+    consumeReturnTarget,
     actionError,
     status,
     isProcessing,

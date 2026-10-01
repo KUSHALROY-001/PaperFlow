@@ -10,6 +10,8 @@ import SubmissionsTab from "./SubmissionsTab";
 
 export default function WorkspaceTabPanels({
   activeTab,
+  targetQuestionNo = null,
+  onReturnTargetHandled,
   mocktest,
   questions = [],
   // Separate from questions.length because the Processing tab no longer
@@ -81,6 +83,8 @@ export default function WorkspaceTabPanels({
           hasMoreQuestions={hasMoreQuestions}
           onLoadMoreQuestions={onLoadMoreQuestions}
           onLoadThroughQuestion={onLoadThroughQuestion}
+          targetQuestionNo={targetQuestionNo}
+          onReturnTargetHandled={onReturnTargetHandled}
           mocktest={mocktest}
           onStatusChange={handleQuestionStatusChange}
           onDelete={handleQuestionDelete}
@@ -99,6 +103,8 @@ export default function WorkspaceTabPanels({
           hasMoreQuestions={hasMoreQuestions}
           onLoadMoreQuestions={onLoadMoreQuestions}
           onLoadThroughQuestion={onLoadThroughQuestion}
+          targetQuestionNo={targetQuestionNo}
+          onReturnTargetHandled={onReturnTargetHandled}
           mocktest={mocktest}
           metadata={metadata}
           mockTestId={mocktest.id}

@@ -13,6 +13,7 @@ import { ConfirmDialog } from "../design-system/ConfirmDialog";
 export default function EditorSidebar({
   clusterId,
   mockTestId,
+  returnTab = null,
   questions,
   questionOrderMode = "sequential",
   selectedId,
@@ -40,6 +41,44 @@ export default function EditorSidebar({
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const loadMoreSentinelRef = useRef(null);
+  const questionCardRefs = useRef(new Map());
+
+  // Opening the editor from Review/Output supplies ?qId= and selects that
+  // question in the editor. The sidebar has its own scroll container,
+  // though, so browser navigation leaves it at Q1 unless we move that
+  // container too. Only react to a selection, layout-mode, or loaded-page
+  // change - not every text edit - so typing never snaps the sidebar.
+  useEffect(() => {
+    if (!selectedId || !sidebarRef?.current) return undefined;
+
+    const frame = requestAnimationFrame(() => {
+      const container = sidebarRef.current;
+      const fullCard = questionCardRefs.current.get(`full:${selectedId}`);
+      const collapsedCard = questionCardRefs.current.get(
+        `collapsed:${selectedId}`,
+      );
+      // The expanded list remains mounted while collapsed on desktop, but
+      // is display:none. Use its visible counterpart in that case.
+      const target = fullCard?.offsetParent ? fullCard : collapsedCard;
+      if (!container || !target) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      const isAbove = targetRect.top < containerRect.top;
+      const isBelow = targetRect.bottom > containerRect.bottom;
+      if (!isAbove && !isBelow) return;
+
+      container.scrollTo({
+        top:
+          container.scrollTop +
+          (targetRect.top - containerRect.top) -
+          (container.clientHeight - target.clientHeight) / 2,
+        behavior: "smooth",
+      });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [selectedId, isCollapsed, questions.length, sidebarRef]);
 
   // `questions` here is only the pages fetched so far (see
   // useQuestionEditor's useInfiniteQuery), so the list has to ask for the
@@ -75,8 +114,17 @@ export default function EditorSidebar({
     return () => observer.disconnect();
   }, [loadMore, hasMoreQuestions, sidebarRef, isCollapsed]);
 
+  const selectedQuestion = questions.find((question) => question.id === selectedId);
+  const backParams = new URLSearchParams();
+  // A direct editor visit has no originating tab. Review is the useful
+  // fallback because it is the tab that renders and can focus a question.
+  if (returnTab || selectedId) backParams.set("tab", returnTab || "review");
+  if (selectedId) backParams.set("qId", selectedId);
+  if (selectedQuestion?.questionNo) {
+    backParams.set("qNo", String(selectedQuestion.questionNo));
+  }
   const backPath = mockTestId
-    ? `/cluster/${clusterId}/mocktest/${mockTestId}`
+    ? `/cluster/${clusterId}/mocktest/${mockTestId}${backParams.size ? `?${backParams}` : ""}`
     : `/cluster/${clusterId}`;
 
   const handleBackClick = (e) => {
@@ -172,7 +220,17 @@ export default function EditorSidebar({
                 dirtyContentIds != null &&
                 dirtyContentIds.has(q.id);
               return (
-                <div key={q.id} className="relative group">
+                <div
+                  key={q.id}
+                  ref={(element) => {
+                    if (element) {
+                      questionCardRefs.current.set(`collapsed:${q.id}`, element);
+                    } else {
+                      questionCardRefs.current.delete(`collapsed:${q.id}`);
+                    }
+                  }}
+                  className="relative group"
+                >
                   <button
                     type="button"
                     onClick={() => setSelectedId(q.id)}
@@ -216,27 +274,37 @@ export default function EditorSidebar({
           className={`space-y-2 ${isCollapsed ? "block lg:hidden" : "block"}`}
         >
           {questions.map((q, index) => (
-            <QuestionCard
+            <div
               key={q.id}
-              q={q}
-              index={index}
-              isSelected={q.id === selectedId}
-              onSelect={setSelectedId}
-              onDelete={() => setDeleteTarget(q)}
-              issues={issuesById.get(q.id)}
-              isEdited={
-                Boolean(q.persisted) &&
-                dirtyContentIds != null &&
-                dirtyContentIds.has(q.id)
-              }
-              onCardMouseDown={onCardMouseDown}
-              onCardMouseEnter={onCardMouseEnter}
-              isDragging={draggingIndex === index}
-              isDragOver={dragOverIndex === index}
-              questionOrderMode={questionOrderMode}
-              paperDefaultMarks={paperDefaultMarks}
-              paperDefaultNegative={paperDefaultNegative}
-            />
+              ref={(element) => {
+                if (element) {
+                  questionCardRefs.current.set(`full:${q.id}`, element);
+                } else {
+                  questionCardRefs.current.delete(`full:${q.id}`);
+                }
+              }}
+            >
+              <QuestionCard
+                q={q}
+                index={index}
+                isSelected={q.id === selectedId}
+                onSelect={setSelectedId}
+                onDelete={() => setDeleteTarget(q)}
+                issues={issuesById.get(q.id)}
+                isEdited={
+                  Boolean(q.persisted) &&
+                  dirtyContentIds != null &&
+                  dirtyContentIds.has(q.id)
+                }
+                onCardMouseDown={onCardMouseDown}
+                onCardMouseEnter={onCardMouseEnter}
+                isDragging={draggingIndex === index}
+                isDragOver={dragOverIndex === index}
+                questionOrderMode={questionOrderMode}
+                paperDefaultMarks={paperDefaultMarks}
+                paperDefaultNegative={paperDefaultNegative}
+              />
+            </div>
           ))}
         </div>
 

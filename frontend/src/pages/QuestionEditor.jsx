@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuestionEditor } from "@/hooks/useQuestionEditor";
 import { useAuth } from "@/lib/AuthContext";
@@ -10,6 +10,16 @@ import LatexReferenceModal from "../components/question-editor/LatexReferenceMod
 import FloatingDragGhost from "../components/question-editor/FloatingDragGhost";
 import { ConfirmDialog } from "../components/design-system/ConfirmDialog";
 
+function isEditorControl(target) {
+  return (
+    target instanceof Element &&
+    (target.closest(
+      "input, textarea, select, button, [contenteditable='true'], [role='textbox']",
+    ) ||
+      target.isContentEditable)
+  );
+}
+
 export default function QuestionEditor() {
   const navigate = useNavigate();
   const { isViewer } = useAuth();
@@ -19,6 +29,7 @@ export default function QuestionEditor() {
   // presence is enough to show the breadcrumb without a dedicated
   // "cameFromReviewQueue" boolean param.
   const returnTo = searchParams.get("returnTo");
+  const returnTab = searchParams.get("returnTab");
   const [pendingLeavePath, setPendingLeavePath] = useState(null);
   const [isLatexReferenceOpen, setIsLatexReferenceOpen] = useState(false);
 
@@ -39,7 +50,6 @@ export default function QuestionEditor() {
     issueCount,
     extractedTopics,
     hasUnsavedChanges,
-    selectedIsDirty,
     dirtyContentIds,
     dirtyContentCount,
     orderChangeCount,
@@ -62,11 +72,41 @@ export default function QuestionEditor() {
 
   const [isCustomTopic, setIsCustomTopic] = useState(false);
   const sidebarRef = useRef(null);
+  const swipeStartRef = useRef(null);
 
   // Mouse press drag state & cursor position for floating ghost preview
   const [draggingIndex, setDraggingIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  const navigateQuestion = useCallback(
+    (direction) => {
+      if (
+        pendingLeavePath ||
+        isLatexReferenceOpen ||
+        document.querySelector('[role="dialog"]')
+      ) {
+        return false;
+      }
+
+      const currentIndex = displayQuestions.findIndex(
+        (question) => question.id === selectedId,
+      );
+      const nextQuestion = displayQuestions[currentIndex + direction];
+
+      if (!nextQuestion) return false;
+
+      setSelectedId(nextQuestion.id);
+      return true;
+    },
+    [
+      displayQuestions,
+      isLatexReferenceOpen,
+      pendingLeavePath,
+      selectedId,
+      setSelectedId,
+    ],
+  );
 
   useEffect(() => {
     if (draggingIndex === null) return;
@@ -118,6 +158,63 @@ export default function QuestionEditor() {
       window.removeEventListener("mouseup", handleMouseUp);
     };
   }, [draggingIndex, dragOverIndex, reorderQuestions, questionOrderMode]);
+
+  // Navigate in the same order shown in the question sidebar. Keep arrow keys
+  // available for caret movement and selection while the user is editing text.
+  useEffect(() => {
+    const handleQuestionNavigation = (event) => {
+      if (
+        event.defaultPrevented ||
+        (event.key !== "ArrowLeft" && event.key !== "ArrowRight") ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        isEditorControl(event.target)
+      ) {
+        return;
+      }
+
+      const direction = event.key === "ArrowRight" ? 1 : -1;
+      if (navigateQuestion(direction)) event.preventDefault();
+    };
+
+    window.addEventListener("keydown", handleQuestionNavigation);
+    return () => window.removeEventListener("keydown", handleQuestionNavigation);
+  }, [
+    navigateQuestion,
+  ]);
+
+  const handleEditorTouchStart = (event) => {
+    if (event.touches.length !== 1 || isEditorControl(event.target)) {
+      swipeStartRef.current = null;
+      return;
+    }
+
+    const touch = event.touches[0];
+    swipeStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleEditorTouchEnd = (event) => {
+    const swipeStart = swipeStartRef.current;
+    swipeStartRef.current = null;
+    if (!swipeStart || event.changedTouches.length !== 1) return;
+
+    const touch = event.changedTouches[0];
+    const horizontalDistance = touch.clientX - swipeStart.x;
+    const verticalDistance = touch.clientY - swipeStart.y;
+
+    // Require a deliberate horizontal gesture so normal vertical scrolling
+    // never changes question.
+    if (
+      Math.abs(horizontalDistance) < 64 ||
+      Math.abs(horizontalDistance) <= Math.abs(verticalDistance)
+    ) {
+      return;
+    }
+
+    navigateQuestion(horizontalDistance < 0 ? 1 : -1);
+  };
 
   // Intercept browser back button / popstate gesture when unsaved changes exist
   useEffect(() => {
@@ -171,6 +268,7 @@ export default function QuestionEditor() {
       <EditorSidebar
         clusterId={clusterId}
         mockTestId={mockTestId}
+        returnTab={returnTab}
         questions={displayQuestions}
         questionOrderMode={questionOrderMode}
         selectedId={selectedId}
@@ -196,7 +294,14 @@ export default function QuestionEditor() {
         loadMoreQuestions={loadMoreQuestions}
       />
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div
+        className="flex-1 flex flex-col min-w-0"
+        onTouchStart={handleEditorTouchStart}
+        onTouchEnd={handleEditorTouchEnd}
+        onTouchCancel={() => {
+          swipeStartRef.current = null;
+        }}
+      >
         <EditorHeader
           questionsCount={questions.length}
           totalQuestionCount={totalQuestionCount}
@@ -208,7 +313,6 @@ export default function QuestionEditor() {
           isViewer={isViewer}
           onShowLatexReference={() => setIsLatexReferenceOpen(true)}
           returnTo={returnTo}
-          selectedIsDirty={selectedIsDirty}
           hasUnsavedChanges={hasUnsavedChanges}
           dirtyContentCount={dirtyContentCount}
           orderChangeCount={orderChangeCount}

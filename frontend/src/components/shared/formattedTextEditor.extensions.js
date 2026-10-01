@@ -44,6 +44,14 @@ export function buildEditorExtensions() {
     }),
     TableKit.configure({
       table: {
+        // Use TableKit's native column-resize behavior instead of the old
+        // preview-only dragger. The document keeps the widths on table-cell
+        // attributes, which richTextDoc serializes back to Markdown.
+        resizable: true,
+        // Matches index.css's deliberately generous hover target. The
+        // actual visible guide remains thin, but the left-right resize
+        // cursor is easy to discover at a column border.
+        handleWidth: 10,
         renderWrapper: true,
         HTMLAttributes: {
           class: "my-3 w-full border-collapse text-xs sm:text-sm",
@@ -52,12 +60,12 @@ export function buildEditorExtensions() {
       tableHeader: {
         HTMLAttributes: {
           class:
-            "border-b border-border bg-muted px-3 py-2 text-left font-bold text-foreground",
+            "border border-border bg-muted px-3 py-2 text-left font-bold text-foreground",
         },
       },
       tableCell: {
         HTMLAttributes: {
-          class: "border-b border-border/60 px-3 py-2 align-top text-foreground",
+          class: "border border-border px-3 py-2 align-top text-foreground",
         },
       },
     }),

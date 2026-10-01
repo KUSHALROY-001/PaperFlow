@@ -24,20 +24,6 @@ export default function QuestionPreviewCard({
     negative_marks_per_wrong: paperDefaultNegative,
   });
 
-  const handleUpdateText = (updater) => {
-    if (!updateSelected) return;
-    const nextText =
-      typeof updater === "function" ? updater(selected.text) : updater;
-    updateSelected("text", nextText);
-  };
-
-  const handleUpdateExplanation = (updater) => {
-    if (!updateSelected) return;
-    const nextExplanation =
-      typeof updater === "function" ? updater(selected.explanation) : updater;
-    updateSelected("explanation", nextExplanation);
-  };
-
   // Passed to DiagramUploadControl: a brand-new default-slot upload has
   // no ![[img:default]] marker anywhere yet, so append one to the
   // question text - otherwise the image is stored but invisible (there's
@@ -77,8 +63,6 @@ export default function QuestionPreviewCard({
             passage={selected.passage}
             explanation={selected.explanation}
             textClassName="text-sm text-foreground"
-            editable={!isViewer}
-            onUpdateText={handleUpdateText}
           />
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3">
             {selected.diagramUrl && (
@@ -114,8 +98,9 @@ export default function QuestionPreviewCard({
           {diagramError && (
             <p className="mt-2 text-xs text-red-500">{diagramError}</p>
           )}
-          <div className="grid grid-cols-1 gap-2 mt-4">
-            {(selected.options || []).map((opt, i) => (
+          {['single', 'multi'].includes(selected.questionType) && (
+            <div className="grid grid-cols-1 gap-2 mt-4">
+              {(selected.options || []).map((opt, i) => (
               <div
                 key={opt}
                 className={`px-3 py-2.5 rounded-md text-xs sm:text-sm whitespace-pre-wrap wrap-break-word ${
@@ -127,12 +112,11 @@ export default function QuestionPreviewCard({
                 <span className="mr-2">{String.fromCodePoint(65 + i)}.</span>
                 <MathText text={opt} />
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
           <QuestionExplanation
             explanation={selected.explanation}
-            editable={!isViewer}
-            onUpdateExplanation={handleUpdateExplanation}
           />
         </DiagramAssetsProvider>
       </div>
